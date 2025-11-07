@@ -1,10 +1,7 @@
 import { Ingredient } from '@/types/recipe';
 
-// ✅ Use environment variable if available (for local or Render)
-const API_URL =
-  import.meta.env.VITE_API_URL?.endsWith('/extract')
-    ? import.meta.env.VITE_API_URL
-    : `${import.meta.env.VITE_API_URL || 'https://recipeapi-py.onrender.com'}/extract`;
+// Use local server endpoint
+const API_URL = 'http://localhost:3000/api/extract-recipe-from-video';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -26,7 +23,7 @@ export interface ExtractedRecipeData {
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   if (!isValidUrl(url)) {
-    throw new Error('Please paste a valid Instagram reel URL');
+    throw new Error('Please enter a valid URL');
   }
 
   try {
@@ -38,42 +35,49 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(error || 'Failed to extract recipe — try another reel');
+      throw new Error(error || 'Failed to extract recipe. Make sure the extraction server is running with: npm run server');
     }
 
     const data = await response.json();
 
+    if (!data.success || !data.recipe) {
+      throw new Error('No recipe data returned from server');
+    }
+
+    const recipe = data.recipe;
+
     return {
-      title: data.recipe?.title || 'Untitled Recipe',
-      description: data.recipe?.description || 'Delicious recipe extracted from Instagram',
-      creator: data.creator || '@unknown',
-      ingredients: (data.recipe?.ingredients || []).map((ing: string) => ({
-        quantity: ing.split(' ')[0] || '',
-        unit: ing.split(' ').slice(1, -1).join(' ') || '',
-        name: ing.split(' ').slice(-1)[0] || ing,
-      })),
-      instructions: data.recipe?.steps || [],
-      prepTime: data.recipe?.time || '10',
-      cookTime: data.recipe?.cookTime || '20',
-      servings: data.recipe?.serves || '2',
-      cuisineType: data.recipe?.cuisine || 'Global',
-      difficulty: (data.recipe?.difficulty || 'Easy') as 'Easy' | 'Medium' | 'Hard',
-      mealTypes: data.recipe?.mealTypes || ['Dinner'],
-      dietaryTags: data.recipe?.dietary || [],
-      imageUrl: data.thumb || data.recipe?.imageUrl || '',
-      notes: data.transcript ? `Transcript: ${data.transcript.slice(0, 200)}...` : '',
+      title: recipe.title || 'Untitled Recipe',
+      description: recipe.description || 'Delicious recipe extracted from video',
+      creator: '@user',
+      ingredients: recipe.ingredients || [],
+      instructions: recipe.instructions || [],
+      prepTime: String(recipe.prepTime || 10),
+      cookTime: String(recipe.cookTime || 20),
+      servings: String(recipe.servings || 2),
+      cuisineType: recipe.cuisine || 'Global',
+      difficulty: (recipe.difficulty || 'Easy') as 'Easy' | 'Medium' | 'Hard',
+      mealTypes: ['Dinner'],
+      dietaryTags: recipe.dietaryTags || [],
+      imageUrl: recipe.imageUrl || '',
+      notes: '',
       sourceUrl: url,
     };
-  } catch (err) {
+  } catch (err: any) {
     console.error('Extraction error:', err);
-    throw new Error('Error connecting to extraction server');
+
+    if (err.message?.includes('fetch')) {
+      throw new Error('Cannot connect to extraction server. Start it with: npm run server');
+    }
+
+    throw new Error(err.message || 'Failed to extract recipe');
   }
 }
 
 export function isValidUrl(url: string): boolean {
   try {
     new URL(url);
-    return url.includes('instagram.com');
+    return true;
   } catch {
     return false;
   }

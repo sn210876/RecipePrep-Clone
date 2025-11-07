@@ -123,7 +123,7 @@ Extract and return ONLY a valid JSON object with this exact structure (no markdo
 Make sure all fields are present. If information is not mentioned, use reasonable defaults.`;
 
   try {
-    const response = await openai.messages.create({
+    const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       max_tokens: 2000,
       messages: [
@@ -134,7 +134,7 @@ Make sure all fields are present. If information is not mentioned, use reasonabl
       ],
     });
 
-    const content = response.content[0].type === 'text' ? response.content[0].text : '';
+    const content = response.choices[0].message.content;
 
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
