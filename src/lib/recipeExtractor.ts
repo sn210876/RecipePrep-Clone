@@ -16,7 +16,7 @@ interface ExtractedRecipeData {
 }
 
 // ✅ Your backend API URL (update this to your actual Render URL)
-const API_BASE_URL = 'https://recipeapi-py.onrender.com';
+const API_BASE_URL = 'https://recipeprep-clone.onrender.com';
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   try {

@@ -89,7 +89,13 @@ async def extract_recipe(input: URLInput):
     time.sleep(1.5)
     try:
         logger.info("Attempting recipe-scrapers (wild_mode=True for blogs)")
-        scraper = scrape_me(url, wild_mode=True)
+        # Try with wild_mode first (newer versions), fallback without it
+        try:
+            scraper = scrape_me(url, wild_mode=True)
+        except TypeError:
+            # Older version doesn't support wild_mode
+            logger.info("wild_mode not supported, trying without it")
+            scraper = scrape_me(url)
 
         ingredients = scraper.ingredients()
         instructions = scraper.instructions()
