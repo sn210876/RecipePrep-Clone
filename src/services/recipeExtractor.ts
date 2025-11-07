@@ -1,6 +1,7 @@
 import { Ingredient } from '@/types/recipe';
 
-const API_URL = 'https://recipeprep-clone.onrender.com/extract';
+// Use Supabase Edge Function proxy to avoid CORS issues
+const API_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 export interface ExtractedRecipeData {
   title: string;
