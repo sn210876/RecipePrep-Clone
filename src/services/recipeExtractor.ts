@@ -1,6 +1,6 @@
 import { Ingredient } from '@/types/recipe';
 
-const API_URL = 'https://recipeapi-py.onrender.com/extract';
+const API_URL = 'https://recipeprep-clone.onrender.com/extract';
 
 export interface ExtractedRecipeData {
   title: string;
