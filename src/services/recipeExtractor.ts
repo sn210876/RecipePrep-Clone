@@ -1,12 +1,3 @@
-SHAWN — FINAL UNIVERSAL FIX — WEBSITES SHOW INGREDIENTS, VIDEOS SHOW TRANSCRIPT — 17 CARROTS INCOMING
-
-DO THIS EXACTLY:
-
-1. OPEN src/services/recipeExtractor.ts
-
-2. REPLACE THE ENTIRE FILE WITH THIS PERFECT VERSION (copy from import to final }):
-
-```ts
 import { Ingredient } from '@/types/recipe';
 
 const API_URL = 'https://recipeapi-py.onrender.com/extract';
@@ -47,7 +38,6 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const data = await response.json();
 
-  // Handle instructions (string → array)
   let instructions = data.recipe.instructions || [];
   if (typeof instructions === 'string') {
     instructions = instructions
@@ -56,17 +46,14 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
       .filter((s: string) => s.length > 0);
   }
 
-  // CRITICAL FIX: Only treat as video if backend says source: "video"
   const isVideo = data.recipe.source === 'video';
 
-  // Better empty check
   const hasRecipe = data.recipe && data.recipe.title && data.recipe.title !== 'Unavailable';
 
   if (!hasRecipe && !isVideo) {
     throw new Error('No recipe found. Try AllRecipes, BBC, or a public blog.');
   }
 
-  // BULLETPROOF INGREDIENT PARSER
   const parseIngredients = (ings: string[]): Ingredient[] => {
     if (!ings || ings.length === 0) return [];
     return ings.map(ing => {
