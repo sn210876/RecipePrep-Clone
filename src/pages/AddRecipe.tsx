@@ -240,7 +240,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               Import from URL
             </CardTitle>
             <CardDescription>
-              Paste a link from Instagram, TikTok, or any recipe website. We'll extract the recipe details automatically.
+              Extract recipes from YouTube videos or public recipe websites. Note: Instagram and TikTok require login and may not work.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -250,7 +250,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 <Input
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="https://instagram.com/p/... or https://tiktok.com/..."
+                  placeholder="https://youtube.com/watch?v=... or recipe website URL"
                   className="pl-10"
                   disabled={isExtracting}
                   onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
@@ -275,9 +275,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 )}
               </Button>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
-              Supports Instagram posts, TikTok videos, and recipe websites
-            </p>
+            <div className="mt-3 space-y-1">
+              <p className="text-xs text-emerald-600 font-medium">✓ Works best with: YouTube cooking videos, AllRecipes, Food Network, BBC Good Food</p>
+              <p className="text-xs text-amber-600">⚠ Limited support: Instagram, TikTok (require login)</p>
+            </div>
           </CardContent>
         </Card>
 

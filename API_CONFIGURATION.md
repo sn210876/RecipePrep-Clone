@@ -15,13 +15,50 @@ const API_URL = 'https://recipeapi-py.onrender.com/extract';
 - ✅ Points to `https://recipeapi-py.onrender.com/extract`
 - ✅ No local server required
 
+## ⚠️ Important Limitation: Instagram & TikTok
+
+**Instagram and TikTok URLs do NOT work** because:
+- They require login to view content
+- Your Render API can't authenticate
+- The API receives the login page instead of recipe content
+
+**Example of what happens:**
+```bash
+# Request
+POST https://recipeapi-py.onrender.com/extract
+{"url": "https://www.instagram.com/p/DQYSqnVFEgV/"}
+
+# Response
+{
+  "recipe": {
+    "title": "No recipe found on this webpage",
+    "ingredients": [],
+    "steps": []
+  },
+  "transcript": "Login • Instagram..."
+}
+```
+
+### What DOES Work:
+✅ **YouTube cooking videos** - No login required
+✅ **AllRecipes.com** - Public recipe sites
+✅ **Food Network** - Public cooking sites
+✅ **BBC Good Food** - Public recipe database
+✅ **Any public recipe website**
+
+### What DOESN'T Work:
+❌ **Instagram posts** - Requires login
+❌ **TikTok videos** - Requires login
+❌ **Private/paywalled content**
+
 ## How It Works
 
 1. **User pastes URL** in "Add Recipe" → "Import from URL"
 2. **Frontend sends POST request** to `https://recipeapi-py.onrender.com/extract`
-3. **Render API processes** the video/URL and extracts recipe data
-4. **Response is parsed** and displayed in preview modal
-5. **User can review/edit** before saving
+3. **Render API processes** the URL and extracts recipe data
+4. **Frontend validates** the response contains actual recipe data
+5. **If valid:** Recipe displayed in preview modal
+6. **If invalid:** Error shown with suggestion to use manual entry
 
 ## API Request Format
 
