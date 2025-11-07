@@ -6,4 +6,5 @@ requests==2.31.0
 beautifulsoup4==4.12.3
 yt-dlp==2024.3.10
 python-multipart==0.0.9
-recipe-scrapers
+recipe-scrapers>=15.0.0
+lxml>=4.9.0

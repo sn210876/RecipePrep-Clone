@@ -105,7 +105,12 @@ async def extract_recipe(input: URLInput):
     # WEB RECIPES - Keep recipe-scrapers perfection
     time.sleep(1)
     try:
+        print(f"Attempting to scrape: {url}")
         scraper = scrape_me(url, wild_mode=True)
+
+        print(f"Successfully scraped! Title: {scraper.title()}")
+        print(f"Found {len(scraper.ingredients())} ingredients")
+
         recipe_data = {
             "title": scraper.title() or "Untitled Recipe",
             "ingredients": scraper.ingredients(),
@@ -117,6 +122,9 @@ async def extract_recipe(input: URLInput):
             "image": scraper.image(),
             "source": "website"
         }
+
+        print(f"Returning recipe data with {len(recipe_data['ingredients'])} ingredients")
+
         return {
             "imageUrl": scraper.image(),
             "recipe": recipe_data,
@@ -124,9 +132,13 @@ async def extract_recipe(input: URLInput):
         }
     except Exception as e:
         tb = traceback.format_exc()
-        print(f"Scraping failed: {tb}")
+        print(f"SCRAPING ERROR for {url}:")
+        print(tb)
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+
         raise HTTPException(status_code=400, detail={
-            "error": "Site not supported. Try AllRecipes or manual entry.",
+            "error": f"Site not supported. Error: {str(e)[:100]}. Try AllRecipes or manual entry.",
             "imageUrl": None,
             "recipe": {},
             "transcript": ""
