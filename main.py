@@ -1,21 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from openai import OpenAI
-import os
-import json
-import requests
-from bs4 import BeautifulSoup
-import threading
+import traceback
 import time
+from recipe_scrapers import scrape_me
 import yt_dlp
-import tempfile
-from pathlib import Path
+from typing import Dict, Any
 
-# ✅ Create FastAPI app
 app = FastAPI()
 
-# ✅ Enable CORS
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,191 +18,124 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# ✅ Define input model
-class ExtractRequest(BaseModel):
+class URLInput(BaseModel):
     url: str
 
-# ✅ Root route
-@app.get("/")
-def root():
-    return {"status": "API is awake!"}
-
 def is_video_url(url: str) -> bool:
-    """Check if URL is from a video platform"""
-    video_domains = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com']
+    video_domains = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'fb.watch']
     return any(domain in url.lower() for domain in video_domains)
 
-def download_video_info(url: str) -> dict:
-    """Download video and extract info using yt-dlp"""
+def download_video_info(url: str) -> Dict[str, Any]:
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'skip_download': True,
+        'extract_flat': False,
+        'writesubtitles': True,
+        'writeautomaticsub': True,
+        'subtitleslangs': ['en'],
+        'skip_download': True,
+    }
     try:
-        # Create temp directory for downloads
-        temp_dir = tempfile.mkdtemp()
-        
-        ydl_opts = {
-            'format': 'best',
-            'outtmpl': f'{temp_dir}/%(id)s.%(ext)s',
-            'quiet': True,
-            'no_warnings': True,
-            'extract_flat': False,
-            'writesubtitles': True,
-            'writeautomaticsub': True,
-            'subtitleslangs': ['en'],
-        }
-        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            
-            # Get thumbnail
-            thumbnail = info.get('thumbnail', '')
-            
-            # Get description/transcript
-            description = info.get('description', '')
-            
-            # Try to get subtitles/captions
-            transcript = ""
-            if 'subtitles' in info and info['subtitles']:
-                # Get English subtitles if available
-                if 'en' in info['subtitles']:
-                    transcript = " ".join([sub.get('text', '') for sub in info['subtitles']['en']])
-            elif 'automatic_captions' in info and info['automatic_captions']:
-                if 'en' in info['automatic_captions']:
-                    transcript = " ".join([sub.get('text', '') for sub in info['automatic_captions']['en']])
-            
-            # Combine description and transcript
-            full_text = f"{description}\n\n{transcript}"
-            
-            return {
-                'thumbnail': thumbnail,
-                'text': full_text[:5000],  # Limit text length
-                'title': info.get('title', 'Video Recipe')
-            }
-            
-    except Exception as e:
-        raise Exception(f"Failed to download video: {str(e)}")
+            info = ydl.extract_info(url, download=False)
 
-def scrape_webpage(url: str) -> dict:
-    """Scrape regular webpage"""
-    try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        res = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(res.text, "html.parser")
-        
-        # Try to get title
-        title = "Recipe"
-        if soup.title:
-            title = soup.title.string
-        
-        # Try to get main image
-        thumbnail = "https://via.placeholder.com/400x300?text=Recipe"
-        og_image = soup.find('meta', property='og:image')
-        if og_image and og_image.get('content'):
-            thumbnail = og_image['content']
-        
-        text = soup.get_text()[:5000]
-        
+        transcript = ""
+        if 'automatic_captions' in info and info['automatic_captions']:
+            for lang in ['en', 'en-US', 'en-UK']:
+                if lang in info['automatic_captions']:
+                    subs = info['automatic_captions'][lang]
+                    if subs and 'url' in subs[0]:
+                        import requests
+                        sub_data = requests.get(subs[0]['url']).text
+                        transcript += sub_data[:4000]
+                    break
+        elif 'subtitles' in info and info['subtitles']:
+            for lang in info['subtitles']:
+                subs = info['subtitles'][lang]
+                if subs:
+                    import requests
+                    sub_data = requests.get(subs[0]['url']).text
+                    transcript += sub_data[:4000]
+                    break
+
+        description = info.get('description', '')[:2000]
+        transcript = (transcript + "\n\n" + description)[:5000]
+
         return {
-            'thumbnail': thumbnail,
-            'text': text,
-            'title': title
+            "imageUrl": info.get('thumbnail'),
+            "recipe": {},
+            "transcript": transcript
         }
     except Exception as e:
-        raise Exception(f"Failed to scrape webpage: {str(e)}")
+        raise HTTPException(status_code=400, detail={
+            "error": f"Video processing failed: {str(e)}",
+            "imageUrl": None,
+            "recipe": {},
+            "transcript": ""
+        })
 
-def extract_recipe_with_ai(text: str, title: str = "") -> dict:
-    """Use OpenAI to extract recipe from text"""
-    prompt = f"""
-    Extract recipe information from this text. The title might be: {title}
-    
-    Reply ONLY with valid JSON in this EXACT format (no markdown, no extra text):
-    {{
-      "title": "Recipe Name",
-      "ingredients": [
-        {{"quantity": "1", "unit": "cup", "name": "flour"}},
-        {{"quantity": "2", "unit": "piece", "name": "eggs"}}
-      ],
-      "instructions": [
-        "Step 1 description",
-        "Step 2 description"
-      ],
-      "prepTime": "15",
-      "cookTime": "30",
-      "servings": "4",
-      "cuisineType": "Italian",
-      "difficulty": "Medium",
-      "mealTypes": ["Dinner"],
-      "dietaryTags": ["Vegetarian"],
-      "notes": "Any additional tips or notes"
-    }}
-    
-    Text to extract from:
-    {text}
-    """
-    
-    completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0,
-    )
-    
-    content = completion.choices[0].message.content.strip()
-    
-    # Remove markdown code blocks if present
-    if content.startswith("```json"):
-        content = content[7:]
-    if content.startswith("```"):
-        content = content[3:]
-    if content.endswith("```"):
-        content = content[:-3]
-    
-    content = content.strip()
-    
-    try:
-        recipe = json.loads(content)
-        return recipe
-    except json.JSONDecodeError as e:
-        raise Exception(f"Failed to parse AI response: {str(e)}\nResponse: {content}")
-
-# ✅ Extract recipe endpoint
 @app.post("/extract")
-async def extract_recipe(req: ExtractRequest):
+async def extract_recipe(input: URLInput):
+    url = input.url.strip()
+    if not url:
+        raise HTTPException(status_code=400, detail="No URL provided")
+
+    # BLOCKED VIDEO PLATFORMS - Instant rejection
+    lowercase_url = url.lower()
+    if 'youtube.com' in lowercase_url or 'youtu.be' in lowercase_url:
+        raise HTTPException(status_code=400, detail={
+            "error": "YouTube blocked the extraction (bot detection). Please watch the video and use manual entry.",
+            "imageUrl": None,
+            "recipe": {},
+            "transcript": ""
+        })
+    if 'instagram.com' in lowercase_url or 'tiktok.com' in lowercase_url:
+        raise HTTPException(status_code=400, detail={
+            "error": "This URL requires login or is blocked. Instagram and TikTok do not support automated extraction.",
+            "imageUrl": None,
+            "recipe": {},
+            "transcript": ""
+        })
+
+    # VIDEO HANDLING (only for non-blocked like Facebook)
+    if is_video_url(url):
+        return download_video_info(url)
+
+    # WEB PAGE RECIPE EXTRACTION - recipe-scrapers magic
+    time.sleep(1)  # Be gentle on servers
     try:
-        # Determine if it's a video URL or webpage
-        if is_video_url(req.url):
-            print(f"Processing video URL: {req.url}")
-            video_info = download_video_info(req.url)
-            text = video_info['text']
-            thumbnail = video_info['thumbnail']
-            title = video_info['title']
-        else:
-            print(f"Processing webpage URL: {req.url}")
-            webpage_info = scrape_webpage(req.url)
-            text = webpage_info['text']
-            thumbnail = webpage_info['thumbnail']
-            title = webpage_info['title']
-        
-        # Extract recipe using AI
-        recipe = extract_recipe_with_ai(text, title)
-        
-        return {
-            "imageUrl": thumbnail,
-            "recipe": recipe,
-            "transcript": text[:500],
+        scraper = scrape_me(url, wild_mode=True)  # wild_mode handles JS-heavy sites
+
+        recipe_data = {
+            "title": scraper.title() or "Untitled Recipe",
+            "ingredients": scraper.ingredients(),
+            "instructions": scraper.instructions().split('\n') if scraper.instructions() else [],
+            "total_time": scraper.total_time(),
+            "cook_time": scraper.cook_time(),
+            "prep_time": scraper.prep_time(),
+            "servings": scraper.yields() or "Unknown",
+            "image": scraper.image(),
+            "nutrients": scraper.nutrients() or {},
+            "author": scraper.author() or "Unknown"
         }
-        
+
+        return {
+            "imageUrl": scraper.image(),
+            "recipe": recipe_data,
+            "transcript": ""
+        }
+
     except Exception as e:
-        print(f"Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        tb = traceback.format_exc()
+        print(f"recipe-scrapers failed for {url}: {tb}")
+        raise HTTPException(status_code=400, detail={
+            "error": "Failed to extract recipe from this site. Try AllRecipes, Food Network, or BBC Good Food. For videos, use manual entry.",
+            "imageUrl": None,
+            "recipe": {},
+            "transcript": ""
+        })
 
-# ✅ Background keep-alive
-def keep_awake():
-    while True:
-        try:
-            time.sleep(600)
-            requests.get("https://recipeapi-py.onrender.com")
-        except Exception:
-            pass
-
-threading.Thread(target=keep_awake, daemon=True).start()
+@app.get("/")
+async def root():
+    return {"message": "Recipe API with recipe-scrapers - Fixed!"}
