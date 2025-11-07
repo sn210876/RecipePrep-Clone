@@ -40,34 +40,18 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
     const data = await response.json();
 
+    // Handle video transcripts (YouTube, Instagram, TikTok)
+    if (data.transcript && data.transcript.length > 500) {
+      console.log('Video detected! Transcript available:', data.transcript.substring(0, 200));
+    }
+
     // Check if recipe extraction failed
-    const isBotDetection = data.transcript?.includes('unusual traffic') ||
-                          data.transcript?.includes('enable javascript') ||
-                          data.recipe?.title === 'Unavailable';
-
-    const isLoginRequired = data.transcript?.includes('Login');
-
     const hasNoData = !data.recipe ||
-                      data.recipe.title?.includes('No recipe found') ||
-                      (data.recipe.ingredients?.length === 0 && data.recipe.steps?.length === 0);
+                      !data.recipe.title ||
+                      data.recipe.title === 'Unavailable' ||
+                      (data.recipe.ingredients?.length === 0 && data.recipe.instructions?.length === 0);
 
     if (hasNoData) {
-      if (isBotDetection) {
-        throw new Error(
-          'YouTube blocked the extraction (bot detection). ' +
-          'Unfortunately, automated recipe extraction from YouTube is not reliable. ' +
-          'Please watch the video and use manual entry to add your recipe.'
-        );
-      }
-
-      if (isLoginRequired) {
-        throw new Error(
-          'This URL requires login to view content. ' +
-          'Instagram and TikTok do not support automated extraction. ' +
-          'Please use manual entry instead.'
-        );
-      }
-
       throw new Error(
         'Could not extract recipe from this URL. ' +
         'Try a public recipe website like AllRecipes.com, or use manual entry.'
@@ -90,21 +74,26 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
       });
     };
 
+    // Handle video sources differently
+    const isVideo = data.recipe.source === 'video';
+
     return {
       title: data.recipe.title || 'Untitled Recipe',
       description: data.recipe.description || 'Delicious recipe',
-      creator: data.creator || '@unknown',
-      ingredients: parseIngredients(data.recipe.ingredients),
-      instructions: data.recipe.steps || [],
-      prepTime: String(data.recipe.time || 10),
-      cookTime: String(data.recipe.cookTime || 20),
-      servings: String(data.recipe.serves || 2),
+      creator: data.recipe.author || '@unknown',
+      ingredients: isVideo && data.recipe.ingredients?.length === 0
+        ? []
+        : parseIngredients(data.recipe.ingredients),
+      instructions: data.recipe.instructions || [],
+      prepTime: String(data.recipe.prep_time || data.recipe.time || 10),
+      cookTime: String(data.recipe.cook_time || data.recipe.cookTime || 20),
+      servings: String(data.recipe.servings || data.recipe.serves || 2),
       cuisineType: data.recipe.cuisine || 'Global',
-      difficulty: (data.recipe.difficulty || 'Easy') as 'Easy' | 'Medium' | 'Hard',
+      difficulty: (data.recipe.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
       mealTypes: data.recipe.mealTypes || ['Dinner'],
       dietaryTags: data.recipe.dietary || [],
-      imageUrl: data.thumb && !data.thumb.includes('placeholder') ? data.thumb : '',
-      notes: data.transcript && !data.transcript.includes('Login') ? `Transcript: ${data.transcript.slice(0, 200)}...` : '',
+      imageUrl: data.imageUrl || data.thumb || '',
+      notes: data.transcript ? `Video Transcript:\n${data.transcript.slice(0, 500)}...` : '',
       sourceUrl: url,
     };
   } catch (err: any) {
