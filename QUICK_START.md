@@ -1,104 +1,99 @@
 # Quick Start Guide
 
-## 1. Install Dependencies
-```bash
-npm install
-```
+## ✅ Preview Window Fixed
 
-## 2. Setup Environment
-```bash
-cp .env.example .env
-```
+The Vite config has been updated to work with bolt.new:
+- Server binds to `0.0.0.0` (accessible from preview)
+- Port set to `5173`
+- **The preview should now work!**
 
-Edit `.env` and add:
-```
-OPENAI_API_KEY=your_api_key_here
-```
+## Current App Status
 
-## 3. Install yt-dlp
+### ✅ Working Features (No Setup Required):
+- Manual recipe entry with full form
+- My Recipes - view and manage saved recipes
+- Cook Mode with voice controls
+- Shopping list generation
+- Meal planner
+- Recipe discovery and browsing
 
-**macOS:**
+### ❌ Disabled Feature:
+- **Import from URL** - Requires OpenAI API key and yt-dlp
+
+## Using the App (Simple Mode)
+
+1. The preview window should now display your app
+2. Navigate to "Add Recipe"
+3. Scroll past the "Import from URL" section
+4. Use the manual form to create recipes:
+   - Enter title, times, servings
+   - Select cuisine and difficulty
+   - Add ingredients and instructions
+   - Save your recipe!
+
+## Enable Recipe Extraction (Optional)
+
+To enable importing recipes from URLs:
+
+### 1. Get OpenAI API Key
+Visit https://platform.openai.com/api-keys
+
+### 2. Install yt-dlp
+
+**Mac:**
 ```bash
 brew install yt-dlp
 ```
 
-**Ubuntu/Debian:**
+**Linux:**
 ```bash
-sudo apt-get install yt-dlp
+sudo wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp
+sudo chmod a+rx /usr/local/bin/yt-dlp
 ```
 
-**Windows:**
+### 3. Add API Key to .env
 ```bash
-choco install yt-dlp
+OPENAI_API_KEY=sk-your-key-here
 ```
 
-## 4. Verify Installation
-
-Check yt-dlp is installed:
-```bash
-which yt-dlp    # macOS/Linux
-where yt-dlp    # Windows
-```
-
-Check syntax:
-```bash
-node --check server.js
-```
-
-## 5. Run the Server
-
-**Development (auto-restart on changes):**
-```bash
-npm run server:dev
-```
-
-**Production:**
+### 4. Start Extraction Server
 ```bash
 npm run server
 ```
 
-Server runs on: `http://localhost:3000`
+Server runs on `http://localhost:3000`
 
-## 6. Test It Works
-
-Health check:
+### 5. Test It
 ```bash
 curl http://localhost:3000/api/health
 ```
 
-Should return:
-```json
-{ "status": "ok" }
-```
+Should return: `{ "status": "ok" }`
 
-## 7. Extract a Recipe
+## Cost Information
 
-```bash
-curl -X POST http://localhost:3000/api/extract-recipe-from-video \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://www.youtube.com/watch?v=YOUR_VIDEO_ID"}'
-```
+Recipe extraction uses OpenAI API:
+- Whisper (transcription): ~$0.006/minute
+- GPT-4 (extraction): ~$0.01-0.03/recipe
+- **Total per recipe: $0.02-0.05**
 
-## 8. Integrate with Frontend
+## Troubleshooting Preview
 
-See `INTEGRATION_GUIDE.md` for frontend integration examples.
+### Preview shows "Connection Refused"
+- Restart the dev server
+- Check Vite output for errors
+- Ensure port 5173 is available
 
-## Troubleshooting
+### Recipe extraction not working
+- Verify server is running: `npm run server`
+- Check `.env` has `OPENAI_API_KEY`
+- Confirm yt-dlp installed: `yt-dlp --version`
 
-### yt-dlp not found
-Make sure it's installed and in your PATH
+### "Cannot connect to extraction server"
+The extraction feature needs the backend server running. Use manual entry instead, or set up the server (see above).
 
-### OpenAI error
-Verify API key in .env file
+## More Documentation
 
-### Port already in use
-Kill the process on port 3000 or change PORT in .env
-
-### Syntax errors
-Run: `node --check server.js`
-
-## Documentation
-
-- `SERVER_README.md` - Overview and features
-- `SERVER_SETUP.md` - Detailed setup and deployment
-- `INTEGRATION_GUIDE.md` - Frontend integration
+- `RECIPE_EXTRACTION_SETUP.md` - Detailed extraction setup
+- `SERVER_SETUP.md` - Server deployment guide
+- `INTEGRATION_GUIDE.md` - API integration examples
