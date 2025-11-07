@@ -25,18 +25,25 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('Please enter a valid URL');
   }
 
+  console.log('[RecipeExtractor] Calling API:', API_URL);
+  console.log('[RecipeExtractor] URL to extract:', url);
+
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: url.trim() }),
   });
 
+  console.log('[RecipeExtractor] Response status:', response.status);
+
   if (!response.ok) {
     const error = await response.json();
+    console.error('[RecipeExtractor] API Error:', error);
     throw new Error(error.detail || error.error || 'Failed to extract recipe');
   }
 
   const data = await response.json();
+  console.log('[RecipeExtractor] API Response:', data);
 
   let instructions = data.recipe.instructions || [];
   if (typeof instructions === 'string') {
@@ -82,7 +89,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     });
   };
 
-  return {
+  const result = {
     title: data.recipe.title || 'Untitled Recipe',
     description: isVideo ? 'Recipe from video' : 'Delicious homemade recipe',
     creator: data.recipe.author || (isVideo ? 'Video Creator' : 'Unknown'),
@@ -99,6 +106,12 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     notes: isVideo && data.transcript ? `Video Transcript:\n${data.transcript.slice(0, 1000)}...` : '',
     sourceUrl: url,
   };
+
+  console.log('[RecipeExtractor] Parsed result:', result);
+  console.log('[RecipeExtractor] Ingredients count:', result.ingredients.length);
+  console.log('[RecipeExtractor] Instructions count:', result.instructions.length);
+
+  return result;
 }
 
 export function isValidUrl(url: string): boolean {
