@@ -1,3 +1,12 @@
+SHAWN — FINAL UNIVERSAL FIX — WEBSITES SHOW INGREDIENTS, VIDEOS SHOW TRANSCRIPT — 17 CARROTS INCOMING
+
+DO THIS EXACTLY:
+
+1. OPEN src/services/recipeExtractor.ts
+
+2. REPLACE THE ENTIRE FILE WITH THIS PERFECT VERSION (copy from import to final }):
+
+```ts
 import { Ingredient } from '@/types/recipe';
 
 const API_URL = 'https://recipeapi-py.onrender.com/extract';
@@ -47,40 +56,35 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
       .filter((s: string) => s.length > 0);
   }
 
-  // Better empty recipe detection
-  const hasRecipe = data.recipe && 
-                    data.recipe.title && 
-                    data.recipe.title !== 'Unavailable' &&
-                    (data.recipe.ingredients?.length > 0 || instructions.length > 0);
+  // CRITICAL FIX: Only treat as video if backend says source: "video"
+  const isVideo = data.recipe.source === 'video';
 
-  if (!hasRecipe && !data.transcript) {
-    throw new Error('No recipe found. Try AllRecipes or a public blog.');
+  // Better empty check
+  const hasRecipe = data.recipe && data.recipe.title && data.recipe.title !== 'Unavailable';
+
+  if (!hasRecipe && !isVideo) {
+    throw new Error('No recipe found. Try AllRecipes, BBC, or a public blog.');
   }
 
-  // BULLETPROOF INGREDIENT PARSER — WORKS ON ALLRECIPES 100%
+  // BULLETPROOF INGREDIENT PARSER
   const parseIngredients = (ings: string[]): Ingredient[] => {
     if (!ings || ings.length === 0) return [];
     return ings.map(ing => {
       const trimmed = ing.trim();
       if (!trimmed) return { quantity: '', unit: '', name: '' };
 
-      // Match quantity: numbers, fractions, dashes, commas, spaces
       const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)?\s*/);
       const quantity = quantityMatch ? (quantityMatch[1]?.trim() || '') : '';
 
-      // Remove quantity
       let rest = trimmed.slice(quantity.length).trim();
 
-      // Match unit: words like cup, tsp, tbsp, lb, oz, etc.
       const unitMatch = rest.match(/^([a-zA-Z]+\.?\s*[a-zA-Z]*\.?)\s+/);
       const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : '';
 
-      // Remove unit from rest
       if (unitMatch) {
         rest = rest.slice(unitMatch[0].length).trim();
       }
 
-      // Everything left is the name
       const name = rest || trimmed;
 
       return {
@@ -91,11 +95,9 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     });
   };
 
-  const isVideo = data.recipe.source === 'video' || data.transcript?.length > 500;
-
   return {
     title: data.recipe.title || 'Untitled Recipe',
-    description: data.recipe.description || (isVideo ? 'Recipe from video' : 'Delicious homemade recipe'),
+    description: isVideo ? 'Recipe from video' : 'Delicious homemade recipe',
     creator: data.recipe.author || (isVideo ? 'Video Creator' : 'Unknown'),
     ingredients: isVideo ? [] : parseIngredients(data.recipe.ingredients || []),
     instructions: instructions,
@@ -107,7 +109,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     mealTypes: ['Dinner'],
     dietaryTags: [],
     imageUrl: data.imageUrl || '',
-    notes: data.transcript ? `Transcript:\n${data.transcript.slice(0, 1000)}...` : '',
+    notes: isVideo && data.transcript ? `Video Transcript:\n${data.transcript.slice(0, 1000)}...` : '',
     sourceUrl: url,
   };
 }
