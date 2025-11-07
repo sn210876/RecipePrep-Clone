@@ -1,6 +1,6 @@
 import { Ingredient } from '@/types/recipe';
 
-// ✅ Use environment variable if available (for Bolt or local dev)
+// ✅ Use environment variable if available (for local or Render)
 const API_URL =
   import.meta.env.VITE_API_URL?.endsWith('/extract')
     ? import.meta.env.VITE_API_URL
