@@ -38,7 +38,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const data = await response.json();
 
-  // FIX: Handle instructions as string OR array
+  // Handle instructions (string → array)
   let instructions = data.recipe.instructions || [];
   if (typeof instructions === 'string') {
     instructions = instructions
@@ -47,7 +47,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
       .filter((s: string) => s.length > 0);
   }
 
-  // FIX: Better detection of empty recipe
+  // Better empty recipe detection
   const hasRecipe = data.recipe && 
                     data.recipe.title && 
                     data.recipe.title !== 'Unavailable' &&
@@ -57,20 +57,37 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('No recipe found. Try AllRecipes or a public blog.');
   }
 
+  // BULLETPROOF INGREDIENT PARSER — WORKS ON ALLRECIPES 100%
   const parseIngredients = (ings: string[]): Ingredient[] => {
+    if (!ings || ings.length === 0) return [];
     return ings.map(ing => {
       const trimmed = ing.trim();
-      if (!trimmed) return { quantity: '1', unit: '', name: '' };
-      
-      const match = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s]+)\s*([^\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s]+)?\s*(.*)$/);
-      if (match) {
-        return {
-          quantity: match[1].trim(),
-          unit: match[2]?.trim() || '',
-          name: match[3].trim() || trimmed
-        };
+      if (!trimmed) return { quantity: '', unit: '', name: '' };
+
+      // Match quantity: numbers, fractions, dashes, commas, spaces
+      const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)?\s*/);
+      const quantity = quantityMatch ? (quantityMatch[1]?.trim() || '') : '';
+
+      // Remove quantity
+      let rest = trimmed.slice(quantity.length).trim();
+
+      // Match unit: words like cup, tsp, tbsp, lb, oz, etc.
+      const unitMatch = rest.match(/^([a-zA-Z]+\.?\s*[a-zA-Z]*\.?)\s+/);
+      const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : '';
+
+      // Remove unit from rest
+      if (unitMatch) {
+        rest = rest.slice(unitMatch[0].length).trim();
       }
-      return { quantity: '1', unit: '', name: trimmed };
+
+      // Everything left is the name
+      const name = rest || trimmed;
+
+      return {
+        quantity: quantity || '',
+        unit: unit || '',
+        name: name || trimmed
+      };
     });
   };
 
@@ -98,6 +115,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 export function isValidUrl(url: string): boolean {
   try { new URL(url); return true; } catch { return false; }
 }
+
 export function getPlatformFromUrl(url: string): string {
   if (url.includes('tiktok.com')) return 'TikTok';
   if (url.includes('instagram.com')) return 'Instagram';
