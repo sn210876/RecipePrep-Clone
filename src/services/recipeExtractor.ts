@@ -1,6 +1,5 @@
 import { Ingredient } from '@/types/recipe';
 
-// Use Render API endpoint
 const API_URL = 'https://recipeapi-py.onrender.com/extract';
 
 export interface ExtractedRecipeData {
@@ -26,96 +25,76 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('Please enter a valid URL');
   }
 
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.trim() }),
-    });
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: url.trim() }),
+  });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || 'Failed to extract recipe from URL');
-    }
-
-    const data = await response.json();
-
-    // Handle video transcripts (YouTube, Instagram, TikTok)
-    if (data.transcript && data.transcript.length > 500) {
-      console.log('Video detected! Transcript available:', data.transcript.substring(0, 200));
-    }
-
-    // Check if recipe extraction failed
-    const hasNoData = !data.recipe ||
-                      !data.recipe.title ||
-                      data.recipe.title === 'Unavailable' ||
-                      (data.recipe.ingredients?.length === 0 && data.recipe.instructions?.length === 0);
-
-    if (hasNoData) {
-      throw new Error(
-        'Could not extract recipe from this URL. ' +
-        'Try a public recipe website like AllRecipes.com, or use manual entry.'
-      );
-    }
-
-    // Parse ingredients from string format to structured format
-    const parseIngredients = (ingredients: string[]): Ingredient[] => {
-      if (!ingredients || ingredients.length === 0) {
-        throw new Error('No ingredients found in the recipe.');
-      }
-
-      return ingredients.map(ing => {
-        const parts = ing.trim().split(' ');
-        const quantity = parts[0] || '1';
-        const unit = parts[1] || 'piece';
-        const name = parts.slice(2).join(' ') || ing;
-
-        return { quantity, unit, name };
-      });
-    };
-
-    // Handle video sources differently
-    const isVideo = data.recipe.source === 'video';
-
-    return {
-      title: data.recipe.title || 'Untitled Recipe',
-      description: data.recipe.description || 'Delicious recipe',
-      creator: data.recipe.author || '@unknown',
-      ingredients: isVideo && data.recipe.ingredients?.length === 0
-        ? []
-        : parseIngredients(data.recipe.ingredients),
-      instructions: data.recipe.instructions || [],
-      prepTime: String(data.recipe.prep_time || data.recipe.time || 10),
-      cookTime: String(data.recipe.cook_time || data.recipe.cookTime || 20),
-      servings: String(data.recipe.servings || data.recipe.serves || 2),
-      cuisineType: data.recipe.cuisine || 'Global',
-      difficulty: (data.recipe.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
-      mealTypes: data.recipe.mealTypes || ['Dinner'],
-      dietaryTags: data.recipe.dietary || [],
-      imageUrl: data.imageUrl || data.thumb || '',
-      notes: data.transcript ? `Video Transcript:\n${data.transcript.slice(0, 500)}...` : '',
-      sourceUrl: url,
-    };
-  } catch (err: any) {
-    console.error('Extraction error:', err);
-
-    if (err.message?.includes('fetch') || err.name === 'TypeError') {
-      throw new Error('Cannot connect to recipe extraction service. Please check your internet connection.');
-    }
-
-    throw new Error(err.message || 'Failed to extract recipe. Please try a different URL.');
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || error.error || 'Failed to extract recipe');
   }
+
+  const data = await response.json();
+
+  // FIX: Handle instructions as string OR array
+  let instructions = data.recipe.instructions || [];
+  if (typeof instructions === 'string') {
+    instructions = instructions
+      .split('\n')
+      .map((s: string) => s.trim())
+      .filter((s: string) => s.length > 0);
+  }
+
+  // FIX: Better detection of empty recipe
+  const hasRecipe = data.recipe && 
+                    data.recipe.title && 
+                    data.recipe.title !== 'Unavailable' &&
+                    (data.recipe.ingredients?.length > 0 || instructions.length > 0);
+
+  if (!hasRecipe && !data.transcript) {
+    throw new Error('No recipe found. Try AllRecipes or a public blog.');
+  }
+
+  const parseIngredients = (ings: string[]): Ingredient[] => {
+    return ings.map(ing => {
+      const trimmed = ing.trim();
+      if (!trimmed) return { quantity: '1', unit: '', name: '' };
+      
+      const match = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s]+)\s*([^\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s]+)?\s*(.*)$/);
+      if (match) {
+        return {
+          quantity: match[1].trim(),
+          unit: match[2]?.trim() || '',
+          name: match[3].trim() || trimmed
+        };
+      }
+      return { quantity: '1', unit: '', name: trimmed };
+    });
+  };
+
+  const isVideo = data.recipe.source === 'video' || data.transcript?.length > 500;
+
+  return {
+    title: data.recipe.title || 'Untitled Recipe',
+    description: data.recipe.description || (isVideo ? 'Recipe from video' : 'Delicious homemade recipe'),
+    creator: data.recipe.author || (isVideo ? 'Video Creator' : 'Unknown'),
+    ingredients: isVideo ? [] : parseIngredients(data.recipe.ingredients || []),
+    instructions: instructions,
+    prepTime: String(data.recipe.prep_time || 15),
+    cookTime: String(data.recipe.cook_time || 30),
+    servings: String(data.recipe.servings || 4),
+    cuisineType: 'Global',
+    difficulty: 'Medium' as const,
+    mealTypes: ['Dinner'],
+    dietaryTags: [],
+    imageUrl: data.imageUrl || '',
+    notes: data.transcript ? `Transcript:\n${data.transcript.slice(0, 1000)}...` : '',
+    sourceUrl: url,
+  };
 }
 
 export function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function getPlatformFromUrl(url: string): string {
-  return url.includes('instagram') ? 'Instagram' : 'Website';
+  try { new URL(url); return true; } catch { return false; }
 }
