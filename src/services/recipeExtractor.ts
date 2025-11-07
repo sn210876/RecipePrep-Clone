@@ -41,13 +41,36 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     const data = await response.json();
 
     // Check if recipe extraction failed
-    if (!data.recipe ||
-        data.recipe.title?.includes('No recipe found') ||
-        data.transcript?.includes('Login') ||
-        (data.recipe.ingredients?.length === 0 && data.recipe.steps?.length === 0)) {
+    const isBotDetection = data.transcript?.includes('unusual traffic') ||
+                          data.transcript?.includes('enable javascript') ||
+                          data.recipe?.title === 'Unavailable';
+
+    const isLoginRequired = data.transcript?.includes('Login');
+
+    const hasNoData = !data.recipe ||
+                      data.recipe.title?.includes('No recipe found') ||
+                      (data.recipe.ingredients?.length === 0 && data.recipe.steps?.length === 0);
+
+    if (hasNoData) {
+      if (isBotDetection) {
+        throw new Error(
+          'YouTube blocked the extraction (bot detection). ' +
+          'Unfortunately, automated recipe extraction from YouTube is not reliable. ' +
+          'Please watch the video and use manual entry to add your recipe.'
+        );
+      }
+
+      if (isLoginRequired) {
+        throw new Error(
+          'This URL requires login to view content. ' +
+          'Instagram and TikTok do not support automated extraction. ' +
+          'Please use manual entry instead.'
+        );
+      }
+
       throw new Error(
-        'Could not extract recipe from this URL. Instagram requires login to view posts. ' +
-        'Try a public recipe website or YouTube video instead, or use manual entry.'
+        'Could not extract recipe from this URL. ' +
+        'Try a public recipe website like AllRecipes.com, or use manual entry.'
       );
     }
 

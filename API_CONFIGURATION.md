@@ -15,14 +15,33 @@ const API_URL = 'https://recipeapi-py.onrender.com/extract';
 - ✅ Points to `https://recipeapi-py.onrender.com/extract`
 - ✅ No local server required
 
-## ⚠️ Important Limitation: Instagram & TikTok
+## ⚠️ Critical Limitation: Video Platforms Block Automation
 
-**Instagram and TikTok URLs do NOT work** because:
-- They require login to view content
-- Your Render API can't authenticate
-- The API receives the login page instead of recipe content
+### The Reality
 
-**Example of what happens:**
+**Most video platforms actively block automated extraction**, including:
+- ❌ **YouTube** - Bot detection/CAPTCHA
+- ❌ **Instagram** - Requires login
+- ❌ **TikTok** - Requires login
+
+**Example: YouTube blocking:**
+```bash
+# Request
+POST https://recipeapi-py.onrender.com/extract
+{"url": "https://www.youtube.com/watch?v=FvN2oZQ1OJQ"}
+
+# Response
+{
+  "recipe": {
+    "title": "Unavailable",
+    "ingredients": [],
+    "steps": []
+  },
+  "transcript": "unusual traffic detected... enable javascript..."
+}
+```
+
+**Example: Instagram blocking:**
 ```bash
 # Request
 POST https://recipeapi-py.onrender.com/extract
@@ -39,17 +58,27 @@ POST https://recipeapi-py.onrender.com/extract
 }
 ```
 
-### What DOES Work:
-✅ **YouTube cooking videos** - No login required
-✅ **AllRecipes.com** - Public recipe sites
-✅ **Food Network** - Public cooking sites
-✅ **BBC Good Food** - Public recipe database
-✅ **Any public recipe website**
+### What MAY Work (But Not Guaranteed):
+🟡 **AllRecipes.com** - Public recipe sites
+🟡 **Food Network** - Public cooking sites
+🟡 **BBC Good Food** - Public recipe database
+🟡 **Serious Eats** - Recipe blogs
+🟡 **Bon Appétit** - Magazine sites
 
-### What DOESN'T Work:
-❌ **Instagram posts** - Requires login
-❌ **TikTok videos** - Requires login
+### What DEFINITELY Doesn't Work:
+❌ **YouTube** - Bot detection always triggers
+❌ **Instagram** - Login required
+❌ **TikTok** - Login required
 ❌ **Private/paywalled content**
+
+### Recommended Approach
+
+**For video recipes:**
+1. Watch the video
+2. Take notes while watching
+3. Use the manual entry form below to add your recipe
+
+This is more reliable than automated extraction and gives you control over the recipe details.
 
 ## How It Works
 
