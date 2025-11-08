@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const response = await fetch("https://recipeprep-clone.onrender.com/extract", {
+    const response = await fetch("https://recipe-backend-nodejs.onrender.com/extract", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
