@@ -4,7 +4,6 @@ import { Ingredient } from '@/types/recipe';
 const API_URL = 'http://localhost:3001/api/extract-recipe-from-video';
 
 export interface ExtractedRecipeData {
-  {
   title: string,
   description: string,
   ingredients: Array<{quantity: string, unit: string, ingredient: string}>,
