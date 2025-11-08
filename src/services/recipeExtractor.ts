@@ -97,6 +97,15 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     });
   };
 
+  if (isVideo && (!data.recipe.ingredients || data.recipe.ingredients.length === 0)) {
+    const transcript = data.transcript || '';
+    throw new Error(
+      `Video extraction found description but no recipe details. ` +
+      `This video may not contain a complete recipe with ingredients and instructions. ` +
+      `Try: AllRecipes, BBC Good Food, or Food Network instead.${transcript ? `\n\nVideo description: ${transcript.slice(0, 200)}...` : ''}`
+    );
+  }
+
   const result = {
     title: data.recipe.title || 'Untitled Recipe',
     description: isVideo ? 'Recipe from video' : 'Delicious homemade recipe',
