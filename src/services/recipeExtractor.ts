@@ -56,9 +56,16 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const isVideo = data.recipe.source === 'video';
 
-  const hasRecipe = data.recipe && data.recipe.title && data.recipe.title !== 'Unavailable';
+  const hasRecipe = data.recipe &&
+    data.recipe.title &&
+    data.recipe.title !== 'Unavailable' &&
+    data.recipe.title !== 'Unsupported Site';
 
   if (!hasRecipe && !isVideo) {
+    const errorMsg = data.transcript || 'No recipe found';
+    if (errorMsg.includes('not supported') || errorMsg.includes('Unsupported')) {
+      throw new Error('This website is not supported yet. Try AllRecipes, BBC Good Food, Food Network, or Serious Eats.');
+    }
     throw new Error('No recipe found. Try AllRecipes, BBC, or a public blog.');
   }
 
