@@ -4,21 +4,20 @@ import { Ingredient } from '@/types/recipe';
 const API_URL = 'http://localhost:3001/api/extract-recipe-from-video';
 
 export interface ExtractedRecipeData {
-  title: string;
-  description: string;
-  creator: string;
-  ingredients: Ingredient[];
-  instructions: string[];
-  prepTime: string;
-  cookTime: string;
-  servings: string;
-  cuisineType: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  mealTypes: string[];
-  dietaryTags: string[];
-  imageUrl: string;
-  notes: string;
-  sourceUrl: string;
+  {
+  title: string,
+  description: string,
+  ingredients: Array<{quantity: string, unit: string, ingredient: string}>,
+  instructions: Array<string>,
+  prepTime: number,
+  cookTime: number,
+  servings: number,
+  cuisine: string,
+  difficulty: string,
+  dietaryTags: Array<string>,
+  image: string (base64),
+  sourceUrl: string,
+  transcript: string
 }
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
