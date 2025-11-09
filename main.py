@@ -1,4 +1,4 @@
-# SHAWN NUCLEAR CACHE BUSTER 9002 NOV 9 2025 - NEW SERVICE FIX - MAC COOKIES + YT-DLP FAQ + CORS/OPTIONS NUCLEAR
+# SHAWN NUCLEAR CACHE BUSTER 9003 NOV 9 2025 - YOUR COOKIES + YT-DLP UPDATE + CORS + IG + ALLRECIPES WORKING
 import os
 import re
 import json
@@ -6,7 +6,7 @@ import requests
 import subprocess
 import sys
 import tempfile
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -14,7 +14,7 @@ from recipe_scrapers import scrape_me
 import yt_dlp
 from openai import OpenAI
 
-# NUCLEAR YT-DLP UPDATE NO CACHE
+# NUCLEAR YT-DLP UPDATE — NO CACHE
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
     print("NUCLEAR YT-DLP UPDATED NOV 9 2025")
@@ -22,7 +22,7 @@ except: pass
 
 app = FastAPI()
 
-# NUCLEAR CORS - ALLOW EVERYTHING
+# NUCLEAR CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,21 +34,13 @@ app.add_middleware(
 )
 
 # NUCLEAR OPTIONS HANDLER
-@app.options("/{full_path:path}")
+@app.options("/extract")
 async def nuclear_options():
-    return JSONResponse(
-        content={},
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "*",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Credentials": "true",
-        }
-    )
+    return JSONResponse(content={}, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"})
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# MAC COOKIES - YT-DLP FAQ PERFECT
+# YOUR MAC COOKIES - YT-DLP FAQ PERFECT
 INSTAGRAM_COOKIES = """
 # Netscape HTTP Cookie File
 .instagram.com	TRUE	/	FALSE	1733875200	csrftoken	abxvXW3Nl1NZES5GKhSebmYt7chBhJcK
@@ -67,7 +59,7 @@ class ExtractRequest(BaseModel):
 
 def parse_with_ai(text: str):
     if not text.strip(): return [], [], ""
-    prompt = f"Extract ONLY JSON {{ingredients: [], instructions: [], notes: \"\"}} from: {text[:14000]}"
+    prompt = f"Extract recipe JSON {{ingredients: [], instructions: [], notes: \"\"}} from: {text[:14000]}"
     try:
         resp = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "system", "content": prompt}], temperature=0.1, max_tokens=800)
         m = re.search(r'\{.*\}', resp.choices[0].message.content, re.DOTALL)
@@ -80,19 +72,21 @@ async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 
+    # WEBSITES
     try:
         scraper = scrape_me(url, headers=headers)
         data = scraper.to_json()
-        return {"title": data.get("title"), "ingredients": data.get("ingredients", []), "instructions": data.get("instructions", "").split("\n"), "image": data.get("image", ""), "notes": "Scraped NUCLEAR"}
-    except Exception as e:
-        print("Scrape:", e)
+        return {"title": data.get("title"), "ingredients": data.get("ingredients", []), "instructions": data.get("instructions", "").split("\n"), "image": data.get("image", ""), "notes": "Scraped"}
+    except: pass
 
+    # AI HTML
     try:
         html = requests.get(url, headers=headers, timeout=20).text
         ings, inst, notes = parse_with_ai(html)
-        if ings or inst: return {"title": "AI", "ingredients": ings, "instructions": inst, "notes": notes}
+        if ings or inst: return {"title": "AI HTML", "ingredients": ings, "instructions": inst, "notes": notes}
     except: pass
 
+    # VIDEOS WITH YOUR COOKIES
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -112,12 +106,12 @@ async def extract_recipe(request: ExtractRequest):
             info = ydl.extract_info(url, download=False)
             text = f"{info.get('description', '')}\n{info.get('title', '')}"
             ings, inst, notes = parse_with_ai(text)
-            return {"title": info.get('title', 'Reel'), "ingredients": ings or [], "instructions": inst or [], "image": info.get('thumbnail', ''), "notes": f"NUCLEAR CACHE BUSTER 9002 WIN NOV 9 • {notes}"}
+            return {"title": info.get('title', 'Reel'), "ingredients": ings or [], "instructions": inst or [], "image": info.get('thumbnail', ''), "notes": f"NUCLEAR CACHE BUSTER 9003 WIN NOV 9 • {notes}"}
     except Exception as e:
-        raise HTTPException(400, f"Failed: {str(e)}")
+        raise HTTPException(400, f"Video failed: {str(e)}")
     finally:
         if cookie_file and os.path.exists(cookie_file): os.unlink(cookie_file)
 
 @app.get("/")
 async def root():
-    return {"message": "SHAWN NUCLEAR CACHE BUSTER 9002 NOV 9 2025 - NEW SERVICE - MAC COOKIES + YT-DLP FAQ + CORS NUCLEAR - OLD BACKEND DEAD"}
+    return {"message": "SHAWN NUCLEAR CACHE BUSTER 9003 NOV 9 2025 - MAC COOKIES + YT-DLP + CORS + IG + ALLRECIPES WORKING"}
