@@ -40,7 +40,6 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   if (!response.ok) {
     const errorText = await response.text();
     console.error('[RecipeExtractor] API Error:', errorText);
-    
     if (response.status === 404) {
       throw new Error('Backend not found. Check your Render URL.');
     }
@@ -50,22 +49,17 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const data = await response.json();
   console.log('[RecipeExtractor] Raw API Response:', data);
 
-  // Parse ingredients (now strings from recipe-scrapers or AI)
+  // Parse ingredients
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
       const trimmed = ing.trim();
       if (!trimmed) return { quantity: '', unit: '', name: '' };
-
-      // Match quantity (numbers, fractions, etc.)
       const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
       const quantity = quantityMatch ? quantityMatch[1].trim() : '';
       let rest = trimmed.slice(quantity.length).trim();
-
-      // Match unit (cup, tsp, etc.)
       const unitMatch = rest.match(/^([a-zA-Z]+\.?\s*[a-zA-Z]*)\s+/);
       const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : '';
       if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-
       const name = rest || trimmed;
       return { quantity, unit, name };
     });
@@ -76,10 +70,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     ? data.instructions
     : (data.instructions || '').split('\n').filter(Boolean);
 
-  // Preview fix: always show dialog even if AI is still parsing (common on free Render tier)
-if (!result.title || result.title === 'Untitled Recipe') result.title = 'Loading recipe...';
-  }
-
+  // Build result
   const result: ExtractedRecipeData = {
     title: data.title || 'Untitled Recipe',
     description: 'Extracted recipe',
@@ -97,6 +88,11 @@ if (!result.title || result.title === 'Untitled Recipe') result.title = 'Loading
     notes: data.notes || '',
     sourceUrl: url,
   };
+
+  // Preview fix: always show dialog even on free tier wake-up
+  if (!result.title || result.title === 'Untitled Recipe') {
+    result.title = 'Loading recipe...';
+  }
 
   console.log('[RecipeExtractor] Final result:', result);
   console.log('[RecipeExtractor] Ingredients count:', result.ingredients.length);
