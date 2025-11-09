@@ -184,11 +184,11 @@ async def extract_recipe(request: ExtractRequest):
                 "image": thumbnail,
                 "yield": "",
                 "time": duration,
-                "notes": f"AI Extracted from {'Instagram' if 'instagram' in url else 'TikTok' if 'tiktok' in url else 'Video'} (Nov 2025 bypass): {ai_notes}"
+                "notes": f"AI Extracted from {'Instagram' if 'instagram' in url else 'TikTok' if 'tiktok' in url else 'Video'} (Nov 2025 bypass): {ai_notes}\n\nTranscript sample: {full_text[:500]}..."
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Video failed: {str(e)}")
 
 @app.get("/")
 async def root():
-    return {"message": "FINAL UNIVERSAL EXTRACTOR - ALLRECIPES + BLOGS + IG + TIKTOK + AUTO YT-DLP UPDATE - NOV 8 2025"}
+    return {"message": "FINAL FULL 160-LINE UNIVERSAL EXTRACTOR - AUTO YT-DLP UPDATE - IG + TIKTOK + ALLRECIPES + BLOGS - NOV 8 2025"}
