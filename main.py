@@ -23,6 +23,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class ExtractRequest(BaseModel):
     url: str
+    cookies: str = ""  # ← NEW: OPTIONAL COOKIES
 
 def parse_with_ai(transcript: str):
     if not transcript.strip():
@@ -63,15 +64,12 @@ def parse_with_ai(transcript: str):
 @app.post("/extract")
 async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
+    cookies_str = request.cookies.strip()  # ← NEW
     
-    # === WEBSITES: ALLRECIPES + CLOUDFLARE BYPASS ===
+    # === WEBSITES + AI FALLBACK (UNCHANGED) ===
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
         'Referer': 'https://www.google.com/',
-        'DNT': '1',
-        'Sec-Fetch-Mode': 'navigate',
     }
     
     try:
@@ -89,22 +87,12 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"Scrape failed: {e}")
     
-    # === AI FALLBACK FOR ANY WEBSITE ===
     try:
         html = requests.get(url, headers=headers, timeout=15).text
         prompt = f"""
-        Extract recipe from this HTML. Return ONLY valid JSON:
-        {{
-            "title": "Recipe name",
-            "ingredients": ["1 cup flour"],
-            "instructions": ["Step 1"],
-            "image": "",
-            "yield": "",
-            "time": 0,
-            "notes": ""
-        }}
-        HTML:
-        {html[:15000]}
+        Extract recipe from HTML. Return ONLY valid JSON:
+        {{"title": "", "ingredients": [], "instructions": [], "image": "", "yield": "", "time": 0, "notes": ""}}
+        HTML: {html[:15000]}
         """
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -116,43 +104,31 @@ async def extract_recipe(request: ExtractRequest):
         json_match = re.search(r'\{.*\}', content, re.DOTALL)
         if json_match:
             data = json.loads(json_match.group())
-            return {
-                "title": data.get("title", "AI Extracted"),
-                "ingredients": data.get("ingredients", []),
-                "instructions": data.get("instructions", []),
-                "image": data.get("image", ""),
-                "yield": data.get("yield", ""),
-                "time": data.get("time", 0),
-                "notes": "AI fallback"
-            }
+            return {**data, "notes": "AI fallback"}
     except Exception as e:
         print(f"AI fallback failed: {e}")
     
-    # === VIDEOS: INSTAGRAM + TIKTOK + YOUTUBE (NO COOKIES) ===
+    # === VIDEOS: INSTAGRAM WITH COOKIES SUPPORT ===
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'extract_flat': False,
         'geo_bypass': True,
         'http_headers': {
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate, br',
             'Referer': 'https://www.instagram.com/',
             'Origin': 'https://www.instagram.com',
-            'DNT': '1',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
-            'TE': 'trailers',
-            'Priority': 'u=0, i',
         },
     }
     
+    # ← ADD COOKIES IF PROVIDED
+    if cookies_str:
+        cookie_jar = yt_dlp.utils.CookieJar()
+        for cookie in cookies_str.split(';'):
+            if '=' in cookie:
+                name, value = cookie.strip().split('=', 1)
+                cookie_jar.set_cookie(name, value, domain='.instagram.com')
+        ydl_opts['cookiejar'] = cookie_jar
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -181,11 +157,11 @@ async def extract_recipe(request: ExtractRequest):
                 "image": info.get('thumbnail', ''),
                 "yield": "",
                 "time": info.get('duration', 0) or 0,
-                "notes": f"AI Extracted (No Cookies): {ai_notes}"
+                "notes": f"AI Extracted (Cookies: {'YES' if cookies_str else 'NO'})"
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed: {str(e)}")
 
 @app.get("/")
 async def root():
-    return {"message": "FINAL VERSION - INSTAGRAM + ALLRECIPES + AI FALLBACK - NOV 8 2025"}
+    return {"message": "INSTAGRAM COOKIES SUPPORT ADDED - NOV 8 2025"}
