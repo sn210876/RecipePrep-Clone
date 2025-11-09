@@ -27,10 +27,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # ← ALLOWS BOLT, RENDER, LOCAL, EVERYWHERE
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
