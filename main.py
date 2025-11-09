@@ -3,7 +3,7 @@ import re
 import json
 import requests
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware  # ← ADDS CORS
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from recipe_scrapers import scrape_me
 import yt_dlp
@@ -11,7 +11,7 @@ from openai import OpenAI
 
 app = FastAPI()
 
-# ←←← CORS FIX — ALLOWS BOLT, LOCALHOST, YOUR APP, EVERYTHING
+# CORS — ALLOWS BOLT, LOCALHOST, YOUR APP, EVERYTHING
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -81,8 +81,21 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"Scrape failed: {e}")
     
-    # Videos
-    ydl_opts = {'quiet': True, 'no_warnings': True}
+    # Videos — INSTAGRAM + TIKTOK + YOUTUBE — NO COOKIES, MOBILE BYPASS
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extract_flat': False,
+        'geo_bypass': True,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.instagram.com/',
+            'Origin': 'https://www.instagram.com',
+        },
+    }
+    
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -111,11 +124,11 @@ async def extract_recipe(request: ExtractRequest):
                 "image": info.get('thumbnail', ''),
                 "yield": "",
                 "time": info.get('duration', 0) or 0,
-                "notes": f"AI Extracted: {ai_notes}\n\nTranscript: {full_text[:500]}..."
+                "notes": f"AI Extracted (Mobile Bypass): {ai_notes}\n\nTranscript: {full_text[:500]}..."
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed: {str(e)}")
 
 @app.get("/")
 async def root():
-    return {"message": "UNIVERSAL EXTRACTOR LIVE + CORS ENABLED + AI PARSING - NOVEMBER 8 2025"}
+    return {"message": "UNIVERSAL EXTRACTOR LIVE + CORS + INSTAGRAM MOBILE BYPASS - NOVEMBER 8 2025"}
