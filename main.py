@@ -1,4 +1,4 @@
-# SHAWN CHATGPT DEFEATER NOV 9 2025 - CACHE BUSTER 9000 - MAC COOKIES + PERFECT CORS + NO WILD_MODE
+# SHAWN RENDER CACHE BUSTER 9001 NOV 9 2025 - YT-DLP FAQ COOKIES WORK - NO WILD_MODE - CORS + OPTIONS + PIP NO CACHE
 import os
 import re
 import json
@@ -10,18 +10,19 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from recipe_scrapers import scrape_me  # NO WILD_MODE - FIXED
+from recipe_scrapers import scrape_me
 import yt_dlp
 from openai import OpenAI
 
-# FORCE UPDATE
+# FORCE YT-DLP UPDATE NO CACHE - RENDER FIX
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
+    print("YT-DLP FORCE UPDATED NOV 9 2025 - NO CACHE")
 except: pass
 
 app = FastAPI()
 
-# CHATGPT-LEVEL CORS BUT BETTER
+# PERFECT CORS - NO MORE BLOCKED
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,14 +33,14 @@ app.add_middleware(
     max_age=600,
 )
 
-# MANUAL OPTIONS - FIXES PREFLIGHT 100%
+# FIX 405 OPTIONS - RENDER/BOLT PREFlight
 @app.options("/extract")
-async def options():
+async def options_extract():
     return JSONResponse(
         content={},
         headers={
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Methods": "POST,OPTIONS",
             "Access-Control-Allow-Headers": "*",
             "Access-Control-Allow-Credentials": "true",
         }
@@ -47,7 +48,7 @@ async def options():
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# YOUR MAC COOKIES - PERFECT
+# YOUR MAC COOKIES - YT-DLP FAQ APPROVED NETSCAPE FORMAT
 INSTAGRAM_COOKIES = """
 # Netscape HTTP Cookie File
 .instagram.com	TRUE	/	FALSE	1733875200	csrftoken	abxvXW3Nl1NZES5GKhSebmYt7chBhJcK
@@ -71,19 +72,20 @@ def parse_with_ai(text: str):
         resp = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "system", "content": prompt}], temperature=0.1, max_tokens=800)
         m = re.search(r'\{.*\}', resp.choices[0].message.content, re.DOTALL)
         if m: data = json.loads(m.group()); return data.get("ingredients", []), data.get("instructions", []), data.get("notes", "")
-    except: pass
+    except Exception as e:
+        print("AI error:", e)
     return [], [], ""
 
 @app.post("/extract")
-async def extract(request: ExtractRequest):
+async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 
-    # 1. SCRAPE - NO WILD_MODE
+    # 1. SCRAPE NO WILD_MODE
     try:
         scraper = scrape_me(url, headers=headers)
         data = scraper.to_json()
-        return {"title": data.get("title", "Untitled"), "ingredients": data.get("ingredients", []), "instructions": data.get("instructions", "").split("\n"), "image": data.get("image", ""), "notes": "Scraped Nov 9"}
+        return {"title": data.get("title"), "ingredients": data.get("ingredients", []), "instructions": data.get("instructions", "").split("\n"), "image": data.get("image", ""), "notes": "Scraped"}
     except Exception as e:
         print("Scrape error:", e)
 
@@ -91,10 +93,10 @@ async def extract(request: ExtractRequest):
     try:
         html = requests.get(url, headers=headers, timeout=20).text
         ings, inst, notes = parse_with_ai(html)
-        if ings or inst: return {"title": "AI Parsed", "ingredients": ings, "instructions": inst, "notes": notes}
+        if ings or inst: return {"title": "AI HTML", "ingredients": ings, "instructions": inst, "notes": notes}
     except: pass
 
-    # 3. VIDEO + COOKIES
+    # 3. IG REEL + COOKIES YT-DLP FAQ
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -114,12 +116,12 @@ async def extract(request: ExtractRequest):
             info = ydl.extract_info(url, download=False)
             text = f"{info.get('description', '')}\n{info.get('title', '')}"
             ings, inst, notes = parse_with_ai(text)
-            return {"title": info.get('title', 'Reel'), "ingredients": ings or [], "instructions": inst or [], "image": info.get('thumbnail', ''), "notes": f"MAC COOKIES WORKED - CHATGPT DEFEATED NOV 9 • {notes}"}
+            return {"title": info.get('title', 'Reel'), "ingredients": ings or [], "instructions": inst or [], "image": info.get('thumbnail', ''), "notes": f"YT-DLP FAQ COOKIES WORKED - RENDER CACHE BUSTER 9001 NOV 9 • {notes}"}
     except Exception as e:
-        raise HTTPException(400, f"Video failed: {str(e)}")
+        raise HTTPException(400, f"IG failed: {str(e)}")
     finally:
         if cookie_file and os.path.exists(cookie_file): os.unlink(cookie_file)
 
 @app.get("/")
 async def root():
-    return {"message": "SHAWN CHATGPT DEFEATER NOV 9 2025 - CACHE BUSTER 9000 - MAC COOKIES + PERFECT CORS + IG LIVE"}
+    return {"message": "SHAWN RENDER CACHE BUSTER 9001 NOV 9 2025 - YT-DLP FAQ COOKIES + PIP NO CACHE + CORS/OPTIONS FIXED - IG REELS LIVE"}
