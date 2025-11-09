@@ -41,17 +41,20 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   console.log('[RecipeExtractor] Response status:', response.status);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[RecipeExtractor] API Error:', errorText);
-    if (response.status === 404) {
-      throw new Error('Backend not found. Check your Render URL.');
-    }
-    throw new Error('Failed to extract recipe. Try a supported site or video.');
-  }
-
   const data = await response.json();
   console.log('[RecipeExtractor] Raw API Response:', data);
+
+  if (!response.ok) {
+    console.error('[RecipeExtractor] API Error:', data);
+    if (response.status === 404) {
+      throw new Error('Backend not found.');
+    }
+    const errorDetail = data.detail || '';
+    if (errorDetail.includes('Unsupported URL') || errorDetail.includes('not supported')) {
+      throw new Error('This recipe site is not supported yet. Try BBC Good Food, Food Network, or Serious Eats.');
+    }
+    throw new Error('Failed to extract recipe. Try a different recipe website.');
+  }
 
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
