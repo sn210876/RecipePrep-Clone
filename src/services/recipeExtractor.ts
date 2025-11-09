@@ -49,7 +49,6 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const data = await response.json();
   console.log('[RecipeExtractor] Raw API Response:', data);
 
-  // Parse ingredients
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
       const trimmed = ing.trim();
@@ -70,7 +69,6 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     ? data.instructions
     : (data.instructions || '').split('\n').filter(Boolean);
 
-  // Build result
   const result: ExtractedRecipeData = {
     title: data.title || 'Untitled Recipe',
     description: 'Extracted recipe',
@@ -89,7 +87,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     sourceUrl: url,
   };
 
-  // Preview fix: always show dialog even on free tier wake-up
+  // Preview fix: always show dialog even on free Render tier wake-up
   if (!result.title || result.title === 'Untitled Recipe') {
     result.title = 'Loading recipe...';
   }
