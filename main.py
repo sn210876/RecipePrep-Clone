@@ -3,6 +3,7 @@ import re
 import json
 import requests
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  # ← NEW
 from pydantic import BaseModel
 from recipe_scrapers import scrape_me
 import yt_dlp
@@ -10,7 +11,15 @@ from openai import OpenAI
 
 app = FastAPI()
 
-# Works with openai 1.51.0 + httpx 0.27.2
+# ←←←← ADD THIS CORS BLOCK — FIXES EVERYTHING
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows bolt.new, localhost, your app, everyone
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class ExtractRequest(BaseModel):
@@ -56,7 +65,6 @@ def parse_with_ai(transcript: str):
 async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
     
-    # Websites
     try:
         scraper = scrape_me(url, wild_mode=True)
         data = scraper.to_json()
@@ -72,7 +80,6 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"Scrape failed: {e}")
     
-    # Videos
     ydl_opts = {'quiet': True, 'no_warnings': True}
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -109,4 +116,4 @@ async def extract_recipe(request: ExtractRequest):
 
 @app.get("/")
 async def root():
-    return {"message": "UNIVERSAL EXTRACTOR LIVE - NOV 8 2025 - PROXIES FIXED"}
+    return {"message": "UNIVERSAL EXTRACTOR LIVE - CORS ENABLED - NOV 8 2025"}
