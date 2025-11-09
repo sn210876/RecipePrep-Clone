@@ -1,10 +1,7 @@
 import { Ingredient } from '@/types/recipe';
 
-// DIRECT TO RENDER — SUPABASE PROXY BYPASSED FOREVER (NO MORE 400)
-const DIRECT_RENDER_URL = 'https://recipe-backend-nodejs-1.onrender.com/extract';
-
-// NO SUPABASE = NO 400 = NO FALLBACK NEEDED
-const API_URL = DIRECT_RENDER_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 export interface ExtractedRecipeData {
   title: string;
@@ -29,12 +26,14 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('Please enter a valid URL');
   }
 
-  console.log('[RecipeExtractor] DIRECT TO RENDER (Supabase bypassed):', API_URL);
+  console.log('[RecipeExtractor] Supabase Edge Function:', API_URL);
   console.log('[RecipeExtractor] URL to extract:', url);
 
   const response = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ url: url.trim() }),
   });
 
@@ -42,8 +41,8 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('[RecipeExtractor] Render error:', errorText);
-    throw new Error('Failed to extract. Your backend is live — try hard refresh (Cmd+Shift+R)');
+    console.error('[RecipeExtractor] Error:', errorText);
+    throw new Error('Failed to extract recipe. Try a different URL.');
   }
 
   const data = await response.json();
