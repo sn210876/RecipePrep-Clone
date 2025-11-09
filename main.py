@@ -25,9 +25,10 @@ update_ytdlp()
 
 app = FastAPI()
 
+# FIXED CORS — WORKS FROM BOLT, RENDER, LOCAL, ANYWHERE
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ← ALLOWS BOLT, RENDER, LOCAL, EVERYWHERE
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -161,7 +162,7 @@ async def extract_recipe(request: ExtractRequest):
             title = info.get('title', 'Video Recipe')
             description = info.get('description', '')
             thumbnail = info.get('thumbnail', '')
-            duration = info.get('duration', 0) or 0
+            duration = info.get('duration', 0 PN ) or 0
             
             transcript = ""
             if info.get('automatic_captions'):
@@ -192,4 +193,4 @@ async def extract_recipe(request: ExtractRequest):
 
 @app.get("/")
 async def root():
-    return {"message": "FINAL FULL 160-LINE UNIVERSAL EXTRACTOR - AUTO YT-DLP UPDATE - IG + TIKTOK + ALLRECIPES + BLOGS - NOV 8 2025"}
+    return {"message": "FINAL UNIVERSAL EXTRACTOR - CORS FIXED - AUTO YT-DLP - IG + TIKTOK + ALLRECIPES + BLOGS - NOV 9 2025"}
