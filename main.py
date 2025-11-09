@@ -11,21 +11,19 @@ from recipe_scrapers import scrape_me
 import yt_dlp
 from openai import OpenAI
 
-# FORCE UPDATE yt-dlp ON EVERY START (WORKS ON RENDER FREE TIER)
+# AUTO-UPDATE yt-dlp ON EVERY START — RENDER FREE TIER WORKS
 def update_ytdlp():
     try:
-        subprocess.check_call([
-            sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"
-        ])
-        print("yt-dlp UPDATED TO LATEST NOV 2025 VERSION - IG + TIKTOK BYPASS ACTIVE")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
+        print("yt-dlp UPDATED TO LATEST NOV 9 2025 — IG + TIKTOK BYPASS ACTIVE")
     except Exception as e:
-        print(f"yt-dlp update skipped (using cached): {e}")
+        print(f"yt-dlp update skipped: {e}")
 
 update_ytdlp()
 
 app = FastAPI()
 
-# FIXED CORS — WORKS FROM BOLT, RENDER, LOCAL, ANYWHERE
+# CORS — BOLT + RENDER + LOCALHOST + EVERYWHERE
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -80,7 +78,7 @@ def parse_with_ai(text: str):
 async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
     
-    # CLOUDFLARE + ALLRECIPES BYPASS HEADERS
+    # HEADERS FOR CLOUDFLARE + ALLRECIPES
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -89,7 +87,7 @@ async def extract_recipe(request: ExtractRequest):
         'DNT': '1',
     }
     
-    # TRY RECIPE-SCRAPERS FIRST (ALLRECIPES, BLOGS, BBC, SERIOUS EATS, etc.)
+    # TRY RECIPE-SCRAPERS (ALLRECIPES, BLOGS, BBC, etc.)
     try:
         scraper = scrape_me(url, wild_mode=True, headers=headers)
         data = scraper.to_json()
@@ -105,7 +103,7 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"Scrape failed: {e}")
     
-    # AI FALLBACK FOR ANY WEBSITE (ALLRECIPES NEW FORMAT, CLOUDFLARE SITES, BLOGS)
+    # AI FALLBACK FOR ANY WEBSITE
     try:
         html = requests.get(url, headers=headers, timeout=20).text
         prompt = f"""
@@ -114,9 +112,9 @@ async def extract_recipe(request: ExtractRequest):
             "title": "Recipe name",
             "ingredients": ["1 cup flour"],
             "instructions": ["Step 1"],
-            "image": "url or empty",
-            "yield": "serves 4",
-            "time": 30,
+            "image": "",
+            "yield": "",
+            "time": 0,
             "notes": ""
         }}
         HTML:
@@ -144,7 +142,7 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"AI HTML fallback failed: {e}")
     
-    # VIDEOS: INSTAGRAM + TIKTOK + YOUTUBE (NOV 2025 BYPASS - NO COOKIES)
+    # VIDEOS: INSTAGRAM + TIKTOK + YOUTUBE (NOV 9 2025 BYPASS — NO COOKIES)
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -162,7 +160,7 @@ async def extract_recipe(request: ExtractRequest):
             title = info.get('title', 'Video Recipe')
             description = info.get('description', '')
             thumbnail = info.get('thumbnail', '')
-            duration = info.get('duration', 0 PN ) or 0
+            duration = info.get('duration', 0) or 0
             
             transcript = ""
             if info.get('automatic_captions'):
@@ -186,11 +184,11 @@ async def extract_recipe(request: ExtractRequest):
                 "image": thumbnail,
                 "yield": "",
                 "time": duration,
-                "notes": f"AI Extracted from {'Instagram' if 'instagram' in url else 'TikTok' if 'tiktok' in url else 'Video'} (Nov 2025 bypass): {ai_notes}\n\nTranscript sample: {full_text[:500]}..."
+                "notes": f"AI Extracted from {'Instagram' if 'instagram' in url else 'TikTok' if 'tiktok' in url else 'Video'} (Nov 9 2025 bypass): {ai_notes}"
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Video failed: {str(e)}")
 
 @app.get("/")
 async def root():
-    return {"message": "FINAL UNIVERSAL EXTRACTOR - CORS FIXED - AUTO YT-DLP - IG + TIKTOK + ALLRECIPES + BLOGS - NOV 9 2025"}
+    return {"message": "FINAL UNIVERSAL EXTRACTOR - IG + TIKTOK + ALLRECIPES + BLOGS - NOV 9 2025"}
