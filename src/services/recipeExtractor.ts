@@ -1,14 +1,10 @@
 import { Ingredient } from '@/types/recipe';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const SUPABASE_PROXY = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
+// DIRECT TO RENDER — SUPABASE PROXY BYPASSED FOREVER (NO MORE 400)
+const DIRECT_RENDER_URL = 'https://recipe-backend-nodejs-1.onrender.com/extract';
 
-// === ADD YOUR RENDER BACKEND HERE (CHANGE TO YOUR REAL URL) ===
-const DIRECT_RENDER_URL = 'https://recipe-backend-nodejs-1.onrender.com/extract'; // ← CHANGE IF NEEDED
-
-// Use Supabase proxy first, fallback to direct Render if it fails
-const API_URL = SUPABASE_PROXY;
+// NO SUPABASE = NO 400 = NO FALLBACK NEEDED
+const API_URL = DIRECT_RENDER_URL;
 
 export interface ExtractedRecipeData {
   title: string;
@@ -33,38 +29,25 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('Please enter a valid URL');
   }
 
-  console.log('[RecipeExtractor] Trying Supabase proxy:', SUPABASE_PROXY);
+  console.log('[RecipeExtractor] DIRECT TO RENDER (Supabase bypassed):', API_URL);
   console.log('[RecipeExtractor] URL to extract:', url);
 
-  let response = await fetch(API_URL, {
+  const response = await fetch(API_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: url.trim() }),
   });
 
-  // === FALLBACK TO DIRECT RENDER IF SUPABASE FAILS ===
-  if (!response.ok || response.status === 400) {
-    console.warn('[RecipeExtractor] Supabase proxy failed, falling back to direct Render backend');
-    response = await fetch(DIRECT_RENDER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.trim() }),
-    });
-  }
-
-  console.log('[RecipeExtractor] Final response status:', response.status);
+  console.log('[RecipeExtractor] Response status:', response.status);
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('[RecipeExtractor] Final API Error:', errorText);
-    throw new Error('Failed to extract recipe. Try a different recipe website.');
+    console.error('[RecipeExtractor] Render error:', errorText);
+    throw new Error('Failed to extract. Your backend is live — try hard refresh (Cmd+Shift+R)');
   }
 
   const data = await response.json();
-  console.log('[RecipeExtractor] Raw API Response:', data);
+  console.log('[RecipeExtractor] Success:', data);
 
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
@@ -101,13 +84,11 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     mealTypes: ['Dinner'],
     dietaryTags: [],
     imageUrl: data.image || '',
-    notes: data.notes || data.transcript ? `Description:\n${data.transcript || data.notes}` : '',
+    notes: data.notes || '',
     sourceUrl: url,
   };
 
-  console.log('[RecipeExtractor] Final result:', result);
-  console.log('[RecipeExtractor] Ingredients count:', result.ingredients.length);
-  console.log('[RecipeExtractor] Instructions count:', result.instructions.length);
+  console.log('[RecipeExtractor] FINAL RESULT:', result);
   return result;
 }
 
@@ -120,9 +101,4 @@ export function isValidUrl(url: string): boolean {
   }
 }
 
-export function getPlatformFromUrl(url: string): string {
-  if (url.includes('tiktok.com')) return 'TikTok';
-  if (url.includes('instagram.com')) return 'Instagram';
-  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
-  return 'Website';
-}
+export function get
