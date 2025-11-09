@@ -1,4 +1,3 @@
-# SHAWN FINAL FIXED NOV 9 2025 - COOKIES WORK - NO WILD_MODE - CORS 100% - IG REELS WORK
 import os
 import re
 import json
@@ -6,25 +5,18 @@ import requests
 import subprocess
 import sys
 import tempfile
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from recipe_scrapers import scrape_me, scrape_html
+from recipe_scrapers import scrape_me
 import yt_dlp
 from openai import OpenAI
 
-# UPDATE YT-DLP
-def update_ytdlp():
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
-        print("YT-DLP UPDATED NOV 9 2025")
-    except: pass
-update_ytdlp()
+subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
 
 app = FastAPI()
 
-# PERFECT CORS - NO MORE 405 OR BLOCKED
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -35,18 +27,12 @@ app.add_middleware(
     max_age=600,
 )
 
-# HANDLE OPTIONS MANUALLY FOR EXTRA SAFETY
 @app.options("/extract")
-async def options_extract():
-    return JSONResponse(content={}, headers={
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "*",
-    })
+async def options():
+    return JSONResponse(content={}, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"})
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# YOUR MAC COOKIES - FIXED FORMAT
 INSTAGRAM_COOKIES = """
 # Netscape HTTP Cookie File
 .instagram.com	TRUE	/	FALSE	1733875200	csrftoken	abxvXW3Nl1NZES5GKhSebmYt7chBhJcK
@@ -64,71 +50,38 @@ class ExtractRequest(BaseModel):
     url: str
 
 def parse_with_ai(text: str):
-    if not text or not text.strip(): return [], [], ""
-    prompt = f"Extract recipe ONLY JSON {{ingredients: [], instructions: [], notes: ''}} from: {text[:14000]}"
+    if not text.strip(): return [], [], ""
+    prompt = f"Extract ONLY JSON {{ingredients: [], instructions: [], notes: \"\"}} from: {text[:14000]}"
     try:
-        resp = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": prompt}],
-            temperature=0.1,
-            max_tokens=800
-        )
-        match = re.search(r'\{.*\}', resp.choices[0].message.content, re.DOTALL)
-        if match:
-            data = json.loads(match.group())
-            return data.get("ingredients", []), data.get("instructions", []), data.get("notes", "")
-    except Exception as e:
-        print("AI parse failed:", e)
+        resp = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "system", "content": prompt}], temperature=0.1)
+        m = re.search(r'\{.*\}', resp.choices[0].message.content, re.DOTALL)
+        if m: data = json.loads(m.group()); return data.get("ingredients", []), data.get("instructions", []), data.get("notes", "")
+    except: pass
     return [], [], ""
 
 @app.post("/extract")
-async def extract_recipe(request: ExtractRequest):
+async def extract(request: ExtractRequest):
     url = request.url.strip()
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36',
-        'Referer': 'https://www.google.com/',
-    }
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 
-    # 1. RECIPE-SCRAPERS - NO WILD_MODE (REMOVED)
     try:
         scraper = scrape_me(url, headers=headers)
         data = scraper.to_json()
-        return {
-            "title": data.get("title", "Untitled"),
-            "ingredients": data.get("ingredients", []),
-            "instructions": data.get("instructions", "").split("\n"),
-            "image": data.get("image", ""),
-            "yield": data.get("yields", ""),
-            "time": data.get("total_time", 0),
-            "notes": "Scraped successfully"
-        }
+        return {"title": data.get("title"), "ingredients": data.get("ingredients", []), "instructions": data.get("instructions", "").split("\n"), "image": data.get("image", ""), "notes": "Scraped"}
     except Exception as e:
-        print(f"Scrape failed: {e}")
+        print(e)
 
-    # 2. AI FROM HTML
     try:
         html = requests.get(url, headers=headers, timeout=20).text
         ings, inst, notes = parse_with_ai(html)
-        if ings or inst:
-            return {"title": "AI Parsed", "ingredients": ings, "instructions": inst, "notes": notes}
+        if ings or inst: return {"title": "AI", "ingredients": ings, "instructions": inst, "notes": notes}
     except: pass
 
-    # 3. VIDEO WITH YOUR COOKIES
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'geo_bypass': True,
-        'http_headers': {
-            'User-Agent': 'Instagram 219.0.0.12.117 Android',
-            'x-ig-app-id': '936619743392459',
-        },
-    }
-
+    ydl_opts = {'quiet': True, 'no_warnings': True, 'geo_bypass': True, 'http_headers': {'User-Agent': 'Instagram 219.0.0.12.117 Android', 'x-ig-app-id': '936619743392459'}}
     cookie_file = None
     if INSTAGRAM_COOKIES.strip():
         temp = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
-        temp.write(INSTAGRAM_COOKIES)
-        temp.close()
+        temp.write(INSTAGRAM_COOKIES); temp.close()
         cookie_file = temp.name
         ydl_opts['cookiefile'] = cookie_file
 
@@ -137,20 +90,12 @@ async def extract_recipe(request: ExtractRequest):
             info = ydl.extract_info(url, download=False)
             text = f"{info.get('description', '')}\n{info.get('title', '')}"
             ings, inst, notes = parse_with_ai(text)
-            return {
-                "title": info.get('title', 'Video Recipe'),
-                "ingredients": ings,
-                "instructions": inst,
-                "image": info.get('thumbnail', ''),
-                "time": info.get('duration', 0),
-                "notes": f"IG REEL WORKED WITH YOUR COOKIES NOV 9 2025 • {notes}"
-            }
+            return {"title": info.get('title', 'Reel'), "ingredients": ings, "instructions": inst, "image": info.get('thumbnail', ''), "notes": f"MAC COOKIES WIN NOV 9 • {notes}"}
     except Exception as e:
-        raise HTTPException(400, f"Video failed: {str(e)}")
+        raise HTTPException(400, str(e))
     finally:
-        if cookie_file and os.path.exists(cookie_file):
-            os.unlink(cookie_file)
+        if cookie_file and os.path.exists(cookie_file): os.unlink(cookie_file)
 
 @app.get("/")
 async def root():
-    return {"message": "SHAWN FINAL FIXED NOV 9 2025 - COOKIES WORK - NO WILD_MODE - IG REELS LIVE"}
+    return {"message": "SHAWN GOD MODE NOV 9 2025 - CACHE BUSTER 999999 - MAC COOKIES + CORS FIXED - CHATGPT DEFEATED"}
