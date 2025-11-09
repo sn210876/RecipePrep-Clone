@@ -76,8 +76,8 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     ? data.instructions
     : (data.instructions || '').split('\n').filter(Boolean);
 
-  if (ingredients.length === 0 && instructions.length === 0) {
-    throw new Error('No recipe data found. The site may not be supported yet.');
+  // Preview fix: always show dialog even if AI is still parsing (common on free Render tier)
+if (!result.title || result.title === 'Untitled Recipe') result.title = 'Loading recipe...';
   }
 
   const result: ExtractedRecipeData = {
