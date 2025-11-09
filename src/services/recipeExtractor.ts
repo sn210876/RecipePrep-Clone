@@ -71,26 +71,26 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     });
   };
 
-  const ingredients = parseIngredients(data.recipe?.ingredients || []);
-  let instructions = data.recipe?.instructions || [];
+  const ingredients = parseIngredients(data.ingredients || []);
+  let instructions = data.instructions || [];
   if (typeof instructions === 'string') {
     instructions = instructions.split('\n').map((s: string) => s.trim()).filter((s: string) => s);
   }
 
   const result: ExtractedRecipeData = {
-    title: data.recipe?.title || 'Untitled Recipe',
+    title: data.title || 'Untitled Recipe',
     description: 'Extracted recipe',
-    creator: data.recipe?.author || 'Unknown',
+    creator: data.author || 'Unknown',
     ingredients,
     instructions,
-    prepTime: String(data.recipe?.prep_time || 30),
-    cookTime: String(data.recipe?.cook_time || 45),
-    servings: String(data.recipe?.servings || '4'),
+    prepTime: String(data.prep_time || 30),
+    cookTime: String(data.cook_time || 45),
+    servings: String(data.yield || '4'),
     cuisineType: 'Global',
     difficulty: 'Medium',
     mealTypes: ['Dinner'],
     dietaryTags: [],
-    imageUrl: data.imageUrl || '',
+    imageUrl: data.image || '',
     notes: data.transcript ? `Description:\n${data.transcript}` : '',
     sourceUrl: url,
   };
