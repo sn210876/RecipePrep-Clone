@@ -1,7 +1,8 @@
 import { Ingredient } from '@/types/recipe';
 
-// YOUR NEW PYTHON BACKEND WITH AI PARSING
-const API_URL = 'https://recipe-backend-nodejs-1.onrender.com/extract';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 export interface ExtractedRecipeData {
   title: string;
@@ -31,7 +32,10 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const response = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    },
     body: JSON.stringify({ url: url.trim() }),
   });
 
@@ -64,33 +68,29 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     });
   };
 
-  const ingredients = parseIngredients(data.ingredients || []);
-  const instructions = Array.isArray(data.instructions)
-    ? data.instructions
-    : (data.instructions || '').split('\n').filter(Boolean);
+  const ingredients = parseIngredients(data.recipe?.ingredients || []);
+  let instructions = data.recipe?.instructions || [];
+  if (typeof instructions === 'string') {
+    instructions = instructions.split('\n').map((s: string) => s.trim()).filter((s: string) => s);
+  }
 
   const result: ExtractedRecipeData = {
-    title: data.title || 'Untitled Recipe',
+    title: data.recipe?.title || 'Untitled Recipe',
     description: 'Extracted recipe',
-    creator: 'Auto-extracted',
+    creator: data.recipe?.author || 'Unknown',
     ingredients,
     instructions,
-    prepTime: data.time ? `${data.time} min` : '30 min',
-    cookTime: data.time ? `${data.time} min` : '45 min',
-    servings: data.yield || '4',
+    prepTime: String(data.recipe?.prep_time || 30),
+    cookTime: String(data.recipe?.cook_time || 45),
+    servings: String(data.recipe?.servings || '4'),
     cuisineType: 'Global',
     difficulty: 'Medium',
     mealTypes: ['Dinner'],
     dietaryTags: [],
-    imageUrl: data.image || '',
-    notes: data.notes || '',
+    imageUrl: data.imageUrl || '',
+    notes: data.transcript ? `Description:\n${data.transcript}` : '',
     sourceUrl: url,
   };
-
-  // Preview fix: always show dialog even on free Render tier wake-up
-  if (!result.title || result.title === 'Untitled Recipe') {
-    result.title = 'Loading recipe...';
-  }
 
   console.log('[RecipeExtractor] Final result:', result);
   console.log('[RecipeExtractor] Ingredients count:', result.ingredients.length);
