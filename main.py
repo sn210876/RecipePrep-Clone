@@ -100,14 +100,28 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as ai_e:
         print(f"AI fallback failed: {ai_e}")
     
-    # Videos — SAME MOBILE BYPASS AS BEFORE
+       # Videos — INSTAGRAM 100% BYPASS NO COOKIES EVER (MOBILE + CLOUDFLARE KILLER)
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
+        'extract_flat': False,
         'geo_bypass': True,
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
             'Referer': 'https://www.instagram.com/',
+            'Origin': 'https://www.instagram.com',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'TE': 'trailers',
+            'Priority': 'u=0, i',
         },
     }
     
