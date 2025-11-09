@@ -92,7 +92,7 @@ This is more reliable than automated extraction and gives you control over the r
 ## API Request Format
 
 ```json
-POST https://recipeapi-py.onrender.com/extract
+POST https://recipe-backend-nodejs-1.onrender.com/extract
 Content-Type: application/json
 
 {
