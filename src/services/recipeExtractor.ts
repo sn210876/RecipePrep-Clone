@@ -76,6 +76,10 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     ? data.instructions
     : (data.instructions || '').split('\n').filter(Boolean);
 
+  if (ingredients.length === 0 && instructions.length === 0) {
+    throw new Error('No recipe data found. The site may not be supported yet.');
+  }
+
   const result: ExtractedRecipeData = {
     title: data.title || 'Untitled Recipe',
     description: 'Extracted recipe',
@@ -115,4 +119,4 @@ export function getPlatformFromUrl(url: string): string {
   if (url.includes('instagram.com')) return 'Instagram';
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
   return 'Website';
-}s
+}
