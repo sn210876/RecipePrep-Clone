@@ -101,4 +101,9 @@ export function isValidUrl(url: string): boolean {
   }
 }
 
-export function get
+export function getPlatformFromUrl(url: string): string {
+  if (url.includes('tiktok.com')) return 'TikTok';
+  if (url.includes('instagram.com')) return 'Instagram';
+  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+  return 'Website';
+}
