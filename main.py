@@ -1,12 +1,13 @@
 import os
 import json
 import re
+import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from recipe_scrapers import scrape_me, NoSchemaFound
+from recipe_scrapers import scrape_me
 import yt_dlp
 from openai import OpenAI
-from typing import Optional, List
+from typing import List
 
 app = FastAPI()
 
@@ -16,18 +17,16 @@ class ExtractRequest(BaseModel):
     url: str
 
 def parse_with_ai(transcript: str):
-    """Use GPT-4o-mini to parse transcript into recipe structure"""
     if not transcript.strip():
         return None, None, None
     
     prompt = f"""
-    Extract a complete recipe from this video transcript. Return ONLY valid JSON with this exact structure:
+    Extract a complete recipe from this video transcript. Return ONLY valid JSON:
     {{
         "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt"],
         "instructions": ["Preheat oven to 350°F", "Mix ingredients", "Bake 30 minutes"],
-        "notes": "Any additional tips or context"
+        "notes": "Any tips"
     }}
-    
     Transcript:
     {transcript}
     """
@@ -36,11 +35,10 @@ def parse_with_ai(transcript: str):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "system", "content": prompt}],
-            temperature=0.3,
+            temperature=0.2,
             max_tokens=1000
         )
         content = response.choices[0].message.content
-        # Extract JSON from response
         json_match = re.search(r'\{.*\}', content, re.DOTALL)
         if json_match:
             data = json.loads(json_match.group())
@@ -51,29 +49,30 @@ def parse_with_ai(transcript: str):
             )
         return None, None, None
     except Exception as e:
-        print(f"OpenAI parsing error: {e}")
+        print(f"OpenAI error: {e}")
         return None, None, None
 
 @app.post("/extract")
 async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
     
-    # Try recipe-scrapers first (for websites)
+    # Try recipe-scrapers (websites)
     try:
         scraper = scrape_me(url, wild_mode=True)
+        scraper_data = scraper.to_json()
         return {
-            "title": scraper.title() or "Untitled Recipe",
-            "ingredients": scraper.ingredients(),
-            "instructions": scraper.instructions().split('\n') if scraper.instructions() else [],
-            "image": scraper.image(),
-            "yield": scraper.yields() or "",
-            "time": scraper.total_time() or 0,
+            "title": scraper_data.get("title", "Untitled"),
+            "ingredients": scraper_data.get("ingredients", []),
+            "instructions": scraper_data.get("instructions", "").split("\n") if scraper_data.get("instructions") else [],
+            "image": scraper_data.get("image", ""),
+            "yield": scraper_data.get("yields", ""),
+            "time": scraper_data.get("total_time", 0),
             "notes": ""
         }
     except Exception as e:
         print(f"Scrapers failed: {e}")
     
-    # Fall back to yt-dlp for videos
+    # Fallback: yt-dlp for videos
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -88,24 +87,20 @@ async def extract_recipe(request: ExtractRequest):
             description = info.get('description', '')
             transcript = ""
             
-            # Try to get auto subtitles
+            # Get subtitles
             if info.get('automatic_captions'):
-                for lang in ['en', 'en-US', 'en-UK']:
+                for lang in ['en', 'en-US']:
                     if lang in info['automatic_captions']:
                         subs = info['automatic_captions'][lang]
                         if subs:
-                            transcript_url = subs[0]['url']
-                            import requests
-                            sub_data = requests.get(transcript_url).text
-                            # Simple SRT to text
-                            lines = [line.strip() for line in sub_data.split('\n') if not line.strip().isdigit() and '-->' not in line]
+                            sub_url = subs[0]['url']
+                            sub_data = requests.get(sub_url).text
+                            lines = [l.strip() for l in sub_data.split('\n') if not l.strip().isdigit() and '-->' not in l and l.strip()]
                             transcript = ' '.join(lines)
                             break
             
-            # Combine description + transcript
             full_text = f"{description}\n\n{transcript}".strip()
             
-            # Use AI to parse if we have text
             if full_text:
                 ai_ingredients, ai_instructions, ai_notes = parse_with_ai(full_text)
                 if ai_ingredients and ai_instructions:
@@ -116,18 +111,17 @@ async def extract_recipe(request: ExtractRequest):
                         "image": info.get('thumbnail', ''),
                         "yield": "",
                         "time": info.get('duration', 0) or 0,
-                        "notes": f"Extracted from video transcript:\n{full_text[:500]}{'...' if len(full_text) > 500 else ''}"
+                        "notes": f"AI Extracted from transcript:\n{full_text[:500]}..."
                     }
             
-            # Fallback: return what we have
             return {
                 "title": title,
                 "ingredients": [],
                 "instructions": [],
                 "image": info.get('thumbnail', ''),
                 "yield": "",
-                "time": info.get('duration', 0) or 0,
-                "notes": f"Video description:\n{description}\n\nNo structured recipe found. AI parsing available with OpenAI key."
+                "time": 0,
+                "notes": f"Video description:\n{description}\n\nNo recipe found in transcript."
             }
             
     except Exception as e:
