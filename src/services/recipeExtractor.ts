@@ -2,7 +2,13 @@ import { Ingredient } from '@/types/recipe';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
+const SUPABASE_PROXY = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
+
+// === ADD YOUR RENDER BACKEND HERE (CHANGE TO YOUR REAL URL) ===
+const DIRECT_RENDER_URL = 'https://recipe-backend-nodejs-1.onrender.com/extract'; // ← CHANGE IF NEEDED
+
+// Use Supabase proxy first, fallback to direct Render if it fails
+const API_URL = SUPABASE_PROXY;
 
 export interface ExtractedRecipeData {
   title: string;
@@ -27,10 +33,10 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('Please enter a valid URL');
   }
 
-  console.log('[RecipeExtractor] Calling API:', API_URL);
+  console.log('[RecipeExtractor] Trying Supabase proxy:', SUPABASE_PROXY);
   console.log('[RecipeExtractor] URL to extract:', url);
 
-  const response = await fetch(API_URL, {
+  let response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -39,22 +45,26 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     body: JSON.stringify({ url: url.trim() }),
   });
 
-  console.log('[RecipeExtractor] Response status:', response.status);
+  // === FALLBACK TO DIRECT RENDER IF SUPABASE FAILS ===
+  if (!response.ok || response.status === 400) {
+    console.warn('[RecipeExtractor] Supabase proxy failed, falling back to direct Render backend');
+    response = await fetch(DIRECT_RENDER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url.trim() }),
+    });
+  }
+
+  console.log('[RecipeExtractor] Final response status:', response.status);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[RecipeExtractor] Final API Error:', errorText);
+    throw new Error('Failed to extract recipe. Try a different recipe website.');
+  }
 
   const data = await response.json();
   console.log('[RecipeExtractor] Raw API Response:', data);
-
-  if (!response.ok) {
-    console.error('[RecipeExtractor] API Error:', data);
-    if (response.status === 404) {
-      throw new Error('Backend not found.');
-    }
-    const errorDetail = data.detail || '';
-    if (errorDetail.includes('Unsupported URL') || errorDetail.includes('not supported')) {
-      throw new Error('This recipe site is not supported yet. Try BBC Good Food, Food Network, or Serious Eats.');
-    }
-    throw new Error('Failed to extract recipe. Try a different recipe website.');
-  }
 
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
@@ -83,22 +93,21 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     creator: data.author || 'Unknown',
     ingredients,
     instructions,
-    prepTime: String(data.prep_time || 30),
-    cookTime: String(data.cook_time || 45),
+    prepTime: String(data.prep_time || data.time || 30),
+    cookTime: String(data.cook_time || data.time || 45),
     servings: String(data.yield || '4'),
     cuisineType: 'Global',
     difficulty: 'Medium',
     mealTypes: ['Dinner'],
     dietaryTags: [],
     imageUrl: data.image || '',
-    notes: data.transcript ? `Description:\n${data.transcript}` : '',
+    notes: data.notes || data.transcript ? `Description:\n${data.transcript || data.notes}` : '',
     sourceUrl: url,
   };
 
   console.log('[RecipeExtractor] Final result:', result);
   console.log('[RecipeExtractor] Ingredients count:', result.ingredients.length);
   console.log('[RecipeExtractor] Instructions count:', result.instructions.length);
-
   return result;
 }
 
