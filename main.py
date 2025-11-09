@@ -1,17 +1,16 @@
-`python
 import os
 import re
+import json
 import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from recipe_scrapers import scrape_me
 import yt_dlp
 from openai import OpenAI
-from typing import List
 
 app = FastAPI()
 
-# Fixed for openai 1.51.0 — no proxies argument
+# Works with openai 1.51.0 + httpx 0.27.2
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class ExtractRequest(BaseModel):
@@ -57,32 +56,27 @@ def parse_with_ai(transcript: str):
 async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
     
-    # Websites — recipe-scrapers
+    # Websites
     try:
         scraper = scrape_me(url, wild_mode=True)
-        scraper_data = scraper.to_json()
+        data = scraper.to_json()
         return {
-            "title": scraper_data.get("title", "Untitled"),
-            "ingredients": scraper_data.get("ingredients", []),
-            "instructions": scraper_data.get("instructions", "").split("\n") if scraper_data.get("instructions") else [],
-            "image": scraper_data.get("image", ""),
-            "yield": scraper_data.get("yields", ""),
-            "time": scraper_data.get("total_time", 0),
+            "title": data.get("title", "Untitled"),
+            "ingredients": data.get("ingredients", []),
+            "instructions": (data.get("instructions") or "").split("\n"),
+            "image": data.get("image", ""),
+            "yield": data.get("yields", ""),
+            "time": data.get("total_time", 0),
             "notes": ""
         }
     except Exception as e:
-        print(f"Website scrape failed: {e}")
+        print(f"Scrape failed: {e}")
     
-    # Videos — yt-dlp + AI parsing
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-    }
-    
+    # Videos
+    ydl_opts = {'quiet': True, 'no_warnings': True}
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-            
             title = info.get('title', 'Video Recipe')
             description = info.get('description', '')
             transcript = ""
@@ -99,33 +93,20 @@ async def extract_recipe(request: ExtractRequest):
                             break
             
             full_text = f"{description}\n\n{transcript}".strip()
-            
-            if full_text:
-                ai_ingredients, ai_instructions, ai_notes = parse_with_ai(full_text)
-                if ai_ingredients or ai_instructions:
-                    return {
-                        "title": title,
-                        "ingredients": ai_ingredients,
-                        "instructions": ai_instructions,
-                        "image": info.get('thumbnail', ''),
-                        "yield": "",
-                        "time": info.get('duration', 0) or 0,
-                        "notes": f"AI Extracted:\n{ai_notes}\n\nTranscript:\n{full_text[:500]}..."
-                    }
+            ai_ingredients, ai_instructions, ai_notes = parse_with_ai(full_text)
             
             return {
                 "title": title,
-                "ingredients": [],
-                "instructions": [],
+                "ingredients": ai_ingredients or [],
+                "instructions": ai_instructions or [],
                 "image": info.get('thumbnail', ''),
                 "yield": "",
-                "time": 0,
-                "notes": f"Video description:\n{description}"
+                "time": info.get('duration', 0) or 0,
+                "notes": f"AI Extracted: {ai_notes}\n\nTranscript: {full_text[:500]}..."
             }
-            
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Video extraction failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed: {str(e)}")
 
 @app.get("/")
 async def root():
-    return {"message": "UNIVERSAL EXTRACTOR LIVE + AI VIDEO PARSING (openai 1.51.0 fixed)"}
+    return {"message": "UNIVERSAL EXTRACTOR LIVE - NOV 8 2025 - PROXIES FIXED"}
