@@ -51,12 +51,12 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
       const trimmed = ing.trim();
-      if (!trimmed) return { quantity: '', unit: '', name: '' };
+      if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
       const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
       const quantity = quantityMatch ? quantityMatch[1].trim() : '';
       let rest = trimmed.slice(quantity.length).trim();
       const unitMatch = rest.match(/^([a-zA-Z]+\.?\s*[a-zA-Z]*)\s+/);
-      const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : '';
+      const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : 'cup';
       if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
       const name = rest || trimmed;
       return { quantity, unit, name };

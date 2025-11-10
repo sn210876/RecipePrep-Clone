@@ -136,10 +136,22 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const handleAcceptExtraction = () => {
     if (!extractedData) return;
 
-    console.log('[AddRecipe] Accepting extraction, ingredients:', extractedData.ingredients);
+    console.log('[AddRecipe] Accepting extraction');
+    console.log('[AddRecipe] Extracted ingredients:', extractedData.ingredients);
+    console.log('[AddRecipe] Extracted instructions:', extractedData.instructions);
 
     setTitle(extractedData.title);
-    setIngredients(extractedData.ingredients);
+
+    // Ensure ingredients have proper structure
+    const normalizedIngredients = extractedData.ingredients.map(ing => ({
+      quantity: ing.quantity || '',
+      unit: ing.unit || 'cup',
+      name: ing.name || ''
+    }));
+
+    console.log('[AddRecipe] Normalized ingredients:', normalizedIngredients);
+    setIngredients(normalizedIngredients);
+
     setInstructions(extractedData.instructions);
     setPrepTime(extractedData.prepTime);
     setCookTime(extractedData.cookTime);
@@ -520,7 +532,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Ingredients *</CardTitle>
-              <CardDescription>List all ingredients with quantities</CardDescription>
+              <CardDescription>List all ingredients (quantities optional)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {ingredients.map((ingredient, index) => (
