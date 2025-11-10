@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRecipes } from '../context/RecipeContext';
 import { Recipe, MealPlanEntry } from '../types/recipe';
 import { Card, CardContent } from '../components/ui/card';
@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../components/ui/accordion';
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,9 @@ export function MealPlanner() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedMealType, setSelectedMealType] = useState<MealType | ''>('');
+  const [showSlotDropdown, setShowSlotDropdown] = useState(false);
+  const [slotDate, setSlotDate] = useState<Date | null>(null);
+  const [slotMealType, setSlotMealType] = useState<MealType | null>(null);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -68,6 +72,22 @@ export function MealPlanner() {
   useEffect(() => {
     loadMealPlans();
   }, [userId, currentWeekStart, weeksToShow, state.mealPlan, state.savedRecipes]);
+
+  const recipesByCuisine = useMemo(() => {
+    const grouped: Record<string, Recipe[]> = {};
+
+    state.savedRecipes.forEach(recipe => {
+      const cuisine = recipe.cuisineType || 'Other';
+      if (!grouped[cuisine]) {
+        grouped[cuisine] = [];
+      }
+      grouped[cuisine].push(recipe);
+    });
+
+    return Object.entries(grouped)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([cuisine, recipes]) => ({ cuisine, recipes }));
+  }, [state.savedRecipes]);
 
   const loadMealPlans = async () => {
     setLoading(true);
@@ -213,6 +233,24 @@ export function MealPlanner() {
     setSelectedMealType('');
   };
 
+  const handleOpenSlotDropdown = (date: Date, mealType: MealType) => {
+    setSlotDate(date);
+    setSlotMealType(mealType);
+    setShowSlotDropdown(true);
+  };
+
+  const handleAddRecipeToSlot = async (recipeId: string) => {
+    if (!slotDate || !slotMealType) return;
+
+    const recipe = state.savedRecipes.find(r => r.id === recipeId);
+    if (!recipe) return;
+
+    await handleDrop(slotDate, slotMealType, recipe);
+    setShowSlotDropdown(false);
+    setSlotDate(null);
+    setSlotMealType(null);
+  };
+
   const getDaysToShow = (): Date[] => {
     const days: Date[] = [];
     const totalDays = weeksToShow * 7;
@@ -327,7 +365,7 @@ export function MealPlanner() {
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="p-4 space-y-3">
+            <div className="p-4">
               {state.savedRecipes.length === 0 ? (
                 <div className="text-center py-8 px-4">
                   <Layers className="w-12 h-12 text-slate-300 mx-auto mb-3" />
@@ -336,7 +374,18 @@ export function MealPlanner() {
                   </p>
                 </div>
               ) : (
-                state.savedRecipes.map(recipe => (
+                <Accordion type="multiple" defaultValue={recipesByCuisine.map(g => g.cuisine)} className="space-y-2">
+                  {recipesByCuisine.map(({ cuisine, recipes }) => (
+                    <AccordionItem key={cuisine} value={cuisine} className="border rounded-lg px-4 bg-slate-50">
+                      <AccordionTrigger className="hover:no-underline py-3">
+                        <div className="flex items-center justify-between w-full pr-2">
+                          <span className="font-semibold text-slate-900">{cuisine}</span>
+                          <Badge variant="secondary">{recipes.length}</Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-3">
+                        <div className="space-y-3 pt-2">
+                          {recipes.map(recipe => (
                   <div
                     key={recipe.id}
                     className="group"
@@ -405,7 +454,12 @@ export function MealPlanner() {
                       </CardContent>
                     </Card>
                   </div>
-                ))
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
               )}
             </div>
           </ScrollArea>
@@ -554,15 +608,26 @@ export function MealPlanner() {
                                   <div className="text-xs text-slate-400">
                                     Drop recipe here
                                   </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => suggestRecipe(day, mealType)}
-                                    className="h-7 text-xs px-2 gap-1 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                  >
-                                    <Sparkles className="w-3 h-3" />
-                                    Suggest
-                                  </Button>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleOpenSlotDropdown(day, mealType)}
+                                      className="h-7 text-xs px-2 gap-1 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                      Add
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => suggestRecipe(day, mealType)}
+                                      className="h-7 text-xs px-2 gap-1 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                    >
+                                      <Sparkles className="w-3 h-3" />
+                                      Suggest
+                                    </Button>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -635,6 +700,91 @@ export function MealPlanner() {
               disabled={!selectedDate || !selectedMealType}
             >
               Add to Plan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSlotDropdown} onOpenChange={setShowSlotDropdown}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Select Recipe</DialogTitle>
+            <DialogDescription>
+              {slotDate && slotMealType && `Add a recipe for ${slotMealType} on ${format(slotDate, 'EEE, MMM d')}`}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[50vh]">
+            <div className="space-y-4 py-4">
+              {recipesByCuisine.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  No saved recipes. Save recipes from the Discover page first.
+                </div>
+              ) : (
+                <Accordion type="multiple" defaultValue={recipesByCuisine.map(g => g.cuisine)}>
+                  {recipesByCuisine.map(({ cuisine, recipes }) => (
+                    <AccordionItem key={cuisine} value={cuisine}>
+                      <AccordionTrigger>
+                        <div className="flex items-center justify-between w-full pr-2">
+                          <span className="font-semibold">{cuisine}</span>
+                          <Badge variant="secondary">{recipes.length}</Badge>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2 pt-2">
+                          {recipes.map(recipe => (
+                            <button
+                              key={recipe.id}
+                              onClick={() => handleAddRecipeToSlot(recipe.id)}
+                              className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                            >
+                              <div className="flex gap-3">
+                                {recipe.imageUrl && (
+                                  <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
+                                    <img
+                                      src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+                                        ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                                        : recipe.imageUrl}
+                                      alt={recipe.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-sm text-slate-900 mb-1">
+                                    {recipe.title}
+                                  </h3>
+                                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      <span>{recipe.prepTime + recipe.cookTime}m</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <Users className="w-3 h-3" />
+                                      <span>{recipe.servings}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </div>
+          </ScrollArea>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSlotDropdown(false);
+                setSlotDate(null);
+                setSlotMealType(null);
+              }}
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
