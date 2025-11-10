@@ -128,18 +128,18 @@ export function RecipeCard({ recipe, onSave, onCook }: RecipeCardProps) {
         <Button
           variant={isSaved ? "default" : "outline"}
           size="sm"
-          className={isSaved ? "flex-1 bg-rose-500 hover:bg-rose-600 text-white" : "flex-1 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all"}
+          className={isSaved ? "flex-1 bg-secondary hover:bg-secondary/90 text-white" : "flex-1 border-gray-300 hover:bg-primary hover:text-white transition-all"}
           onClick={(e) => {
             e.stopPropagation();
             onSave?.(recipe.id);
           }}
         >
           <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-white' : ''}`} />
-          {isSaved ? 'Saved' : 'Save'}
+          {isSaved ? 'Saved' : 'Add to Recipe'}
         </Button>
         <Button
           size="sm"
-          className="flex-1 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white shadow-md hover:shadow-lg transition-all"
+          className="flex-1 bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg transition-all"
           onClick={(e) => {
             e.stopPropagation();
             onCook?.(recipe.id);
