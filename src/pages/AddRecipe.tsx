@@ -136,6 +136,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const handleAcceptExtraction = () => {
     if (!extractedData) return;
 
+    console.log('[AddRecipe] Accepting extraction, ingredients:', extractedData.ingredients);
+
     setTitle(extractedData.title);
     setIngredients(extractedData.ingredients);
     setInstructions(extractedData.instructions);
@@ -172,10 +174,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     if (selectedMealTypes.length === 0) newErrors.mealTypes = 'Select at least one meal type';
 
     const validIngredients = ingredients.filter(
-      ing => ing.quantity.trim() && ing.name.trim()
+      ing => ing.name.trim()
     );
     if (validIngredients.length === 0) {
-      newErrors.ingredients = 'Add at least one complete ingredient';
+      newErrors.ingredients = 'Add at least one ingredient';
     }
 
     const validInstructions = instructions.filter(inst => inst.trim());
@@ -198,7 +200,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     }
 
     const validIngredients = ingredients.filter(
-      ing => ing.quantity.trim() && ing.name.trim()
+      ing => ing.name.trim()
     );
     const validInstructions = instructions.filter(inst => inst.trim());
 
@@ -352,10 +354,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 <div className="space-y-2">
                   <div className="relative w-full rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
                     <img
-                      src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`}
+                      src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
                       alt={title || 'Recipe'}
                       className="w-full h-64 object-cover"
                       onError={(e) => {
+                        console.error('[AddRecipe] Image failed to load:', imageUrl);
                         const parent = (e.target as HTMLImageElement).parentElement;
                         if (parent) {
                           parent.innerHTML = `
@@ -364,7 +367,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
                               <p class="text-sm font-medium">Image cannot be displayed</p>
-                              <p class="text-xs">(Image proxy failed)</p>
+                              <p class="text-xs">(Instagram images may not work)</p>
                             </div>
                           `;
                         }
@@ -671,10 +674,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                   {extractedData.imageUrl && (
                     <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
                       <img
-                        src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl)}`}
+                        src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl.replace(/&amp;/g, '&'))}`}
                         alt={extractedData.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
+                          console.error('[Preview] Image failed to load:', extractedData.imageUrl);
                           const parent = (e.target as HTMLImageElement).parentElement;
                           if (parent) {
                             parent.innerHTML = `
