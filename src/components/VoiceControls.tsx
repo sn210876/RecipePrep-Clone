@@ -301,7 +301,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
           size="lg"
           className={`relative flex-1 gap-3 transition-all ${
             isActive
-              ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/50'
+              ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/50'
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
           }`}
         >
@@ -311,8 +311,8 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
                 <Mic className="w-5 h-5" />
                 {isListening && (
                   <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-300 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                   </span>
                 )}
               </div>
@@ -339,30 +339,30 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       {isActive && (
         <>
           {isListening && (
-            <Card className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300">
+            <Card className="p-4 bg-orange-50 border-primary">
               <div className="flex items-center gap-3">
                 <div className="flex gap-1">
-                  <span className="w-1 h-8 bg-emerald-500 rounded-full animate-pulse" style={{ animationDelay: '0s' }}></span>
-                  <span className="w-1 h-8 bg-emerald-500 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></span>
-                  <span className="w-1 h-8 bg-emerald-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
-                  <span className="w-1 h-8 bg-emerald-500 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></span>
+                  <span className="w-1 h-8 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0s' }}></span>
+                  <span className="w-1 h-8 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></span>
+                  <span className="w-1 h-8 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
+                  <span className="w-1 h-8 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-emerald-900">Listening...</p>
+                  <p className="text-sm font-semibold text-gray-900">Listening...</p>
                   {transcript && (
-                    <p className="text-sm text-emerald-700 mt-1">"{transcript}"</p>
+                    <p className="text-sm text-gray-700 mt-1">"{transcript}"</p>
                   )}
                 </div>
-                <Volume2 className="w-5 h-5 text-emerald-600" />
+                <Volume2 className="w-5 h-5 text-primary" />
               </div>
             </Card>
           )}
 
           {showCommandFeedback && lastCommand && (
-            <Card className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 animate-in slide-in-from-bottom-2">
+            <Card className="p-3 bg-orange-50 border-primary animate-in slide-in-from-bottom-2">
               <div className="flex items-center gap-2">
-                <Check className="w-5 h-5 text-green-600" />
-                <p className="text-sm font-medium text-green-900">
+                <Check className="w-5 h-5 text-primary" />
+                <p className="text-sm font-medium text-gray-900">
                   Command recognized: "{lastCommand}"
                 </p>
               </div>

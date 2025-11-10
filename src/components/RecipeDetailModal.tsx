@@ -108,9 +108,9 @@ export function RecipeDetailModal({
   };
 
   const difficultyColors = {
-    Easy: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    Easy: 'bg-orange-100 text-orange-700 border-orange-200',
     Medium: 'bg-amber-100 text-amber-700 border-amber-200',
-    Hard: 'bg-rose-100 text-rose-700 border-rose-200',
+    Hard: 'bg-red-100 text-red-700 border-red-200',
   };
 
   return (
@@ -164,8 +164,8 @@ export function RecipeDetailModal({
 
             <div className="p-8">
               <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
-                  <div className="bg-emerald-500 p-3 rounded-lg">
+                <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-100">
+                  <div className="bg-primary p-3 rounded-lg">
                     <Clock className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -208,7 +208,7 @@ export function RecipeDetailModal({
                   <Button
                     size="lg"
                     onClick={() => setCookMode(true)}
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-lg py-7 gap-3 shadow-lg hover:shadow-xl transition-all"
+                    className="w-full bg-accent hover:bg-accent/90 text-white text-lg py-7 gap-3 shadow-lg hover:shadow-xl transition-all"
                   >
                     <PlayCircle className="w-7 h-7" />
                     Start Cooking
@@ -226,8 +226,8 @@ export function RecipeDetailModal({
                   onClick={handleSaveRecipe}
                   className={
                     isSaved
-                      ? 'gap-2 border-2 border-emerald-500 text-emerald-700 hover:bg-emerald-50'
-                      : 'gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600'
+                      ? 'gap-2 border-2 border-secondary text-secondary hover:bg-orange-50'
+                      : 'gap-2 bg-secondary hover:bg-secondary/90 text-white'
                   }
                 >
                   <Bookmark
@@ -251,7 +251,7 @@ export function RecipeDetailModal({
                 <Button
                   variant="outline"
                   onClick={handleAddToShoppingList}
-                  className="flex-1 gap-2 hover:bg-emerald-50 hover:border-emerald-500 hover:text-emerald-700"
+                  className="flex-1 gap-2 hover:bg-orange-50 hover:border-primary hover:text-primary"
                 >
                   <ShoppingCart className="w-4 h-4" />
                   Add to Shopping List
@@ -283,8 +283,8 @@ export function RecipeDetailModal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="bg-emerald-100 p-2 rounded-lg">
-                      <UtensilsCrossed className="w-5 h-5 text-emerald-600" />
+                    <div className="bg-orange-100 p-2 rounded-lg">
+                      <UtensilsCrossed className="w-5 h-5 text-primary" />
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900">
                       Ingredients
@@ -295,7 +295,7 @@ export function RecipeDetailModal({
                       {recipe.ingredients.map((ingredient, index) => (
                         <div
                           key={index}
-                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-emerald-50 transition-colors"
+                          className="flex items-start gap-3 p-3 rounded-lg hover:bg-orange-50 transition-colors"
                         >
                           <Checkbox
                             id={`ingredient-${index}`}
@@ -311,7 +311,7 @@ export function RecipeDetailModal({
                                 : ''
                             }`}
                           >
-                            <span className="font-semibold text-emerald-700">
+                            <span className="font-semibold text-primary">
                               {ingredient.quantity} {ingredient.unit}
                             </span>{' '}
                             {ingredient.name}
@@ -335,7 +335,7 @@ export function RecipeDetailModal({
                     <ol className="space-y-4">
                       {recipe.instructions.map((instruction, index) => (
                         <li key={index} className="flex gap-4">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-sm shadow-md">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-md">
                             {index + 1}
                           </div>
                           <p className="text-gray-700 pt-0.5 leading-relaxed">

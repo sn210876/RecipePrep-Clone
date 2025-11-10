@@ -150,8 +150,8 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
-            <div className="bg-emerald-100 p-3 rounded-lg">
-              <Clock className="w-6 h-6 text-emerald-600" />
+            <div className="bg-orange-100 p-3 rounded-lg">
+              <Clock className="w-6 h-6 text-primary" />
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Time</p>
@@ -196,7 +196,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
           <Button
             size="lg"
             onClick={() => setCookMode(true)}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-lg py-8 gap-3 shadow-lg hover:shadow-xl transition-all"
+            className="w-full bg-accent hover:bg-accent/90 text-white text-lg py-8 gap-3 shadow-lg hover:shadow-xl transition-all"
           >
             <PlayCircle className="w-7 h-7" />
             Start Cooking
@@ -216,7 +216,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
             <ul className="space-y-2">
               {recipe.ingredients.map((ingredient, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 mt-2" />
+                  <div className="w-2 h-2 rounded-full bg-primary mt-2" />
                   <span className="text-gray-700">
                     <span className="font-semibold">
                       {ingredient.quantity} {ingredient.unit}
@@ -237,7 +237,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
             <ol className="space-y-4">
               {recipe.instructions.map((instruction, index) => (
                 <li key={index} className="flex gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">
                     {index + 1}
                   </div>
                   <p className="text-gray-700 pt-1">{instruction}</p>
@@ -268,7 +268,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
                 setShowReviewForm(true);
                 setEditingReview(null);
               }}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-secondary hover:bg-secondary/90"
             >
               {userReview ? 'Edit Your Review' : 'Add Your Review'}
             </Button>

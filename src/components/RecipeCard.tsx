@@ -24,9 +24,9 @@ export function RecipeCard({ recipe, onSave, onCook }: RecipeCardProps) {
   const isSaved = state.savedRecipes.some(r => r.id === recipe.id);
 
   const difficultyColors = {
-    Easy: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    Easy: 'bg-orange-100 text-orange-700 border-orange-200',
     Medium: 'bg-amber-100 text-amber-700 border-amber-200',
-    Hard: 'bg-rose-100 text-rose-700 border-rose-200',
+    Hard: 'bg-red-100 text-red-700 border-red-200',
   };
 
   useEffect(() => {

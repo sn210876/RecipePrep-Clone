@@ -384,10 +384,10 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-hidden">
       <div className="h-full flex flex-col">
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-lg">
+        <div className="bg-primary text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-lg">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg sm:text-2xl font-bold truncate">{recipe.title}</h2>
-            <p className="text-emerald-100 text-xs sm:text-sm">
+            <p className="text-orange-100 text-xs sm:text-sm">
               Step {currentStep + 1} of {steps.length}
             </p>
           </div>
@@ -417,7 +417,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
 
         <div className="w-full bg-gray-200 h-1 sm:h-2">
           <div
-            className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-300"
+            className="bg-primary h-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -446,7 +446,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
             )}
 
             {voiceModeActive && (
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border-2 border-emerald-300 shadow-sm">
+              <div className="bg-orange-50 rounded-xl p-4 border-2 border-primary shadow-sm">
                 <VoiceControls
                   onCommand={handleVoiceCommand}
                   isActive={voiceModeActive}
@@ -460,7 +460,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-300 shadow-sm">
                 <Button
                   onClick={() => setVoiceModeActive(true)}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold"
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold"
                   size="lg"
                 >
                   Enable Voice Control for Hands-Free Cooking
@@ -474,7 +474,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                   {allIngredientsChecked ? (
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <CheckCircle2 className="w-3 h-3 text-primary" />
                   ) : (
                     <Circle className="w-3 h-3 text-gray-400" />
                   )}
@@ -490,7 +490,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                     key={index}
                     className={`flex items-center gap-3 p-2 sm:p-3 rounded-lg transition-all ${
                       checkedIngredients.has(index)
-                        ? 'bg-emerald-100 border border-emerald-300'
+                        ? 'bg-orange-100 border border-primary'
                         : 'bg-white border border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -533,7 +533,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                   : 'p-4 sm:p-8'
               } ${
                 checkedSteps.has(currentStep)
-                  ? 'border-emerald-300 bg-emerald-50'
+                  ? 'border-primary bg-orange-50'
                   : 'border-gray-200'
               }`}>
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -560,7 +560,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                         onClick={toggleTimer}
                         className={`gap-2 ${
                           timerActive && !timerPaused
-                            ? 'border-emerald-500 bg-emerald-50 hover:bg-emerald-100'
+                            ? 'border-primary bg-orange-50 hover:bg-orange-100'
                             : 'border-blue-300 hover:bg-blue-50'
                         }`}
                       >
@@ -590,12 +590,12 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                     className={`mb-4 sm:mb-6 p-4 sm:p-6 rounded-xl text-center ${
                       timeRemaining <= 10
                         ? 'bg-red-100 border-2 border-red-300 animate-pulse'
-                        : 'bg-gradient-to-br from-emerald-100 to-teal-100 border-2 border-emerald-300'
+                        : 'bg-orange-100 border-2 border-primary'
                     }`}
                   >
                     <div className="flex items-center justify-center gap-3">
-                      <Timer className={`w-4 h-4 sm:w-5 sm:h-5 ${timeRemaining <= 10 ? 'text-red-600' : 'text-emerald-600'}`} />
-                      <span className={`font-mono text-4xl sm:text-6xl font-bold ${timeRemaining <= 10 ? 'text-red-600' : 'text-emerald-600'}`}>
+                      <Timer className={`w-4 h-4 sm:w-5 sm:h-5 ${timeRemaining <= 10 ? 'text-red-600' : 'text-primary'}`} />
+                      <span className={`font-mono text-4xl sm:text-6xl font-bold ${timeRemaining <= 10 ? 'text-red-600' : 'text-primary'}`}>
                         {formatTime(timeRemaining)}
                       </span>
                     </div>
@@ -635,7 +635,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               size="lg"
               onClick={handleNextStep}
               disabled={currentStep === steps.length - 1}
-              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-6"
+              className="bg-primary hover:bg-primary/90 gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-6"
             >
               <span className="hidden sm:inline">Next</span>
               <span className="sm:hidden">Next</span>

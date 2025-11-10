@@ -59,13 +59,13 @@ export function StepVisualizer({ step }: StepVisualizerProps) {
 
   return (
     <Card className="overflow-hidden border-0 shadow-lg">
-      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6">
+      <div className="bg-orange-50 p-6">
         <div className="flex flex-col items-center text-center">
-          <div className="w-32 h-32 rounded-full bg-gradient-to-br from-white to-emerald-100 flex items-center justify-center mb-4 shadow-md">
+          <div className="w-32 h-32 rounded-full bg-gradient-to-br from-white to-orange-100 flex items-center justify-center mb-4 shadow-md">
             <span className="text-7xl">{stepIcon}</span>
           </div>
 
-          <div className="bg-emerald-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl mb-4 shadow-sm">
+          <div className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl mb-4 shadow-sm">
             {step.stepNumber}
           </div>
 
@@ -75,7 +75,7 @@ export function StepVisualizer({ step }: StepVisualizerProps) {
 
           {step.duration && (
             <div className="flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full shadow-sm">
-              <Clock className="w-4 h-4 text-emerald-600" />
+              <Clock className="w-4 h-4 text-primary" />
               <span className="font-medium">{step.duration}</span>
             </div>
           )}

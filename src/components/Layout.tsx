@@ -25,11 +25,11 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-amber-50">
+    <div className="min-h-screen bg-white">
       <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 border-b border-gray-200 p-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
               <ChefHat className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -51,7 +51,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                   }}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-all ${
                     isActive
-                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md'
+                      ? 'bg-primary text-white shadow-md'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
