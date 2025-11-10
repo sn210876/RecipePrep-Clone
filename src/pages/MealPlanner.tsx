@@ -45,14 +45,15 @@ export function MealPlanner() {
     const storedUserId = localStorage.getItem('userId');
     if (storedUserId) {
       setUserId(storedUserId);
+    } else {
+      // If no userId, still load meal plans
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (userId) {
-      loadMealPlans();
-    }
-  }, [userId, currentWeekStart, weeksToShow]);
+    loadMealPlans();
+  }, [userId, currentWeekStart, weeksToShow, state.mealPlan, state.savedRecipes]);
 
   const loadMealPlans = async () => {
     setLoading(true);

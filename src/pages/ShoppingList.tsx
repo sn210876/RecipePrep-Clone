@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '../components/ui/dialog';
 import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import {
   getDefaultCategories,
   type ShoppingListCategory,
@@ -26,10 +27,13 @@ export function ShoppingList() {
   const { state, dispatch } = useRecipes();
   const [categories, setCategories] = useState<ShoppingListCategory[]>(getDefaultCategories());
   const loading = false;
-  const [showAddCategoryDialog, setShowAddCategoryDialog] = useState(false);
+  const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemQuantity, setNewItemQuantity] = useState('');
+  const [newItemUnit, setNewItemUnit] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('');
 
   const items = state.shoppingList;
 
@@ -55,9 +59,29 @@ export function ShoppingList() {
     });
   }
 
-  function handleAddCategory() {
-    setShowAddCategoryDialog(false);
-    setNewCategoryName('');
+  function handleAddItem() {
+    if (!newItemName.trim() || !newItemCategory) return;
+
+    const newItem: ShoppingListItem = {
+      id: `item-${Date.now()}-${Math.random()}`,
+      name: newItemName.trim(),
+      quantity: parseFloat(newItemQuantity) || 1,
+      unit: newItemUnit || '',
+      categoryId: newItemCategory,
+      checked: false,
+      sourceRecipeIds: [],
+    };
+
+    dispatch({
+      type: 'ADD_SHOPPING_ITEM',
+      payload: newItem
+    });
+
+    setShowAddItemDialog(false);
+    setNewItemName('');
+    setNewItemQuantity('');
+    setNewItemUnit('');
+    setNewItemCategory('');
   }
 
   function handleMoveItem(itemId: string, newCategoryId: string) {
@@ -141,10 +165,10 @@ export function ShoppingList() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => setShowAddCategoryDialog(true)}
+            onClick={() => setShowAddItemDialog(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Category
+            Add Item
           </Button>
           {checkedCount > 0 && (
             <Button variant="outline" onClick={handleClearChecked}>
@@ -249,33 +273,71 @@ export function ShoppingList() {
         </div>
       )}
 
-      <Dialog open={showAddCategoryDialog} onOpenChange={setShowAddCategoryDialog}>
+      <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Category</DialogTitle>
+            <DialogTitle>Add Item</DialogTitle>
             <DialogDescription>
-              Create a new category to organize your shopping list items.
+              Add a new item to your shopping list.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="categoryName">Category Name</Label>
+              <Label htmlFor="itemName">Item Name *</Label>
               <Input
-                id="categoryName"
-                value={newCategoryName}
-                onChange={e => setNewCategoryName(e.target.value)}
-                placeholder="e.g., Spices, Condiments"
+                id="itemName"
+                value={newItemName}
+                onChange={e => setNewItemName(e.target.value)}
+                placeholder="e.g., Milk, Eggs"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="itemQuantity">Quantity</Label>
+                <Input
+                  id="itemQuantity"
+                  type="number"
+                  value={newItemQuantity}
+                  onChange={e => setNewItemQuantity(e.target.value)}
+                  placeholder="1"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="itemUnit">Unit</Label>
+                <Input
+                  id="itemUnit"
+                  value={newItemUnit}
+                  onChange={e => setNewItemUnit(e.target.value)}
+                  placeholder="e.g., cups, lbs"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="itemCategory">Category *</Label>
+              <Select value={newItemCategory} onValueChange={setNewItemCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setShowAddCategoryDialog(false)}
+              onClick={() => setShowAddItemDialog(false)}
             >
               Cancel
             </Button>
-            <Button onClick={handleAddCategory}>Add Category</Button>
+            <Button onClick={handleAddItem} disabled={!newItemName.trim() || !newItemCategory}>
+              Add Item
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
