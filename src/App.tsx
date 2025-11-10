@@ -12,17 +12,25 @@ import { Toaster } from './components/ui/sonner';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [discoverKey, setDiscoverKey] = useState(0);
+
+  const handleNavigate = (page: string) => {
+    if (page === 'discover') {
+      setDiscoverKey(prev => prev + 1);
+    }
+    setCurrentPage(page);
+  };
 
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home onNavigate={setCurrentPage} />;
+        return <Home onNavigate={handleNavigate} />;
       case 'discover':
-        return <Discover />;
+        return <Discover key={discoverKey} />;
       case 'my-recipes':
         return <MyRecipes />;
       case 'add-recipe':
-        return <AddRecipe onNavigate={setCurrentPage} />;
+        return <AddRecipe onNavigate={handleNavigate} />;
       case 'meal-planner':
         return <MealPlanner />;
       case 'shopping-list':
@@ -30,12 +38,12 @@ function AppContent() {
       case 'settings':
         return <Settings />;
       default:
-        return <Home onNavigate={setCurrentPage} />;
+        return <Home onNavigate={handleNavigate} />;
     }
   };
 
   return (
-    <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
+    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
       {renderPage()}
     </Layout>
   );

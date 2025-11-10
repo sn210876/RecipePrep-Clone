@@ -20,7 +20,9 @@ export function Discover() {
   useEffect(() => {
     const loadRecipes = async () => {
       try {
+        console.log('[Discover] Loading recipes from database...');
         const dbRecipes = await getAllPublicRecipes();
+        console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
         setAllRecipes([...mockRecipes, ...dbRecipes]);
       } catch (error) {
         console.error('Failed to load recipes:', error);
@@ -29,6 +31,19 @@ export function Discover() {
     };
 
     loadRecipes();
+
+    // Reload recipes when the component becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadRecipes();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const cuisines = useMemo(() => {
@@ -76,7 +91,7 @@ export function Discover() {
   }, [allRecipes, showAllHealthy]);
 
   const internationalRecipes = useMemo(() => {
-    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican'];
+    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese'];
     const filtered = allRecipes
       .filter((r) => cuisines.includes(r.cuisineType));
     return showAllInternational ? filtered : filtered.slice(0, 12);
