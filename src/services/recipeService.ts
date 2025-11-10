@@ -1,0 +1,145 @@
+import { createClient } from '@supabase/supabase-js';
+import { Recipe } from '@/types/recipe';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export interface DBRecipe {
+  id: string;
+  user_id?: string;
+  title: string;
+  ingredients: any;
+  instructions: any;
+  prep_time: number;
+  cook_time: number;
+  servings: number;
+  tags: any;
+  cuisine_type: string;
+  difficulty: string;
+  dietary_tags: any;
+  meal_type: any;
+  image_url?: string;
+  source_url?: string;
+  notes?: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+function dbRecipeToRecipe(dbRecipe: DBRecipe): Recipe {
+  return {
+    id: dbRecipe.id,
+    title: dbRecipe.title,
+    ingredients: dbRecipe.ingredients,
+    instructions: dbRecipe.instructions,
+    prepTime: dbRecipe.prep_time,
+    cookTime: dbRecipe.cook_time,
+    servings: dbRecipe.servings,
+    tags: dbRecipe.tags || [],
+    cuisineType: dbRecipe.cuisine_type,
+    difficulty: dbRecipe.difficulty as 'Easy' | 'Medium' | 'Hard',
+    dietaryTags: dbRecipe.dietary_tags || [],
+    mealType: dbRecipe.meal_type || [],
+    imageUrl: dbRecipe.image_url,
+    notes: dbRecipe.notes,
+    isSaved: false,
+  };
+}
+
+function recipeToDBRecipe(recipe: Omit<Recipe, 'id'>): Omit<DBRecipe, 'id' | 'created_at' | 'updated_at'> {
+  return {
+    title: recipe.title,
+    ingredients: recipe.ingredients,
+    instructions: recipe.instructions,
+    prep_time: recipe.prepTime,
+    cook_time: recipe.cookTime,
+    servings: recipe.servings,
+    tags: recipe.tags || [],
+    cuisine_type: recipe.cuisineType,
+    difficulty: recipe.difficulty,
+    dietary_tags: recipe.dietaryTags || [],
+    meal_type: recipe.mealType || [],
+    image_url: recipe.imageUrl,
+    notes: recipe.notes,
+    is_public: true,
+  };
+}
+
+export async function createRecipe(recipe: Omit<Recipe, 'id'>): Promise<Recipe> {
+  const dbRecipe = recipeToDBRecipe(recipe);
+
+  const { data, error } = await supabase
+    .from('public_recipes')
+    .insert(dbRecipe)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating recipe:', error);
+    throw new Error('Failed to create recipe');
+  }
+
+  return dbRecipeToRecipe(data);
+}
+
+export async function getAllPublicRecipes(): Promise<Recipe[]> {
+  const { data, error } = await supabase
+    .from('public_recipes')
+    .select('*')
+    .eq('is_public', true)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching recipes:', error);
+    throw new Error('Failed to fetch recipes');
+  }
+
+  return (data || []).map(dbRecipeToRecipe);
+}
+
+export async function getRecipeById(id: string): Promise<Recipe | null> {
+  const { data, error } = await supabase
+    .from('public_recipes')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching recipe:', error);
+    return null;
+  }
+
+  return data ? dbRecipeToRecipe(data) : null;
+}
+
+export async function updateRecipe(id: string, updates: Partial<Recipe>): Promise<Recipe> {
+  const dbUpdates = recipeToDBRecipe(updates as Recipe);
+
+  const { data, error } = await supabase
+    .from('public_recipes')
+    .update({ ...dbUpdates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating recipe:', error);
+    throw new Error('Failed to update recipe');
+  }
+
+  return dbRecipeToRecipe(data);
+}
+
+export async function deleteRecipe(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('public_recipes')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting recipe:', error);
+    throw new Error('Failed to delete recipe');
+  }
+}

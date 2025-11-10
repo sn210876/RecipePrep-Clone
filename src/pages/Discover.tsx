@@ -8,20 +8,36 @@ import { useRecipes } from '../context/RecipeContext';
 import { getRecommendedRecipes, getRecommendationInsights } from '../services/recommendationService';
 import { CookMode } from '../components/CookMode';
 import { Recipe } from '../types/recipe';
+import { getAllPublicRecipes } from '../services/recipeService';
 
 export function Discover() {
   const { state, dispatch } = useRecipes();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
+  const [allRecipes, setAllRecipes] = useState<Recipe[]>(mockRecipes);
 
-  const cuisines = useMemo(() => {
-    const cuisineSet = new Set(mockRecipes.map((r) => r.cuisineType));
-    return Array.from(cuisineSet).sort();
+  useEffect(() => {
+    const loadRecipes = async () => {
+      try {
+        const dbRecipes = await getAllPublicRecipes();
+        setAllRecipes([...mockRecipes, ...dbRecipes]);
+      } catch (error) {
+        console.error('Failed to load recipes:', error);
+        setAllRecipes(mockRecipes);
+      }
+    };
+
+    loadRecipes();
   }, []);
 
+  const cuisines = useMemo(() => {
+    const cuisineSet = new Set(allRecipes.map((r) => r.cuisineType));
+    return Array.from(cuisineSet).sort();
+  }, [allRecipes]);
+
   const filteredRecipes = useMemo(() => {
-    return mockRecipes.filter((recipe) => {
+    return allRecipes.filter((recipe) => {
       const matchesSearch =
         searchQuery === '' ||
         recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -42,36 +58,36 @@ export function Discover() {
   const [showAllInternational, setShowAllInternational] = useState(false);
 
   const trendingRecipes = useMemo(() => {
-    const sorted = [...mockRecipes]
+    const sorted = [...allRecipes]
       .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
     return showAllTrending ? sorted : sorted.slice(0, 12);
-  }, [showAllTrending]);
+  }, [allRecipes, showAllTrending]);
 
   const quickEasyRecipes = useMemo(() => {
-    const filtered = mockRecipes
+    const filtered = allRecipes
       .filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy');
     return showAllQuick ? filtered : filtered.slice(0, 12);
-  }, [showAllQuick]);
+  }, [allRecipes, showAllQuick]);
 
   const healthyRecipes = useMemo(() => {
-    const filtered = mockRecipes
+    const filtered = allRecipes
       .filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan'));
     return showAllHealthy ? filtered : filtered.slice(0, 12);
-  }, [showAllHealthy]);
+  }, [allRecipes, showAllHealthy]);
 
   const internationalRecipes = useMemo(() => {
     const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican'];
-    const filtered = mockRecipes
+    const filtered = allRecipes
       .filter((r) => cuisines.includes(r.cuisineType));
     return showAllInternational ? filtered : filtered.slice(0, 12);
-  }, [showAllInternational]);
+  }, [allRecipes, showAllInternational]);
 
   const [recommendedRecipes, setRecommendedRecipes] = useState<typeof mockRecipes>([]);
 
   useEffect(() => {
     const updateRecommendations = () => {
       const recommendations = getRecommendedRecipes(
-        mockRecipes,
+        allRecipes,
         state.savedRecipes,
         state.userPreferences,
         6
@@ -80,14 +96,14 @@ export function Discover() {
     };
 
     updateRecommendations();
-  }, [state.savedRecipes, state.userPreferences]);
+  }, [allRecipes, state.savedRecipes, state.userPreferences]);
 
   const recommendationInsight = useMemo(() => {
     return getRecommendationInsights(state.savedRecipes);
   }, [state.savedRecipes]);
 
   const handleSave = (recipeId: string) => {
-    const recipe = mockRecipes.find(r => r.id === recipeId);
+    const recipe = allRecipes.find(r => r.id === recipeId);
     if (recipe) {
       const isAlreadySaved = state.savedRecipes.some(r => r.id === recipeId);
       if (isAlreadySaved) {
@@ -99,7 +115,7 @@ export function Discover() {
   };
 
   const handleCook = (recipeId: string) => {
-    const recipe = mockRecipes.find(r => r.id === recipeId);
+    const recipe = allRecipes.find(r => r.id === recipeId);
     if (recipe) {
       console.log('Cook Now clicked for:', recipe.title);
       setCookingRecipe(recipe);

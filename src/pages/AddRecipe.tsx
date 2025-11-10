@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2 } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
-import { Ingredient, Recipe } from '@/types/recipe';
+import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
 import { extractRecipeFromUrl, isValidUrl, getPlatformFromUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -187,7 +187,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) {
@@ -199,8 +199,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     );
     const validInstructions = instructions.filter(inst => inst.trim());
 
-    const newRecipe: Recipe = {
-      id: Date.now().toString(),
+    const newRecipe = {
       title: title.trim(),
       ingredients: validIngredients,
       instructions: validInstructions,
@@ -217,11 +216,19 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       isSaved: true
     };
 
-    dispatch({ type: 'SAVE_RECIPE', payload: newRecipe });
-    toast.success('Recipe created successfully!');
+    try {
+      const { createRecipe } = await import('@/services/recipeService');
+      const createdRecipe = await createRecipe(newRecipe);
 
-    if (onNavigate) {
-      onNavigate('my-recipes');
+      dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+      toast.success('Recipe created and published successfully!');
+
+      if (onNavigate) {
+        onNavigate('my-recipes');
+      }
+    } catch (error) {
+      console.error('Failed to create recipe:', error);
+      toast.error('Failed to create recipe. Please try again.');
     }
   };
 
