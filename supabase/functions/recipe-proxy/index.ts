@@ -11,7 +11,19 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 async function parseWithAI(text: string): Promise<{ ingredients: string[], instructions: string[], notes: string }> {
   if (!text.trim() || !OPENAI_API_KEY) return { ingredients: [], instructions: [], notes: "" };
 
-  const prompt = `Extract recipe JSON {ingredients: [], instructions: [], notes: ''} from: ${text.slice(0, 15000)}`;
+  const prompt = `You are a recipe extraction expert. Extract the recipe from the text and TRANSLATE EVERYTHING TO ENGLISH.
+
+CRITICAL: If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
+
+Return ONLY valid JSON in this exact format:
+{
+  "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt"],
+  "instructions": ["Preheat oven to 350F", "Mix ingredients", "Bake for 30 minutes"],
+  "notes": "Any cooking tips or notes"
+}
+
+Text to extract from:
+${text.slice(0, 15000)}`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -24,7 +36,7 @@ async function parseWithAI(text: string): Promise<{ ingredients: string[], instr
         model: "gpt-4o-mini",
         messages: [{ role: "system", content: prompt }],
         temperature: 0.1,
-        max_tokens: 800,
+        max_tokens: 1200,
       }),
     });
 
