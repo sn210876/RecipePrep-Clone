@@ -121,7 +121,9 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
 
       <div className="relative mb-8 rounded-2xl overflow-hidden shadow-xl">
         <img
-          src={recipe.imageUrl}
+          src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+            ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+            : recipe.imageUrl}
           alt={recipe.title}
           className="w-full h-96 object-cover"
         />
