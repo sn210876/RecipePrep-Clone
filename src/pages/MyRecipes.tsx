@@ -56,6 +56,7 @@ export function MyRecipes() {
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
+              showReviewButton={true}
               onCook={(recipeId) => {
                 const recipe = state.savedRecipes.find(r => r.id === recipeId);
                 if (recipe) {

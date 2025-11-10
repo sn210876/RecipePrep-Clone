@@ -17,8 +17,6 @@ import { RatingDisplay } from './RatingDisplay';
 import {
   getRecipeReviews,
   getUserReview,
-  createReview,
-  updateReview,
   deleteReview,
   getAverageRating,
   ReviewWithImages,
@@ -36,8 +34,6 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
   const [userReview, setUserReview] = useState<ReviewWithImages | null>(null);
   const [averageRating, setAverageRating] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [editingReview, setEditingReview] = useState<ReviewWithImages | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const hasSteps = recipe.steps && recipe.steps.length > 0;
 
@@ -72,25 +68,6 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
     }
   };
 
-  const handleSubmitReview = async (rating: number, comment: string, images: File[]) => {
-    setLoading(true);
-    try {
-      if (editingReview) {
-        await updateReview(editingReview.id, rating, comment, images);
-        toast.success('Review updated successfully!');
-      } else {
-        await createReview(recipe.id, rating, comment, images);
-        toast.success('Review added successfully!');
-      }
-      setShowReviewForm(false);
-      setEditingReview(null);
-      await loadReviews();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save review');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!window.confirm('Are you sure you want to delete this review?')) return;
@@ -264,10 +241,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
           </div>
           {!showReviewForm && (
             <Button
-              onClick={() => {
-                setShowReviewForm(true);
-                setEditingReview(null);
-              }}
+              onClick={() => setShowReviewForm(true)}
               className="bg-secondary hover:bg-secondary/90"
             >
               {userReview ? 'Edit Your Review' : 'Add Your Review'}
@@ -275,18 +249,12 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
           )}
         </div>
 
-        {showReviewForm && (
-          <div className="mb-8">
-            <ReviewForm
-              onSubmit={handleSubmitReview}
-              onCancel={() => {
-                setShowReviewForm(false);
-                setEditingReview(null);
-              }}
-              loading={loading}
-            />
-          </div>
-        )}
+        <ReviewForm
+          recipe={recipe}
+          open={showReviewForm}
+          onOpenChange={setShowReviewForm}
+          onReviewSubmitted={loadReviews}
+        />
 
         {userReview && !showReviewForm && (
           <div className="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -299,10 +267,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
               author="You"
               createdAt={userReview.created_at}
               isOwn={true}
-              onEdit={() => {
-                setEditingReview(userReview);
-                setShowReviewForm(true);
-              }}
+              onEdit={() => setShowReviewForm(true)}
               onDelete={() => handleDeleteReview(userReview.id)}
             />
           </div>

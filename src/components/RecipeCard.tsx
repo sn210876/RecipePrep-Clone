@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, ChefHat, Bookmark, Flame } from 'lucide-react';
+import { Clock, ChefHat, Bookmark, Flame, Star } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardFooter } from './ui/card';
@@ -8,16 +8,19 @@ import { RecipeDetailModal } from './RecipeDetailModal';
 import { useRecipes } from '../context/RecipeContext';
 import { RatingDisplay } from './RatingDisplay';
 import { getRecipeReviews, getAverageRating } from '../services/reviewService';
+import { ReviewForm } from './ReviewForm';
 
 interface RecipeCardProps {
   recipe: Recipe;
   onSave?: (recipeId: string) => void;
   onCook?: (recipeId: string) => void;
+  showReviewButton?: boolean;
 }
 
-export function RecipeCard({ recipe, onSave, onCook }: RecipeCardProps) {
+export function RecipeCard({ recipe, onSave, onCook, showReviewButton = false }: RecipeCardProps) {
   const { state } = useRecipes();
   const [showDetail, setShowDetail] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const totalTime = recipe.prepTime + recipe.cookTime;
@@ -29,17 +32,18 @@ export function RecipeCard({ recipe, onSave, onCook }: RecipeCardProps) {
     Hard: 'bg-red-100 text-red-700 border-red-200',
   };
 
+  const loadReviewData = async () => {
+    try {
+      const reviews = await getRecipeReviews(recipe.id);
+      setReviewCount(reviews.length);
+      const avgRating = await getAverageRating(recipe.id);
+      setAverageRating(avgRating);
+    } catch (error) {
+      console.error('Failed to load review data:', error);
+    }
+  };
+
   useEffect(() => {
-    const loadReviewData = async () => {
-      try {
-        const reviews = await getRecipeReviews(recipe.id);
-        setReviewCount(reviews.length);
-        const avgRating = await getAverageRating(recipe.id);
-        setAverageRating(avgRating);
-      } catch (error) {
-        console.error('Failed to load review data:', error);
-      }
-    };
     loadReviewData();
   }, [recipe.id]);
 
@@ -124,30 +128,53 @@ export function RecipeCard({ recipe, onSave, onCook }: RecipeCardProps) {
         )}
       </CardContent>
 
-      <CardFooter className="p-5 pt-0 flex gap-2">
-        <Button
-          variant={isSaved ? "default" : "outline"}
-          size="sm"
-          className={isSaved ? "flex-1 bg-secondary hover:bg-secondary/90 text-white" : "flex-1 border-gray-300 hover:bg-primary hover:text-white transition-all"}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSave?.(recipe.id);
-          }}
-        >
-          <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-white' : ''}`} />
-          {isSaved ? 'Saved' : 'Add to My Recipes'}
-        </Button>
-        <Button
-          size="sm"
-          className="flex-1 bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg transition-all"
-          onClick={(e) => {
-            e.stopPropagation();
-            onCook?.(recipe.id);
-          }}
-        >
-          <Flame className="w-4 h-4 mr-2" />
-          Cook Now
-        </Button>
+      <CardFooter className="p-5 pt-0 flex flex-col gap-2">
+        <div className="flex gap-2 w-full">
+          <Button
+            variant={isSaved ? "default" : "outline"}
+            size="sm"
+            className={isSaved ? "flex-1 bg-secondary hover:bg-secondary/90 text-white" : "flex-1 border-gray-300 hover:bg-primary hover:text-white transition-all"}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSave?.(recipe.id);
+            }}
+          >
+            <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-white' : ''}`} />
+            {isSaved ? 'Saved' : 'Add to My Recipes'}
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCook?.(recipe.id);
+            }}
+          >
+            <Flame className="w-4 h-4 mr-2" />
+            Cook Now
+          </Button>
+        </div>
+        {showReviewButton && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full border-gray-300 hover:bg-orange-50 hover:border-primary transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowReviewForm(true);
+            }}
+          >
+            <Star className="w-4 h-4 mr-2" />
+            {reviewCount > 0 ? (
+              <span className="flex items-center gap-2">
+                <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                <span className="text-gray-500">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+              </span>
+            ) : (
+              'Write Review'
+            )}
+          </Button>
+        )}
       </CardFooter>
     </Card>
 
@@ -155,6 +182,15 @@ export function RecipeCard({ recipe, onSave, onCook }: RecipeCardProps) {
         recipe={recipe}
         open={showDetail}
         onOpenChange={setShowDetail}
+      />
+
+      <ReviewForm
+        recipe={recipe}
+        open={showReviewForm}
+        onOpenChange={setShowReviewForm}
+        onReviewSubmitted={() => {
+          loadReviewData();
+        }}
       />
     </>
   );

@@ -17,8 +17,11 @@ import {
   Circle,
   Volume2,
   VolumeX,
+  Star,
+  Camera,
 } from 'lucide-react';
 import NoSleep from 'nosleep.js';
+import { ReviewForm } from './ReviewForm';
 
 interface CookModeProps {
   recipe: Recipe;
@@ -34,6 +37,9 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [voiceModeActive, setVoiceModeActive] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [stepPhotos, setStepPhotos] = useState<Map<number, string[]>>(new Map());
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [voiceSettings] = useState<VoiceSettings>(() => {
     const saved = localStorage.getItem('voiceSettings');
     return saved ? JSON.parse(saved) : { speechRate: 1.0, voiceIndex: 0, autoRead: true };
@@ -337,8 +343,22 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
     }
   };
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const newPhotos = files.map(file => URL.createObjectURL(file));
+      setStepPhotos(prev => {
+        const updated = new Map(prev);
+        const existing = updated.get(currentStep) || [];
+        updated.set(currentStep, [...existing, ...newPhotos]);
+        return updated;
+      });
+    }
+  };
+
   const allIngredientsChecked = checkedIngredients.size === recipe.ingredients.length;
   const progress = ((currentStep + 1) / steps.length) * 100;
+  const isCompleted = currentStep === steps.length - 1 && checkedSteps.has(currentStep);
 
   const getIngredientEmoji = (ingredientName: string): string => {
     const name = ingredientName.toLowerCase().trim();
@@ -551,6 +571,15 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                     }`}>
                       Step {currentStep + 1}
                     </h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="gap-1"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span className="text-xs">Photo</span>
+                    </Button>
                   </div>
                   {steps[currentStep]?.duration && (
                     <div className="flex items-center gap-2">
@@ -631,19 +660,75 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               </p>
             </div>
 
-            <Button
-              size="lg"
-              onClick={handleNextStep}
-              disabled={currentStep === steps.length - 1}
-              className="bg-primary hover:bg-primary/90 gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-6"
-            >
-              <span className="hidden sm:inline">Next</span>
-              <span className="sm:hidden">Next</span>
-              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Button>
+            {!isCompleted ? (
+              <Button
+                size="lg"
+                onClick={handleNextStep}
+                disabled={currentStep === steps.length - 1}
+                className="bg-primary hover:bg-primary/90 gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-6"
+              >
+                <span className="hidden sm:inline">Next</span>
+                <span className="sm:hidden">Next</span>
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-2"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Photo</span>
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={() => setShowReviewForm(true)}
+                  className="bg-accent hover:bg-accent/90 gap-2"
+                >
+                  <Star className="w-4 h-4" />
+                  <span>Review Recipe</span>
+                </Button>
+              </div>
+            )}
           </div>
+
+          {stepPhotos.get(currentStep) && stepPhotos.get(currentStep)!.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Step Photos</p>
+              <div className="flex gap-2 overflow-x-auto">
+                {stepPhotos.get(currentStep)!.map((photo, idx) => (
+                  <img
+                    key={idx}
+                    src={photo}
+                    alt={`Step ${currentStep + 1} photo ${idx + 1}`}
+                    className="w-24 h-24 object-cover rounded-lg"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handlePhotoUpload}
+          className="hidden"
+        />
       </div>
+
+      <ReviewForm
+        recipe={recipe}
+        open={showReviewForm}
+        onOpenChange={setShowReviewForm}
+        onReviewSubmitted={() => {
+          setShowReviewForm(false);
+        }}
+      />
     </div>
   );
 }
