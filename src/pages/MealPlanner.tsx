@@ -5,6 +5,15 @@ import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { ScrollArea } from '../components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import {
   Calendar,
   ChevronLeft,
@@ -14,7 +23,8 @@ import {
   Clock,
   Users,
   Layers,
-  Sparkles
+  Sparkles,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
@@ -40,6 +50,10 @@ export function MealPlanner() {
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
+  const [showAddMealDialog, setShowAddMealDialog] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedMealType, setSelectedMealType] = useState<MealType | ''>('');
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -96,14 +110,6 @@ export function MealPlanner() {
     }
   };
 
-  const getDaysToShow = () => {
-    const days = [];
-    for (let i = 0; i < weeksToShow * 7; i++) {
-      days.push(addDays(currentWeekStart, i));
-    }
-    return days;
-  };
-
   const getMealForSlot = (date: Date, mealType: MealType): MealPlanWithRecipe | undefined => {
     return mealPlans.find(
       plan => isSameDay(new Date(plan.date), date) && plan.mealType === mealType
@@ -120,7 +126,7 @@ export function MealPlanner() {
 
   const handleDrop = async (date: Date, mealType: MealType, recipeOverride?: Recipe) => {
     const recipeToAdd = recipeOverride || draggedItem?.recipe;
-    if (!recipeToAdd || !userId) return;
+    if (!recipeToAdd) return;
 
     const dateString = format(date, 'yyyy-MM-dd');
     const existingMeal = getMealForSlot(date, mealType);
@@ -185,6 +191,35 @@ export function MealPlanner() {
 
   const handleNextWeek = () => {
     setCurrentWeekStart(prev => addWeeks(prev, weeksToShow));
+  };
+
+  const handleOpenAddMealDialog = (recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+    setShowAddMealDialog(true);
+  };
+
+  const handleAddMealViaDialog = async () => {
+    if (!selectedRecipe || !selectedDate || !selectedMealType) {
+      toast.error('Please select both date and meal type');
+      return;
+    }
+
+    const date = new Date(selectedDate);
+    await handleDrop(date, selectedMealType as MealType, selectedRecipe);
+
+    setShowAddMealDialog(false);
+    setSelectedRecipe(null);
+    setSelectedDate('');
+    setSelectedMealType('');
+  };
+
+  const getDaysToShow = (): Date[] => {
+    const days: Date[] = [];
+    const totalDays = weeksToShow * 7;
+    for (let i = 0; i < totalDays; i++) {
+      days.push(addDays(currentWeekStart, i));
+    }
+    return days;
   };
 
   const handleToday = () => {
@@ -304,14 +339,16 @@ export function MealPlanner() {
                 state.savedRecipes.map(recipe => (
                   <div
                     key={recipe.id}
-                    draggable
-                    onDragStart={() => handleDragStart(recipe)}
-                    onDragEnd={handleDragEnd}
-                    className="group cursor-move"
+                    className="group"
                   >
                     <Card className="overflow-hidden hover:shadow-md transition-all border-slate-200 hover:border-blue-300 bg-white">
                       <CardContent className="p-0">
-                        <div className="flex gap-3 p-3">
+                        <div
+                          draggable
+                          onDragStart={() => handleDragStart(recipe)}
+                          onDragEnd={handleDragEnd}
+                          className="flex gap-3 p-3 cursor-move"
+                        >
                           {recipe.imageUrl && (
                             <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
                               <img
@@ -350,6 +387,20 @@ export function MealPlanner() {
                               </div>
                             )}
                           </div>
+                        </div>
+                        <div className="px-3 pb-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAddMealDialog(recipe);
+                            }}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add to Plan
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -526,6 +577,68 @@ export function MealPlanner() {
           </ScrollArea>
         </div>
       </div>
+
+      <Dialog open={showAddMealDialog} onOpenChange={setShowAddMealDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Meal to Plan</DialogTitle>
+            <DialogDescription>
+              {selectedRecipe && `Add "${selectedRecipe.title}" to your meal plan`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date</label>
+              <Select value={selectedDate} onValueChange={setSelectedDate}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select date" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getDaysToShow().map((day) => (
+                    <SelectItem key={day.toISOString()} value={format(day, 'yyyy-MM-dd')}>
+                      {format(day, 'EEE, MMM d, yyyy')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Meal Type</label>
+              <Select value={selectedMealType} onValueChange={(value) => setSelectedMealType(value as MealType)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select meal type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MEAL_TYPES.map((mealType) => (
+                    <SelectItem key={mealType} value={mealType}>
+                      {mealType}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAddMealDialog(false);
+                setSelectedRecipe(null);
+                setSelectedDate('');
+                setSelectedMealType('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddMealViaDialog}
+              disabled={!selectedDate || !selectedMealType}
+            >
+              Add to Plan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
