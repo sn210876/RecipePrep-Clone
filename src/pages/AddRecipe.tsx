@@ -311,6 +311,19 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
               </div>
 
+              {imageUrl && (
+                <div className="relative w-full rounded-lg overflow-hidden border-2 border-slate-200">
+                  <img
+                    src={imageUrl}
+                    alt={title || 'Recipe'}
+                    className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="prepTime" className="text-sm font-medium flex items-center gap-2">

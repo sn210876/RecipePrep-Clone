@@ -93,13 +93,18 @@ async function scrapeRecipeSite(url: string) {
       }
     }
 
+    const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+    const twitterImageMatch = html.match(/<meta\s+name="twitter:image"\s+content="([^"]+)"/i);
+    const firstImgMatch = html.match(/<img[^>]+src="([^"]+)"/i);
+    const imageUrl = ogImageMatch?.[1] || twitterImageMatch?.[1] || firstImgMatch?.[1] || '';
+
     const aiResult = await parseWithAI(html);
     if (aiResult.ingredients.length > 0) {
       return {
         title,
         ingredients: aiResult.ingredients,
         instructions: aiResult.instructions,
-        image: '',
+        image: imageUrl,
         yield: '',
         time: 0,
         notes: `AI parsed: ${aiResult.notes}`,
