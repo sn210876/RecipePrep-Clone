@@ -189,8 +189,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[AddRecipe] Form submitted');
 
     if (!validate()) {
+      console.log('[AddRecipe] Validation failed, errors:', errors);
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -198,6 +201,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       ing => ing.quantity.trim() && ing.name.trim()
     );
     const validInstructions = instructions.filter(inst => inst.trim());
+
+    console.log('[AddRecipe] Valid ingredients:', validIngredients.length);
+    console.log('[AddRecipe] Valid instructions:', validInstructions.length);
 
     const newRecipe = {
       title: title.trim(),
@@ -216,9 +222,13 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       isSaved: true
     };
 
+    console.log('[AddRecipe] Creating recipe:', newRecipe);
+
     try {
       const { createRecipe } = await import('@/services/recipeService');
+      console.log('[AddRecipe] Calling createRecipe...');
       const createdRecipe = await createRecipe(newRecipe);
+      console.log('[AddRecipe] Recipe created:', createdRecipe);
 
       dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
       toast.success('Recipe created and published successfully!');
@@ -227,7 +237,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         onNavigate('my-recipes');
       }
     } catch (error) {
-      console.error('Failed to create recipe:', error);
+      console.error('[AddRecipe] Failed to create recipe:', error);
       toast.error('Failed to create recipe. Please try again.');
     }
   };
@@ -300,6 +310,26 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {Object.keys(errors).length > 0 && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                    <span className="text-red-600 text-xs font-bold">!</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-red-900 mb-2">Please fix the following errors:</h3>
+                    <ul className="space-y-1">
+                      {Object.values(errors).map((error, idx) => (
+                        <li key={idx} className="text-sm text-red-700">• {error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
@@ -319,15 +349,28 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               </div>
 
               {imageUrl && (
-                <div className="relative w-full rounded-lg overflow-hidden border-2 border-slate-200">
-                  <img
-                    src={imageUrl}
-                    alt={title || 'Recipe'}
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
+                <div className="space-y-2">
+                  <div className="relative w-full rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
+                    <img
+                      src={imageUrl}
+                      alt={title || 'Recipe'}
+                      className="w-full h-64 object-cover"
+                      onError={(e) => {
+                        const parent = (e.target as HTMLImageElement).parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="w-full h-64 flex flex-col items-center justify-center text-slate-500">
+                              <svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <p class="text-sm font-medium">Image cannot be displayed</p>
+                              <p class="text-xs">(External site blocks direct access)</p>
+                            </div>
+                          `;
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 
