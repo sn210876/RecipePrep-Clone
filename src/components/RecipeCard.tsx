@@ -51,7 +51,9 @@ export function RecipeCard({ recipe, onSave, onCook }: RecipeCardProps) {
       >
       <div className="relative overflow-hidden aspect-[4/3]">
         <img
-          src={recipe.imageUrl}
+          src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+            ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl)}`
+            : recipe.imageUrl}
           alt={recipe.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />

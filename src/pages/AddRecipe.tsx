@@ -352,7 +352,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 <div className="space-y-2">
                   <div className="relative w-full rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
                     <img
-                      src={imageUrl}
+                      src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`}
                       alt={title || 'Recipe'}
                       className="w-full h-64 object-cover"
                       onError={(e) => {
@@ -364,7 +364,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
                               <p class="text-sm font-medium">Image cannot be displayed</p>
-                              <p class="text-xs">(External site blocks direct access)</p>
+                              <p class="text-xs">(Image proxy failed)</p>
                             </div>
                           `;
                         }
@@ -669,11 +669,24 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
                 <div className="space-y-6 py-4">
                   {extractedData.imageUrl && (
-                    <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-slate-200">
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
                       <img
-                        src={extractedData.imageUrl}
+                        src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl)}`}
                         alt={extractedData.title}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const parent = (e.target as HTMLImageElement).parentElement;
+                          if (parent) {
+                            parent.innerHTML = `
+                              <div class="w-full h-48 flex flex-col items-center justify-center text-slate-500">
+                                <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <p class="text-xs font-medium">Image unavailable</p>
+                              </div>
+                            `;
+                          }
+                        }}
                       />
                     </div>
                   )}
