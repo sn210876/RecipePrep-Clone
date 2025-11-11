@@ -32,16 +32,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
-        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-          setShowVerifying(true);
+        const isVerificationEvent =
+          event === 'SIGNED_IN' ||
+          event === 'USER_UPDATED' ||
+          event === 'TOKEN_REFRESHED';
+
+        if (isVerificationEvent && session?.user?.email_confirmed_at) {
+          const wasUnverified = !user?.email_confirmed_at;
+          if (wasUnverified || event === 'SIGNED_IN') {
+            setShowVerifying(true);
+          }
         }
+
         setSession(session);
         setUser(session?.user ?? null);
       })();
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [user?.email_confirmed_at]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

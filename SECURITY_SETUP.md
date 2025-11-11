@@ -13,13 +13,18 @@ The application now requires email verification before users can access any feat
 3. Navigate to **Authentication** → **Providers** → **Email**
 4. Find **"Confirm email"** setting
 5. Toggle it **ON**
-6. Click **Save**
+6. Scroll down to **"Redirect URLs"** section
+7. Add your site URL (e.g., `https://yourdomain.com` or `http://localhost:5173` for local dev)
+8. Click **Save**
+
+**Important:** Make sure your site URL is added to the redirect URLs list, otherwise verification emails will fail to redirect properly.
 
 **What happens:**
 - New users receive a verification email after signup
 - Users are redirected to a verification page until they confirm
+- When users click the verification link, they see a "Verifying..." screen for 2 seconds
+- Users are then automatically redirected to the homepage
 - Users can resend verification emails if needed
-- Login only works for verified email addresses
 
 ## ⚠️ CRITICAL: Leaked Password Protection (REQUIRED)
 
