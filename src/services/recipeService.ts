@@ -45,6 +45,7 @@ function dbRecipeToRecipe(dbRecipe: DBRecipe): Recipe {
     mealType: dbRecipe.meal_type || [],
     imageUrl: dbRecipe.image_url,
     videoUrl: dbRecipe.video_url,
+    sourceUrl: dbRecipe.source_url,
     notes: dbRecipe.notes,
     isSaved: false,
   };
@@ -65,6 +66,7 @@ function recipeToDBRecipe(recipe: Omit<Recipe, 'id'>): Omit<DBRecipe, 'id' | 'cr
     meal_type: recipe.mealType || [],
     image_url: recipe.imageUrl,
     video_url: recipe.videoUrl,
+    source_url: recipe.sourceUrl,
     notes: recipe.notes,
     is_public: true,
   };
@@ -72,6 +74,8 @@ function recipeToDBRecipe(recipe: Omit<Recipe, 'id'>): Omit<DBRecipe, 'id' | 'cr
 
 export async function createRecipe(recipe: Omit<Recipe, 'id'>): Promise<Recipe> {
   const dbRecipe = recipeToDBRecipe(recipe);
+
+  console.log('[createRecipe] Attempting to insert:', dbRecipe);
 
   const { data, error } = await supabase
     .from('public_recipes')
@@ -81,7 +85,14 @@ export async function createRecipe(recipe: Omit<Recipe, 'id'>): Promise<Recipe> 
 
   if (error) {
     console.error('Error creating recipe:', error);
-    throw new Error('Failed to create recipe');
+    console.error('Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
+    console.error('Supabase request failed', error);
+    throw new Error(error.message || 'Failed to create recipe');
   }
 
   return dbRecipeToRecipe(data);

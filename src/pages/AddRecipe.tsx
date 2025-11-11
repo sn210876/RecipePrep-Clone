@@ -243,6 +243,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       mealType: selectedMealTypes,
       imageUrl: imageUrl.trim() || undefined,
       videoUrl: videoUrl.trim() || undefined,
+      sourceUrl: urlInput.trim() || undefined,
       notes: notes.trim() || undefined,
       isSaved: true
     };
