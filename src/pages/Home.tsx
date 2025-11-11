@@ -58,7 +58,39 @@ export function Home({ onNavigate }: HomeProps) {
 
           <div className="mt-16 pt-12 border-t border-orange-200/50">
             <p className="text-sm text-gray-600 mb-8">
-              Did you see something online recipe and thought "I wanna make that", then simply PASTE a link in "Add Recipe" button above to recipe extraction. Then manage your collection, plan meals, and COOK!
+              <div className="bg-gradient-to-b from-orange-50 to-white py-16 px-4">
+  <div className="max-w-4xl mx-auto text-center">
+    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+      Did you see an online recipe and thought <span className="text-red-600">"I wanna make that"</span>?
+    </h2>
+    
+    <p className="text-xl md:text-2xl text-gray-700 mb-10 max-w-3xl mx-auto">
+      Simply <span className="font-semibold text-orange-600">PASTE a link</span> in the 
+      <span className="font-bold text-red-600"> "Add Recipe"</span> button above to instantly extract it.
+    </p>
+
+    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+      <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-orange-200">
+        <div className="text-3xl font-bold text-orange-600">1</div>
+        <p className="text-gray-800 font-medium">Paste any link</p>
+      </div>
+      <div className="text-3xl text-orange-600 hidden sm:block">→</div>
+      <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-red-200">
+        <div className="text-3xl font-bold text-red-600">2</div>
+        <p className="text-gray-800 font-medium">Auto-extract recipe</p>
+      </div>
+      <div className="text-3xl text-orange-600 hidden sm:block">→</div>
+      <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-orange-200">
+        <div className="text-3xl font-bold text-orange-600">3</div>
+        <p className="text-gray-800 font-medium">Save & Cook!</p>
+      </div>
+    </div>
+
+    <p className="text-lg text-gray-600 italic">
+      Then manage your collection, plan meals, and <span className="font-bold text-red-600">COOK!</span>
+    </p>
+  </div>
+</div>
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
               <div className="flex items-center gap-2">
