@@ -10,88 +10,62 @@ export function Home({ onNavigate }: HomeProps) {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-orange-25 to-amber-50 overflow-hidden">
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-orange-200/30 to-transparent rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-amber-200/30 to-transparent rounded-full blur-3xl" />
-
+      
       <div className="relative z-10 h-screen flex flex-col items-center justify-center px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="mb-8">
+        <div className="text-center max-w-4xl mx-auto">
+          {/* Hero Header */}
+          <div className="mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6">
-              <span className="text-4xl">🍳</span>
+              <span className="text-4xl">Pan</span>
             </div>
+            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-3">
+              Recipe Prep
+            </h1>
+            <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
+              Automate your <span className="font-semibold text-orange-700">Recipe</span>,{' '}
+              <span className="font-semibold text-amber-700">Shopping List</span>, and{' '}
+              <span className="font-semibold text-orange-600">Cooking</span> all in one place.
+            </p>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4">
-            Welcome to <span className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">Recipe Prep</span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-gray-700 mb-12 leading-relaxed">
-            Automate your <span className="font-semibold text-orange-700">Recipe</span>, <span className="font-semibold text-amber-700">Shopping List</span>, and <span className="font-semibold text-orange-600">Cooking</span> all in one place.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-16">
+          {/* Centered Buttons - Full Width on Mobile, Grid on Desktop */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <Button
               onClick={() => onNavigate('discover')}
               size="lg"
-              className="h-16 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
+              className="w-full sm:w-auto min-w-48 h-16 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
             >
               <Search className="w-5 h-5" />
               <span>Discover</span>
             </Button>
-
             <Button
               onClick={() => onNavigate('my-recipes')}
               size="lg"
-              className="h-16 text-base font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
+              className="w-full sm:w-auto min-w-48 h-16 text-base font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
             >
               <BookOpen className="w-5 h-5" />
               <span>My Recipes</span>
             </Button>
-
             <Button
               onClick={() => onNavigate('add-recipe')}
               size="lg"
-              className="h-16 text-base font-semibold bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
+              className="w-full sm:w-auto min-w-48 h-16 text-base font-semibold bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
             >
               <Plus className="w-5 h-5" />
               <span>Add Recipe</span>
             </Button>
           </div>
 
-          <div className="mt-16 pt-12 border-t border-orange-200/50">
-            <p className="text-sm text-gray-600 mb-8">
-              <div className="bg-gradient-to-b from-orange-50 to-white py-16 px-4">
-  <div className="max-w-4xl mx-auto text-center">
-    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-      Did you see an online recipe and thought <span className="text-red-600">"I wanna make that"</span>?
-    </h2>
-    
-    <p className="text-xl md:text-2xl text-gray-700 mb-10 max-w-3xl mx-auto">
-      Simply <span className="font-semibold text-orange-600">PASTE a link</span> in the 
-      <span className="font-bold text-red-600"> "Add Recipe"</span> button above to instantly extract it.
-    </p>
-
-    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-      <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-orange-200">
-        <div className="text-3xl font-bold text-orange-600">1</div>
-        <p className="text-gray-800 font-medium">Paste any link</p>
-      </div>
-      <div className="text-3xl text-orange-600 hidden sm:block">→</div>
-      <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-red-200">
-        <div className="text-3xl font-bold text-red-600">2</div>
-        <p className="text-gray-800 font-medium">Auto-extract recipe</p>
-      </div>
-      <div className="text-3xl text-orange-600 hidden sm:block">→</div>
-      <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-orange-200">
-        <div className="text-3xl font-bold text-orange-600">3</div>
-        <p className="text-gray-800 font-medium">Save & Cook!</p>
-      </div>
-    </div>
-
-    <p className="text-lg text-gray-600 italic">
-      Then manage your collection, plan meals, and <span className="font-bold text-red-600">COOK!</span>
-    </p>
-  </div>
-</div>
+          {/* "Did you see..." Section - Half Font Size */}
+          <div className="mt-8 pt-8 border-t border-orange-200/50">
+            <p className="text-base sm:text-lg text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
+              Did you see an online recipe and thought <span className="font-bold text-red-600">"I wanna make that"</span>? 
+              Then simply <span className="font-semibold text-orange-600">PASTE a link</span> in the 
+              <span className="font-bold text-red-600">"Add Recipe"</span> button above to extract it instantly. 
+              Then manage your collection, plan meals, and <span className="font-bold text-red-600">COOK!</span>
             </p>
+
+            {/* Feature Dots */}
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-orange-500" />
