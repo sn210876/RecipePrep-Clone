@@ -118,6 +118,14 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       return;
     }
 
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+    const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
+
+    if (isImageUrl) {
+      toast.error('Please paste a recipe page URL, not a direct image link. Enter the recipe page URL instead.');
+      return;
+    }
+
     setIsExtracting(true);
     const platform = getPlatformFromUrl(urlInput);
 
@@ -253,9 +261,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       if (onNavigate) {
         onNavigate('my-recipes');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[AddRecipe] Failed to create recipe:', error);
-      toast.error('Failed to create recipe. Please try again.');
+      const errorMessage = error?.message || 'Failed to create recipe. Please try again.';
+      toast.error(errorMessage);
     }
   };
 
@@ -327,6 +336,15 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex justify-center">
+            <Button
+              type="submit"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+            >
+              Create Recipe
+            </Button>
+          </div>
+
           {Object.keys(errors).length > 0 && (
             <Card className="border-red-200 bg-red-50">
               <CardContent className="pt-6">
@@ -652,22 +670,23 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </CardContent>
           </Card>
 
-          <div className="flex gap-3 justify-end pt-4">
+          <div className="flex flex-col items-center gap-4 pt-4">
+            <Button
+              type="submit"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+            >
+              Create Recipe
+            </Button>
             {onNavigate && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onNavigate('my-recipes')}
+                className="text-sm"
               >
                 Cancel
               </Button>
             )}
-            <Button
-              type="submit"
-              className="bg-slate-900 hover:bg-slate-800 text-white px-8"
-            >
-              Create Recipe
-            </Button>
           </div>
         </form>
 
@@ -822,7 +841,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 onClick={handleAcceptExtraction}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                Use This Recipe
+                Review and Edit
               </Button>
             </DialogFooter>
           </DialogContent>
