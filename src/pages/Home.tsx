@@ -16,7 +16,7 @@ export function Home({ onNavigate }: HomeProps) {
           {/* Hero Header */}
           <div className="mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6">
-              <span className="text-4xl">Pan</span>
+              <span className="text-4xl">Cooking Pot</span>
             </div>
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-3">
               Recipe Prep
@@ -28,7 +28,7 @@ export function Home({ onNavigate }: HomeProps) {
             </p>
           </div>
 
-          {/* Centered Buttons - Full Width on Mobile, Grid on Desktop */}
+          {/* Centered Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <Button
               onClick={() => onNavigate('discover')}
@@ -74,15 +74,4 @@ export function Home({ onNavigate }: HomeProps) {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-amber-500" />
                 Smart Shopping Lists
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-orange-600" />
-                Hands-Free Cooking
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+              </
