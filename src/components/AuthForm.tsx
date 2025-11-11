@@ -23,7 +23,7 @@ export function AuthForm() {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: 'https://sn210876-recipeprep-jzt5.bolt.host',
         },
       });
 

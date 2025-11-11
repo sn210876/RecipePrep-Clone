@@ -22,11 +22,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isEmailVerified = user ? !!user.email_confirmed_at : false;
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initAuth = async () => {
+      const hash = window.location.hash;
+
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const type = params.get('type');
+
+        if (accessToken && type === 'signup') {
+          try {
+            const { data, error } = await supabase.auth.getUser(accessToken);
+
+            if (!error && data.user) {
+              setShowVerifying(true);
+              setUser(data.user);
+
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          } catch (err) {
+            console.error('Token verification error:', err);
+          }
+        }
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-    });
+    };
+
+    initAuth();
 
     const {
       data: { subscription },
