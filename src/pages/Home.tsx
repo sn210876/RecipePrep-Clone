@@ -16,9 +16,8 @@ export function Home({ onNavigate }: HomeProps) {
           {/* Hero Header */}
           <div className="mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6">
-<div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6">
-  <span className="text-4xl">Cooking Pot</span>
-</div>            </div>
+              <span className="text-4xl">Cooking Pot</span>
+            </div>
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-3">
               Recipe Prep
             </h1>
@@ -34,7 +33,7 @@ export function Home({ onNavigate }: HomeProps) {
             <Button
               onClick={() => onNavigate('discover')}
               size="lg"
-              className="w-full sm:w-auto min-w-48 h-16 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300Suggest gap-3"
+              className="w-full sm:w-auto min-w-48 h-16 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
             >
               <Search className="w-5 h-5" />
               <span>Discover</span>
@@ -57,17 +56,16 @@ export function Home({ onNavigate }: HomeProps) {
             </Button>
           </div>
 
-          {/* "Did you see..." Section */}
+          {/* Shortened & Readable Call-to-Action */}
           <div className="mt-8 pt-8 border-t border-orange-200/50">
-            <p className="text-base sm:text-lg text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
-              Did you see an online recipe and thought <span className="font-bold text-red-600">"I wanna make that"</span>? 
-              Then simply <span className="font-semibold text-orange-600">PASTE a link</span> in the 
-              <span className="font-bold text-red-600">"Add Recipe"</span> button above to extract it instantly. 
-              Then manage your collection, plan meals, and <span className="font-bold text-red-600">COOK!</span>
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              See a recipe online? <span className="font-bold text-red-600">"I want that!"</span><br />
+              Just <span className="font-semibold text-orange-600">paste the link</span> in <span className="font-bold text-red-600">"Add Recipe"</span> — done.<br />
+              Then plan, shop, and <span className="font-bold text-red-600">COOK!</span>
             </p>
 
-            {/* Feature Dots - FIXED: Text inside <div> */}
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
+            {/* Feature Dots */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600 mt-6">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-orange-500" />
                 <span>Meal Planning</span>
