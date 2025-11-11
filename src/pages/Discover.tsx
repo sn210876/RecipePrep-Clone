@@ -58,6 +58,9 @@ export function Discover() {
         recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         recipe.tags.some((tag) =>
           tag.toLowerCase().includes(searchQuery.toLowerCase())
+        ) ||
+        recipe.ingredients.some((ingredient) =>
+          ingredient.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
       const matchesCuisine =
@@ -65,7 +68,7 @@ export function Discover() {
 
       return matchesSearch && matchesCuisine;
     });
-  }, [searchQuery, selectedCuisine]);
+  }, [searchQuery, selectedCuisine, allRecipes]);
 
   const [showAllTrending, setShowAllTrending] = useState(false);
   const [showAllQuick, setShowAllQuick] = useState(false);
@@ -91,7 +94,7 @@ export function Discover() {
   }, [allRecipes, showAllHealthy]);
 
   const internationalRecipes = useMemo(() => {
-    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese'];
+    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'];
     const filtered = allRecipes
       .filter((r) => cuisines.includes(r.cuisineType));
     return showAllInternational ? filtered : filtered.slice(0, 12);
@@ -332,7 +335,7 @@ export function Discover() {
                   />
                 ))}
               </div>
-              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican'].includes(r.cuisineType)).length > 12 && (
+              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'].includes(r.cuisineType)).length > 12 && (
                 <div className="text-center mt-8">
                   <Button
                     onClick={() => setShowAllInternational(!showAllInternational)}
