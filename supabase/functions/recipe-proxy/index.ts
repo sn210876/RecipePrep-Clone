@@ -11,19 +11,25 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 async function parseWithAI(text: string): Promise<{ ingredients: string[], instructions: string[], notes: string }> {
   if (!text.trim() || !OPENAI_API_KEY) return { ingredients: [], instructions: [], notes: "" };
 
-  const prompt = `You are a recipe extraction expert. Extract the recipe from the text and TRANSLATE EVERYTHING TO ENGLISH.
+  const prompt = `You are a recipe extraction expert. Extract ALL ingredients and ALL instructions from the recipe text. TRANSLATE EVERYTHING TO ENGLISH.
 
-CRITICAL: If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
+CRITICAL RULES:
+1. If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
+2. Extract EVERY SINGLE ingredient listed in the recipe - do not skip any.
+3. Extract EVERY SINGLE instruction step - include all details and sub-steps.
+4. Preserve quantities, measurements, and cooking times exactly.
+5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include all of them.
+6. If there are detailed preparation steps, include them all.
 
 Return ONLY valid JSON in this exact format:
 {
-  "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt"],
-  "instructions": ["Preheat oven to 350F", "Mix ingredients", "Bake for 30 minutes"],
+  "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt", ...],
+  "instructions": ["Step 1 with full details", "Step 2 with full details", ...],
   "notes": "Any cooking tips or notes"
 }
 
 Text to extract from:
-${text.slice(0, 15000)}`;
+${text.slice(0, 20000)}`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -34,9 +40,9 @@ ${text.slice(0, 15000)}`;
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [{ role: "system", content: prompt }],
+        messages: [{ role: "user", content: prompt }],
         temperature: 0.1,
-        max_tokens: 1200,
+        max_tokens: 3000,
       }),
     });
 
@@ -71,25 +77,45 @@ async function scrapeRecipeSite(url: string) {
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     const title = titleMatch ? titleMatch[1].split('|')[0].trim() : 'Recipe';
 
-    const recipeMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/i);
-    if (recipeMatch) {
-      const json = JSON.parse(recipeMatch[1]);
-      const recipe = Array.isArray(json) ? json.find((r: any) => r['@type'] === 'Recipe') : json['@type'] === 'Recipe' ? json : null;
+    const recipeMatches = html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/gi);
+    for (const match of recipeMatches) {
+      try {
+        const json = JSON.parse(match[1]);
+        const recipes = Array.isArray(json) ? json : [json];
 
-      if (recipe) {
-        return {
-          title: recipe.name || title,
-          ingredients: recipe.recipeIngredient || [],
-          instructions: Array.isArray(recipe.recipeInstructions)
-            ? recipe.recipeInstructions.map((i: any) => typeof i === 'string' ? i : i.text || '')
-            : typeof recipe.recipeInstructions === 'string'
-              ? recipe.recipeInstructions.split('\n')
-              : [],
-          image: recipe.image?.url || recipe.image || '',
-          yield: recipe.recipeYield || '',
-          time: recipe.totalTime || 0,
-          notes: 'Scraped from structured data',
-        };
+        for (const item of recipes) {
+          if (item['@type'] === 'Recipe' || (Array.isArray(item['@graph']) && item['@graph'].some((g: any) => g['@type'] === 'Recipe'))) {
+            const recipe = item['@type'] === 'Recipe' ? item : item['@graph'].find((g: any) => g['@type'] === 'Recipe');
+
+            if (recipe && recipe.recipeIngredient && recipe.recipeInstructions) {
+              const instructions = Array.isArray(recipe.recipeInstructions)
+                ? recipe.recipeInstructions.map((i: any) => {
+                    if (typeof i === 'string') return i;
+                    if (i.text) return i.text;
+                    if (i.itemListElement) {
+                      return i.itemListElement.map((e: any) => e.text || '').join(' ');
+                    }
+                    return '';
+                  }).filter(Boolean)
+                : typeof recipe.recipeInstructions === 'string'
+                  ? recipe.recipeInstructions.split('\n').filter(Boolean)
+                  : [];
+
+              return {
+                title: recipe.name || title,
+                ingredients: recipe.recipeIngredient || [],
+                instructions,
+                image: recipe.image?.url || (Array.isArray(recipe.image) ? recipe.image[0] : recipe.image) || '',
+                yield: recipe.recipeYield || '',
+                time: recipe.totalTime || 0,
+                notes: 'Extracted from structured data',
+              };
+            }
+          }
+        }
+      } catch (e) {
+        console.error("JSON parse error:", e);
+        continue;
       }
     }
 
