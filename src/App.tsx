@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
@@ -19,15 +19,10 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
   const [discoverKey, setDiscoverKey] = useState(0);
   const [completedVerifying, setCompletedVerifying] = useState(false);
-  const [isPasswordReset, setIsPasswordReset] = useState(false);
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
 
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.includes('type=recovery')) {
-      setIsPasswordReset(true);
-    }
-  }, []);
+  const hash = window.location.hash;
+  const isPasswordReset = hash && hash.includes('type=recovery');
 
   const handleNavigate = (page: string) => {
     if (page === 'discover') {
