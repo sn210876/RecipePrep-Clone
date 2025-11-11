@@ -58,7 +58,7 @@ export function Home({ onNavigate }: HomeProps) {
 
           <div className="mt-16 pt-12 border-t border-orange-200/50">
             <p className="text-sm text-gray-600 mb-8">
-              Did you see something online recipe and thought "I wanna make that", then simply PASTE a link in "Add Recipe" button above to recipe extraction. Then manage your collection, plan meals, cook, and upload a photo to show how you did.
+              Did you see something online recipe and thought "I wanna make that", then simply PASTE a link in "Add Recipe" button above to recipe extraction. Then manage your collection, plan meals, and COOK!
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
               <div className="flex items-center gap-2">
