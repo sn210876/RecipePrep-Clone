@@ -14,6 +14,29 @@ import { extractRecipeFromUrl, isValidUrl, getPlatformFromUrl, type ExtractedRec
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+function parseTimeValue(value: string | number): number {
+  if (typeof value === 'number') return value;
+
+  const str = String(value).trim();
+  if (/^PT\d+[HM]$/i.test(str)) {
+    const hours = str.match(/PT(\d+)H/i);
+    const minutes = str.match(/PT(\d+)M/i) || str.match(/(\d+)M/i);
+    return (hours ? parseInt(hours[1]) * 60 : 0) + (minutes ? parseInt(minutes[1]) : 0);
+  }
+
+  const num = parseInt(str);
+  return isNaN(num) ? 0 : num;
+}
+
+function parseServingsValue(value: string | number): number {
+  if (typeof value === 'number') return value;
+
+  const str = String(value).trim();
+  const match = str.match(/(\d+)/);
+  const num = match ? parseInt(match[1]) : parseInt(str);
+  return isNaN(num) ? 1 : num;
+}
+
 const UNITS = [
   'cup', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'l',
   'piece', 'whole', 'pinch', 'dash', 'to taste'
@@ -162,9 +185,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     setIngredients(normalizedIngredients);
 
     setInstructions(extractedData.instructions);
-    setPrepTime(extractedData.prepTime);
-    setCookTime(extractedData.cookTime);
-    setServings(extractedData.servings);
+    setPrepTime(String(parseTimeValue(extractedData.prepTime)));
+    setCookTime(String(parseTimeValue(extractedData.cookTime)));
+    setServings(String(parseServingsValue(extractedData.servings)));
     setCuisineType(extractedData.cuisineType);
     setDifficulty(extractedData.difficulty);
     setSelectedMealTypes(extractedData.mealTypes);
@@ -233,9 +256,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       title: title.trim(),
       ingredients: validIngredients,
       instructions: validInstructions,
-      prepTime: parseInt(prepTime),
-      cookTime: parseInt(cookTime),
-      servings: parseInt(servings),
+      prepTime: parseTimeValue(prepTime),
+      cookTime: parseTimeValue(cookTime),
+      servings: parseServingsValue(servings),
       tags: [...selectedMealTypes, ...selectedDietaryTags],
       cuisineType,
       difficulty,
@@ -829,7 +852,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               </ScrollArea>
             )}
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="flex justify-center gap-2">
               <Button
                 type="button"
                 variant="outline"
