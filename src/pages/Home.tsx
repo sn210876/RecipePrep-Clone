@@ -15,11 +15,11 @@ export function Home({ onNavigate }: HomeProps) {
         <div className="text-center max-w-4xl mx-auto">
           {/* Hero Header */}
           <div className="mb-12">
-            <div className="inline-flex items-center justify-center w-64 h-64 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6 p-6">
+            <div className="inline-flex items-center justify-center w-44 h-44 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6 p-0">
               <img
                 src="/Phoenix_10_simple_logo_icon_ceramic_bowl_with_wooden_spoon_ing_0.jpg"
                 alt="Recipe Prep Logo"
-                className="w-full h-full object-contain"
+                className="w-64 h-64 object-contain"
               />
             </div>
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-3">
