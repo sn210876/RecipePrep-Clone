@@ -16,8 +16,9 @@ export function Home({ onNavigate }: HomeProps) {
           {/* Hero Header */}
           <div className="mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6">
-              <span className="text-4xl">Cooking Pot</span>
-            </div>
+<div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6">
+  <span className="text-4xl">Cooking Pot</span>
+</div>            </div>
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-3">
               Recipe Prep
             </h1>
