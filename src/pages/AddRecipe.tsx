@@ -13,7 +13,10 @@ import { toast } from 'sonner';
 import { extractRecipeFromUrl, isValidUrl, getPlatformFromUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+const { data, error } = await supabase.auth.signUp({
+  email: 'user@example.com',
+  password: 'password',
+});
 const UNITS = [
   'cup', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'l',
   'piece', 'whole', 'pinch', 'dash', 'to taste'
