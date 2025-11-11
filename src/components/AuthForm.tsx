@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { supabase } from '../lib/supabase';
+import { ForgotPassword } from '../pages/ForgotPassword';
 
 export function AuthForm() {
   const [isLogin, setIsLogin] = useState(false);
@@ -10,6 +11,7 @@ export function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showVerificationScreen, setShowVerificationScreen] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +80,10 @@ export function AuthForm() {
       setLoading(false);
     }
   };
+
+  if (showForgotPassword) {
+    return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
+  }
 
   if (showVerificationScreen) {
     return (
@@ -215,7 +221,18 @@ export function AuthForm() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
+          {isLogin && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+
+          <div className="mt-4 text-center">
             <button
               onClick={() => {
                 setIsLogin(!isLogin);
