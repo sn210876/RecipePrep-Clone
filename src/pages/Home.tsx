@@ -33,7 +33,7 @@ export function Home({ onNavigate }: HomeProps) {
             <Button
               onClick={() => onNavigate('discover')}
               size="lg"
-              className="w-full sm:w-auto min-w-48 h-16 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
+              className="w-full sm:w-auto min-w-48 h-16 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300Suggest gap-3"
             >
               <Search className="w-5 h-5" />
               <span>Discover</span>
@@ -56,7 +56,7 @@ export function Home({ onNavigate }: HomeProps) {
             </Button>
           </div>
 
-          {/* "Did you see..." Section - Half Font Size */}
+          {/* "Did you see..." Section */}
           <div className="mt-8 pt-8 border-t border-orange-200/50">
             <p className="text-base sm:text-lg text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
               Did you see an online recipe and thought <span className="font-bold text-red-600">"I wanna make that"</span>? 
@@ -65,13 +65,24 @@ export function Home({ onNavigate }: HomeProps) {
               Then manage your collection, plan meals, and <span className="font-bold text-red-600">COOK!</span>
             </p>
 
-            {/* Feature Dots */}
+            {/* Feature Dots - FIXED: Text inside <div> */}
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-orange-500" />
-                Meal Planning
+                <span>Meal Planning</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-amber-500" />
-                Smart Shopping Lists
-              </
+                <span>Smart Shopping Lists</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-orange-600" />
+                <span>Hands-Free Cooking</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
