@@ -1,5 +1,26 @@
 # Security Setup Instructions
 
+## ⚠️ CRITICAL: Email Verification (REQUIRED)
+
+**Status:** ❌ NOT ENABLED - Manual action required
+
+The application now requires email verification before users can access any features. You must enable this in Supabase.
+
+### Steps to Enable Email Verification:
+
+1. Go to your Supabase Dashboard: https://supabase.com/dashboard
+2. Select your project
+3. Navigate to **Authentication** → **Providers** → **Email**
+4. Find **"Confirm email"** setting
+5. Toggle it **ON**
+6. Click **Save**
+
+**What happens:**
+- New users receive a verification email after signup
+- Users are redirected to a verification page until they confirm
+- Users can resend verification emails if needed
+- Login only works for verified email addresses
+
 ## ⚠️ CRITICAL: Leaked Password Protection (REQUIRED)
 
 **Status:** ❌ NOT ENABLED - Manual action required
@@ -17,7 +38,7 @@ Supabase Auth can prevent users from using compromised passwords by checking aga
 
 **Why this matters:** This prevents users from choosing passwords that have been exposed in data breaches, significantly improving account security.
 
-**Note:** This setting cannot be changed programmatically and must be configured through the Supabase Dashboard.
+**Note:** These settings cannot be changed programmatically and must be configured through the Supabase Dashboard.
 
 ## Database Security
 

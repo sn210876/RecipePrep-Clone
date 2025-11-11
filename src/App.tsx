@@ -9,13 +9,14 @@ import { AddRecipe } from './pages/AddRecipe';
 import { MealPlanner } from './pages/MealPlanner';
 import { ShoppingList } from './pages/ShoppingList';
 import { Settings } from './pages/Settings';
+import { VerifyEmail } from './pages/VerifyEmail';
 import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
   const [discoverKey, setDiscoverKey] = useState(0);
-  const { user, loading } = useAuth();
+  const { user, loading, isEmailVerified } = useAuth();
 
   const handleNavigate = (page: string) => {
     if (page === 'discover') {
@@ -57,7 +58,11 @@ function AppContent() {
   }
 
   if (!user) {
-    return <AuthForm onAuthSuccess={() => setCurrentPage('home')} />;
+    return <AuthForm />;
+  }
+
+  if (!isEmailVerified) {
+    return <VerifyEmail />;
   }
 
   return (

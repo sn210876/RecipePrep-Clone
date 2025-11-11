@@ -3,11 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { supabase } from '../lib/supabase';
 
-interface AuthFormProps {
-  onAuthSuccess: () => void;
-}
-
-export function AuthForm({ onAuthSuccess }: AuthFormProps) {
+export function AuthForm() {
   const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,10 +31,7 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
           email: data.user.email,
         });
 
-        setMessage('Account created successfully! Logging you in...');
-        setTimeout(() => {
-          onAuthSuccess();
-        }, 1000);
+        setMessage('Account created! Check your email to verify.');
       }
     } catch (err: any) {
       setError(err.message || 'Failed to sign up');
@@ -60,11 +53,6 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
       });
 
       if (loginError) throw loginError;
-
-      setMessage('Logged in successfully!');
-      setTimeout(() => {
-        onAuthSuccess();
-      }, 500);
     } catch (err: any) {
       setError(err.message || 'Failed to log in');
     } finally {
