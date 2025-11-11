@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isEmailVerified: boolean;
+  showVerifying: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -16,6 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showVerifying, setShowVerifying] = useState(false);
 
   const isEmailVerified = user ? !!user.email_confirmed_at : false;
 
@@ -28,8 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
+        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+          setShowVerifying(true);
+        }
         setSession(session);
         setUser(session?.user ?? null);
       })();
@@ -45,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isEmailVerified, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isEmailVerified, showVerifying, signOut }}>
       {children}
     </AuthContext.Provider>
   );

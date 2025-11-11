@@ -10,13 +10,15 @@ import { MealPlanner } from './pages/MealPlanner';
 import { ShoppingList } from './pages/ShoppingList';
 import { Settings } from './pages/Settings';
 import { VerifyEmail } from './pages/VerifyEmail';
+import { Verifying } from './pages/Verifying';
 import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
   const [discoverKey, setDiscoverKey] = useState(0);
-  const { user, loading, isEmailVerified } = useAuth();
+  const [completedVerifying, setCompletedVerifying] = useState(false);
+  const { user, loading, isEmailVerified, showVerifying } = useAuth();
 
   const handleNavigate = (page: string) => {
     if (page === 'discover') {
@@ -59,6 +61,10 @@ function AppContent() {
 
   if (!user) {
     return <AuthForm />;
+  }
+
+  if (showVerifying && !completedVerifying) {
+    return <Verifying onComplete={() => setCompletedVerifying(true)} />;
   }
 
   if (!isEmailVerified) {
