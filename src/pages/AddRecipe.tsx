@@ -21,7 +21,7 @@ const UNITS = [
 
 const CUISINE_TYPES = [
   'Italian', 'Chinese', 'Mexican', 'Japanese', 'Indian', 'Thai',
-  'French', 'Mediterranean', 'American', 'Korean', 'Vietnamese', 'Other'
+  'French', 'Mediterranean', 'American', 'Korean', 'Vietnamese', 'Vegan/Vegetarian','Other'
 ];
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
