@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { VoiceSettings } from '../components/VoiceControls';
 import { useRecipes } from '../context/RecipeContext';
+import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
-import { Video, Image, Sparkles, Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2 } from 'lucide-react';
+import { Video, Image, Sparkles, Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut } from 'lucide-react';
 import { Slider } from '../components/ui/slider';
 import { Switch } from '../components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 
 export function Settings() {
   const { state, dispatch } = useRecipes();
+  const { user, signOut } = useAuth();
   const [forwardingEmail, setForwardingEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -166,6 +168,15 @@ export function Settings() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+    } catch (error) {
+      toast.error('Failed to log out');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
@@ -175,6 +186,29 @@ export function Settings() {
         </div>
 
         <div className="space-y-6">
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-br from-orange-50 to-red-50 border-b border-orange-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-orange-600 flex items-center justify-center">
+                  <Mail className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <CardTitle className="text-2xl text-slate-900">Account</CardTitle>
+                  <CardDescription className="text-slate-600">
+                    {user?.email || 'Your account information'}
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Log Out
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-gradient-to-br from-blue-50 to-cyan-50 border-b border-blue-100">
               <div className="flex items-center gap-3">

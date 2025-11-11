@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { Discover } from './pages/Discover';
@@ -9,10 +10,12 @@ import { MealPlanner } from './pages/MealPlanner';
 import { ShoppingList } from './pages/ShoppingList';
 import { Settings } from './pages/Settings';
 import { Toaster } from './components/ui/sonner';
+import { AuthForm } from './components/AuthForm';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('home');
   const [discoverKey, setDiscoverKey] = useState(0);
+  const { user, loading } = useAuth();
 
   const handleNavigate = (page: string) => {
     if (page === 'discover') {
@@ -42,6 +45,21 @@ function AppContent() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthForm onAuthSuccess={() => setCurrentPage('home')} />;
+  }
+
   return (
     <Layout currentPage={currentPage} onNavigate={handleNavigate}>
       {renderPage()}
@@ -51,10 +69,12 @@ function AppContent() {
 
 function App() {
   return (
-    <RecipeProvider>
-      <AppContent />
-      <Toaster />
-    </RecipeProvider>
+    <AuthProvider>
+      <RecipeProvider>
+        <AppContent />
+        <Toaster />
+      </RecipeProvider>
+    </AuthProvider>
   );
 }
 
