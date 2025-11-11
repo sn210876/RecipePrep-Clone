@@ -54,13 +54,46 @@ export function RecipeCard({ recipe, onSave, onCook, showReviewButton = false }:
         onClick={() => setShowDetail(true)}
       >
       <div className="relative overflow-hidden aspect-[4/3]">
-        <img
-          src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-            ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-            : recipe.imageUrl}
-          alt={recipe.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
+        {recipe.videoUrl ? (
+          <div className="w-full h-full bg-black flex items-center justify-center">
+            {recipe.videoUrl.includes('tiktok.com') ? (
+              <iframe
+                src={`https://www.tiktok.com/embed/${recipe.videoUrl.match(/video\/(\d+)/)?.[1]}`}
+                className="w-full h-full"
+                allowFullScreen
+              />
+            ) : recipe.videoUrl.includes('youtube.com') || recipe.videoUrl.includes('youtu.be') ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${recipe.videoUrl.includes('youtu.be') ? recipe.videoUrl.split('/').pop() : new URLSearchParams(new URL(recipe.videoUrl).search).get('v')}`}
+                className="w-full h-full"
+                allowFullScreen
+              />
+            ) : recipe.videoUrl.includes('instagram.com') ? (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500">
+                <div className="text-white text-center p-4">
+                  <p className="text-sm font-semibold">Instagram Video</p>
+                  <p className="text-xs mt-1">Click to view details</p>
+                </div>
+              </div>
+            ) : (
+              <img
+                src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+                  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                  : recipe.imageUrl}
+                alt={recipe.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+            )}
+          </div>
+        ) : (
+          <img
+            src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+              ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+              : recipe.imageUrl}
+            alt={recipe.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute top-3 right-3 flex gap-2">
           {isSaved && (

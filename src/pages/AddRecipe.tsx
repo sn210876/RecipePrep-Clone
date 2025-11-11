@@ -51,6 +51,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [selectedMealTypes, setSelectedMealTypes] = useState<string[]>([]);
   const [selectedDietaryTags, setSelectedDietaryTags] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [urlInput, setUrlInput] = useState('');
@@ -161,6 +162,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     setSelectedMealTypes(extractedData.mealTypes);
     setSelectedDietaryTags(extractedData.dietaryTags);
     setImageUrl(extractedData.imageUrl);
+    setVideoUrl(extractedData.videoUrl || '');
     setNotes(extractedData.notes);
 
     setShowPreview(false);
@@ -232,6 +234,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       dietaryTags: selectedDietaryTags,
       mealType: selectedMealTypes,
       imageUrl: imageUrl.trim() || undefined,
+      videoUrl: videoUrl.trim() || undefined,
       notes: notes.trim() || undefined,
       isSaved: true
     };

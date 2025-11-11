@@ -21,6 +21,7 @@ export interface DBRecipe {
   dietary_tags: any;
   meal_type: any;
   image_url?: string;
+  video_url?: string;
   source_url?: string;
   notes?: string;
   is_public: boolean;
@@ -43,6 +44,7 @@ function dbRecipeToRecipe(dbRecipe: DBRecipe): Recipe {
     dietaryTags: dbRecipe.dietary_tags || [],
     mealType: dbRecipe.meal_type || [],
     imageUrl: dbRecipe.image_url,
+    videoUrl: dbRecipe.video_url,
     notes: dbRecipe.notes,
     isSaved: false,
   };
@@ -62,6 +64,7 @@ function recipeToDBRecipe(recipe: Omit<Recipe, 'id'>): Omit<DBRecipe, 'id' | 'cr
     dietary_tags: recipe.dietaryTags || [],
     meal_type: recipe.mealType || [],
     image_url: recipe.imageUrl,
+    video_url: recipe.videoUrl,
     notes: recipe.notes,
     is_public: true,
   };

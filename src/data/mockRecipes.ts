@@ -1648,5 +1648,103 @@ export const mockRecipes: Recipe[] = [
     mealType: ['Breakfast'],
     popularity: 94,
     sourceUrl: 'https://example.com/pancakes'
+  },
+  {
+    id: '51',
+    title: 'Vegan Buddha Bowl',
+    ingredients: [
+      { quantity: '1', unit: 'cup', name: 'quinoa, cooked' },
+      { quantity: '1', unit: 'cup', name: 'chickpeas, roasted' },
+      { quantity: '2', unit: 'cups', name: 'kale, massaged' },
+      { quantity: '1', unit: 'whole', name: 'sweet potato, cubed and roasted' },
+      { quantity: '1/2', unit: 'cup', name: 'hummus' },
+      { quantity: '1/4', unit: 'cup', name: 'tahini dressing' },
+      { quantity: '2', unit: 'tbsp', name: 'hemp seeds' }
+    ],
+    instructions: [
+      'Cook quinoa according to package directions.',
+      'Toss chickpeas with olive oil and spices, roast at 400°F for 25 minutes.',
+      'Massage kale with lemon juice until softened.',
+      'Roast sweet potato cubes at 425°F for 20 minutes.',
+      'Arrange all ingredients in a bowl.',
+      'Top with hummus, tahini dressing, and hemp seeds.'
+    ],
+    prepTime: 15,
+    cookTime: 30,
+    servings: 2,
+    tags: ['vegan', 'healthy', 'bowl'],
+    cuisineType: 'Vegan/Vegetarian',
+    difficulty: 'Easy',
+    dietaryTags: ['Vegan', 'Gluten-Free'],
+    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&h=600&fit=crop',
+    mealType: ['Lunch', 'Dinner'],
+    popularity: 89,
+    sourceUrl: 'https://example.com/buddha-bowl'
+  },
+  {
+    id: '52',
+    title: 'Lentil Bolognese',
+    ingredients: [
+      { quantity: '2', unit: 'cups', name: 'brown lentils' },
+      { quantity: '1', unit: 'can', name: 'crushed tomatoes (28 oz)' },
+      { quantity: '1', unit: 'whole', name: 'onion, diced' },
+      { quantity: '3', unit: 'cloves', name: 'garlic, minced' },
+      { quantity: '2', unit: 'whole', name: 'carrots, diced' },
+      { quantity: '2', unit: 'stalks', name: 'celery, diced' },
+      { quantity: '1', unit: 'tsp', name: 'dried oregano' },
+      { quantity: '1', unit: 'tsp', name: 'dried basil' }
+    ],
+    instructions: [
+      'Cook lentils according to package directions.',
+      'Sauté onion, carrot, and celery until softened.',
+      'Add garlic and cook for 1 minute.',
+      'Add cooked lentils, crushed tomatoes, and herbs.',
+      'Simmer for 20 minutes.',
+      'Serve over pasta with vegan parmesan.'
+    ],
+    prepTime: 10,
+    cookTime: 35,
+    servings: 6,
+    tags: ['vegan', 'italian', 'pasta'],
+    cuisineType: 'Vegan/Vegetarian',
+    difficulty: 'Easy',
+    dietaryTags: ['Vegan'],
+    imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop',
+    mealType: ['Dinner'],
+    popularity: 87,
+    sourceUrl: 'https://example.com/lentil-bolognese'
+  },
+  {
+    id: '53',
+    title: 'Cauliflower Buffalo Wings',
+    ingredients: [
+      { quantity: '1', unit: 'head', name: 'cauliflower, cut into florets' },
+      { quantity: '1', unit: 'cup', name: 'flour' },
+      { quantity: '1', unit: 'cup', name: 'plant milk' },
+      { quantity: '1', unit: 'tsp', name: 'garlic powder' },
+      { quantity: '3/4', unit: 'cup', name: 'buffalo sauce' },
+      { quantity: '2', unit: 'tbsp', name: 'vegan butter, melted' }
+    ],
+    instructions: [
+      'Preheat oven to 450°F.',
+      'Mix flour, milk, and garlic powder to make batter.',
+      'Dip cauliflower florets in batter.',
+      'Bake for 20 minutes until crispy.',
+      'Mix buffalo sauce with melted vegan butter.',
+      'Toss baked cauliflower in buffalo sauce.',
+      'Bake for another 20 minutes.',
+      'Serve with vegan ranch dressing.'
+    ],
+    prepTime: 15,
+    cookTime: 40,
+    servings: 4,
+    tags: ['vegan', 'appetizer', 'spicy'],
+    cuisineType: 'Vegan/Vegetarian',
+    difficulty: 'Medium',
+    dietaryTags: ['Vegan'],
+    imageUrl: 'https://images.unsplash.com/photo-1608039829572-78524f79c4c7?w=800&h=600&fit=crop',
+    mealType: ['Snack'],
+    popularity: 85,
+    sourceUrl: 'https://example.com/cauliflower-wings'
   }
 ];

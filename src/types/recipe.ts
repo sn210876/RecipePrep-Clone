@@ -28,6 +28,7 @@ export interface Recipe {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   dietaryTags: string[];
   imageUrl?: string;
+  videoUrl?: string;
   sourceUrl?: string;
   notes?: string;
   mealType: string[];

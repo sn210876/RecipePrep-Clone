@@ -17,6 +17,7 @@ export interface ExtractedRecipeData {
   mealTypes: string[];
   dietaryTags: string[];
   imageUrl: string;
+  videoUrl?: string;
   notes: string;
   sourceUrl: string;
 }
@@ -69,6 +70,10 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     instructions = instructions.split('\n').map((s: string) => s.trim()).filter((s: string) => s);
   }
 
+  const isSocialMedia = url.includes('tiktok.com') || url.includes('instagram.com') ||
+                         url.includes('youtube.com') || url.includes('youtu.be');
+  const videoUrl = isSocialMedia ? url : '';
+
   const result: ExtractedRecipeData = {
     title: data.title || 'Untitled Recipe',
     description: 'Extracted recipe',
@@ -83,6 +88,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     mealTypes: ['Dinner'],
     dietaryTags: [],
     imageUrl: data.image || '',
+    videoUrl,
     notes: data.notes || '',
     sourceUrl: url,
   };
