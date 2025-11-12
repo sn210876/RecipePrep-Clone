@@ -1,15 +1,15 @@
 /*
-  # Create Shopping Lists and Categories Tables
+  # Create Grocery Lists and Categories Tables
 
   1. New Tables
-    - `shopping_list_categories`
+    - `grocery_list_categories`
       - `id` (uuid, primary key) - Unique category identifier
       - `user_id` (uuid, not null) - User who owns the category
       - `name` (text, not null) - Category name (Produce, Dairy, Meat, etc.)
       - `sort_order` (integer, not null) - Display order for categories
       - `created_at` (timestamptz) - When created
       
-    - `shopping_list_items`
+    - `grocery_list_items`
       - `id` (uuid, primary key) - Unique item identifier
       - `user_id` (uuid, not null) - User who owns the item
       - `name` (text, not null) - Ingredient name
@@ -35,8 +35,8 @@
     - Category sort order allows custom arrangement
 */
 
--- Create shopping list categories table
-CREATE TABLE IF NOT EXISTS shopping_list_categories (
+-- Create grocery list categories table
+CREATE TABLE IF NOT EXISTS grocery_list_categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   name text NOT NULL,
@@ -44,14 +44,14 @@ CREATE TABLE IF NOT EXISTS shopping_list_categories (
   created_at timestamptz DEFAULT now()
 );
 
--- Create shopping list items table
-CREATE TABLE IF NOT EXISTS shopping_list_items (
+-- Create grocery list items table
+CREATE TABLE IF NOT EXISTS grocery_list_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   name text NOT NULL,
   quantity numeric NOT NULL DEFAULT 0,
   unit text NOT NULL,
-  category_id uuid NOT NULL REFERENCES shopping_list_categories(id) ON DELETE CASCADE,
+  category_id uuid NOT NULL REFERENCES grocery_list_categories(id) ON DELETE CASCADE,
   checked boolean DEFAULT false,
   source_recipe_ids text[] DEFAULT '{}',
   created_at timestamptz DEFAULT now(),
