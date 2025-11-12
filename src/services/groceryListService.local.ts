@@ -8,13 +8,13 @@ import {
   getBestDisplayUnit,
 } from '../lib/unitConversion';
 
-export interface ShoppingListCategory {
+export interface GroceryListCategory {
   id: string;
   name: string;
   sortOrder: number;
 }
 
-export interface ShoppingListItem {
+export interface GroceryListItem {
   id: string;
   name: string;
   quantity: number;
