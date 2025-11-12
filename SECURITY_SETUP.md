@@ -68,7 +68,7 @@ All tables have RLS enabled with appropriate policies to ensure data security:
 
 - Users can only access their own data
 - Public recipes are accessible to all authenticated users
-- Shopping lists and meal plans are private to each user
+- Grocery lists and meal plans are private to each user
 
 ## Additional Security Best Practices
 
