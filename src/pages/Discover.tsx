@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Music } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Music, Play, Pause, Volume2, VolumeX, Bell } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -77,6 +77,12 @@ export function Discover() {
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [filterHashtag, setFilterHashtag] = useState<string | null>(null);
+  const [playingMusicId, setPlayingMusicId] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const POSTS_PER_PAGE = 10;
 
@@ -305,6 +311,12 @@ export function Discover() {
 
         if (error) throw error;
 
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          actor_id: currentUserId,
+          type: 'follow',
+        });
+
         setFollowingUsers(prev => new Set([...prev, userId]));
         toast.success('Supporting!');
       }
@@ -462,6 +474,88 @@ export function Discover() {
     }, 300);
   };
 
+  const toggleMusic = (postId: string, previewUrl: string) => {
+    if (playingMusicId === postId) {
+      audioRef.current?.pause();
+      setPlayingMusicId(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      audioRef.current = new Audio(previewUrl);
+      audioRef.current.muted = isMuted;
+      audioRef.current.play();
+      setPlayingMusicId(postId);
+
+      audioRef.current.onended = () => {
+        setPlayingMusicId(null);
+      };
+    }
+  };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (audioRef.current) {
+      audioRef.current.muted = !isMuted;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const loadNotifications = async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*, actor:actor_id(username, avatar_url)')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (data) {
+        setNotifications(data);
+        setUnreadNotifications(data.filter(n => !n.read).length);
+      }
+    };
+
+    loadNotifications();
+
+    const channel = supabase
+      .channel('notifications-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUserId}` },
+        () => {
+          loadNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId]);
+
+  const markNotificationRead = async (notificationId: string) => {
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', notificationId);
+
+    setNotifications(prev =>
+      prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
+    );
+    setUnreadNotifications(prev => Math.max(0, prev - 1));
+  };
+
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
       e.preventDefault();
@@ -482,16 +576,29 @@ export function Discover() {
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto">
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Search users..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search users..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <Bell className="w-6 h-6 text-gray-700" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                </span>
+              )}
+            </button>
           </div>
           {showSearchResults && (
             <div className="absolute left-4 right-4 bg-white border border-gray-200 rounded-lg mt-2 max-h-60 overflow-y-auto shadow-lg z-20">
@@ -523,6 +630,48 @@ export function Discover() {
                 <div className="p-4 text-center text-gray-500 text-sm">
                   No users found
                 </div>
+              )}
+            </div>
+          )}
+          {showNotifications && (
+            <div className="absolute left-4 right-4 bg-white border border-gray-200 rounded-lg mt-2 max-h-96 overflow-y-auto shadow-lg z-20">
+              {notifications.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No notifications yet
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    onClick={() => {
+                      if (!notification.read) {
+                        markNotificationRead(notification.id);
+                      }
+                      setShowNotifications(false);
+                    }}
+                    className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                      !notification.read ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <p className="text-sm">
+                          <span className="font-semibold">{notification.actor?.username || 'Someone'}</span>
+                          {notification.type === 'follow' && ' started following you'}
+                          {notification.type === 'like' && ' liked your post'}
+                          {notification.type === 'comment' && ' commented on your post'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(notification.created_at).toLocaleDateString()} at{' '}
+                          {new Date(notification.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      {!notification.read && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                      )}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           )}
@@ -651,14 +800,40 @@ export function Discover() {
                         className="w-full aspect-square object-cover"
                       />
                     ) : null}
-                    {post.song_title && post.song_artist && (
-                      <div className="absolute bottom-16 left-4 right-4">
-                        <div className="inline-flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-full">
+                    {post.song_title && post.song_artist && post.song_preview_url && (
+                      <div className="absolute bottom-16 left-4 right-4 flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMusic(post.id, post.song_preview_url!);
+                          }}
+                          className="inline-flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-full hover:bg-black/70 transition-colors cursor-pointer"
+                        >
+                          {playingMusicId === post.id ? (
+                            <Pause className="w-4 h-4 text-white" />
+                          ) : (
+                            <Play className="w-4 h-4 text-white" />
+                          )}
                           <Music className="w-4 h-4 text-white" />
                           <span className="text-white text-xs font-medium truncate max-w-[200px]">
                             {post.song_title} • {post.song_artist}
                           </span>
-                        </div>
+                        </button>
+                        {playingMusicId === post.id && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleMute();
+                            }}
+                            className="bg-black/60 backdrop-blur-sm p-2 rounded-full hover:bg-black/70 transition-colors"
+                          >
+                            {isMuted ? (
+                              <VolumeX className="w-4 h-4 text-white" />
+                            ) : (
+                              <Volume2 className="w-4 h-4 text-white" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     )}
                     {post.title && (
