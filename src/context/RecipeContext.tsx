@@ -22,7 +22,7 @@ type RecipeAction =
   | { type: 'ADD_GROCERY_ITEM'; payload: ShoppingListItem }
   | { type: 'REMOVE_GROCERY_ITEM'; payload: string }
   | { type: 'TOGGLE_GROCERY_ITEM'; payload: string }
-  | { type: 'UPDATE_GROCERY_LIST'; payload: ShoppingListItem[] }
+  | { type: 'UPDATE_GROCERY_LIST'; payload: GroceryListItem[] }
   | { type: 'UPDATE_PREFERENCES'; payload: Partial<UserPreferences> }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'LOAD_STATE'; payload: RecipeState };
@@ -98,24 +98,24 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
         ...state,
         mealPlan: state.mealPlan.map(m => m.id === action.payload.id ? action.payload : m)
       };
-    case 'ADD_SHOPPING_ITEM':
+    case 'ADD_GROCERY_ITEM':
       return {
         ...state,
         shoppingList: [...state.shoppingList, action.payload]
       };
-    case 'REMOVE_SHOPPING_ITEM':
+    case 'REMOVE_GROCERY_ITEM':
       return {
         ...state,
         shoppingList: state.shoppingList.filter(i => i.id !== action.payload)
       };
-    case 'TOGGLE_SHOPPING_ITEM':
+    case 'TOGGLE_GROCERY_ITEM':
       return {
         ...state,
         shoppingList: state.shoppingList.map(i =>
           i.id === action.payload ? { ...i, checked: !i.checked } : i
         )
       };
-    case 'UPDATE_SHOPPING_LIST':
+    case 'UPDATE_GROCERY_LIST':
       return {
         ...state,
         shoppingList: action.payload
