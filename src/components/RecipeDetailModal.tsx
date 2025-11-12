@@ -15,7 +15,7 @@ import {
   Trash2,
   Edit,
   Calendar,
-  ShoppingCart,
+  GroceryCart,
   ExternalLink,
   X,
   Timer,
