@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { Upload as UploadIcon, X, Image as ImageIcon, Video, Music } from 'lucide-react';
 import { extractHashtags } from '../lib/hashtags';
 import { MusicSelectionModal } from '../components/MusicSelectionModal';
-import { Song } from '../data/mockSongs';
 import {
   Select,
   SelectContent,
@@ -25,12 +24,10 @@ interface UserRecipe {
   image_url: string;
 }
 
-// NEW: Define YTMusic Song Type
-interface YTMusicSong {
+interface SelectedSong {
   id: string;
   title: string;
   artist: string;
-  duration?: string;
   thumbnail?: string;
 }
 
@@ -43,7 +40,7 @@ export function Upload({ onNavigate }: UploadProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
   const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<Song | YTMusicSong | null>(null);
+  const [selectedSong, setSelectedSong] = useState<SelectedSong | null>(null);
   const [showMusicModal, setShowMusicModal] = useState(false);
 
   useEffect(() => {
@@ -135,10 +132,9 @@ export function Upload({ onNavigate }: UploadProps) {
         recipeLink = `${window.location.origin}/#recipe/${selectedRecipeId}`;
       }
 
-      // NEW: Handle YTMusic or Mock Song
-      const songId = (selectedSong as any)?.id || null;
-      const songTitle = (selectedSong as any)?.title || null;
-      const songArtist = (selectedSong as any)?.artist || null;
+      const songId = selectedSong?.id || null;
+      const songTitle = selectedSong?.title || null;
+      const songArtist = selectedSong?.artist || null;
       const songPreview = songId
         ? `https://www.youtube.com/embed/${songId}?autoplay=1&mute=1&loop=1&playlist=${songId}&modestbranding=1&controls=0`
         : null;
