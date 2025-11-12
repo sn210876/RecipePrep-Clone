@@ -52,7 +52,7 @@
 - **Herbs/Medicine**: Herbal Chicken Soup
 - **Hunting/Fishing**: Grilled Salmon Fillet
 - **Vietnamese**: Pho
-- **Baking/Culinary**: French Baguette & Homemade Pasta
+- **Baking/Culinary**: 
 - **Other**: General Purpose Stir Fry
 
 Now showing ALL cuisine types in filter dropdown.
