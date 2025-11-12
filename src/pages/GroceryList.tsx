@@ -300,7 +300,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Shopping List</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Grocery List</h1>
             <p className="text-sm text-gray-500 mt-1">
               {checkedCount} of {totalCount} items checked
             </p>
