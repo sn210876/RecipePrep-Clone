@@ -1,4 +1,4 @@
-import { ChefHat, Calendar, GroceryCart } from 'lucide-react';
+import { ChefHat, Calendar, ShoppingCart } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 
@@ -19,7 +19,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       description: 'Drag and drop recipes onto your weekly calendar. Smart suggestions help you plan balanced, varied meals.',
     },
     {
-      icon: GroceryCart,
+      icon: ShoppingCart,
       title: 'Smart Grocery Lists',
       description: 'Automatically generate organized grocery lists from your meal plan. Check off items as you shop.',
     },

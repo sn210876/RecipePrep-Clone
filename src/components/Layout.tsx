@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { ChefHat, Home, BookMarked, Plus, Calendar, GroceryCart, Settings, Menu, X, LogOut } from 'lucide-react';
+import { ChefHat, Home, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useAuth } from '../context/AuthContext';
@@ -31,7 +31,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     { id: 'my-recipes', label: 'My Recipes', icon: BookMarked },
     { id: 'add-recipe', label: 'Add Recipe', icon: Plus },
     { id: 'meal-planner', label: 'Meal Planner', icon: Calendar },
-    { id: 'grocery-list', label: 'Grocery List', icon: groceryCart },
+    { id: 'grocery-list', label: 'Grocery List', icon: ShoppingCart },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 

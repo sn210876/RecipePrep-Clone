@@ -15,7 +15,7 @@ import {
   Trash2,
   Edit,
   Calendar,
-  GroceryCart,
+  ShoppingCart,
   ExternalLink,
   X,
   Timer,
@@ -253,7 +253,7 @@ export function RecipeDetailModal({
                   onClick={handleAddToGroceryList}
                   className="flex-1 gap-2 hover:bg-orange-50 hover:border-primary hover:text-primary"
                 >
-                  <GroceryCart className="w-4 h-4" />
+                  <ShoppingCart className="w-4 h-4" />
                   Add to Grocery List
                 </Button>
 
