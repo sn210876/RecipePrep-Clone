@@ -82,7 +82,7 @@ export function RecipeDetailModal({
         checked: false,
         sourceRecipeIds: [recipe.id],
       };
-      dispatch({ type: 'ADD_SHOPPING_ITEM', payload: item });
+      dispatch({ type: 'ADD_GROCERY_ITEM', payload: item });
     });
     toast.success('Ingredients added to shopping list');
   };
