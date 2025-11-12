@@ -137,7 +137,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
   function handleDeleteItem(itemId: string) {
     dispatch({
-      type: 'REMOVE_SHOPPING_ITEM',
+      type: 'REMOVE_GROCERY_ITEM',
       payload: itemId
     });
   }
@@ -145,7 +145,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   function handleClearChecked() {
     const uncheckedItems = items.filter(item => !item.checked);
     dispatch({
-      type: 'UPDATE_SHOPPING_LIST',
+      type: 'UPDATE_GROCERY_LIST',
       payload: uncheckedItems
     });
   }
