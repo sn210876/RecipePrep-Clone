@@ -12,23 +12,28 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [hasToken, setHasToken] = useState(false);
 
-  // Verify recovery token on load
+  // ✅ Verify recovery token on load (supports access_token or token)
   useEffect(() => {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
-    const token = params.get('access_token');
-    const type = params.get('type');
+
+    const token = params.get('access_token') || params.get('token');
+    const type = params.get('type') || 'recovery';
 
     if (token && type === 'recovery') {
-      supabase.auth.verifyOtp({ token_hash: token, type: 'recovery' })
+      supabase.auth
+        .verifyOtp({ token_hash: token, type: 'recovery' })
         .then(({ error }) => {
           if (error) {
+            console.error('Verification error:', error);
             setError('Link expired or invalid. Please request a new one.');
           } else {
+            console.log('Recovery token verified successfully.');
             setHasToken(true);
           }
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('Unexpected verification error:', err);
           setError('Failed to verify link. Please try again.');
         });
     } else {
@@ -36,7 +41,7 @@ export default function ResetPassword() {
     }
   }, []);
 
-  // Handle password reset
+  // ✅ Handle password reset
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -58,16 +63,17 @@ export default function ResetPassword() {
       if (updateError) throw updateError;
       setSuccess(true);
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = '/login'; // ✅ Redirect to login instead of homepage
       }, 2000);
     } catch (err: any) {
+      console.error('Password reset failed:', err);
       setError(err.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
   };
 
-  // Success Screen
+  // ✅ Success Screen
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
@@ -91,7 +97,7 @@ export default function ResetPassword() {
                 <div className="w-2 h-2 bg-orange-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
               </div>
               <p className="text-sm text-gray-500 mt-6">
-                Redirecting to home...
+                Redirecting to login...
               </p>
             </div>
           </div>
@@ -100,7 +106,7 @@ export default function ResetPassword() {
     );
   }
 
-  // Invalid Link Screen
+  // ❌ Invalid Link Screen
   if (!hasToken) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
@@ -119,7 +125,7 @@ export default function ResetPassword() {
                 {error || 'This password reset link is invalid or has expired.'}
               </p>
               <Button
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = '/')}
                 className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold h-12 text-base shadow-lg"
               >
                 Back to Sign In
@@ -131,7 +137,7 @@ export default function ResetPassword() {
     );
   }
 
-  // Password Form
+  // ✅ Password Form
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-red-200/30 to-transparent rounded-full blur-3xl" />
@@ -141,15 +147,18 @@ export default function ResetPassword() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl shadow-lg mb-4">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Create New Password
             </h1>
-            <p className="text-gray-600">
-              Enter your new password below
-            </p>
+            <p className="text-gray-600">Enter your new password below</p>
           </div>
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div>
@@ -185,9 +194,7 @@ export default function ResetPassword() {
               />
             </div>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
             )}
             <Button
               type="submit"
