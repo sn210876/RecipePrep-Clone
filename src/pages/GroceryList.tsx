@@ -151,9 +151,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }
 
   function handleClearAll() {
-    if (!window.confirm('Are you sure you want to clear all items from your shopping list?')) return;
+    if (!window.confirm('Are you sure you want to clear all items from your grocery list?')) return;
     dispatch({
-      type: 'UPDATE_SHOPPING_LIST',
+      type: 'UPDATE_GROCERY_LIST',
       payload: []
     });
   }
@@ -161,7 +161,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   function handleAddItem() {
     if (!newItemName.trim() || !newItemCategory) return;
 
-    const newItem: ShoppingListItem = {
+    const newItem: GroceryListItem = {
       id: `item-${Date.now()}-${Math.random()}`,
       name: newItemName.trim(),
       quantity: parseFloat(newItemQuantity) || 1,
@@ -172,7 +172,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     };
 
     dispatch({
-      type: 'ADD_SHOPPING_ITEM',
+      type: 'ADD_GROCERY_ITEM',
       payload: newItem
     });
 
@@ -185,23 +185,23 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
   function handleAddRecipe() {
     if (!selectedRecipeId) {
-      console.log('[ShoppingList] No recipe selected');
+      console.log('[GroceryList] No recipe selected');
       return;
     }
 
-    console.log('[ShoppingList] Looking for recipe:', selectedRecipeId);
-    console.log('[ShoppingList] Available recipes:', state.savedRecipes.length);
+    console.log('[GroceryList] Looking for recipe:', selectedRecipeId);
+    console.log('[GroceryList] Available recipes:', state.savedRecipes.length);
 
     const recipe = state.savedRecipes.find(r => r.id === selectedRecipeId);
     if (!recipe) {
-      console.log('[ShoppingList] Recipe not found');
+      console.log('[GroceryList] Recipe not found');
       toast.error('Recipe not found');
       return;
     }
 
-    console.log('[ShoppingList] Found recipe:', recipe.title, 'ingredients:', recipe.ingredients.length);
+    console.log('[GroceryList] Found recipe:', recipe.title, 'ingredients:', recipe.ingredients.length);
 
-    const newItems: ShoppingListItem[] = recipe.ingredients.map((ing, idx) => {
+    const newItems: GroceryListItem[] = recipe.ingredients.map((ing, idx) => {
       const categoryId = getCategoryForIngredient(ing.name);
       return {
         id: `item-${Date.now()}-${idx}`,
@@ -214,10 +214,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       };
     });
 
-    console.log('[ShoppingList] Adding items:', newItems.length);
+    console.log('[GroceryList] Adding items:', newItems.length);
 
     dispatch({
-      type: 'UPDATE_SHOPPING_LIST',
+      type: 'UPDATE_GROCERY_LIST',
       payload: [...items, ...newItems]
     });
 
