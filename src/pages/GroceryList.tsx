@@ -52,9 +52,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
   function loadMealPlannerItems() {
     console.log('[GroceryList] Loading meal planner items');
-    console.log('[ShoppingList] Date range:', startDate, 'to', endDate);
-    console.log('[ShoppingList] Total meals in plan:', state.mealPlan.length);
-    console.log('[ShoppingList] Meal plan data:', state.mealPlan);
+    console.log('[GroceryList] Date range:', startDate, 'to', endDate);
+    console.log('[GroceryList] Total meals in plan:', state.mealPlan.length);
+    console.log('[GroceryList] Meal plan data:', state.mealPlan);
 
     const start = new Date(startDate);
     start.setHours(0, 0, 0, 0);
@@ -65,19 +65,19 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       const mealDate = new Date(meal.date);
       mealDate.setHours(0, 0, 0, 0);
       const inRange = mealDate >= start && mealDate <= end;
-      console.log('[ShoppingList] Meal date:', meal.date, 'in range:', inRange);
+      console.log('[GroceryList] Meal date:', meal.date, 'in range:', inRange);
       return inRange;
     });
 
-    console.log('[ShoppingList] Meals in range:', mealsInRange.length);
+    console.log('[GroceryList] Meals in range:', mealsInRange.length);
 
-    const ingredientsToAdd: { [key: string]: ShoppingListItem } = {};
+    const ingredientsToAdd: { [key: string]: GroceryListItem } = {};
 
     mealsInRange.forEach(meal => {
       const recipe = state.savedRecipes.find(r => r.id === meal.recipeId);
-      console.log('[ShoppingList] Looking for recipe:', meal.recipeId, 'found:', !!recipe);
+      console.log('[GroceryList] Looking for recipe:', meal.recipeId, 'found:', !!recipe);
       if (recipe) {
-        console.log('[ShoppingList] Recipe:', recipe.title, 'ingredients:', recipe.ingredients.length);
+        console.log('[GroceryList] Recipe:', recipe.title, 'ingredients:', recipe.ingredients.length);
         recipe.ingredients.forEach(ing => {
           const key = `${ing.name.toLowerCase()}-${ing.unit}`;
           if (ingredientsToAdd[key]) {
@@ -101,18 +101,18 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       }
     });
 
-    console.log('[ShoppingList] Total ingredients to add:', Object.keys(ingredientsToAdd).length);
+    console.log('[GroceryList] Total ingredients to add:', Object.keys(ingredientsToAdd).length);
 
     const existingItemKeys = new Set(items.map(item => `${item.name.toLowerCase()}-${item.unit}`));
     const newItems = Object.values(ingredientsToAdd).filter(
       item => !existingItemKeys.has(`${item.name.toLowerCase()}-${item.unit}`)
     );
 
-    console.log('[ShoppingList] New items after filtering:', newItems.length);
+    console.log('[GroceryList] New items after filtering:', newItems.length);
 
     if (newItems.length > 0) {
       dispatch({
-        type: 'UPDATE_SHOPPING_LIST',
+        type: 'UPDATE_GROCERY_LIST',
         payload: [...items, ...newItems]
       });
     }
@@ -130,7 +130,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
   function handleToggleItem(itemId: string) {
     dispatch({
-      type: 'TOGGLE_SHOPPING_ITEM',
+      type: 'TOGGLE_GROCERY_ITEM',
       payload: itemId
     });
   }
