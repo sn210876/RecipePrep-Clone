@@ -12,29 +12,15 @@ export function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [hasToken, setHasToken] = useState(false);
 
-  // ✅ Verify recovery token on load (supports access_token or token)
   useEffect(() => {
-    const hash = window.location.hash.substring(1);
-const params = new URLSearchParams(hash);
-
-const token = params.get('access_token') || params.get('token');
-const type = params.get('type') || 'recovery';
-
-if (token && type === 'recovery') {
-  supabase.auth.verifyOtp({ token_hash: token, type: 'recovery' })
-    .then(({ error }) => {
-      if (error) {
-        setError('Link expired or invalid. Please request a new one.');
-      } else {
-        setHasToken(true); // Show the form to enter new password
-      }
-    });
-} else {
-  setError('Invalid reset link. Please request a new one.');
-}
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      setHasToken(true);
+    } else {
+      setError('Invalid or expired reset link. Please request a new one.');
+    }
   }, []);
 
-  // ✅ Handle password reset
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
