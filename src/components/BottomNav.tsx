@@ -1,4 +1,4 @@
-import { Home, PlusCircle, User } from 'lucide-react';
+import { PlusCircle, User, UtensilsCrossed } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -42,7 +42,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
             currentPage === 'discover' ? 'text-cyan-500' : 'text-gray-600 hover:text-cyan-500'
           }`}
         >
-          <Home className="w-7 h-7" strokeWidth={currentPage === 'discover' ? 2.5 : 2} />
+          <UtensilsCrossed className="w-7 h-7" strokeWidth={currentPage === 'discover' ? 2.5 : 2} />
         </button>
 
         <button

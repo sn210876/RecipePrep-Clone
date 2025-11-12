@@ -384,14 +384,31 @@ export function Discover() {
       return;
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('id, username, avatar_url')
-      .ilike('username', `%${query}%`)
+      .ilike('username', `${query}%`)
       .limit(10);
 
+    if (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
     setSearchResults(data || []);
-    setShowSearchResults(true);
+    setShowSearchResults(data && data.length > 0);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      if (searchResults.length > 0) {
+        setViewingUserId(searchResults[0].id);
+        setShowSearchResults(false);
+        setSearchQuery('');
+      }
+    }
   };
 
   return (
@@ -404,6 +421,7 @@ export function Discover() {
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Search users..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
