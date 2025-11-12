@@ -59,61 +59,61 @@ CREATE TABLE IF NOT EXISTS grocery_list_items (
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_shopping_list_categories_user_id ON shopping_list_categories(user_id);
-CREATE INDEX IF NOT EXISTS idx_shopping_list_categories_sort_order ON shopping_list_categories(user_id, sort_order);
-CREATE INDEX IF NOT EXISTS idx_shopping_list_items_user_id ON shopping_list_items(user_id);
-CREATE INDEX IF NOT EXISTS idx_shopping_list_items_category ON shopping_list_items(category_id);
+CREATE INDEX IF NOT EXISTS idx_grocery_list_categories_user_id ON shopping_list_categories(user_id);
+CREATE INDEX IF NOT EXISTS idx_grocery_list_categories_sort_order ON shopping_list_categories(user_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_grocery_list_items_user_id ON shopping_list_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_grocery_list_items_category ON grocery_list_items(category_id);
 
 -- Enable RLS
-ALTER TABLE shopping_list_categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE shopping_list_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE grocery_list_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE grocery_list_items ENABLE ROW LEVEL SECURITY;
 
 -- Categories policies
 CREATE POLICY "Users can read own categories"
-  ON shopping_list_categories
+  ON grocery_list_categories
   FOR SELECT
   USING (true);
 
 CREATE POLICY "Users can insert own categories"
-  ON shopping_list_categories
+  ON grocery_list_categories
   FOR INSERT
   WITH CHECK (true);
 
 CREATE POLICY "Users can update own categories"
-  ON shopping_list_categories
+  ON grocery_list_categories
   FOR UPDATE
   USING (true)
   WITH CHECK (true);
 
 CREATE POLICY "Users can delete own categories"
-  ON shopping_list_categories
+  ON grocery_list_categories
   FOR DELETE
   USING (true);
 
 -- Items policies
 CREATE POLICY "Users can read own items"
-  ON shopping_list_items
+  ON grocery_list_items
   FOR SELECT
   USING (true);
 
 CREATE POLICY "Users can insert own items"
-  ON shopping_list_items
+  ON grocery_list_items
   FOR INSERT
   WITH CHECK (true);
 
 CREATE POLICY "Users can update own items"
-  ON shopping_list_items
+  ON grocery_list_items
   FOR UPDATE
   USING (true)
   WITH CHECK (true);
 
 CREATE POLICY "Users can delete own items"
-  ON shopping_list_items
+  ON grocery_list_items
   FOR DELETE
   USING (true);
 
 -- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_shopping_list_item_updated_at()
+CREATE OR REPLACE FUNCTION update_grocery_list_item_updated_at()
 RETURNS trigger AS $$
 BEGIN
   NEW.updated_at = now();
@@ -122,8 +122,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger
-DROP TRIGGER IF EXISTS update_shopping_list_item_updated_at_trigger ON shopping_list_items;
-CREATE TRIGGER update_shopping_list_item_updated_at_trigger
-  BEFORE UPDATE ON shopping_list_items
+DROP TRIGGER IF EXISTS update_grocery_list_item_updated_at_trigger ON grocery_list_items;
+CREATE TRIGGER update_grocery_list_item_updated_at_trigger
+  BEFORE UPDATE ON grocery_list_items
   FOR EACH ROW
-  EXECUTE FUNCTION update_shopping_list_item_updated_at();
+  EXECUTE FUNCTION update_grocery_list_item_updated_at();
