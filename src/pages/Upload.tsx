@@ -52,6 +52,20 @@ export function Upload({ onNavigate }: UploadProps) {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
 
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userData.user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        await supabase.from('profiles').insert({
+          id: userData.user.id,
+          username: userData.user.email?.split('@')[0] || 'user',
+          avatar_url: null,
+        });
+      }
+
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${userData.user.id}/${Date.now()}.${fileExt}`;
 
@@ -79,7 +93,7 @@ export function Upload({ onNavigate }: UploadProps) {
       handleClearImage();
       setCaption('');
       setRecipeUrl('');
-      onNavigate('feed');
+      onNavigate('discover');
     } catch (error: any) {
       console.error('Error uploading post:', error);
       toast.error(error.message || 'Failed to upload post');
@@ -93,7 +107,7 @@ export function Upload({ onNavigate }: UploadProps) {
       <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <button
-            onClick={() => onNavigate('feed')}
+            onClick={() => onNavigate('discover')}
             className="text-gray-600 hover:text-gray-900 font-medium"
           >
             Cancel

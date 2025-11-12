@@ -49,39 +49,69 @@ export function Discover() {
 
   const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
     try {
-      const { data, error } = await supabase
+      const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles:user_id (username, avatar_url),
-          likes (user_id),
-          comments (
-            id,
-            text,
-            created_at,
-            profiles:user_id (username)
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .range(pageNum * POSTS_PER_PAGE, (pageNum + 1) * POSTS_PER_PAGE - 1);
 
-      if (error) throw error;
+      if (postsError) throw postsError;
 
-      const postsWithCounts = (data || []).map(post => ({
-        ...post,
-        _count: {
-          likes: post.likes?.length || 0,
-          comments: post.comments?.length || 0,
-        },
-      }));
+      const postsWithDetails = await Promise.all(
+        (postsData || []).map(async (post) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', post.user_id)
+            .single();
+
+          const { data: likes } = await supabase
+            .from('likes')
+            .select('user_id')
+            .eq('post_id', post.id);
+
+          const { data: comments } = await supabase
+            .from('comments')
+            .select('id, text, created_at, user_id')
+            .eq('post_id', post.id)
+            .order('created_at', { ascending: false })
+            .limit(2);
+
+          const commentsWithProfiles = await Promise.all(
+            (comments || []).map(async (comment) => {
+              const { data: commentProfile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', comment.user_id)
+                .single();
+
+              return {
+                ...comment,
+                profiles: commentProfile,
+              };
+            })
+          );
+
+          return {
+            ...post,
+            profiles: profile,
+            likes: likes || [],
+            comments: commentsWithProfiles,
+            _count: {
+              likes: likes?.length || 0,
+              comments: comments?.length || 0,
+            },
+          };
+        })
+      );
 
       if (isRefresh) {
-        setPosts(postsWithCounts);
+        setPosts(postsWithDetails);
       } else {
-        setPosts(prev => [...prev, ...postsWithCounts]);
+        setPosts(prev => [...prev, ...postsWithDetails]);
       }
 
-      setHasMore((data || []).length === POSTS_PER_PAGE);
+      setHasMore((postsData || []).length === POSTS_PER_PAGE);
     } catch (error: any) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
