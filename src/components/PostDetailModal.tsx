@@ -14,9 +14,10 @@ interface Post {
   title: string | null;
   caption: string | null;
   recipe_url: string | null;
+  recipe_id?: string | null;
   created_at: string;
-  likes_count: number;
-  comments_count: number;
+  likes_count?: number;
+  comments_count?: number;
 }
 
 interface Review {

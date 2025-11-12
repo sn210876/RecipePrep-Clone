@@ -311,7 +311,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                     key={recipe.id}
                     className="group"
                   >
-                    <Card className={`overflow-hidden hover:shadow-md transition-all border-slate-200 hover:border-blue-300 bg-white ${draggedItem?.recipe.id === recipe.id && dragOverSlot ? 'scale-75 opacity-70' : ''}`}>
+                    <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 border-slate-200 hover:border-blue-300 bg-white ${draggedItem?.recipe.id === recipe.id && dragOverSlot ? 'scale-50 opacity-30 shadow-lg' : ''}`}>
                       <CardContent className="p-0">
                         <div
                           draggable
@@ -482,7 +482,9 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                                 const dateStr = (e.currentTarget as HTMLElement).getAttribute('data-date');
                                 const mealTypeStr = (e.currentTarget as HTMLElement).getAttribute('data-meal-type') as MealType;
                                 if (dateStr && mealTypeStr) {
-                                  setDragOverSlot({date: new Date(dateStr), mealType: mealTypeStr});
+                                  const parsedDate = new Date(dateStr);
+                                  const utcDate = new Date(Date.UTC(parsedDate.getUTCFullYear(), parsedDate.getUTCMonth(), parsedDate.getUTCDate(), 0, 0, 0, 0));
+                                  setDragOverSlot({date: utcDate, mealType: mealTypeStr});
                                 }
                               }}
                               onDragLeave={() => setDragOverSlot(null)}
@@ -490,9 +492,9 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                                 const dateStr = (e.currentTarget as HTMLElement).getAttribute('data-date');
                                 const mealTypeStr = (e.currentTarget as HTMLElement).getAttribute('data-meal-type') as MealType;
                                 if (dateStr && mealTypeStr) {
-                                  const dropDate = new Date(dateStr);
-                                  const localDate = new Date(dropDate.getFullYear(), dropDate.getMonth(), dropDate.getDate());
-                                  handleDrop(localDate, mealTypeStr);
+                                  const parsedDate = new Date(dateStr);
+                                  const utcDate = new Date(Date.UTC(parsedDate.getUTCFullYear(), parsedDate.getUTCMonth(), parsedDate.getUTCDate(), 0, 0, 0, 0));
+                                  handleDrop(utcDate, mealTypeStr);
                                   setDragOverSlot(null);
                                 }
                               }}
@@ -500,7 +502,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                                 min-h-[100px] rounded-lg border-2 border-dashed p-2
                                 transition-all relative group
                                 ${draggedItem && isHovered
-                                  ? 'border-orange-500 bg-orange-100 shadow-lg scale-105 ring-2 ring-orange-300'
+                                  ? 'border-orange-500 bg-gradient-to-br from-orange-100 to-red-100 shadow-lg scale-105 ring-2 ring-orange-400'
                                   : draggedItem
                                   ? 'border-blue-300 bg-blue-50/50'
                                   : 'border-slate-200 bg-slate-50/50'

@@ -168,30 +168,32 @@ export function Discover() {
 
   useEffect(() => {
     fetchPosts(0);
-  }, []);
 
-  useEffect(() => {
     const channel = supabase
       .channel('posts-and-comments-changes')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'posts' },
-        () => {
-          fetchPosts(0, true);
+        { event: 'INSERT', schema: 'public', table: 'posts' },
+        (payload) => {
+          console.log('[Discover] New post created');
+          setPosts(prev => {
+            const newPost = payload.new as any;
+            return [{ ...newPost, profiles: { username: 'User', avatar_url: null }, likes: [], comments: [], _count: { likes: 0, comments: 0 } }, ...prev];
+          });
         }
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'comments' },
+        { event: 'INSERT', schema: 'public', table: 'comments' },
         () => {
-          fetchPosts(0, true);
+          console.log('[Discover] New comment added, refreshing comments only');
         }
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'likes' },
+        { event: 'INSERT', schema: 'public', table: 'likes' },
         () => {
-          fetchPosts(0, true);
+          console.log('[Discover] New like added');
         }
       )
       .subscribe();

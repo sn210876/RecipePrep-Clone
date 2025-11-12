@@ -18,9 +18,10 @@ interface Post {
   video_url: string | null;
   caption: string | null;
   recipe_url: string | null;
+  recipe_id: string | null;
   created_at: string;
-  likes_count: number;
-  comments_count: number;
+  likes_count?: number;
+  comments_count?: number;
 }
 
 interface Profile {
@@ -95,7 +96,7 @@ export function Profile() {
 
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('id, user_id, title, image_url, video_url, caption, recipe_url, created_at, likes_count, comments_count')
+        .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
         .eq('user_id', userData.user.id)
         .order('created_at', { ascending: false });
 
