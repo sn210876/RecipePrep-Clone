@@ -254,7 +254,7 @@ export function RecipeDetailModal({
                   className="flex-1 gap-2 hover:bg-orange-50 hover:border-primary hover:text-primary"
                 >
                   <GroceryCart className="w-4 h-4" />
-                  Add to Shopping List
+                  Add to Grocery List
                 </Button>
 
                 {isSaved && (
