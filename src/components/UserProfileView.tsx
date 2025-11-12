@@ -1,5 +1,13 @@
+import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { UserPlus, UserCheck } from 'lucide-react';
+import { UserPlus, UserCheck, PiggyBank } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
 
 interface Post {
   id: string;
@@ -38,6 +46,52 @@ export function UserProfileView({
   const userPosts = posts.filter(p => p.user_id === userId);
   const userProfile = userPosts[0]?.profiles;
 
+  const [supportersCount, setSupportersCount] = useState(0);
+  const [supportingCount, setSupportingCount] = useState(0);
+  const [showSupporters, setShowSupporters] = useState(false);
+  const [showSupporting, setShowSupporting] = useState(false);
+  const [supporters, setSupporters] = useState<any[]>([]);
+  const [supporting, setSupporting] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const { count: followersCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', userId);
+
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', userId);
+
+      setSupportersCount(followersCount || 0);
+      setSupportingCount(followingCount || 0);
+    };
+
+    fetchCounts();
+  }, [userId]);
+
+  const loadSupporters = async () => {
+    const { data } = await supabase
+      .from('follows')
+      .select('follower_id, profiles:follower_id(id, username, avatar_url)')
+      .eq('following_id', userId);
+
+    setSupporters(data || []);
+    setShowSupporters(true);
+  };
+
+  const loadSupporting = async () => {
+    const { data } = await supabase
+      .from('follows')
+      .select('following_id, profiles:following_id(id, username, avatar_url)')
+      .eq('follower_id', userId);
+
+    setSupporting(data || []);
+    setShowSupporting(true);
+  };
+
   return (
     <div className="p-4">
       <Button
@@ -51,11 +105,21 @@ export function UserProfileView({
       <div className="bg-white rounded-xl p-6 mb-4 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold">
-            {userProfile?.username?.[0]?.toUpperCase() || '?'}
+            {userProfile?.username?.[0]?.toUpperCase() || <PiggyBank className="w-10 h-10" />}
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold">{userProfile?.username || 'User'}</h2>
-            <p className="text-gray-600">{userPosts.length} {userPosts.length === 1 ? 'post' : 'posts'}</p>
+            <div className="flex gap-4 mt-2">
+              <button onClick={loadSupporters} className="text-sm hover:underline">
+                <span className="font-semibold">{supportersCount}</span> <span className="text-gray-600">supporters</span>
+              </button>
+              <button onClick={loadSupporting} className="text-sm hover:underline">
+                <span className="font-semibold">{supportingCount}</span> <span className="text-gray-600">supporting</span>
+              </button>
+              <span className="text-sm">
+                <span className="font-semibold">{userPosts.length}</span> <span className="text-gray-600">{userPosts.length === 1 ? 'post' : 'posts'}</span>
+              </span>
+            </div>
           </div>
           {userId !== currentUserId && (
             <Button
@@ -119,6 +183,48 @@ export function UserProfileView({
           ))}
         </div>
       )}
+
+      <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supporters</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {supporters.map((supporter) => (
+              <div key={supporter.follower_id} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold">
+                  {supporter.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-5 h-5" />}
+                </div>
+                <span className="font-medium">{supporter.profiles?.username || 'User'}</span>
+              </div>
+            ))}
+            {supporters.length === 0 && (
+              <p className="text-center text-gray-500 py-4">No supporters yet</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSupporting} onOpenChange={setShowSupporting}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supporting</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {supporting.map((followed) => (
+              <div key={followed.following_id} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold">
+                  {followed.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-5 h-5" />}
+                </div>
+                <span className="font-medium">{followed.profiles?.username || 'User'}</span>
+              </div>
+            ))}
+            {supporting.length === 0 && (
+              <p className="text-center text-gray-500 py-4">Not supporting anyone yet</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

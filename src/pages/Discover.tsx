@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Music, Play, Pause, Volume2, VolumeX, Bell } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Music, Play, Pause, Volume2, VolumeX, Bell, PiggyBank } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -530,10 +530,20 @@ export function Discover() {
       }
       audioRef.current = new Audio(previewUrl);
       audioRef.current.muted = isMuted;
-      audioRef.current.play();
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+        toast.error('Unable to play music preview');
+        setPlayingMusicId(null);
+      });
       setPlayingMusicId(postId);
 
       audioRef.current.onended = () => {
+        setPlayingMusicId(null);
+      };
+
+      audioRef.current.onerror = () => {
+        console.error('Audio failed to load');
+        toast.error('Music preview not available');
         setPlayingMusicId(null);
       };
     }
@@ -732,7 +742,7 @@ export function Discover() {
                         />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-sm">
-                          {post.profiles?.username?.[0]?.toUpperCase()}
+                          {post.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-4 h-4" />}
                         </div>
                       )}
                       <span className="font-semibold text-sm">{post.profiles?.username}</span>

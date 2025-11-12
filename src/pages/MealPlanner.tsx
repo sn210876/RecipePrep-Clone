@@ -474,9 +474,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
               ) : (
-                <div className="grid gap-4" style={{
-                  gridTemplateColumns: `repeat(${weeksToShow === 1 ? 7 : 7}, minmax(0, 1fr))`
-                }}>
+                <div className={`grid gap-4 ${weeksToShow === 4 ? 'grid-cols-7' : 'grid-cols-7'}`}>
                   {getDaysToShow().map((day, dayIndex) => (
                     <div key={dayIndex} className="space-y-2">
                       <div className="text-center pb-2 border-b-2 border-slate-200">
@@ -559,7 +557,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                                     {mealType}
                                   </div>
                                   <div className="text-xs text-slate-400">
-                                    Drop recipe here
+                                    Drop here
                                   </div>
                                   <div className="flex gap-1">
                                     <Button
