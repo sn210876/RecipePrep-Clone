@@ -1,416 +1,300 @@
-import { useState, useMemo, useEffect } from 'react';
-import { RecipeCard } from '../components/RecipeCard';
-import { mockRecipes } from '../data/mockRecipes';
-import { Input } from '../components/ui/input';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
+import { Heart, MessageCircle, ExternalLink } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Search, TrendingUp, Zap, Star, Leaf, Globe } from 'lucide-react';
-import { useRecipes } from '../context/RecipeContext';
-import { getRecommendedRecipes, getRecommendationInsights } from '../services/recommendationService';
-import { CookMode } from '../components/CookMode';
-import { Recipe } from '../types/recipe';
-import { getAllPublicRecipes } from '../services/recipeService';
+import { toast } from 'sonner';
+import { CommentModal } from '../components/CommentModal';
+
+interface Post {
+  id: string;
+  user_id: string;
+  image_url: string;
+  caption: string | null;
+  recipe_url: string | null;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+  likes: { user_id: string }[];
+  comments: {
+    id: string;
+    text: string;
+    created_at: string;
+    profiles: {
+      username: string;
+    };
+  }[];
+  _count?: {
+    likes: number;
+    comments: number;
+  };
+}
 
 export function Discover() {
-  const { state, dispatch } = useRecipes();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
-  const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
-  const [allRecipes, setAllRecipes] = useState<Recipe[]>(mockRecipes);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
+
+  const POSTS_PER_PAGE = 10;
 
   useEffect(() => {
-    const loadRecipes = async () => {
-      try {
-        console.log('[Discover] Loading recipes from database...');
-        const dbRecipes = await getAllPublicRecipes();
-        console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
-        setAllRecipes([...mockRecipes, ...dbRecipes]);
-      } catch (error) {
-        console.error('Failed to load recipes:', error);
-        setAllRecipes(mockRecipes);
-      }
-    };
-
-    loadRecipes();
-
-    // Reload recipes when the component becomes visible
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        loadRecipes();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
   }, []);
 
-  const cuisines = useMemo(() => {
-    const cuisineSet = new Set(allRecipes.map((r) => r.cuisineType));
-    return Array.from(cuisineSet).sort();
-  }, [allRecipes]);
+  const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url),
+          likes (user_id),
+          comments (
+            id,
+            text,
+            created_at,
+            profiles:user_id (username)
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .range(pageNum * POSTS_PER_PAGE, (pageNum + 1) * POSTS_PER_PAGE - 1);
 
-  const filteredRecipes = useMemo(() => {
-    return allRecipes.filter((recipe) => {
-      const matchesSearch =
-        searchQuery === '' ||
-        recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        recipe.tags.some((tag) =>
-          tag.toLowerCase().includes(searchQuery.toLowerCase())
-        ) ||
-        recipe.ingredients.some((ingredient) =>
-          ingredient.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+      if (error) throw error;
 
-      const matchesCuisine =
-        !selectedCuisine || recipe.cuisineType === selectedCuisine;
+      const postsWithCounts = (data || []).map(post => ({
+        ...post,
+        _count: {
+          likes: post.likes?.length || 0,
+          comments: post.comments?.length || 0,
+        },
+      }));
 
-      return matchesSearch && matchesCuisine;
-    });
-  }, [searchQuery, selectedCuisine, allRecipes]);
+      if (isRefresh) {
+        setPosts(postsWithCounts);
+      } else {
+        setPosts(prev => [...prev, ...postsWithCounts]);
+      }
 
-  const [showAllTrending, setShowAllTrending] = useState(false);
-  const [showAllQuick, setShowAllQuick] = useState(false);
-  const [showAllHealthy, setShowAllHealthy] = useState(false);
-  const [showAllInternational, setShowAllInternational] = useState(false);
-
-  const trendingRecipes = useMemo(() => {
-    const sorted = [...allRecipes]
-      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-    return showAllTrending ? sorted : sorted.slice(0, 12);
-  }, [allRecipes, showAllTrending]);
-
-  const quickEasyRecipes = useMemo(() => {
-    const filtered = allRecipes
-      .filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy');
-    return showAllQuick ? filtered : filtered.slice(0, 12);
-  }, [allRecipes, showAllQuick]);
-
-  const healthyRecipes = useMemo(() => {
-    const filtered = allRecipes
-      .filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan'));
-    return showAllHealthy ? filtered : filtered.slice(0, 12);
-  }, [allRecipes, showAllHealthy]);
-
-  const internationalRecipes = useMemo(() => {
-    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'];
-    const filtered = allRecipes
-      .filter((r) => cuisines.includes(r.cuisineType));
-    return showAllInternational ? filtered : filtered.slice(0, 12);
-  }, [allRecipes, showAllInternational]);
-
-  const [recommendedRecipes, setRecommendedRecipes] = useState<typeof mockRecipes>([]);
+      setHasMore((data || []).length === POSTS_PER_PAGE);
+    } catch (error: any) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const updateRecommendations = () => {
-      const recommendations = getRecommendedRecipes(
-        allRecipes,
-        state.savedRecipes,
-        state.userPreferences,
-        6
-      );
-      setRecommendedRecipes(recommendations);
-    };
+    fetchPosts(0);
+  }, [fetchPosts]);
 
-    updateRecommendations();
-  }, [allRecipes, state.savedRecipes, state.userPreferences]);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setPage(0);
+    await fetchPosts(0, true);
+  };
 
-  const recommendationInsight = useMemo(() => {
-    return getRecommendationInsights(state.savedRecipes);
-  }, [state.savedRecipes]);
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPosts(nextPage);
+  };
 
-  const handleSave = (recipeId: string) => {
-    const recipe = allRecipes.find(r => r.id === recipeId);
-    if (recipe) {
-      const isAlreadySaved = state.savedRecipes.some(r => r.id === recipeId);
-      if (isAlreadySaved) {
-        dispatch({ type: 'REMOVE_RECIPE', payload: recipeId });
+  const toggleLike = async (postId: string) => {
+    if (!currentUserId) return;
+
+    const post = posts.find(p => p.id === postId);
+    const isLiked = post?.likes?.some(like => like.user_id === currentUserId);
+
+    try {
+      if (isLiked) {
+        await supabase
+          .from('likes')
+          .delete()
+          .match({ post_id: postId, user_id: currentUserId });
+
+        setPosts(prev =>
+          prev.map(p =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likes: p.likes.filter(like => like.user_id !== currentUserId),
+                  _count: { ...p._count!, likes: p._count!.likes - 1 },
+                }
+              : p
+          )
+        );
       } else {
-        dispatch({ type: 'SAVE_RECIPE', payload: recipe });
+        await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
+
+        setPosts(prev =>
+          prev.map(p =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likes: [...p.likes, { user_id: currentUserId }],
+                  _count: { ...p._count!, likes: p._count!.likes + 1 },
+                }
+              : p
+          )
+        );
       }
+    } catch (error: any) {
+      console.error('Error toggling like:', error);
+      toast.error('Failed to update like');
     }
   };
 
-  const handleCook = (recipeId: string) => {
-    const recipe = allRecipes.find(r => r.id === recipeId);
-    if (recipe) {
-      console.log('Cook Now clicked for:', recipe.title);
-      setCookingRecipe(recipe);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+          <p className="mt-4 text-gray-600">Loading feed...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            Discover Amazing Recipes
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
+        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+            RecipeGram
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Explore thousands of delicious recipes from around the world
-          </p>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="text-sm text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50"
+          >
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
+      </div>
 
-        <div className="mb-12 space-y-6">
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              type="text"
-              placeholder="Search for recipes, ingredients, or cuisines..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 text-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 shadow-sm"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2 justify-center">
-            <Button
-              variant={selectedCuisine === null ? 'default' : 'outline'}
-              onClick={() => setSelectedCuisine(null)}
-              size="sm"
-              className={
-                selectedCuisine === null
-                  ? 'bg-orange-500 hover:bg-orange-600'
-                  : ''
-              }
-            >
-              All Cuisines
-            </Button>
-            {cuisines.map((cuisine) => (
-              <Button
-                key={cuisine}
-                variant={selectedCuisine === cuisine ? 'default' : 'outline'}
-                onClick={() => setSelectedCuisine(cuisine)}
-                size="sm"
-                className={
-                  selectedCuisine === cuisine
-                    ? 'bg-orange-500 hover:bg-orange-600'
-                    : ''
-                }
-              >
-                {cuisine}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {searchQuery === '' && selectedCuisine === null ? (
-          <div className="space-y-16">
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-2 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Trending Now
-                  </h2>
-                  <p className="text-gray-600">
-                    Most popular recipes this week
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {trendingRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                  />
-                ))}
-              </div>
-              {mockRecipes.length > 12 && (
-                <div className="text-center mt-8">
-                  <Button
-                    onClick={() => setShowAllTrending(!showAllTrending)}
-                    variant="outline"
-                    size="lg"
-                    className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                  >
-                    {showAllTrending ? 'Show Less' : 'Show More Recipes'}
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-2 rounded-lg">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Quick & Easy
-                  </h2>
-                  <p className="text-gray-600">
-                    Delicious meals ready in 30 minutes or less
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {quickEasyRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                  />
-                ))}
-              </div>
-              {mockRecipes.filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy').length > 12 && (
-                <div className="text-center mt-8">
-                  <Button
-                    onClick={() => setShowAllQuick(!showAllQuick)}
-                    variant="outline"
-                    size="lg"
-                    className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                  >
-                    {showAllQuick ? 'Show Less' : 'Show More Recipes'}
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-lg">
-                  <Leaf className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Healthy Options
-                  </h2>
-                  <p className="text-gray-600">
-                    Vegetarian and vegan recipes for a lighter meal
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {healthyRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                  />
-                ))}
-              </div>
-              {mockRecipes.filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan')).length > 12 && (
-                <div className="text-center mt-8">
-                  <Button
-                    onClick={() => setShowAllHealthy(!showAllHealthy)}
-                    variant="outline"
-                    size="lg"
-                    className="border-green-500 text-green-600 hover:bg-green-50"
-                  >
-                    {showAllHealthy ? 'Show Less' : 'Show More Recipes'}
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-2 rounded-lg">
-                  <Globe className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    International Flavors
-                  </h2>
-                  <p className="text-gray-600">
-                    Explore cuisines from around the world
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {internationalRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                  />
-                ))}
-              </div>
-              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'].includes(r.cuisineType)).length > 12 && (
-                <div className="text-center mt-8">
-                  <Button
-                    onClick={() => setShowAllInternational(!showAllInternational)}
-                    variant="outline"
-                    size="lg"
-                    className="border-amber-500 text-amber-600 hover:bg-amber-50"
-                  >
-                    {showAllInternational ? 'Show Less' : 'Show More Recipes'}
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-lg">
-                  <Star className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Recommended for You
-                  </h2>
-                  <p className="text-gray-600">
-                    {recommendationInsight}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {recommendedRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                  />
-                ))}
-              </div>
-            </section>
+      <div className="max-w-lg mx-auto">
+        {posts.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No posts yet. Be the first to share!</p>
           </div>
         ) : (
-          <section>
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Search Results
-              </h2>
-              <p className="text-gray-600">
-                Found {filteredRecipes.length} recipe
-                {filteredRecipes.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-            {filteredRecipes.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
+          <>
+            {posts.map(post => {
+              const isLiked = post.likes?.some(like => like.user_id === currentUserId);
+              const latestComments = post.comments?.slice(0, 2) || [];
+
+              return (
+                <div key={post.id} className="bg-white border-b border-gray-200 mb-2">
+                  <div className="px-4 py-3 flex items-center gap-3">
+                    {post.profiles?.avatar_url ? (
+                      <img
+                        src={post.profiles.avatar_url}
+                        alt={post.profiles.username}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-sm">
+                        {post.profiles?.username?.[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <span className="font-semibold text-sm">{post.profiles?.username}</span>
+                  </div>
+
+                  <img
+                    src={post.image_url}
+                    alt={post.caption || 'Post'}
+                    className="w-full aspect-square object-cover"
                   />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-xl text-gray-500">
-                  No recipes found. Try adjusting your search.
-                </p>
+
+                  <div className="px-4 py-3 space-y-2">
+                    <div className="flex items-center gap-4">
+                      <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110">
+                        <Heart
+                          className={`w-7 h-7 ${
+                            isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'
+                          }`}
+                        />
+                      </button>
+                      <button
+                        onClick={() => setCommentModalPostId(post.id)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <MessageCircle className="w-7 h-7 text-gray-700" />
+                      </button>
+                    </div>
+
+                    <div className="text-sm font-semibold">
+                      {post._count?.likes || 0} {post._count?.likes === 1 ? 'like' : 'likes'}
+                    </div>
+
+                    {post.caption && (
+                      <div className="text-sm">
+                        <span className="font-semibold">{post.profiles?.username}</span>{' '}
+                        <span className="text-gray-700">{post.caption}</span>
+                      </div>
+                    )}
+
+                    {(post._count?.comments || 0) > 0 && (
+                      <button
+                        onClick={() => setCommentModalPostId(post.id)}
+                        className="text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        View all {post._count?.comments} comments
+                      </button>
+                    )}
+
+                    {latestComments.map(comment => (
+                      <div key={comment.id} className="text-sm">
+                        <span className="font-semibold">{comment.profiles?.username}</span>{' '}
+                        <span className="text-gray-700">{comment.text}</span>
+                      </div>
+                    ))}
+
+                    {post.recipe_url && (
+                      <Button
+                        onClick={() => window.open(post.recipe_url!, '_blank')}
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-2 border-orange-600 text-orange-600 hover:bg-orange-50"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View Recipe
+                      </Button>
+                    )}
+
+                    <div className="text-xs text-gray-400 uppercase pt-1">
+                      {new Date(post.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {hasMore && (
+              <div className="py-8 text-center">
+                <Button onClick={handleLoadMore} variant="outline">
+                  Load More
+                </Button>
               </div>
             )}
-          </section>
+          </>
         )}
       </div>
-      {cookingRecipe && (
-        <CookMode
-          recipe={cookingRecipe}
-          onClose={() => setCookingRecipe(null)}
+
+      {commentModalPostId && (
+        <CommentModal
+          postId={commentModalPostId}
+          isOpen={!!commentModalPostId}
+          onClose={() => setCommentModalPostId(null)}
         />
       )}
     </div>

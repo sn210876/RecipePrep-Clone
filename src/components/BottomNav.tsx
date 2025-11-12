@@ -1,5 +1,6 @@
 import { Home, PlusCircle, User } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface BottomNavProps {
   currentPage: string;
@@ -7,18 +8,41 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
-  const { user } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadAvatar();
+  }, []);
+
+  const loadAvatar = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', userData.user.id)
+        .maybeSingle();
+
+      if (profileData?.avatar_url) {
+        setAvatarUrl(profileData.avatar_url);
+      }
+    } catch (error) {
+      console.error('Error loading avatar:', error);
+    }
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
       <div className="max-w-lg mx-auto px-4 h-16 flex items-center justify-around">
         <button
-          onClick={() => onNavigate('feed')}
+          onClick={() => onNavigate('discover')}
           className={`flex flex-col items-center gap-1 transition-colors ${
-            currentPage === 'feed' ? 'text-orange-600' : 'text-gray-600 hover:text-gray-900'
+            currentPage === 'discover' ? 'text-orange-600' : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <Home className="w-7 h-7" strokeWidth={currentPage === 'feed' ? 2.5 : 2} />
+          <Home className="w-7 h-7" strokeWidth={currentPage === 'discover' ? 2.5 : 2} />
         </button>
 
         <button
@@ -34,9 +58,9 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
             currentPage === 'profile' ? 'text-orange-600' : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          {user?.user_metadata?.avatar_url ? (
+          {avatarUrl ? (
             <img
-              src={user.user_metadata.avatar_url}
+              src={avatarUrl}
               alt="Profile"
               className={`w-8 h-8 rounded-full object-cover ${
                 currentPage === 'profile' ? 'ring-2 ring-orange-600' : ''

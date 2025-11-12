@@ -3,6 +3,7 @@ import { ChefHat, Compass, BookMarked, Plus, Calendar, ShoppingCart, Settings, M
 import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { BottomNav } from './BottomNav';
 
 interface LayoutProps {
   children: ReactNode;
@@ -24,13 +25,15 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   };
 
   const navItems = [
-    { id: 'discover', label: 'Discover', icon: Compass },
+    { id: 'discover', label: 'Social Feed', icon: Compass },
     { id: 'my-recipes', label: 'My Recipes', icon: BookMarked },
     { id: 'add-recipe', label: 'Add Recipe', icon: Plus },
     { id: 'meal-planner', label: 'Meal Planner', icon: Calendar },
     { id: 'shopping-list', label: 'Shopping List', icon: ShoppingCart },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
+
+  const socialPages = ['discover', 'upload', 'profile'];
 
   if (currentPage === 'home') {
     return <>{children}</>;
@@ -98,26 +101,32 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       )}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-          <div className="flex h-16 items-center justify-between px-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-            <h2 className="text-xl font-semibold text-gray-900 capitalize">
-              {navItems.find(item => item.id === currentPage)?.label || 'Recipe Prep'}
-            </h2>
-            <div className="w-10 lg:w-0" />
-          </div>
-        </header>
+        {!socialPages.includes(currentPage) && (
+          <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+            <div className="flex h-16 items-center justify-between px-6">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+              <h2 className="text-xl font-semibold text-gray-900 capitalize">
+                {navItems.find(item => item.id === currentPage)?.label || 'Recipe Prep'}
+              </h2>
+              <div className="w-10 lg:w-0" />
+            </div>
+          </header>
+        )}
 
-        <main className="p-6">
+        <main className={socialPages.includes(currentPage) ? '' : 'p-6'}>
           {children}
         </main>
+
+        {socialPages.includes(currentPage) && (
+          <BottomNav currentPage={currentPage} onNavigate={onNavigate} />
+        )}
       </div>
     </div>
   );

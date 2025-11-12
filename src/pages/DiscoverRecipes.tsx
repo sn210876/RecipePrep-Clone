@@ -1,0 +1,418 @@
+import { useState, useMemo, useEffect } from 'react';
+import { RecipeCard } from '../components/RecipeCard';
+import { mockRecipes } from '../data/mockRecipes';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Search, TrendingUp, Zap, Star, Leaf, Globe } from 'lucide-react';
+import { useRecipes } from '../context/RecipeContext';
+import { getRecommendedRecipes, getRecommendationInsights } from '../services/recommendationService';
+import { CookMode } from '../components/CookMode';
+import { Recipe } from '../types/recipe';
+import { getAllPublicRecipes } from '../services/recipeService';
+
+export function Discover() {
+  const { state, dispatch } = useRecipes();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
+  const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
+  const [allRecipes, setAllRecipes] = useState<Recipe[]>(mockRecipes);
+
+  useEffect(() => {
+    const loadRecipes = async () => {
+      try {
+        console.log('[Discover] Loading recipes from database...');
+        const dbRecipes = await getAllPublicRecipes();
+        console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
+        setAllRecipes([...mockRecipes, ...dbRecipes]);
+      } catch (error) {
+        console.error('Failed to load recipes:', error);
+        setAllRecipes(mockRecipes);
+      }
+    };
+
+    loadRecipes();
+
+    // Reload recipes when the component becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadRecipes();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  const cuisines = useMemo(() => {
+    const cuisineSet = new Set(allRecipes.map((r) => r.cuisineType));
+    return Array.from(cuisineSet).sort();
+  }, [allRecipes]);
+
+  const filteredRecipes = useMemo(() => {
+    return allRecipes.filter((recipe) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        recipe.tags.some((tag) =>
+          tag.toLowerCase().includes(searchQuery.toLowerCase())
+        ) ||
+        recipe.ingredients.some((ingredient) =>
+          ingredient.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+      const matchesCuisine =
+        !selectedCuisine || recipe.cuisineType === selectedCuisine;
+
+      return matchesSearch && matchesCuisine;
+    });
+  }, [searchQuery, selectedCuisine, allRecipes]);
+
+  const [showAllTrending, setShowAllTrending] = useState(false);
+  const [showAllQuick, setShowAllQuick] = useState(false);
+  const [showAllHealthy, setShowAllHealthy] = useState(false);
+  const [showAllInternational, setShowAllInternational] = useState(false);
+
+  const trendingRecipes = useMemo(() => {
+    const sorted = [...allRecipes]
+      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+    return showAllTrending ? sorted : sorted.slice(0, 12);
+  }, [allRecipes, showAllTrending]);
+
+  const quickEasyRecipes = useMemo(() => {
+    const filtered = allRecipes
+      .filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy');
+    return showAllQuick ? filtered : filtered.slice(0, 12);
+  }, [allRecipes, showAllQuick]);
+
+  const healthyRecipes = useMemo(() => {
+    const filtered = allRecipes
+      .filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan'));
+    return showAllHealthy ? filtered : filtered.slice(0, 12);
+  }, [allRecipes, showAllHealthy]);
+
+  const internationalRecipes = useMemo(() => {
+    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'];
+    const filtered = allRecipes
+      .filter((r) => cuisines.includes(r.cuisineType));
+    return showAllInternational ? filtered : filtered.slice(0, 12);
+  }, [allRecipes, showAllInternational]);
+
+  const [recommendedRecipes, setRecommendedRecipes] = useState<typeof mockRecipes>([]);
+
+  useEffect(() => {
+    const updateRecommendations = () => {
+      const recommendations = getRecommendedRecipes(
+        allRecipes,
+        state.savedRecipes,
+        state.userPreferences,
+        6
+      );
+      setRecommendedRecipes(recommendations);
+    };
+
+    updateRecommendations();
+  }, [allRecipes, state.savedRecipes, state.userPreferences]);
+
+  const recommendationInsight = useMemo(() => {
+    return getRecommendationInsights(state.savedRecipes);
+  }, [state.savedRecipes]);
+
+  const handleSave = (recipeId: string) => {
+    const recipe = allRecipes.find(r => r.id === recipeId);
+    if (recipe) {
+      const isAlreadySaved = state.savedRecipes.some(r => r.id === recipeId);
+      if (isAlreadySaved) {
+        dispatch({ type: 'REMOVE_RECIPE', payload: recipeId });
+      } else {
+        dispatch({ type: 'SAVE_RECIPE', payload: recipe });
+      }
+    }
+  };
+
+  const handleCook = (recipeId: string) => {
+    const recipe = allRecipes.find(r => r.id === recipeId);
+    if (recipe) {
+      console.log('Cook Now clicked for:', recipe.title);
+      setCookingRecipe(recipe);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+            Discover Amazing Recipes
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Explore thousands of delicious recipes from around the world
+          </p>
+        </div>
+
+        <div className="mb-12 space-y-6">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search for recipes, ingredients, or cuisines..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-14 text-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 shadow-sm"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button
+              variant={selectedCuisine === null ? 'default' : 'outline'}
+              onClick={() => setSelectedCuisine(null)}
+              size="sm"
+              className={
+                selectedCuisine === null
+                  ? 'bg-orange-500 hover:bg-orange-600'
+                  : ''
+              }
+            >
+              All Cuisines
+            </Button>
+            {cuisines.map((cuisine) => (
+              <Button
+                key={cuisine}
+                variant={selectedCuisine === cuisine ? 'default' : 'outline'}
+                onClick={() => setSelectedCuisine(cuisine)}
+                size="sm"
+                className={
+                  selectedCuisine === cuisine
+                    ? 'bg-orange-500 hover:bg-orange-600'
+                    : ''
+                }
+              >
+                {cuisine}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {searchQuery === '' && selectedCuisine === null ? (
+          <div className="space-y-16">
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-2 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    Trending Now
+                  </h2>
+                  <p className="text-gray-600">
+                    Most popular recipes this week
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {trendingRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onSave={handleSave}
+                    onCook={handleCook}
+                  />
+                ))}
+              </div>
+              {mockRecipes.length > 12 && (
+                <div className="text-center mt-8">
+                  <Button
+                    onClick={() => setShowAllTrending(!showAllTrending)}
+                    variant="outline"
+                    size="lg"
+                    className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                  >
+                    {showAllTrending ? 'Show Less' : 'Show More Recipes'}
+                  </Button>
+                </div>
+              )}
+            </section>
+
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-2 rounded-lg">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    Quick & Easy
+                  </h2>
+                  <p className="text-gray-600">
+                    Delicious meals ready in 30 minutes or less
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {quickEasyRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onSave={handleSave}
+                    onCook={handleCook}
+                  />
+                ))}
+              </div>
+              {mockRecipes.filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy').length > 12 && (
+                <div className="text-center mt-8">
+                  <Button
+                    onClick={() => setShowAllQuick(!showAllQuick)}
+                    variant="outline"
+                    size="lg"
+                    className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                  >
+                    {showAllQuick ? 'Show Less' : 'Show More Recipes'}
+                  </Button>
+                </div>
+              )}
+            </section>
+
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-lg">
+                  <Leaf className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    Healthy Options
+                  </h2>
+                  <p className="text-gray-600">
+                    Vegetarian and vegan recipes for a lighter meal
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {healthyRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onSave={handleSave}
+                    onCook={handleCook}
+                  />
+                ))}
+              </div>
+              {mockRecipes.filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan')).length > 12 && (
+                <div className="text-center mt-8">
+                  <Button
+                    onClick={() => setShowAllHealthy(!showAllHealthy)}
+                    variant="outline"
+                    size="lg"
+                    className="border-green-500 text-green-600 hover:bg-green-50"
+                  >
+                    {showAllHealthy ? 'Show Less' : 'Show More Recipes'}
+                  </Button>
+                </div>
+              )}
+            </section>
+
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-2 rounded-lg">
+                  <Globe className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    International Flavors
+                  </h2>
+                  <p className="text-gray-600">
+                    Explore cuisines from around the world
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {internationalRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onSave={handleSave}
+                    onCook={handleCook}
+                  />
+                ))}
+              </div>
+              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'].includes(r.cuisineType)).length > 12 && (
+                <div className="text-center mt-8">
+                  <Button
+                    onClick={() => setShowAllInternational(!showAllInternational)}
+                    variant="outline"
+                    size="lg"
+                    className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                  >
+                    {showAllInternational ? 'Show Less' : 'Show More Recipes'}
+                  </Button>
+                </div>
+              )}
+            </section>
+
+            <section>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-lg">
+                  <Star className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    Recommended for You
+                  </h2>
+                  <p className="text-gray-600">
+                    {recommendationInsight}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {recommendedRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onSave={handleSave}
+                    onCook={handleCook}
+                  />
+                ))}
+              </div>
+            </section>
+          </div>
+        ) : (
+          <section>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Search Results
+              </h2>
+              <p className="text-gray-600">
+                Found {filteredRecipes.length} recipe
+                {filteredRecipes.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            {filteredRecipes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    onSave={handleSave}
+                    onCook={handleCook}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-xl text-gray-500">
+                  No recipes found. Try adjusting your search.
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+      {cookingRecipe && (
+        <CookMode
+          recipe={cookingRecipe}
+          onClose={() => setCookingRecipe(null)}
+        />
+      )}
+    </div>
+  );
+}
