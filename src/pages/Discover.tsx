@@ -26,7 +26,9 @@ import { Textarea } from '../components/ui/textarea';
 interface Post {
   id: string;
   user_id: string;
-  image_url: string;
+  title: string;
+  image_url: string | null;
+  video_url: string | null;
   caption: string | null;
   recipe_url: string | null;
   created_at: string;
@@ -146,6 +148,7 @@ export function Discover() {
 
       if (isRefresh) {
         setPosts(postsWithDetails);
+        setPage(0);
       } else {
         setPosts(prev => [...prev, ...postsWithDetails]);
       }
@@ -340,7 +343,7 @@ export function Discover() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-sm mx-auto">
         {posts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No posts yet. Be the first to share!</p>
@@ -411,11 +414,25 @@ export function Discover() {
                     )}
                   </div>
 
-                  <img
-                    src={post.image_url}
-                    alt={post.caption || 'Post'}
-                    className="w-full aspect-square object-cover"
-                  />
+                  {post.title && (
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <h3 className="font-bold text-base text-gray-900">{post.title}</h3>
+                    </div>
+                  )}
+
+                  {post.image_url ? (
+                    <img
+                      src={post.image_url}
+                      alt={post.title || 'Post'}
+                      className="w-full aspect-square object-cover"
+                    />
+                  ) : post.video_url ? (
+                    <video
+                      src={post.video_url}
+                      controls
+                      className="w-full aspect-square object-cover"
+                    />
+                  ) : null}
 
                   <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center gap-4">

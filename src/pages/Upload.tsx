@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
-import { Upload as UploadIcon, X, Image as ImageIcon } from 'lucide-react';
+import { Upload as UploadIcon, X, Image as ImageIcon, Video } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -25,6 +25,8 @@ interface UserRecipe {
 export function Upload({ onNavigate }: UploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<'image' | 'video' | null>(null);
+  const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
   const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
@@ -56,12 +58,16 @@ export function Upload({ onNavigate }: UploadProps) {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB');
+      if (file.type.startsWith('image/')) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error('Image size must be less than 10MB');
+          return;
+        }
+        setFileType('image');
+      } else if (file.type.startsWith('video/')) {
+        setFileType('video');
+      } else {
+        toast.error('Please select an image or video file');
         return;
       }
       setSelectedFile(file);
@@ -71,6 +77,7 @@ export function Upload({ onNavigate }: UploadProps) {
 
   const handleClearImage = () => {
     setSelectedFile(null);
+    setFileType(null);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
@@ -79,7 +86,12 @@ export function Upload({ onNavigate }: UploadProps) {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      toast.error('Please select an image');
+      toast.error('Please select an image or video');
+      return;
+    }
+
+    if (!title.trim()) {
+      toast.error('Please enter a title');
       return;
     }
 
@@ -121,17 +133,26 @@ export function Upload({ onNavigate }: UploadProps) {
         recipeLink = `${window.location.origin}/#recipe/${selectedRecipeId}`;
       }
 
-      const { error: insertError } = await supabase.from('posts').insert({
+      const postData: any = {
         user_id: userData.user.id,
-        image_url: urlData.publicUrl,
+        title: title.trim(),
         caption: caption.trim() || null,
         recipe_url: recipeLink,
-      });
+      };
+
+      if (fileType === 'image') {
+        postData.image_url = urlData.publicUrl;
+      } else if (fileType === 'video') {
+        postData.video_url = urlData.publicUrl;
+      }
+
+      const { error: insertError } = await supabase.from('posts').insert(postData);
 
       if (insertError) throw insertError;
 
       toast.success('Post uploaded successfully!');
       handleClearImage();
+      setTitle('');
       setCaption('');
       setSelectedRecipeId('');
       onNavigate('discover');
@@ -156,7 +177,7 @@ export function Upload({ onNavigate }: UploadProps) {
           <h1 className="text-lg font-semibold">New Post</h1>
           <Button
             onClick={handleUpload}
-            disabled={!selectedFile || uploading}
+            disabled={!selectedFile || !title.trim() || uploading}
             size="sm"
             className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
           >
@@ -171,29 +192,42 @@ export function Upload({ onNavigate }: UploadProps) {
             <label className="cursor-pointer">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 onChange={handleFileSelect}
                 className="hidden"
               />
               <div className="space-y-4">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
-                  <ImageIcon className="w-10 h-10 text-white" />
+                <div className="flex gap-4 justify-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
+                    <ImageIcon className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg">
+                    <Video className="w-10 h-10 text-white" />
+                  </div>
                 </div>
                 <div>
-                  <p className="text-lg font-semibold text-gray-900 mb-1">Upload a photo</p>
-                  <p className="text-sm text-gray-500">Click to select an image from your device</p>
-                  <p className="text-xs text-gray-400 mt-2">Maximum size: 5MB</p>
+                  <p className="text-lg font-semibold text-gray-900 mb-1">Upload a photo or video</p>
+                  <p className="text-sm text-gray-500">Click to select a file from your device</p>
+                  <p className="text-xs text-gray-400 mt-2">Images: max 10MB • Videos: no limit</p>
                 </div>
               </div>
             </label>
           </div>
         ) : (
           <div className="relative">
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="w-full aspect-square object-cover rounded-xl"
-            />
+            {fileType === 'image' ? (
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full aspect-square object-cover rounded-xl"
+              />
+            ) : (
+              <video
+                src={previewUrl}
+                controls
+                className="w-full aspect-square object-cover rounded-xl"
+              />
+            )}
             <button
               onClick={handleClearImage}
               className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
@@ -204,6 +238,21 @@ export function Upload({ onNavigate }: UploadProps) {
         )}
 
         <div className="space-y-4 bg-white rounded-xl p-4 shadow-sm">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter a title for your post"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              maxLength={200}
+            />
+            <p className="text-xs text-gray-400 mt-1">{title.length}/200</p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Caption

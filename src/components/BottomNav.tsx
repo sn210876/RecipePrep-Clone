@@ -39,7 +39,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
         <button
           onClick={() => onNavigate('discover')}
           className={`flex flex-col items-center gap-1 transition-colors ${
-            currentPage === 'discover' ? 'text-orange-600' : 'text-gray-600 hover:text-gray-900'
+            currentPage === 'discover' ? 'text-cyan-500' : 'text-gray-600 hover:text-cyan-500'
           }`}
         >
           <Home className="w-7 h-7" strokeWidth={currentPage === 'discover' ? 2.5 : 2} />

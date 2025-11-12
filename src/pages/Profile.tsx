@@ -6,7 +6,9 @@ import { useAuth } from '../context/AuthContext';
 
 interface Post {
   id: string;
-  image_url: string;
+  title: string;
+  image_url: string | null;
+  video_url: string | null;
   caption: string | null;
   created_at: string;
 }
@@ -78,7 +80,7 @@ export function Profile() {
 
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('id, image_url, caption, created_at')
+        .select('id, title, image_url, video_url, caption, created_at')
         .eq('user_id', userData.user.id)
         .order('created_at', { ascending: false });
 
@@ -244,13 +246,25 @@ export function Profile() {
             {posts.map(post => (
               <div
                 key={post.id}
-                className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative"
               >
-                <img
-                  src={post.image_url}
-                  alt={post.caption || 'Post'}
-                  className="w-full h-full object-cover"
-                />
+                {post.image_url ? (
+                  <img
+                    src={post.image_url}
+                    alt={post.title || 'Post'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : post.video_url ? (
+                  <video
+                    src={post.video_url}
+                    className="w-full h-full object-cover"
+                  />
+                ) : null}
+                {post.title && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                    <p className="text-white text-xs font-semibold truncate">{post.title}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
