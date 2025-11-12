@@ -28,7 +28,7 @@ interface GroceryListProps {
   onNavigate?: (page: string) => void;
 }
 
-export function ShoppingList({ onNavigate }: ShoppingListProps = {}) {
+export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const { state, dispatch } = useRecipes();
   const [categories, setCategories] = useState<ShoppingListCategory[]>(getDefaultCategories());
   const loading = false;
