@@ -475,14 +475,24 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                           return (
                             <div
                               key={`${dayIndex}-${mealType}`}
+                              data-date={day.toISOString()}
+                              data-meal-type={mealType}
                               onDragOver={(e) => {
                                 e.preventDefault();
-                                setDragOverSlot({date: day, mealType});
+                                const dateStr = (e.currentTarget as HTMLElement).getAttribute('data-date');
+                                const mealTypeStr = (e.currentTarget as HTMLElement).getAttribute('data-meal-type') as MealType;
+                                if (dateStr && mealTypeStr) {
+                                  setDragOverSlot({date: new Date(dateStr), mealType: mealTypeStr});
+                                }
                               }}
                               onDragLeave={() => setDragOverSlot(null)}
-                              onDrop={() => {
-                                handleDrop(day, mealType);
-                                setDragOverSlot(null);
+                              onDrop={(e) => {
+                                const dateStr = (e.currentTarget as HTMLElement).getAttribute('data-date');
+                                const mealTypeStr = (e.currentTarget as HTMLElement).getAttribute('data-meal-type') as MealType;
+                                if (dateStr && mealTypeStr) {
+                                  handleDrop(new Date(dateStr), mealTypeStr);
+                                  setDragOverSlot(null);
+                                }
                               }}
                               className={`
                                 min-h-[100px] rounded-lg border-2 border-dashed p-2

@@ -394,17 +394,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="sticky bottom-20 z-40 py-4">
-            <div className="flex justify-center">
-              <Button
-                type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                Create Recipe
-              </Button>
-            </div>
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-6 pb-32">
 
           {showErrors && Object.keys(errors).length > 0 && (
             <Card className="border-red-200 bg-red-50">
@@ -731,30 +721,29 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </CardContent>
           </Card>
 
-          <div className="sticky bottom-20 z-40 bg-white border-t border-gray-200 py-4 -mx-6 px-6 shadow-lg">
-            <div className="flex flex-col items-center gap-4">
-              <Button
-                type="submit"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                Create Recipe
-              </Button>
-              {onNavigate && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onNavigate('my-recipes')}
-                  className="text-sm"
-                >
-                  Cancel
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Spacer to prevent content from being hidden under sticky button */}
-          <div className="h-24"></div>
         </form>
+
+        <div className="fixed bottom-24 left-0 right-0 z-50 pointer-events-none">
+          <div className="flex justify-center items-center gap-3 pointer-events-auto">
+            {onNavigate && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onNavigate('my-recipes')}
+                className="bg-white shadow-2xl border-2 border-gray-300 hover:bg-gray-50 px-6 py-6 text-base font-semibold rounded-full"
+              >
+                Cancel
+              </Button>
+            )}
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-base font-semibold shadow-2xl rounded-full transition-all transform hover:scale-105"
+            >
+              Create Recipe
+            </Button>
+          </div>
+        </div>
 
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
           <DialogContent className="max-w-4xl max-h-[90vh]">
