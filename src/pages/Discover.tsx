@@ -422,25 +422,26 @@ export function Discover() {
                     )}
                   </div>
 
-                  {post.title && (
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <h3 className="font-bold text-base text-gray-900">{post.title}</h3>
-                    </div>
-                  )}
-
-                  {post.image_url ? (
-                    <img
-                      src={post.image_url}
-                      alt={post.title || 'Post'}
-                      className="w-full aspect-square object-cover"
-                    />
-                  ) : post.video_url ? (
-                    <video
-                      src={post.video_url}
-                      controls
-                      className="w-full aspect-square object-cover"
-                    />
-                  ) : null}
+                  <div className="relative">
+                    {post.image_url ? (
+                      <img
+                        src={post.image_url}
+                        alt={post.title || 'Post'}
+                        className="w-full aspect-square object-cover"
+                      />
+                    ) : post.video_url ? (
+                      <video
+                        src={post.video_url}
+                        controls
+                        className="w-full aspect-square object-cover"
+                      />
+                    ) : null}
+                    {post.title && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
+                        <h3 className="text-white text-sm font-semibold">{post.title}</h3>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center gap-4">

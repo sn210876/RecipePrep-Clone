@@ -206,7 +206,7 @@ export function Profile() {
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">{profile?.username}</h1>
+          <h1 className="text-lg font-semibold">Profile</h1>
           <button
             onClick={handleLogout}
             className="text-gray-600 hover:text-gray-900 p-2"

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, GripVertical, Loader2, Calendar, ChefHat } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Checkbox } from '../components/ui/checkbox';
@@ -183,15 +184,27 @@ export function ShoppingList({ onNavigate }: ShoppingListProps = {}) {
   }
 
   function handleAddRecipe() {
-    if (!selectedRecipeId) return;
+    if (!selectedRecipeId) {
+      console.log('[ShoppingList] No recipe selected');
+      return;
+    }
+
+    console.log('[ShoppingList] Looking for recipe:', selectedRecipeId);
+    console.log('[ShoppingList] Available recipes:', state.savedRecipes.length);
 
     const recipe = state.savedRecipes.find(r => r.id === selectedRecipeId);
-    if (!recipe) return;
+    if (!recipe) {
+      console.log('[ShoppingList] Recipe not found');
+      toast.error('Recipe not found');
+      return;
+    }
 
-    const newItems: ShoppingListItem[] = recipe.ingredients.map(ing => {
+    console.log('[ShoppingList] Found recipe:', recipe.title, 'ingredients:', recipe.ingredients.length);
+
+    const newItems: ShoppingListItem[] = recipe.ingredients.map((ing, idx) => {
       const categoryId = getCategoryForIngredient(ing.name);
       return {
-        id: `item-${Date.now()}-${Math.random()}`,
+        id: `item-${Date.now()}-${idx}`,
         name: ing.name,
         quantity: parseFloat(ing.quantity) || 1,
         unit: ing.unit || '',
@@ -201,11 +214,14 @@ export function ShoppingList({ onNavigate }: ShoppingListProps = {}) {
       };
     });
 
+    console.log('[ShoppingList] Adding items:', newItems.length);
+
     dispatch({
       type: 'UPDATE_SHOPPING_LIST',
       payload: [...items, ...newItems]
     });
 
+    toast.success(`Added ${newItems.length} ingredients from ${recipe.title}`);
     setShowAddRecipeDialog(false);
     setSelectedRecipeId('');
   }

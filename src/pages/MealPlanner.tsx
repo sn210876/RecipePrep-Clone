@@ -62,6 +62,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
   const [showSlotDropdown, setShowSlotDropdown] = useState(false);
   const [slotDate, setSlotDate] = useState<Date | null>(null);
   const [slotMealType, setSlotMealType] = useState<MealType | null>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<{date: Date, mealType: MealType} | null>(null);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -553,16 +554,27 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                         {MEAL_TYPES.map(mealType => {
                           const meal = getMealForSlot(day, mealType);
 
+                          const isHovered = dragOverSlot?.date === day && dragOverSlot?.mealType === mealType;
+
                           return (
                             <div
                               key={`${dayIndex}-${mealType}`}
-                              onDragOver={(e) => e.preventDefault()}
-                              onDrop={() => handleDrop(day, mealType)}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                setDragOverSlot({date: day, mealType});
+                              }}
+                              onDragLeave={() => setDragOverSlot(null)}
+                              onDrop={() => {
+                                handleDrop(day, mealType);
+                                setDragOverSlot(null);
+                              }}
                               className={`
                                 min-h-[100px] rounded-lg border-2 border-dashed p-2
                                 transition-all relative group
-                                ${draggedItem
-                                  ? 'border-blue-400 bg-blue-50/50 hover:bg-blue-50'
+                                ${draggedItem && isHovered
+                                  ? 'border-orange-500 bg-orange-100 shadow-lg scale-105 ring-2 ring-orange-300'
+                                  : draggedItem
+                                  ? 'border-blue-300 bg-blue-50/50'
                                   : 'border-slate-200 bg-slate-50/50'
                                 }
                                 ${meal ? 'border-solid bg-white hover:shadow-md' : ''}
