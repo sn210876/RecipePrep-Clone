@@ -47,7 +47,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Recipe Prep</h1>
-              <p className="text-xs text-gray-500">Plan, Cook, Enjoy</p>
+              <p className="text-xs text-gray-500">Online Recipe Book and Community</p>
             </div>
           </div>
 
