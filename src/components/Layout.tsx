@@ -106,14 +106,17 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
-            <h2 className="text-xl font-semibold text-gray-900 capitalize">
-              {navItems.find(item => item.id === currentPage)?.label || 'Recipe Prep'}
-            </h2>
+
+            {!socialPages.includes(currentPage) && (
+              <h2 className="text-xl font-semibold text-gray-900 capitalize">
+                {navItems.find(item => item.id === currentPage)?.label || 'Recipe Prep'}
+              </h2>
+            )}
+
             <div className="flex items-center gap-2">
               {navItems.slice(0, 3).map((item) => {
                 const Icon = item.icon;
@@ -123,7 +126,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     key={item.id}
                     variant="ghost"
                     size="icon"
-                    className={`hidden sm:flex ${isActive ? 'text-orange-600' : 'text-gray-600'}`}
+                    className={`${isActive ? 'text-orange-600' : 'text-gray-600'}`}
                     onClick={() => onNavigate(item.id)}
                   >
                     <Icon className="h-5 w-5" />

@@ -34,7 +34,6 @@ interface Post {
 export function Discover() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -88,19 +87,27 @@ export function Discover() {
       toast.error('Failed to load posts');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
     fetchPosts(0);
-  }, [fetchPosts]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    setPage(0);
-    await fetchPosts(0, true);
-  };
+    const channel = supabase
+      .channel('posts-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'posts' },
+        () => {
+          fetchPosts(0, true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchPosts]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
@@ -166,21 +173,6 @@ export function Discover() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            RecipeGram
-          </h1>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="text-sm text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50"
-          >
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </button>
-        </div>
-      </div>
-
       <div className="max-w-lg mx-auto">
         {posts.length === 0 ? (
           <div className="text-center py-12">
