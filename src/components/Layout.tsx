@@ -1,6 +1,8 @@
 import { ReactNode, useState } from 'react';
-import { ChefHat, Compass, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X } from 'lucide-react';
+import { ChefHat, Compass, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,6 +12,16 @@ interface LayoutProps {
 
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success('Logged out successfully');
+    } catch (error) {
+      toast.error('Failed to log out');
+    }
+  };
 
   const navItems = [
     { id: 'discover', label: 'Discover', icon: Compass },
@@ -62,7 +74,14 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             })}
           </nav>
 
-          <div className="border-t border-gray-200 p-4">
+          <div className="border-t border-gray-200 p-4 space-y-3">
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-all text-red-700 hover:bg-red-50 border border-red-200"
+            >
+              <LogOut className="h-5 w-5 text-red-600" />
+              <span className="font-medium">Log Out</span>
+            </button>
             <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-4">
               <p className="text-xs font-medium text-gray-900">Discover, Save, Plan, Shop</p>
               <p className="mt-1 text-xs text-gray-600">All in One Place</p>
