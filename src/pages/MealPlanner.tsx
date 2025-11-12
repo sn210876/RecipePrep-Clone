@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
-import { consolidateShoppingListItems } from '../services/shoppingListService.local';
+import { consolidateGroceryListItems } from '../services/groceryListService.local';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
@@ -113,23 +113,23 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     }
   };
 
-  const syncShoppingList = async () => {
+  const syncGroceryList = async () => {
     try {
       const mealPlansWithServings = state.mealPlan.map(plan => ({
         recipeId: plan.recipeId,
         servings: plan.servings || 2,
       }));
 
-      const items = consolidateShoppingListItems(mealPlansWithServings, state.savedRecipes);
+      const items = consolidateGroceryListItems(mealPlansWithServings, state.savedRecipes);
 
       dispatch({
-        type: 'UPDATE_SHOPPING_LIST',
+        type: 'UPDATE_GROCERY_LIST',
         payload: items
       });
 
       toast.success('Grocery list updated!');
     } catch (error) {
-      console.error('Error syncing shopping list:', error);
+      console.error('Error syncing grocery list:', error);
       toast.error('Failed to update grocery list');
     }
   };
@@ -194,7 +194,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
         toast.success('Meal added to calendar');
       }
       await loadMealPlans();
-      await syncShoppingList();
+      await syncGroceryList();
     } catch (error) {
       console.error('Error adding meal:', error);
       toast.error('Failed to add meal');
@@ -212,7 +212,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
 
       toast.success('Meal removed');
       await loadMealPlans();
-      await syncShoppingList();
+      await syncGroceryList();
     } catch (error) {
       console.error('Error removing meal:', error);
       toast.error('Failed to remove meal');
