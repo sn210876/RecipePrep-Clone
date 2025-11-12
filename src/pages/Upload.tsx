@@ -4,6 +4,7 @@ import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 import { Upload as UploadIcon, X, Image as ImageIcon, Video } from 'lucide-react';
+import { extractHashtags } from '../lib/hashtags';
 import {
   Select,
   SelectContent,
@@ -146,9 +147,50 @@ export function Upload({ onNavigate }: UploadProps) {
         postData.video_url = urlData.publicUrl;
       }
 
-      const { error: insertError } = await supabase.from('posts').insert(postData);
+      const { data: newPost, error: insertError } = await supabase
+        .from('posts')
+        .insert(postData)
+        .select()
+        .single();
 
       if (insertError) throw insertError;
+
+      const hashtagTexts = extractHashtags(caption);
+      if (hashtagTexts.length > 0 && newPost) {
+        for (const tag of hashtagTexts) {
+          const { data: existingTag } = await supabase
+            .from('hashtags')
+            .select('id, usage_count')
+            .eq('tag', tag)
+            .maybeSingle();
+
+          let hashtagId: string;
+
+          if (existingTag) {
+            hashtagId = existingTag.id;
+            await supabase
+              .from('hashtags')
+              .update({ usage_count: existingTag.usage_count + 1 })
+              .eq('id', existingTag.id);
+          } else {
+            const { data: newTag } = await supabase
+              .from('hashtags')
+              .insert({ tag, usage_count: 1 })
+              .select()
+              .single();
+
+            if (newTag) {
+              hashtagId = newTag.id;
+            } else {
+              continue;
+            }
+          }
+
+          await supabase
+            .from('post_hashtags')
+            .insert({ post_id: newPost.id, hashtag_id: hashtagId });
+        }
+      }
 
       toast.success('Post uploaded successfully!');
       handleClearImage();

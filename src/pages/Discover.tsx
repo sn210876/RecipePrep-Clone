@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
+import { makeHashtagsClickable } from '../lib/hashtags';
 import { CommentModal } from '../components/CommentModal';
 import { RecipeDetailModal } from '../components/RecipeDetailModal';
 import { Recipe } from '../types/recipe';
@@ -71,6 +72,7 @@ export function Discover() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [filterHashtag, setFilterHashtag] = useState<string | null>(null);
 
   const POSTS_PER_PAGE = 10;
 
@@ -94,10 +96,43 @@ export function Discover() {
 
   const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
     try {
-      const { data: postsData, error: postsError } = await supabase
+      let query = supabase
         .from('posts')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (filterHashtag) {
+        const { data: hashtagData } = await supabase
+          .from('hashtags')
+          .select('id')
+          .eq('tag', filterHashtag.toLowerCase())
+          .maybeSingle();
+
+        if (hashtagData) {
+          const { data: postHashtags } = await supabase
+            .from('post_hashtags')
+            .select('post_id')
+            .eq('hashtag_id', hashtagData.id);
+
+          const postIds = (postHashtags || []).map(ph => ph.post_id);
+
+          if (postIds.length === 0) {
+            setPosts([]);
+            setHasMore(false);
+            setLoading(false);
+            return;
+          }
+
+          query = query.in('id', postIds);
+        } else {
+          setPosts([]);
+          setHasMore(false);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const { data: postsData, error: postsError } = await query
         .range(pageNum * POSTS_PER_PAGE, (pageNum + 1) * POSTS_PER_PAGE - 1);
 
       if (postsError) throw postsError;
@@ -169,7 +204,7 @@ export function Discover() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filterHashtag]);
 
   useEffect(() => {
     let isMounted = true;
@@ -489,6 +524,25 @@ export function Discover() {
           )}
         </div>
 
+        {filterHashtag && (
+          <div className="bg-blue-50 border-b border-blue-200 p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Hash className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-900">
+                Posts tagged with #{filterHashtag}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setFilterHashtag(null)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              Clear
+            </Button>
+          </div>
+        )}
+
         {viewingUserId ? (
           <div className="p-4">
             <Button
@@ -624,7 +678,12 @@ export function Discover() {
                     {post.caption && (
                       <div className="text-sm">
                         <span className="font-semibold">{post.profiles?.username}</span>{' '}
-                        <span className="text-gray-700">{post.caption}</span>
+                        <span className="text-gray-700">
+                          {makeHashtagsClickable(post.caption, (tag) => {
+                            setFilterHashtag(tag);
+                            setViewingUserId(null);
+                          })}
+                        </span>
                       </div>
                     )}
 
