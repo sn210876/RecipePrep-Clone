@@ -163,7 +163,15 @@ export function Discover() {
   }, []);
 
   useEffect(() => {
-    fetchPosts(0);
+    let mounted = true;
+
+    const loadInitialPosts = async () => {
+      if (mounted) {
+        await fetchPosts(0);
+      }
+    };
+
+    loadInitialPosts();
 
     const channel = supabase
       .channel('posts-and-comments-changes')
@@ -171,26 +179,33 @@ export function Discover() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'posts' },
         () => {
-          fetchPosts(0, true);
+          if (mounted) {
+            fetchPosts(0, true);
+          }
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'comments' },
         () => {
-          fetchPosts(0, true);
+          if (mounted) {
+            fetchPosts(0, true);
+          }
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'likes' },
         () => {
-          fetchPosts(0, true);
+          if (mounted) {
+            fetchPosts(0, true);
+          }
         }
       )
       .subscribe();
 
     return () => {
+      mounted = false;
       supabase.removeChannel(channel);
     };
   }, [fetchPosts]);
