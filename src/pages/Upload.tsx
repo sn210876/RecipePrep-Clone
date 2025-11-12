@@ -25,6 +25,15 @@ interface UserRecipe {
   image_url: string;
 }
 
+// NEW: Define YTMusic Song Type
+interface YTMusicSong {
+  id: string;
+  title: string;
+  artist: string;
+  duration?: string;
+  thumbnail?: string;
+}
+
 export function Upload({ onNavigate }: UploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -34,7 +43,7 @@ export function Upload({ onNavigate }: UploadProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
   const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [selectedSong, setSelectedSong] = useState<Song | YTMusicSong | null>(null);
   const [showMusicModal, setShowMusicModal] = useState(false);
 
   useEffect(() => {
@@ -45,15 +54,12 @@ export function Upload({ onNavigate }: UploadProps) {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
-
       const { data: recipes, error } = await supabase
         .from('public_recipes')
         .select('id, title, image_url')
         .eq('user_id', userData.user.id)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-
       setUserRecipes(recipes || []);
     } catch (error: any) {
       console.error('Error loading recipes:', error);
@@ -94,23 +100,19 @@ export function Upload({ onNavigate }: UploadProps) {
       toast.error('Please select an image or video');
       return;
     }
-
     if (!title.trim()) {
       toast.error('Please enter a title');
       return;
     }
-
     setUploading(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
-
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', userData.user.id)
         .maybeSingle();
-
       if (!existingProfile) {
         await supabase.from('profiles').insert({
           id: userData.user.id,
@@ -118,35 +120,38 @@ export function Upload({ onNavigate }: UploadProps) {
           avatar_url: null,
         });
       }
-
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${userData.user.id}/${Date.now()}.${fileExt}`;
-
       const { error: uploadError } = await supabase.storage
         .from('posts')
         .upload(fileName, selectedFile, {
           cacheControl: '3600',
           upsert: false,
         });
-
       if (uploadError) throw uploadError;
-
       const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
-
       let recipeLink = null;
       if (selectedRecipeId) {
         recipeLink = `${window.location.origin}/#recipe/${selectedRecipeId}`;
       }
+
+      // NEW: Handle YTMusic or Mock Song
+      const songId = (selectedSong as any)?.id || null;
+      const songTitle = (selectedSong as any)?.title || null;
+      const songArtist = (selectedSong as any)?.artist || null;
+      const songPreview = songId
+        ? `https://www.youtube.com/embed/${songId}?autoplay=1&mute=1&loop=1&playlist=${songId}&modestbranding=1&controls=0`
+        : null;
 
       const postData: any = {
         user_id: userData.user.id,
         title: title.trim(),
         caption: caption.trim() || null,
         recipe_url: recipeLink,
-        song_id: selectedSong?.id || null,
-        song_title: selectedSong?.title || null,
-        song_artist: selectedSong?.artist || null,
-        song_preview_url: selectedSong?.preview || null,
+        song_id: songId,
+        song_title: songTitle,
+        song_artist: songArtist,
+        song_preview_url: songPreview,
       };
 
       if (fileType === 'image') {
@@ -160,7 +165,6 @@ export function Upload({ onNavigate }: UploadProps) {
         .insert(postData)
         .select()
         .single();
-
       if (insertError) throw insertError;
 
       const hashtagTexts = extractHashtags(caption);
@@ -171,9 +175,7 @@ export function Upload({ onNavigate }: UploadProps) {
             .select('id, usage_count')
             .eq('tag', tag)
             .maybeSingle();
-
           let hashtagId: string;
-
           if (existingTag) {
             hashtagId = existingTag.id;
             await supabase
@@ -186,14 +188,12 @@ export function Upload({ onNavigate }: UploadProps) {
               .insert({ tag, usage_count: 1 })
               .select()
               .single();
-
             if (newTag) {
               hashtagId = newTag.id;
             } else {
               continue;
             }
           }
-
           await supabase
             .from('post_hashtags')
             .insert({ post_id: newPost.id, hashtag_id: hashtagId });
@@ -236,7 +236,6 @@ export function Upload({ onNavigate }: UploadProps) {
           </Button>
         </div>
       </div>
-
       <div className="max-w-lg mx-auto p-4 space-y-4">
         {!previewUrl ? (
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
@@ -287,7 +286,6 @@ export function Upload({ onNavigate }: UploadProps) {
             </button>
           </div>
         )}
-
         <div className="space-y-4 bg-white rounded-xl p-4 shadow-sm">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -303,7 +301,6 @@ export function Upload({ onNavigate }: UploadProps) {
             />
             <p className="text-xs text-gray-400 mt-1">{title.length}/200</p>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Caption
@@ -317,7 +314,6 @@ export function Upload({ onNavigate }: UploadProps) {
             />
             <p className="text-xs text-gray-400 mt-1">{caption.length}/2200</p>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Link to Recipe (optional)
@@ -353,7 +349,6 @@ export function Upload({ onNavigate }: UploadProps) {
               Choose a recipe from your collection to link with this post
             </p>
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Music (optional)
@@ -393,14 +388,12 @@ export function Upload({ onNavigate }: UploadProps) {
             </p>
           </div>
         </div>
-
         <MusicSelectionModal
           open={showMusicModal}
           onClose={() => setShowMusicModal(false)}
           onSelect={setSelectedSong}
           selectedSong={selectedSong}
         />
-
         {selectedFile && (
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
             <div className="flex items-start gap-3">
