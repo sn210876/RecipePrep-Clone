@@ -1,14 +1,10 @@
 import { useState } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Layout } from './components/Layout';
-import { Home } from './pages/Home';
-import { Discover } from './pages/Discover';
-import { MyRecipes } from './pages/MyRecipes';
-import { AddRecipe } from './pages/AddRecipe';
-import { MealPlanner } from './pages/MealPlanner';
-import { ShoppingList } from './pages/ShoppingList';
-import { Settings } from './pages/Settings';
+import { BottomNav } from './components/BottomNav';
+import { Feed } from './pages/Feed';
+import { Upload } from './pages/Upload';
+import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { Verifying } from './pages/Verifying';
 import { ResetPassword } from './pages/ResetPassword';
@@ -16,8 +12,7 @@ import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [discoverKey, setDiscoverKey] = useState(0);
+  const [currentPage, setCurrentPage] = useState('feed');
   const [completedVerifying, setCompletedVerifying] = useState(false);
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
 
@@ -25,30 +20,19 @@ function AppContent() {
   const isPasswordReset = hash && (hash.includes('type=recovery') || window.location.pathname === '/reset-password');
 
   const handleNavigate = (page: string) => {
-    if (page === 'discover') {
-      setDiscoverKey(prev => prev + 1);
-    }
     setCurrentPage(page);
   };
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'home':
-        return <Home onNavigate={handleNavigate} />;
-      case 'discover':
-        return <Discover key={discoverKey} />;
-      case 'my-recipes':
-        return <MyRecipes />;
-      case 'add-recipe':
-        return <AddRecipe onNavigate={handleNavigate} />;
-      case 'meal-planner':
-        return <MealPlanner />;
-      case 'shopping-list':
-        return <ShoppingList />;
-      case 'settings':
-        return <Settings />;
+      case 'feed':
+        return <Feed />;
+      case 'upload':
+        return <Upload onNavigate={handleNavigate} />;
+      case 'profile':
+        return <Profile />;
       default:
-        return <Home onNavigate={handleNavigate} />;
+        return <Feed />;
     }
   };
 
@@ -80,9 +64,10 @@ function AppContent() {
   }
 
   return (
-    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+    <>
       {renderPage()}
-    </Layout>
+      <BottomNav currentPage={currentPage} onNavigate={handleNavigate} />
+    </>
   );
 }
 
