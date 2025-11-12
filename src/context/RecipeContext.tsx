@@ -30,7 +30,7 @@ type RecipeAction =
 const initialState: RecipeState = {
   savedRecipes: [],
   mealPlan: [],
-  shoppingList: [],
+  groceryList: [],
   userPreferences: {
     dietaryPreferences: [],
     favoriteCuisines: [],
