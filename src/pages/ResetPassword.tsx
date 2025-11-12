@@ -13,7 +13,6 @@ export default function ResetPassword() {
   const [hasToken, setHasToken] = useState(false);
 
   useEffect(() => {
-    // Parse URL hash: #access_token=...&type=recovery
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
     const token = params.get('access_token');
@@ -51,7 +50,7 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      const { error: updateError } = await updateUser({
+      const { error: updateError } = await supabase.auth.updateUser({
         password: password,
       });
       if (updateError) throw updateError;
@@ -66,7 +65,6 @@ export default function ResetPassword() {
     }
   };
 
-  // Success Screen
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
@@ -99,7 +97,6 @@ export default function ResetPassword() {
     );
   }
 
-  // Invalid Link Screen
   if (!hasToken) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
@@ -130,7 +127,6 @@ export default function ResetPassword() {
     );
   }
 
-  // Password Form
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-red-200/30 to-transparent rounded-full blur-3xl" />
