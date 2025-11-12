@@ -44,14 +44,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
 
-  const items = state.shoppingList;
+  const items = state.groceryList;
 
   useEffect(() => {
     loadMealPlannerItems();
   }, [startDate, endDate]);
 
   function loadMealPlannerItems() {
-    console.log('[ShoppingList] Loading meal planner items');
+    console.log('[GroceryList] Loading meal planner items');
     console.log('[ShoppingList] Date range:', startDate, 'to', endDate);
     console.log('[ShoppingList] Total meals in plan:', state.mealPlan.length);
     console.log('[ShoppingList] Meal plan data:', state.mealPlan);
