@@ -262,7 +262,11 @@ export function RecipeDetailModal({
                     <Button
                       variant="outline"
                       size="icon"
+                      onClick={() => {
+                        toast.info('Edit recipe feature coming soon!');
+                      }}
                       className="hover:bg-blue-50 hover:border-blue-500 hover:text-blue-700"
+                      title="Edit recipe"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>

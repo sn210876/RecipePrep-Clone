@@ -24,7 +24,8 @@ import {
   Users,
   Layers,
   Plus,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
@@ -407,11 +408,25 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold text-slate-900">Meal Planner</h1>
-                    <p className="text-slate-600">Plan your weekly meals</p>
+                    <p className="text-slate-600">Select a recipe, then click a meal slot to assign it</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm('Clear all meal plans? This cannot be undone.')) {
+                        dispatch({ type: 'CLEAR_MEAL_PLAN' });
+                        toast.success('All meals cleared');
+                      }
+                    }}
+                    className="gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear All
+                  </Button>
                   <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
                     <Button
                       variant={weeksToShow === 1 ? 'default' : 'ghost'}

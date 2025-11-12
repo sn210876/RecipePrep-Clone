@@ -23,6 +23,8 @@ import {
   Users,
   Plus,
   Minus,
+  Edit3,
+  Check,
 } from 'lucide-react';
 import NoSleep from 'nosleep.js';
 import { ReviewForm } from './ReviewForm';
@@ -55,6 +57,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const noSleepRef = useRef<NoSleep | null>(null);
   const wakeLockRef = useRef<any>(null);
   const prevStepRef = useRef<number>(0);
+  const [editingIngredients, setEditingIngredients] = useState(false);
 
   const steps = recipe.steps || recipe.instructions.map((instruction, index) => ({
     stepNumber: index + 1,
@@ -611,10 +614,37 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                   )}
                   Ingredients
                 </h3>
-                <span className="text-xs sm:text-sm text-gray-600">
-                  {checkedIngredients.size}/{recipe.ingredients.length} checked
-                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingIngredients(!editingIngredients)}
+                    className="h-8 text-xs"
+                  >
+                    {editingIngredients ? (
+                      <>
+                        <Check className="w-3 h-3 mr-1" />
+                        Done
+                      </>
+                    ) : (
+                      <>
+                        <Edit3 className="w-3 h-3 mr-1" />
+                        Edit
+                      </>
+                    )}
+                  </Button>
+                  <span className="text-xs sm:text-sm text-gray-600">
+                    {checkedIngredients.size}/{recipe.ingredients.length} checked
+                  </span>
+                </div>
               </div>
+              {editingIngredients && (
+                <div className="mb-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-xs text-yellow-800">
+                    Changes here won't be saved to the recipe. These are temporary adjustments for this cooking session only.
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {scaledIngredients.map((ingredient, index) => (
                   <div

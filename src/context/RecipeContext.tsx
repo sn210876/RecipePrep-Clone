@@ -18,6 +18,7 @@ type RecipeAction =
   | { type: 'REMOVE_RECIPE'; payload: string }
   | { type: 'ADD_MEAL_PLAN'; payload: MealPlanEntry }
   | { type: 'REMOVE_MEAL_PLAN'; payload: string }
+  | { type: 'CLEAR_MEAL_PLAN' }
   | { type: 'UPDATE_MEAL_PLAN'; payload: MealPlanEntry }
   | { type: 'ADD_GROCERY_ITEM'; payload: GroceryListItem }
   | { type: 'REMOVE_GROCERY_ITEM'; payload: string }
@@ -92,6 +93,12 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
       return {
         ...state,
         mealPlan: state.mealPlan.filter(m => m.id !== action.payload)
+      };
+    case 'CLEAR_MEAL_PLAN':
+      return {
+        ...state,
+        mealPlan: [],
+        groceryList: []
       };
     case 'UPDATE_MEAL_PLAN':
       return {
