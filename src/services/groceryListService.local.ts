@@ -152,7 +152,7 @@ function getCategoryForIngredient(ingredientName: string, categories: GroceryLis
   return otherCategory?.id || categories[0]?.id || '';
 }
 
-export function getDefaultCategories(): ShoppingListCategory[] {
+export function getDefaultCategories(): GroceryListCategory[] {
   return DEFAULT_CATEGORIES.map((cat, idx) => ({
     id: `cat-${idx}`,
     name: cat.name,
@@ -160,12 +160,12 @@ export function getDefaultCategories(): ShoppingListCategory[] {
   }));
 }
 
-export function consolidateShoppingListItems(
+export function consolidateGroceryListItems(
   mealPlans: Array<{ recipeId: string; servings: number }>,
   recipes: Recipe[]
-): ShoppingListItem[] {
+): GroceryListItem[] {
   const categories = getDefaultCategories();
-  const itemMap = new Map<string, ShoppingListItem>();
+  const itemMap = new Map<string, GroceryListItem>();
 
   for (const mealPlan of mealPlans) {
     const recipe = recipes.find(r => r.id === mealPlan.recipeId);
@@ -201,7 +201,7 @@ export function consolidateShoppingListItems(
         }
       } else {
         const categoryId = getCategoryForIngredient(ingredient.name, categories);
-        const newItem: ShoppingListItem = {
+        const newItem: GroceryListItem = {
           id: `item-${Date.now()}-${Math.random()}`,
           name: ingredient.name,
           quantity,
