@@ -112,7 +112,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   }, [allRecipes, showAllHealthy]);
 
   const internationalRecipes = useMemo(() => {
-    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'];
+    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian', 'Pet Meals'];
     const filtered = allRecipes
       .filter((r) => cuisines.includes(r.cuisineType));
     return showAllInternational ? filtered : filtered.slice(0, 12);
@@ -361,7 +361,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                   />
                 ))}
               </div>
-              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'].includes(r.cuisineType)).length > 12 && (
+              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian', 'Pet Meals'].includes(r.cuisineType)).length > 12 && (
                 <div className="text-center mt-8">
                   <Button
                     onClick={() => setShowAllInternational(!showAllInternational)}

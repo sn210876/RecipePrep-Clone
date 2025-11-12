@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Search, Music, Play, Pause, Check, Loader2 } from 'lucide-react';
 import { Song } from '../data/mockSongs';
-import { searchSpotify, getFallbackSongs } from '../utils/spotify';
+import { searchSpotify } from '../utils/spotify';
 import { toast } from 'sonner';
 
 interface MusicSelectionModalProps {
@@ -17,14 +17,14 @@ interface MusicSelectionModalProps {
 export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: MusicSelectionModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const [songs, setSongs] = useState<Song[]>(getFallbackSongs());
+  const [songs, setSongs] = useState<Song[]>([]);
   const [searching, setSearching] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setSongs(getFallbackSongs());
+      setSongs([]);
       return;
     }
 
@@ -37,15 +37,15 @@ export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: M
       try {
         const results = await searchSpotify(searchQuery);
         if (results.length === 0) {
-          toast.info('No songs found with preview available');
-          setSongs(getFallbackSongs());
+          toast.info('No songs found with preview available. Try another search.');
+          setSongs([]);
         } else {
           setSongs(results);
         }
       } catch (error) {
         console.error('Spotify search error:', error);
-        toast.error('Failed to search songs, showing fallback');
-        setSongs(getFallbackSongs());
+        toast.error('Failed to search songs. Please try again.');
+        setSongs([]);
       } finally {
         setSearching(false);
       }
@@ -141,8 +141,19 @@ export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: M
 
         <div className="flex-1 overflow-y-auto space-y-2">
           {songs.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {searching ? 'Searching...' : 'No songs found'}
+            <div className="text-center py-12 text-gray-500">
+              {searching ? (
+                <>
+                  <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-orange-500" />
+                  <p>Searching Spotify...</p>
+                </>
+              ) : (
+                <>
+                  <Music className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p className="font-medium">Search for songs on Spotify</p>
+                  <p className="text-sm mt-1">Try "Blinding Lights" or your favorite artist</p>
+                </>
+              )}
             </div>
           ) : (
             songs.map((song) => {

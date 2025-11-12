@@ -19,7 +19,7 @@ export const getSpotifyToken = async () => {
 
 export const searchSpotify = async (query: string) => {
   const token = await getSpotifyToken();
-  const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
+  const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -31,10 +31,3 @@ export const searchSpotify = async (query: string) => {
     cover: t.album.images[1]?.url,
   })).filter((s: any) => s.preview);
 };
-
-const fallback = [
-  { id: '1', title: 'Demo Beat', artist: 'Free Music', preview: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-  { id: '2', title: 'Chill Loop', artist: 'Royalty Free', preview: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
-];
-
-export const getFallbackSongs = () => fallback;
