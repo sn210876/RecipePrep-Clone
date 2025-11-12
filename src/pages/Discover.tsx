@@ -163,52 +163,39 @@ export function Discover() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
+    fetchPosts(0);
+  }, []);
 
-    const loadInitialPosts = async () => {
-      if (mounted) {
-        await fetchPosts(0);
-      }
-    };
-
-    loadInitialPosts();
-
+  useEffect(() => {
     const channel = supabase
       .channel('posts-and-comments-changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'posts' },
         () => {
-          if (mounted) {
-            fetchPosts(0, true);
-          }
+          fetchPosts(0, true);
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'comments' },
         () => {
-          if (mounted) {
-            fetchPosts(0, true);
-          }
+          fetchPosts(0, true);
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'likes' },
         () => {
-          if (mounted) {
-            fetchPosts(0, true);
-          }
+          fetchPosts(0, true);
         }
       )
       .subscribe();
 
     return () => {
-      mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [fetchPosts]);
+  }, []);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
