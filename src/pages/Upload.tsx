@@ -3,8 +3,10 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
-import { Upload as UploadIcon, X, Image as ImageIcon, Video } from 'lucide-react';
+import { Upload as UploadIcon, X, Image as ImageIcon, Video, Music } from 'lucide-react';
 import { extractHashtags } from '../lib/hashtags';
+import { MusicSelectionModal } from '../components/MusicSelectionModal';
+import { Song } from '../data/mockSongs';
 import {
   Select,
   SelectContent,
@@ -32,6 +34,8 @@ export function Upload({ onNavigate }: UploadProps) {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
   const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [showMusicModal, setShowMusicModal] = useState(false);
 
   useEffect(() => {
     loadUserRecipes();
@@ -139,6 +143,10 @@ export function Upload({ onNavigate }: UploadProps) {
         title: title.trim(),
         caption: caption.trim() || null,
         recipe_url: recipeLink,
+        song_id: selectedSong?.id || null,
+        song_title: selectedSong?.title || null,
+        song_artist: selectedSong?.artist || null,
+        song_preview_url: selectedSong?.preview || null,
       };
 
       if (fileType === 'image') {
@@ -197,6 +205,7 @@ export function Upload({ onNavigate }: UploadProps) {
       setTitle('');
       setCaption('');
       setSelectedRecipeId('');
+      setSelectedSong(null);
       onNavigate('discover');
     } catch (error: any) {
       console.error('Error uploading post:', error);
@@ -344,7 +353,53 @@ export function Upload({ onNavigate }: UploadProps) {
               Choose a recipe from your collection to link with this post
             </p>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Music (optional)
+            </label>
+            {selectedSong ? (
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center">
+                  <Music className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm truncate">{selectedSong.title}</div>
+                  <div className="text-xs text-gray-600 truncate">{selectedSong.artist}</div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMusicModal(true)}
+                  className="text-orange-600 hover:text-orange-700"
+                >
+                  Change
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowMusicModal(true)}
+                className="w-full flex items-center justify-center gap-2 h-12 border-2 border-dashed hover:border-orange-500 hover:bg-orange-50 transition-colors"
+              >
+                <Music className="w-5 h-5" />
+                <span>Add Music</span>
+              </Button>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Add a song to your post like Instagram Reels
+            </p>
+          </div>
         </div>
+
+        <MusicSelectionModal
+          open={showMusicModal}
+          onClose={() => setShowMusicModal(false)}
+          onSelect={setSelectedSong}
+          selectedSong={selectedSong}
+        />
 
         {selectedFile && (
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">

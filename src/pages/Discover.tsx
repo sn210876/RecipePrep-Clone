@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Music } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -35,6 +35,10 @@ interface Post {
   caption: string | null;
   recipe_url: string | null;
   recipe_id: string | null;
+  song_id: string | null;
+  song_title: string | null;
+  song_artist: string | null;
+  song_preview_url: string | null;
   created_at: string;
   profiles: {
     username: string;
@@ -647,6 +651,16 @@ export function Discover() {
                         className="w-full aspect-square object-cover"
                       />
                     ) : null}
+                    {post.song_title && post.song_artist && (
+                      <div className="absolute bottom-16 left-4 right-4">
+                        <div className="inline-flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-full">
+                          <Music className="w-4 h-4 text-white" />
+                          <span className="text-white text-xs font-medium truncate max-w-[200px]">
+                            {post.song_title} • {post.song_artist}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     {post.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
                         <h3 className="text-white text-sm font-semibold">{post.title}</h3>
