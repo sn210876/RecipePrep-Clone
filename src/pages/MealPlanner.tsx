@@ -24,7 +24,6 @@ import {
   Clock,
   Users,
   Layers,
-  Sparkles,
   Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -269,89 +268,6 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }));
   };
 
-  const suggestRecipe = async (date: Date, mealType: MealType) => {
-    if (state.savedRecipes.length === 0) {
-      toast.error('Please save some recipes first to get suggestions');
-      return;
-    }
-
-    const plannedRecipeIds = mealPlans.map(plan => plan.recipeId);
-    const { userPreferences } = state;
-
-    let availableRecipes = state.savedRecipes.filter(recipe => {
-      const isAppropriateForMeal = recipe.mealType.includes(mealType) || recipe.mealType.length === 0;
-      return isAppropriateForMeal;
-    });
-
-    if (availableRecipes.length === 0) {
-      availableRecipes = state.savedRecipes;
-    }
-
-    const scoredRecipes = availableRecipes.map(recipe => {
-      let score = 0;
-
-      const timesUsedRecently = plannedRecipeIds.filter(id => id === recipe.id).length;
-      score -= timesUsedRecently * 50;
-
-      if (userPreferences.favoriteCuisines.includes(recipe.cuisineType)) {
-        score += 30;
-      }
-
-      const matchesDietaryPrefs = userPreferences.dietaryPreferences.every(pref => {
-        return recipe.dietaryTags.some(tag =>
-          tag.toLowerCase().includes(pref.toLowerCase())
-        );
-      });
-      if (matchesDietaryPrefs) {
-        score += 40;
-      }
-
-      const hasDislikedIngredients = recipe.ingredients.some(ingredient =>
-        userPreferences.dislikedIngredients.some(disliked =>
-          ingredient.name.toLowerCase().includes(disliked.toLowerCase())
-        )
-      );
-      if (hasDislikedIngredients) {
-        score -= 100;
-      }
-
-      const skillMap: Record<string, string> = {
-        'Beginner': 'Easy',
-        'Intermediate': 'Medium',
-        'Advanced': 'Hard'
-      };
-
-      if (recipe.difficulty === skillMap[userPreferences.cookingSkillLevel]) {
-        score += 20;
-      } else if (
-        (userPreferences.cookingSkillLevel === 'Advanced' && recipe.difficulty === 'Medium') ||
-        (userPreferences.cookingSkillLevel === 'Intermediate' && recipe.difficulty === 'Easy')
-      ) {
-        score += 10;
-      }
-
-      const totalTime = recipe.prepTime + recipe.cookTime;
-      if (mealType === 'Breakfast' && totalTime <= 30) {
-        score += 25;
-      } else if (mealType === 'Lunch' && totalTime <= 45) {
-        score += 15;
-      } else if (mealType === 'Dinner' && totalTime <= 60) {
-        score += 10;
-      } else if (mealType === 'Snack' && totalTime <= 20) {
-        score += 30;
-      }
-
-      score += Math.random() * 20;
-
-      return { recipe, score };
-    });
-
-    scoredRecipes.sort((a, b) => b.score - a.score);
-    const suggestedRecipe = scoredRecipes[0].recipe;
-
-    await handleDrop(date, mealType, suggestedRecipe);
-    toast.success(`Suggested: ${suggestedRecipe.title}`);
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -395,7 +311,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                     key={recipe.id}
                     className="group"
                   >
-                    <Card className="overflow-hidden hover:shadow-md transition-all border-slate-200 hover:border-blue-300 bg-white">
+                    <Card className={`overflow-hidden hover:shadow-md transition-all border-slate-200 hover:border-blue-300 bg-white ${draggedItem?.recipe.id === recipe.id && dragOverSlot ? 'scale-75 opacity-70' : ''}`}>
                       <CardContent className="p-0">
                         <div
                           draggable
@@ -554,7 +470,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                         {MEAL_TYPES.map(mealType => {
                           const meal = getMealForSlot(day, mealType);
 
-                          const isHovered = dragOverSlot?.date === day && dragOverSlot?.mealType === mealType;
+                          const isHovered = dragOverSlot?.date?.getTime() === day.getTime() && dragOverSlot?.mealType === mealType;
 
                           return (
                             <div
@@ -633,15 +549,6 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                                     >
                                       <Plus className="w-3 h-3" />
                                       Add
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => suggestRecipe(day, mealType)}
-                                      className="h-7 text-xs px-2 gap-1 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                    >
-                                      <Sparkles className="w-3 h-3" />
-                                      Suggest
                                     </Button>
                                   </div>
                                 </div>

@@ -289,10 +289,16 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           const { data: { user } } = await supabase.auth.getUser();
 
           if (user) {
+            const postImageUrl = imageUrl.trim()
+              ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')
+                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
+                : imageUrl.trim())
+              : null;
+
             const { error: postError } = await supabase.from('posts').insert({
               user_id: user.id,
               title: title.trim(),
-              image_url: imageUrl.trim() || 'https://via.placeholder.com/400',
+              image_url: postImageUrl,
               video_url: videoUrl.trim(),
               caption: notes.trim() || 'Check out my recipe!',
               recipe_url: videoUrl.trim(),
@@ -766,7 +772,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
                 <div className="space-y-6 py-4">
                   {extractedData.imageUrl && (
-                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
                       <img
                         src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl.replace(/&amp;/g, '&'))}`}
                         alt={extractedData.title}
