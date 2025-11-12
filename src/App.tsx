@@ -7,7 +7,7 @@ import { Discover } from './pages/Discover';
 import { MyRecipes } from './pages/MyRecipes';
 import { AddRecipe } from './pages/AddRecipe';
 import { MealPlanner } from './pages/MealPlanner';
-import { ShoppingList } from './pages/GroceryList';
+import { GroceryList } from './pages/GroceryList';
 import { Settings } from './pages/Settings';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
