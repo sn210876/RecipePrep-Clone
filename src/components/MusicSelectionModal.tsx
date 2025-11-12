@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Search, Music, Play, Pause, Check } from 'lucide-react';
@@ -76,6 +76,9 @@ export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: M
             <Music className="w-5 h-5" />
             Add Music
           </DialogTitle>
+          <DialogDescription>
+            Search and select a song to add to your post
+          </DialogDescription>
         </DialogHeader>
 
         <div className="relative mb-4">
