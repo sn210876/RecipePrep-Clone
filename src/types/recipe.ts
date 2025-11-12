@@ -44,7 +44,7 @@ export interface MealPlanEntry {
   servings: number;
 }
 
-export interface ShoppingListItem {
+export interface GroceryListItem {
   id: string;
   name: string;
   quantity: number;
