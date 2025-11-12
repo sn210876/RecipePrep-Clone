@@ -5,6 +5,7 @@ import { VoiceControls, VoiceCommand, VoiceSettings } from './VoiceControls';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { ScrollArea } from './ui/scroll-area';
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,6 +20,9 @@ import {
   VolumeX,
   Star,
   Camera,
+  Users,
+  Plus,
+  Minus,
 } from 'lucide-react';
 import NoSleep from 'nosleep.js';
 import { ReviewForm } from './ReviewForm';
@@ -40,6 +44,8 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [stepPhotos, setStepPhotos] = useState<Map<number, string[]>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [servings, setServings] = useState(recipe.servings);
+  const [showServingsWarning, setShowServingsWarning] = useState(false);
   const [voiceSettings] = useState<VoiceSettings>(() => {
     const saved = localStorage.getItem('voiceSettings');
     return saved ? JSON.parse(saved) : { speechRate: 1.0, voiceIndex: 0, autoRead: true };
@@ -58,6 +64,74 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
     duration: undefined,
     videoUrl: undefined
   }));
+
+  const scaleQuantity = (quantityStr: string, scaleFactor: number): string => {
+    const fractionMap: { [key: string]: number } = {
+      '¼': 0.25, '½': 0.5, '¾': 0.75,
+      '⅓': 0.333, '⅔': 0.667,
+      '⅛': 0.125, '⅜': 0.375, '⅝': 0.625, '⅞': 0.875,
+      '1/4': 0.25, '1/2': 0.5, '3/4': 0.75,
+      '1/3': 0.333, '2/3': 0.667,
+      '1/8': 0.125, '3/8': 0.375, '5/8': 0.625, '7/8': 0.875
+    };
+
+    const numberPattern = /(\d+\.?\d*|\d*\.?\d+|[¼½¾⅓⅔⅛⅜⅝⅞]|1\/[2348]|[23]\/[34])/g;
+    const matches = quantityStr.match(numberPattern);
+
+    if (!matches) return quantityStr;
+
+    let scaled = quantityStr;
+    for (const match of matches) {
+      let value = 0;
+      if (fractionMap[match]) {
+        value = fractionMap[match];
+      } else if (match.includes('/')) {
+        const [num, den] = match.split('/').map(Number);
+        value = num / den;
+      } else {
+        value = parseFloat(match);
+      }
+
+      if (isNaN(value)) continue;
+
+      const newValue = value * scaleFactor;
+      let display = '';
+
+      if (Math.abs(newValue - Math.round(newValue)) < 0.01) {
+        display = Math.round(newValue).toString();
+      } else if (Math.abs(newValue - 0.25) < 0.01) {
+        display = '¼';
+      } else if (Math.abs(newValue - 0.33) < 0.05 || Math.abs(newValue - 0.333) < 0.05) {
+        display = '⅓';
+      } else if (Math.abs(newValue - 0.5) < 0.01) {
+        display = '½';
+      } else if (Math.abs(newValue - 0.67) < 0.05 || Math.abs(newValue - 0.667) < 0.05) {
+        display = '⅔';
+      } else if (Math.abs(newValue - 0.75) < 0.01) {
+        display = '¾';
+      } else {
+        display = newValue.toFixed(2).replace(/\.?0+$/, '');
+      }
+
+      scaled = scaled.replace(match, display);
+    }
+
+    return scaled;
+  };
+
+  const scaleFactor = servings / recipe.servings;
+  const scaledIngredients = recipe.ingredients.map(ing => ({
+    ...ing,
+    quantity: scaleQuantity(ing.quantity, scaleFactor)
+  }));
+
+  const handleServingsChange = (newServings: number) => {
+    if (newServings < 1) return;
+    if (newServings !== recipe.servings) {
+      setShowServingsWarning(true);
+    }
+    setServings(newServings);
+  };
 
   useEffect(() => {
     if (voiceModeActive && voiceSettings.autoRead && currentStep !== prevStepRef.current) {
@@ -490,6 +564,43 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                 </p>
               </div>
             )}
+
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border-2 border-emerald-200 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-emerald-600" />
+                  <span className="text-sm font-semibold text-gray-900">Servings</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleServingsChange(servings - 1)}
+                    disabled={servings <= 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </Button>
+                  <span className="text-lg font-bold text-gray-900 min-w-[2rem] text-center">
+                    {servings}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleServingsChange(servings + 1)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              {servings !== recipe.servings && (
+                <p className="text-xs text-emerald-700 mt-2 text-center">
+                  Scaled from original {recipe.servings} servings
+                </p>
+              )}
+            </div>
+
             <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 sm:p-6 border-2 border-blue-200 shadow-sm">
               <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -505,7 +616,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                {recipe.ingredients.map((ingredient, index) => (
+                {scaledIngredients.map((ingredient, index) => (
                   <div
                     key={index}
                     className={`flex items-center gap-3 p-2 sm:p-3 rounded-lg transition-all ${
@@ -729,6 +840,24 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
           setShowReviewForm(false);
         }}
       />
+
+      <AlertDialog open={showServingsWarning} onOpenChange={setShowServingsWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cooking Time May Vary</AlertDialogTitle>
+            <AlertDialogDescription>
+              When adjusting servings, cooking times may need to increase or decrease accordingly.
+              <br /><br />
+              <strong>Important:</strong> Monitor your food closely and adjust cooking times as needed based on your batch size.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button onClick={() => setShowServingsWarning(false)}>
+              Got it
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
