@@ -71,7 +71,7 @@ export function RecipeDetailModal({
     }
   };
 
-  const handleAddToShoppingList = () => {
+  const handleAddToGroceryList = () => {
     recipe.ingredients.forEach((ingredient) => {
       const item = {
         id: `${recipe.id}-${ingredient.name}-${Date.now()}`,
@@ -84,7 +84,7 @@ export function RecipeDetailModal({
       };
       dispatch({ type: 'ADD_GROCERY_ITEM', payload: item });
     });
-    toast.success('Ingredients added to shopping list');
+    toast.success('Ingredients added to grocery list');
   };
 
   const handleAddToMealPlan = () => {
@@ -250,10 +250,10 @@ export function RecipeDetailModal({
               <div className="flex gap-3 mb-8">
                 <Button
                   variant="outline"
-                  onClick={handleAddToShoppingList}
+                  onClick={handleAddToGroceryList}
                   className="flex-1 gap-2 hover:bg-orange-50 hover:border-primary hover:text-primary"
                 >
-                  <ShoppingCart className="w-4 h-4" />
+                  <GroceryCart className="w-4 h-4" />
                   Add to Shopping List
                 </Button>
 
