@@ -19,12 +19,12 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Grip,
   X,
   Clock,
   Users,
   Layers,
-  Plus
+  Plus,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
@@ -32,11 +32,6 @@ import { consolidateGroceryListItems } from '../services/groceryListService.loca
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
-
-interface DraggedRecipe {
-  recipe: Recipe;
-  type: 'recipe';
-}
 
 interface MealPlanWithRecipe extends MealPlanEntry {
   recipe?: Recipe;
@@ -50,7 +45,6 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
   const { state, dispatch } = useRecipes();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [weeksToShow, setWeeksToShow] = useState<1 | 4>(1);
-  const [draggedItem, setDraggedItem] = useState<DraggedRecipe | null>(null);
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
@@ -61,7 +55,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
   const [showSlotDropdown, setShowSlotDropdown] = useState(false);
   const [slotDate, setSlotDate] = useState<Date | null>(null);
   const [slotMealType, setSlotMealType] = useState<MealType | null>(null);
-  const [dragOverSlot, setDragOverSlot] = useState<{date: Date, mealType: MealType} | null>(null);
+  const [selectedRecipeForAssignment, setSelectedRecipeForAssignment] = useState<Recipe | null>(null);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -140,28 +134,17 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     );
   };
 
-  const handleDragStart = (recipe: Recipe, e: React.DragEvent) => {
-    setDraggedItem({ recipe, type: 'recipe' });
-
-    const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-    dragImage.style.transform = 'scale(0.5)';
-    dragImage.style.opacity = '0.3';
-    dragImage.style.position = 'absolute';
-    dragImage.style.top = '-1000px';
-    document.body.appendChild(dragImage);
-    e.dataTransfer.setDragImage(dragImage, 0, 0);
-
-    setTimeout(() => document.body.removeChild(dragImage), 0);
+  const handleRecipeClick = (recipe: Recipe) => {
+    if (selectedRecipeForAssignment?.id === recipe.id) {
+      setSelectedRecipeForAssignment(null);
+      toast.info('Recipe deselected');
+    } else {
+      setSelectedRecipeForAssignment(recipe);
+      toast.success('Recipe selected - now click a meal slot to assign');
+    }
   };
 
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-  };
-
-  const handleDrop = async (date: Date, mealType: MealType, recipeOverride?: Recipe) => {
-    const recipeToAdd = recipeOverride || draggedItem?.recipe;
-    if (!recipeToAdd) return;
-
+  const addMealToSlot = async (date: Date, mealType: MealType, recipe: Recipe) => {
     const dateString = format(date, 'yyyy-MM-dd');
     const existingMeal = getMealForSlot(date, mealType);
 
@@ -171,10 +154,10 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
           type: 'UPDATE_MEAL_PLAN',
           payload: {
             id: existingMeal.id,
-            recipeId: recipeToAdd.id,
+            recipeId: recipe.id,
             date: dateString,
             mealType: mealType,
-            servings: recipeToAdd.servings
+            servings: recipe.servings
           }
         });
       } else {
@@ -182,25 +165,33 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
           type: 'ADD_MEAL_PLAN',
           payload: {
             id: `meal-${Date.now()}`,
-            recipeId: recipeToAdd.id,
+            recipeId: recipe.id,
             date: dateString,
             mealType: mealType,
-            servings: recipeToAdd.servings
+            servings: recipe.servings
           }
         });
       }
 
-      if (!recipeOverride) {
-        toast.success('Meal added to calendar');
-      }
       await loadMealPlans();
       await syncGroceryList();
     } catch (error) {
       console.error('Error adding meal:', error);
+      throw error;
+    }
+  };
+
+  const handleSlotClick = async (date: Date, mealType: MealType) => {
+    const recipeToAdd = selectedRecipeForAssignment;
+    if (!recipeToAdd) return;
+
+    try {
+      await addMealToSlot(date, mealType, recipeToAdd);
+      toast.success('Meal assigned to calendar');
+      setSelectedRecipeForAssignment(null);
+    } catch (error) {
       toast.error('Failed to add meal');
     }
-
-    setDraggedItem(null);
   };
 
   const handleRemoveMeal = async (mealPlanId: string) => {
@@ -239,12 +230,16 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     }
 
     const date = new Date(selectedDate);
-    await handleDrop(date, selectedMealType as MealType, selectedRecipe);
-
-    setShowAddMealDialog(false);
-    setSelectedRecipe(null);
-    setSelectedDate('');
-    setSelectedMealType('');
+    try {
+      await addMealToSlot(date, selectedMealType as MealType, selectedRecipe);
+      toast.success('Meal added to calendar');
+      setShowAddMealDialog(false);
+      setSelectedRecipe(null);
+      setSelectedDate('');
+      setSelectedMealType('');
+    } catch (error) {
+      toast.error('Failed to add meal');
+    }
   };
 
   const handleOpenSlotDropdown = (date: Date, mealType: MealType) => {
@@ -259,10 +254,15 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     const recipe = state.savedRecipes.find(r => r.id === recipeId);
     if (!recipe) return;
 
-    await handleDrop(slotDate, slotMealType, recipe);
-    setShowSlotDropdown(false);
-    setSlotDate(null);
-    setSlotMealType(null);
+    try {
+      await addMealToSlot(slotDate, slotMealType, recipe);
+      toast.success('Meal added to calendar');
+      setShowSlotDropdown(false);
+      setSlotDate(null);
+      setSlotMealType(null);
+    } catch (error) {
+      toast.error('Failed to add meal');
+    }
   };
 
   const getDaysToShow = (): Date[] => {
@@ -321,13 +321,11 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                     key={recipe.id}
                     className="group"
                   >
-                    <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border-slate-200 hover:border-blue-300 bg-white">
+                    <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 ${selectedRecipeForAssignment?.id === recipe.id ? 'border-2 border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-blue-300 bg-white'}`}>
                       <CardContent className="p-0">
                         <div
-                          draggable
-                          onDragStart={(e) => handleDragStart(recipe, e)}
-                          onDragEnd={handleDragEnd}
-                          className="flex gap-3 p-3 cursor-move"
+                          onClick={() => handleRecipeClick(recipe)}
+                          className="flex gap-3 p-3 cursor-pointer"
                         >
                           {recipe.imageUrl && (
                             <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
@@ -345,7 +343,9 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                               <h3 className="font-semibold text-sm text-slate-900 line-clamp-2">
                                 {recipe.title}
                               </h3>
-                              <Grip className="w-4 h-4 text-slate-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              {selectedRecipeForAssignment?.id === recipe.id && (
+                                <Check className="w-4 h-4 text-orange-600 shrink-0" />
+                              )}
                             </div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               <div className="flex items-center gap-1">
@@ -480,32 +480,19 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                         {MEAL_TYPES.map(mealType => {
                           const meal = getMealForSlot(day, mealType);
 
-                          const dayStr = format(day, 'yyyy-MM-dd');
-                          const hoverDayStr = dragOverSlot?.date ? format(dragOverSlot.date, 'yyyy-MM-dd') : null;
-                          const isHovered = hoverDayStr === dayStr && dragOverSlot?.mealType === mealType;
-
                           return (
                             <div
                               key={`${dayIndex}-${mealType}`}
-                              data-date={day.toISOString()}
-                              data-meal-type={mealType}
-                              onDragOver={(e) => {
-                                e.preventDefault();
-                                setDragOverSlot({date: day, mealType});
-                              }}
-                              onDragLeave={() => setDragOverSlot(null)}
-                              onDrop={(e) => {
-                                e.preventDefault();
-                                handleDrop(day, mealType);
-                                setDragOverSlot(null);
+                              onClick={() => {
+                                if (selectedRecipeForAssignment) {
+                                  handleSlotClick(day, mealType);
+                                }
                               }}
                               className={`
                                 min-h-[100px] rounded-lg border-2 border-dashed p-2
                                 transition-all relative group
-                                ${draggedItem && isHovered
-                                  ? 'border-orange-500 bg-gradient-to-br from-orange-100 to-red-100 shadow-lg scale-105 ring-2 ring-orange-400'
-                                  : draggedItem
-                                  ? 'border-blue-300 bg-blue-50/50'
+                                ${selectedRecipeForAssignment && !meal
+                                  ? 'border-orange-400 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-500'
                                   : 'border-slate-200 bg-slate-50/50'
                                 }
                                 ${meal ? 'border-solid bg-white hover:shadow-md' : ''}
@@ -514,7 +501,10 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                               {meal && meal.recipe ? (
                                 <div className="relative">
                                   <button
-                                    onClick={() => handleRemoveMeal(meal.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveMeal(meal.id);
+                                    }}
                                     className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
                                   >
                                     <X className="w-3 h-3" />
