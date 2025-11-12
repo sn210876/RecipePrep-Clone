@@ -106,6 +106,50 @@ export function Discover() {
     });
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const loadNotifications = async () => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*, actor:actor_id(username, avatar_url)')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (data) {
+        setNotifications(data);
+        setUnreadNotifications(data.filter(n => !n.read).length);
+      }
+    };
+
+    loadNotifications();
+
+    const channel = supabase
+      .channel('notifications-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUserId}` },
+        () => {
+          loadNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId]);
+
   const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
     try {
       let query = supabase
@@ -501,50 +545,6 @@ export function Discover() {
       audioRef.current.muted = !isMuted;
     }
   };
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    const loadNotifications = async () => {
-      const { data } = await supabase
-        .from('notifications')
-        .select('*, actor:actor_id(username, avatar_url)')
-        .eq('user_id', currentUserId)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (data) {
-        setNotifications(data);
-        setUnreadNotifications(data.filter(n => !n.read).length);
-      }
-    };
-
-    loadNotifications();
-
-    const channel = supabase
-      .channel('notifications-changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUserId}` },
-        () => {
-          loadNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentUserId]);
 
   const markNotificationRead = async (notificationId: string) => {
     await supabase
