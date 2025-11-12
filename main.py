@@ -13,7 +13,28 @@ from pydantic import BaseModel
 from recipe_scrapers import scrape_me
 import yt_dlp
 from openai import OpenAI
+import ytmusicapi
 
+# Initialize YTMusic (no auth needed)
+ytm = ytmusicapi.YTMusic()
+
+# Function to search songs
+def search_ytmusic(query: str, limit: int = 5):
+    try:
+        results = ytm.search(query, filter='songs', limit=limit)
+        return [
+            {
+              'id': track['videoId'],
+              'title': track['title'],
+              'artist': track['artist'],
+              'duration': track['duration'],
+              'thumbnail': track['thumbnails'][0]['url'] if track['thumbnails'] else None
+            }
+            for track in results
+        ]
+    except Exception as e:
+        print(f"YTMusic error: {e}")
+        return []
 # NUCLEAR YT-DLP UPDATE — NO CACHE
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
