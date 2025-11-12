@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { ChefHat, Home, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X, LogOut } from 'lucide-react';
+import { ChefHat, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X, LogOut, UtensilsCrossed } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useAuth } from '../context/AuthContext';
@@ -27,7 +27,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const navItems = [
     { id: 'discover-recipes', label: 'Discover Recipes', icon: ChefHat },
-    { id: 'discover', label: 'Social Feed', icon: Home },
+    { id: 'discover', label: 'Social Feed', icon: UtensilsCrossed },
     { id: 'my-recipes', label: 'My Recipes', icon: BookMarked },
     { id: 'add-recipe', label: 'Add Recipe', icon: Plus },
     { id: 'meal-planner', label: 'Meal Planner', icon: Calendar },
@@ -156,7 +156,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             onClick={() => onNavigate('discover')}
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
           >
-            <Home className="w-6 h-6" />
+            <UtensilsCrossed className="w-6 h-6" />
           </button>
         )}
       </div>

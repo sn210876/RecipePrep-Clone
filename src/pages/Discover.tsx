@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search } from 'lucide-react';
@@ -70,6 +70,7 @@ export function Discover() {
   const [searchResults, setSearchResults] = useState<Array<{ id: string; username: string; avatar_url: string | null }>>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const POSTS_PER_PAGE = 10;
 
@@ -376,37 +377,64 @@ export function Discover() {
     );
   }
 
-  const handleSearch = async (query: string) => {
+  const performSearch = async (query: string) => {
+    console.log('[Search] Performing search for:', query);
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .ilike('username', `${query}%`)
+        .limit(10);
+
+      if (error) {
+        console.error('[Search] Error:', error);
+        toast.error('Search failed: ' + error.message);
+        setSearchResults([]);
+        setShowSearchResults(false);
+        return;
+      }
+
+      console.log('[Search] Results:', data);
+      setSearchResults(data || []);
+      setShowSearchResults(true);
+    } catch (err) {
+      console.error('[Search] Exception:', err);
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  };
+
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
     if (!query.trim()) {
       setSearchResults([]);
       setShowSearchResults(false);
       return;
     }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, username, avatar_url')
-      .ilike('username', `${query}%`)
-      .limit(10);
-
-    if (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
-      setShowSearchResults(false);
-      return;
-    }
-
-    setSearchResults(data || []);
-    setShowSearchResults(data && data.length > 0);
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch(query);
+    }, 300);
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
+      e.preventDefault();
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
       if (searchResults.length > 0) {
         setViewingUserId(searchResults[0].id);
         setShowSearchResults(false);
         setSearchQuery('');
+      } else {
+        performSearch(searchQuery);
       }
     }
   };
@@ -426,26 +454,37 @@ export function Discover() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
-          {showSearchResults && searchResults.length > 0 && (
-            <div className="absolute left-0 right-0 bg-white border border-gray-200 rounded-lg mt-2 mx-4 max-h-60 overflow-y-auto shadow-lg z-20">
-              {searchResults.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => {
-                    setViewingUserId(user.id);
-                    setShowSearchResults(false);
-                    setSearchQuery('');
-                  }}
-                  className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                    {user.avatar_url && (
-                      <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <span className="font-medium">{user.username}</span>
-                </button>
-              ))}
+          {showSearchResults && (
+            <div className="absolute left-4 right-4 bg-white border border-gray-200 rounded-lg mt-2 max-h-60 overflow-y-auto shadow-lg z-20">
+              {searchResults.length > 0 ? (
+                searchResults.map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => {
+                      console.log('[Search] User selected:', user.username);
+                      setViewingUserId(user.id);
+                      setShowSearchResults(false);
+                      setSearchQuery('');
+                    }}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 overflow-hidden flex items-center justify-center">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white font-semibold text-lg">
+                          {user.username.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-medium text-gray-900">{user.username}</span>
+                  </button>
+                ))
+              ) : (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No users found
+                </div>
+              )}
             </div>
           )}
         </div>

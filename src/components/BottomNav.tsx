@@ -1,4 +1,4 @@
-import { PlusCircle, User, UtensilsCrossed } from 'lucide-react';
+import { User, UtensilsCrossed, Camera } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -49,7 +49,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
           onClick={() => onNavigate('upload')}
           className="flex flex-col items-center -mt-6 bg-gradient-to-r from-orange-500 to-red-500 rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-105"
         >
-          <PlusCircle className="w-8 h-8 text-white" strokeWidth={2} />
+          <Camera className="w-8 h-8 text-white" strokeWidth={2} />
         </button>
 
         <button

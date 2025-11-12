@@ -1,5 +1,5 @@
 import { Button } from '../components/ui/button';
-import { Search, BookOpen, Plus } from 'lucide-react';
+import { BookOpen, Plus, UtensilsCrossed } from 'lucide-react';
 
 interface HomeProps {
   onNavigate: (page: string) => void;
@@ -39,8 +39,8 @@ export function Home({ onNavigate }: HomeProps) {
               size="lg"
               className="w-full sm:w-auto min-w-48 h-16 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
             >
-              <Search className="w-5 h-5" />
-              <span>Discover</span>
+              <UtensilsCrossed className="w-5 h-5" />
+              <span>Social Feed</span>
             </Button>
             <Button
               onClick={() => onNavigate('my-recipes')}
