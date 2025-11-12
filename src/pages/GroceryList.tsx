@@ -30,7 +30,7 @@ interface GroceryListProps {
 
 export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const { state, dispatch } = useRecipes();
-  const [categories, setCategories] = useState<ShoppingListCategory[]>(getDefaultCategories());
+  const [categories, setCategories] = useState<GroceryListCategory[]>(getDefaultCategories());
   const loading = false;
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
