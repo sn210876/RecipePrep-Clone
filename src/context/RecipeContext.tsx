@@ -19,10 +19,10 @@ type RecipeAction =
   | { type: 'ADD_MEAL_PLAN'; payload: MealPlanEntry }
   | { type: 'REMOVE_MEAL_PLAN'; payload: string }
   | { type: 'UPDATE_MEAL_PLAN'; payload: MealPlanEntry }
-  | { type: 'ADD_SHOPPING_ITEM'; payload: ShoppingListItem }
-  | { type: 'REMOVE_SHOPPING_ITEM'; payload: string }
-  | { type: 'TOGGLE_SHOPPING_ITEM'; payload: string }
-  | { type: 'UPDATE_SHOPPING_LIST'; payload: ShoppingListItem[] }
+  | { type: 'ADD_GROCERY_ITEM'; payload: ShoppingListItem }
+  | { type: 'REMOVE_GROCERY_ITEM'; payload: string }
+  | { type: 'TOGGLE_GROCERY_ITEM'; payload: string }
+  | { type: 'UPDATE_GROCERY_LIST'; payload: ShoppingListItem[] }
   | { type: 'UPDATE_PREFERENCES'; payload: Partial<UserPreferences> }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'LOAD_STATE'; payload: RecipeState };
