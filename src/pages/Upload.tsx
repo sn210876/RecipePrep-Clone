@@ -1,21 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 import { Upload as UploadIcon, X, Image as ImageIcon } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 
 interface UploadProps {
   onNavigate: (page: string) => void;
+}
+
+interface UserRecipe {
+  id: string;
+  title: string;
+  image_url: string;
 }
 
 export function Upload({ onNavigate }: UploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
-  const [recipeUrl, setRecipeUrl] = useState('');
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
+  const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    loadUserRecipes();
+  }, []);
+
+  const loadUserRecipes = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data: recipes, error } = await supabase
+        .from('public_recipes')
+        .select('id, title, image_url')
+        .eq('user_id', userData.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setUserRecipes(recipes || []);
+    } catch (error: any) {
+      console.error('Error loading recipes:', error);
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -80,11 +116,16 @@ export function Upload({ onNavigate }: UploadProps) {
 
       const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
 
+      let recipeLink = null;
+      if (selectedRecipeId) {
+        recipeLink = `${window.location.origin}/#recipe/${selectedRecipeId}`;
+      }
+
       const { error: insertError } = await supabase.from('posts').insert({
         user_id: userData.user.id,
         image_url: urlData.publicUrl,
         caption: caption.trim() || null,
-        recipe_url: recipeUrl.trim() || null,
+        recipe_url: recipeLink,
       });
 
       if (insertError) throw insertError;
@@ -92,7 +133,7 @@ export function Upload({ onNavigate }: UploadProps) {
       toast.success('Post uploaded successfully!');
       handleClearImage();
       setCaption('');
-      setRecipeUrl('');
+      setSelectedRecipeId('');
       onNavigate('discover');
     } catch (error: any) {
       console.error('Error uploading post:', error);
@@ -179,16 +220,37 @@ export function Upload({ onNavigate }: UploadProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Recipe URL (optional)
+              Link to Recipe (optional)
             </label>
-            <Input
-              type="url"
-              value={recipeUrl}
-              onChange={(e) => setRecipeUrl(e.target.value)}
-              placeholder="https://..."
-            />
+            <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a recipe from your collection" />
+              </SelectTrigger>
+              <SelectContent>
+                {userRecipes.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-500">
+                    No recipes yet. Add some recipes first!
+                  </div>
+                ) : (
+                  userRecipes.map((recipe) => (
+                    <SelectItem key={recipe.id} value={recipe.id}>
+                      <div className="flex items-center gap-2">
+                        {recipe.image_url && (
+                          <img
+                            src={recipe.image_url}
+                            alt={recipe.title}
+                            className="w-8 h-8 rounded object-cover"
+                          />
+                        )}
+                        <span>{recipe.title}</span>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
             <p className="text-xs text-gray-500 mt-1">
-              Link to the full recipe from your collection
+              Choose a recipe from your collection to link with this post
             </p>
           </div>
         </div>

@@ -25,6 +25,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   };
 
   const navItems = [
+    { id: 'discover-recipes', label: 'Discover Recipes', icon: ChefHat },
     { id: 'discover', label: 'Social Feed', icon: Compass },
     { id: 'my-recipes', label: 'My Recipes', icon: BookMarked },
     { id: 'add-recipe', label: 'Add Recipe', icon: Plus },
@@ -34,10 +35,6 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   ];
 
   const socialPages = ['discover', 'upload', 'profile'];
-
-  if (currentPage === 'home') {
-    return <>{children}</>;
-  }
 
   return (
     <div className="min-h-screen bg-white">

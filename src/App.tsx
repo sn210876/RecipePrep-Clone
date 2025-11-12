@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
-import { Home } from './pages/Home';
+import { Discover as DiscoverRecipes } from './pages/DiscoverRecipes';
 import { Discover } from './pages/Discover';
 import { MyRecipes } from './pages/MyRecipes';
 import { AddRecipe } from './pages/AddRecipe';
@@ -18,7 +18,7 @@ import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState('discover-recipes');
   const [discoverKey, setDiscoverKey] = useState(0);
   const [completedVerifying, setCompletedVerifying] = useState(false);
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
@@ -35,8 +35,8 @@ function AppContent() {
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'home':
-        return <Home onNavigate={handleNavigate} />;
+      case 'discover-recipes':
+        return <DiscoverRecipes onNavigate={handleNavigate} />;
       case 'discover':
         return <Discover key={discoverKey} />;
       case 'my-recipes':
@@ -54,7 +54,7 @@ function AppContent() {
       case 'profile':
         return <Profile />;
       default:
-        return <Home onNavigate={handleNavigate} />;
+        return <DiscoverRecipes onNavigate={handleNavigate} />;
     }
   };
 
