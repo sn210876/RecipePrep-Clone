@@ -127,10 +127,10 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
         payload: items
       });
 
-      toast.success('Shopping list updated!');
+      toast.success('Grocery list updated!');
     } catch (error) {
       console.error('Error syncing shopping list:', error);
-      toast.error('Failed to update shopping list');
+      toast.error('Failed to update grocery list');
     }
   };
 
@@ -140,8 +140,18 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     );
   };
 
-  const handleDragStart = (recipe: Recipe) => {
+  const handleDragStart = (recipe: Recipe, e: React.DragEvent) => {
     setDraggedItem({ recipe, type: 'recipe' });
+
+    const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+    dragImage.style.transform = 'scale(0.5)';
+    dragImage.style.opacity = '0.3';
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-1000px';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+
+    setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
   const handleDragEnd = () => {
@@ -311,11 +321,11 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                     key={recipe.id}
                     className="group"
                   >
-                    <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 border-slate-200 hover:border-blue-300 bg-white ${draggedItem?.recipe.id === recipe.id ? 'scale-50 opacity-30 shadow-lg' : ''}`}>
+                    <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border-slate-200 hover:border-blue-300 bg-white">
                       <CardContent className="p-0">
                         <div
                           draggable
-                          onDragStart={() => handleDragStart(recipe)}
+                          onDragStart={(e) => handleDragStart(recipe, e)}
                           onDragEnd={handleDragEnd}
                           className="flex gap-3 p-3 cursor-move"
                         >

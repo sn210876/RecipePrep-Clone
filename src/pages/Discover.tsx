@@ -171,18 +171,42 @@ export function Discover() {
   }, []);
 
   useEffect(() => {
-    fetchPosts(0);
+    let isMounted = true;
+    let channel: any = null;
 
-    const channel = supabase
+    const loadInitialPosts = async () => {
+      if (!isMounted) return;
+      await fetchPosts(0, true);
+    };
+
+    loadInitialPosts();
+
+    channel = supabase
       .channel('posts-and-comments-changes')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'posts' },
-        (payload) => {
-          console.log('[Discover] New post created');
+        async (payload) => {
+          if (!isMounted) return;
+          const newPost = payload.new as any;
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', newPost.user_id)
+            .maybeSingle();
+
+          const fullPost = {
+            ...newPost,
+            profiles: profile || { username: 'User', avatar_url: null },
+            likes: [],
+            comments: [],
+            _count: { likes: 0, comments: 0 },
+          };
+
           setPosts(prev => {
-            const newPost = payload.new as any;
-            return [{ ...newPost, profiles: { username: 'User', avatar_url: null }, likes: [], comments: [], _count: { likes: 0, comments: 0 } }, ...prev];
+            if (prev.some(p => p.id === fullPost.id)) return prev;
+            return [fullPost, ...prev];
           });
         }
       )
@@ -190,20 +214,19 @@ export function Discover() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'comments' },
         () => {
-          console.log('[Discover] New comment added, refreshing comments only');
         }
       )
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'likes' },
         () => {
-          console.log('[Discover] New like added');
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      isMounted = false;
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
