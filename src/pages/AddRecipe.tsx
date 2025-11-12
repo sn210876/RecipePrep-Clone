@@ -291,8 +291,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           if (user) {
             const { error: postError } = await supabase.from('posts').insert({
               user_id: user.id,
+              title: title.trim(),
               image_url: imageUrl.trim() || 'https://via.placeholder.com/400',
-              caption: `${title.trim()} - ${notes.trim() || 'Check out my recipe!'}`,
+              video_url: videoUrl.trim(),
+              caption: notes.trim() || 'Check out my recipe!',
               recipe_url: videoUrl.trim(),
             });
 

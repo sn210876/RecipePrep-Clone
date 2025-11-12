@@ -149,6 +149,14 @@ export function ShoppingList({ onNavigate }: ShoppingListProps = {}) {
     });
   }
 
+  function handleClearAll() {
+    if (!window.confirm('Are you sure you want to clear all items from your shopping list?')) return;
+    dispatch({
+      type: 'UPDATE_SHOPPING_LIST',
+      payload: []
+    });
+  }
+
   function handleAddItem() {
     if (!newItemName.trim() || !newItemCategory) return;
 
@@ -300,6 +308,12 @@ export function ShoppingList({ onNavigate }: ShoppingListProps = {}) {
             <Button variant="outline" onClick={handleClearChecked}>
               <Trash2 className="w-4 h-4 mr-2" />
               Clear Checked
+            </Button>
+          )}
+          {totalCount > 0 && (
+            <Button variant="destructive" onClick={handleClearAll}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Clear All
             </Button>
           )}
         </div>

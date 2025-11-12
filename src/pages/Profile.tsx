@@ -3,6 +3,11 @@ import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
 
 interface Post {
   id: string;
@@ -16,6 +21,7 @@ interface Post {
 interface Profile {
   username: string;
   avatar_url: string | null;
+  bio?: string | null;
   followers_count?: number;
   following_count?: number;
 }
@@ -27,6 +33,9 @@ export function Profile() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [newBio, setNewBio] = useState('');
 
   useEffect(() => {
     loadProfile();
@@ -41,7 +50,7 @@ export function Profile() {
 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('username, avatar_url')
+        .select('username, avatar_url, bio')
         .eq('id', userData.user.id)
         .maybeSingle();
 
@@ -142,6 +151,37 @@ export function Profile() {
     }
   };
 
+  const handleEditProfile = async () => {
+    if (!userId) return;
+
+    try {
+      const updates: any = {};
+      if (newUsername && newUsername !== profile?.username) {
+        updates.username = newUsername;
+      }
+      if (newBio !== undefined) {
+        updates.bio = newBio;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', userId);
+
+        if (error) throw error;
+
+        setProfile(prev => prev ? { ...prev, ...updates } : null);
+        toast.success('Profile updated successfully!');
+      }
+
+      setEditingProfile(false);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -211,21 +251,35 @@ export function Profile() {
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold">{profile?.followers_count || 0}</div>
-                  <div className="text-sm text-gray-500">pals</div>
+                  <div className="text-sm text-gray-500">supporters</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xl font-bold">{profile?.following_count || 0}</div>
-                  <div className="text-sm text-gray-500">following</div>
+                  <div className="text-sm text-gray-500">supporting</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-gray-900">{profile?.username}</p>
-            <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-              <Edit2 className="w-4 h-4 text-gray-600" />
-            </button>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="font-semibold text-gray-900">{profile?.username}</p>
+              <button
+                onClick={() => {
+                  setNewUsername(profile?.username || '');
+                  setNewBio(profile?.bio || '');
+                  setEditingProfile(true);
+                }}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <Edit2 className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+            {profile?.bio ? (
+              <p className="text-sm text-gray-700">{profile.bio}</p>
+            ) : (
+              <p className="text-sm text-gray-400 italic">Add your bio here</p>
+            )}
           </div>
         </div>
 
@@ -273,6 +327,46 @@ export function Profile() {
           </div>
         )}
       </div>
+
+      <Dialog open={editingProfile} onOpenChange={setEditingProfile}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your username and bio
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                placeholder="Enter your username"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea
+                id="bio"
+                value={newBio}
+                onChange={(e) => setNewBio(e.target.value)}
+                placeholder="Tell us about yourself..."
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingProfile(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditProfile}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

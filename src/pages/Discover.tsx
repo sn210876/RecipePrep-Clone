@@ -223,7 +223,7 @@ export function Discover() {
           newSet.delete(userId);
           return newSet;
         });
-        toast.success('Unfollowed');
+        toast.success('Unsupported');
       } else {
         const { error } = await supabase.from('follows').insert({
           follower_id: currentUserId,
@@ -233,7 +233,7 @@ export function Discover() {
         if (error) throw error;
 
         setFollowingUsers(prev => new Set([...prev, userId]));
-        toast.success('Following!');
+        toast.success('Supporting!');
       }
     } catch (error: any) {
       console.error('Error toggling follow:', error);
@@ -381,9 +381,15 @@ export function Discover() {
                           className="ml-2"
                         >
                           {isFollowing ? (
-                            <UserCheck className="w-5 h-5 text-orange-600" />
+                            <>
+                              <UserCheck className="w-5 h-5 text-orange-600" />
+                              <span className="text-xs text-orange-600">Supporting</span>
+                            </>
                           ) : (
-                            <UserPlus className="w-5 h-5 text-gray-600 hover:text-orange-600" />
+                            <>
+                              <UserPlus className="w-5 h-5 text-gray-600 hover:text-orange-600" />
+                              <span className="text-xs text-gray-600">Support</span>
+                            </>
                           )}
                         </button>
                       )}
