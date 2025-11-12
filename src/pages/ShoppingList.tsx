@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Trash2, GripVertical, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Trash2, GripVertical, Loader2, Calendar, ChefHat } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Checkbox } from '../components/ui/checkbox';
@@ -34,8 +34,75 @@ export function ShoppingList() {
   const [newItemQuantity, setNewItemQuantity] = useState('');
   const [newItemUnit, setNewItemUnit] = useState('');
   const [newItemCategory, setNewItemCategory] = useState('');
+  const [showAddRecipeDialog, setShowAddRecipeDialog] = useState(false);
+  const [selectedRecipeId, setSelectedRecipeId] = useState('');
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
 
   const items = state.shoppingList;
+
+  useEffect(() => {
+    loadMealPlannerItems();
+  }, [startDate, endDate]);
+
+  function loadMealPlannerItems() {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const mealsInRange = state.mealPlan.filter(meal => {
+      const mealDate = new Date(meal.date);
+      return mealDate >= start && mealDate <= end;
+    });
+
+    const ingredientsToAdd: { [key: string]: ShoppingListItem } = {};
+
+    mealsInRange.forEach(meal => {
+      const recipe = state.savedRecipes.find(r => r.id === meal.recipeId);
+      if (recipe) {
+        recipe.ingredients.forEach(ing => {
+          const key = `${ing.name.toLowerCase()}-${ing.unit}`;
+          if (ingredientsToAdd[key]) {
+            ingredientsToAdd[key].quantity += parseFloat(ing.quantity) || 0;
+            if (!ingredientsToAdd[key].sourceRecipeIds.includes(recipe.id)) {
+              ingredientsToAdd[key].sourceRecipeIds.push(recipe.id);
+            }
+          } else {
+            const categoryId = getCategoryForIngredient(ing.name);
+            ingredientsToAdd[key] = {
+              id: `item-${Date.now()}-${Math.random()}`,
+              name: ing.name,
+              quantity: parseFloat(ing.quantity) || 1,
+              unit: ing.unit || '',
+              categoryId,
+              checked: false,
+              sourceRecipeIds: [recipe.id],
+            };
+          }
+        });
+      }
+    });
+
+    const existingItemKeys = new Set(items.map(item => `${item.name.toLowerCase()}-${item.unit}`));
+    const newItems = Object.values(ingredientsToAdd).filter(
+      item => !existingItemKeys.has(`${item.name.toLowerCase()}-${item.unit}`)
+    );
+
+    if (newItems.length > 0) {
+      dispatch({
+        type: 'UPDATE_SHOPPING_LIST',
+        payload: [...items, ...newItems]
+      });
+    }
+  }
+
+  function getCategoryForIngredient(name: string): string {
+    const nameLower = name.toLowerCase();
+    if (nameLower.includes('milk') || nameLower.includes('cheese') || nameLower.includes('yogurt') || nameLower.includes('butter') || nameLower.includes('cream')) return 'dairy';
+    if (nameLower.includes('chicken') || nameLower.includes('beef') || nameLower.includes('pork') || nameLower.includes('fish') || nameLower.includes('meat')) return 'meat';
+    if (nameLower.includes('apple') || nameLower.includes('banana') || nameLower.includes('orange') || nameLower.includes('berry') || nameLower.includes('fruit')) return 'produce';
+    if (nameLower.includes('lettuce') || nameLower.includes('tomato') || nameLower.includes('carrot') || nameLower.includes('onion') || nameLower.includes('vegetable')) return 'produce';
+    if (nameLower.includes('bread') || nameLower.includes('pasta') || nameLower.includes('rice') || nameLower.includes('cereal')) return 'pantry';
+    return 'other';
+  }
 
   function handleToggleItem(itemId: string) {
     dispatch({
@@ -82,6 +149,34 @@ export function ShoppingList() {
     setNewItemQuantity('');
     setNewItemUnit('');
     setNewItemCategory('');
+  }
+
+  function handleAddRecipe() {
+    if (!selectedRecipeId) return;
+
+    const recipe = state.savedRecipes.find(r => r.id === selectedRecipeId);
+    if (!recipe) return;
+
+    const newItems: ShoppingListItem[] = recipe.ingredients.map(ing => {
+      const categoryId = getCategoryForIngredient(ing.name);
+      return {
+        id: `item-${Date.now()}-${Math.random()}`,
+        name: ing.name,
+        quantity: parseFloat(ing.quantity) || 1,
+        unit: ing.unit || '',
+        categoryId,
+        checked: false,
+        sourceRecipeIds: [recipe.id],
+      };
+    });
+
+    dispatch({
+      type: 'UPDATE_SHOPPING_LIST',
+      payload: [...items, ...newItems]
+    });
+
+    setShowAddRecipeDialog(false);
+    setSelectedRecipeId('');
   }
 
   function handleMoveItem(itemId: string, newCategoryId: string) {
@@ -155,14 +250,22 @@ export function ShoppingList() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Shopping List</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {checkedCount} of {totalCount} items checked
-          </p>
-        </div>
-        <div className="flex gap-2">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Shopping List</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {checkedCount} of {totalCount} items checked
+            </p>
+          </div>
+          <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowAddRecipeDialog(true)}
+          >
+            <ChefHat className="w-4 h-4 mr-2" />
+            Add Recipe
+          </Button>
           <Button
             variant="outline"
             onClick={() => setShowAddItemDialog(true)}
@@ -177,6 +280,41 @@ export function ShoppingList() {
             </Button>
           )}
         </div>
+        </div>
+
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-700 mb-2">Auto-populate from Meal Planner</p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm text-gray-600">From:</Label>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-40"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm text-gray-600">To:</Label>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-40"
+                    />
+                  </div>
+                  <Button onClick={loadMealPlannerItems} size="sm">
+                    Refresh List
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {totalCount === 0 ? (
@@ -185,7 +323,8 @@ export function ShoppingList() {
             <p className="text-gray-500 mb-4">
               Your shopping list is empty. Add recipes to your meal plan to automatically generate a shopping list.
             </p>
-            <Button onClick={() => window.location.href = '/meal-planner'}>
+            <Button onClick={() => window.location.href = '/#/meal-planner'}>
+              <Calendar className="w-4 h-4 mr-2" />
               Go to Meal Planner
             </Button>
           </CardContent>
@@ -337,6 +476,45 @@ export function ShoppingList() {
             </Button>
             <Button onClick={handleAddItem} disabled={!newItemName.trim() || !newItemCategory}>
               Add Item
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Recipe to Shopping List</DialogTitle>
+            <DialogDescription>
+              Select a recipe to add its ingredients to your shopping list.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="recipeSelect">Recipe *</Label>
+              <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a recipe" />
+                </SelectTrigger>
+                <SelectContent>
+                  {state.savedRecipes.map(recipe => (
+                    <SelectItem key={recipe.id} value={recipe.id}>
+                      {recipe.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowAddRecipeDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleAddRecipe} disabled={!selectedRecipeId}>
+              Add Ingredients
             </Button>
           </DialogFooter>
         </DialogContent>
