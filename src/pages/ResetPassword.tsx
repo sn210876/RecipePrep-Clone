@@ -11,12 +11,13 @@ export function ResetPassword() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [hasToken, setHasToken] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const initPasswordReset = async () => {
-      const hash = window.location.hash;
-      if (hash && hash.includes('access_token')) {
-        try {
+      try {
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token')) {
           const params = new URLSearchParams(hash.substring(1));
           const accessToken = params.get('access_token');
           const refreshToken = params.get('refresh_token');
@@ -28,19 +29,23 @@ export function ResetPassword() {
             });
 
             if (sessionError) {
+              console.error('Session error:', sessionError);
               setError('Session expired. Please request a new reset link.');
             } else {
+              await new Promise(resolve => setTimeout(resolve, 500));
               setHasToken(true);
             }
           } else {
             setError('Invalid reset link. Please request a new one.');
           }
-        } catch (err) {
-          console.error('Error setting session:', err);
-          setError('Failed to verify reset link. Please try again.');
+        } else {
+          setError('Invalid or expired reset link. Please request a new one.');
         }
-      } else {
-        setError('Invalid or expired reset link. Please request a new one.');
+      } catch (err) {
+        console.error('Error setting session:', err);
+        setError('Failed to verify reset link. Please try again.');
+      } finally {
+        setIsInitializing(false);
       }
     };
 
@@ -104,6 +109,32 @@ export function ResetPassword() {
               <p className="text-sm text-gray-500 mt-6">
                 Redirecting to login...
               </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ⏳ Loading Screen
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-red-200/30 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-orange-200/30 to-transparent rounded-full blur-3xl" />
+        <div className="relative z-10 w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-red-100">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl shadow-lg mb-6">
+                <svg className="w-10 h-10 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                Verifying Reset Link...
+              </h1>
+              <p className="text-gray-600">Please wait</p>
             </div>
           </div>
         </div>
