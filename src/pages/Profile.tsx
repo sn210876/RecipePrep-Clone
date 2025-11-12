@@ -14,6 +14,8 @@ interface Post {
 interface Profile {
   username: string;
   avatar_url: string | null;
+  followers_count?: number;
+  following_count?: number;
 }
 
 export function Profile() {
@@ -55,9 +57,23 @@ export function Profile() {
 
         if (insertError) throw insertError;
 
-        setProfile({ username: defaultUsername, avatar_url: null });
+        setProfile({ username: defaultUsername, avatar_url: null, followers_count: 0, following_count: 0 });
       } else {
-        setProfile(profileData);
+        const { count: followersCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', userData.user.id);
+
+        const { count: followingCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', userData.user.id);
+
+        setProfile({
+          ...profileData,
+          followers_count: followersCount || 0,
+          following_count: followingCount || 0,
+        });
       }
 
       const { data: postsData, error: postsError } = await supabase
@@ -190,6 +206,14 @@ export function Profile() {
                 <div className="text-center">
                   <div className="text-xl font-bold">{posts.length}</div>
                   <div className="text-sm text-gray-500">posts</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold">{profile?.followers_count || 0}</div>
+                  <div className="text-sm text-gray-500">pals</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold">{profile?.following_count || 0}</div>
+                  <div className="text-sm text-gray-500">following</div>
                 </div>
               </div>
             </div>

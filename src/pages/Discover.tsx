@@ -1,9 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Heart, MessageCircle, ExternalLink } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { CommentModal } from '../components/CommentModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
+import { Textarea } from '../components/ui/textarea';
 
 interface Post {
   id: string;
@@ -38,12 +55,27 @@ export function Discover() {
   const [hasMore, setHasMore] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
+  const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string } | null>(null);
+  const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
 
   const POSTS_PER_PAGE = 10;
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null);
+    supabase.auth.getUser().then(async ({ data }) => {
+      const userId = data.user?.id || null;
+      setCurrentUserId(userId);
+
+      if (userId) {
+        const { data: follows } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', userId);
+
+        if (follows) {
+          setFollowingUsers(new Set(follows.map(f => f.following_id)));
+        }
+      }
     });
   }, []);
 
@@ -145,6 +177,90 @@ export function Discover() {
     fetchPosts(nextPage);
   };
 
+  const toggleFollow = async (userId: string) => {
+    if (!currentUserId) return;
+
+    try {
+      const isFollowing = followingUsers.has(userId);
+
+      if (isFollowing) {
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', currentUserId)
+          .eq('following_id', userId);
+
+        if (error) throw error;
+
+        setFollowingUsers(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(userId);
+          return newSet;
+        });
+        toast.success('Unfollowed');
+      } else {
+        const { error } = await supabase.from('follows').insert({
+          follower_id: currentUserId,
+          following_id: userId,
+        });
+
+        if (error) throw error;
+
+        setFollowingUsers(prev => new Set([...prev, userId]));
+        toast.success('Following!');
+      }
+    } catch (error: any) {
+      console.error('Error toggling follow:', error);
+      toast.error('Failed to update follow status');
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!deletePostId) return;
+
+    try {
+      const { error } = await supabase.from('posts').delete().eq('id', deletePostId);
+
+      if (error) throw error;
+
+      setPosts(prev => prev.filter(p => p.id !== deletePostId));
+      toast.success('Post deleted');
+      setDeletePostId(null);
+    } catch (error: any) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
+    }
+  };
+
+  const handleEditPost = async () => {
+    if (!editingPost) return;
+
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({
+          caption: editingPost.caption.trim() || null,
+          recipe_url: editingPost.recipeUrl.trim() || null,
+        })
+        .eq('id', editingPost.id);
+
+      if (error) throw error;
+
+      setPosts(prev =>
+        prev.map(p =>
+          p.id === editingPost.id
+            ? { ...p, caption: editingPost.caption.trim() || null, recipe_url: editingPost.recipeUrl.trim() || null }
+            : p
+        )
+      );
+      toast.success('Post updated');
+      setEditingPost(null);
+    } catch (error: any) {
+      console.error('Error updating post:', error);
+      toast.error('Failed to update post');
+    }
+  };
+
   const toggleLike = async (postId: string) => {
     if (!currentUserId) return;
 
@@ -214,21 +330,64 @@ export function Discover() {
               const isLiked = post.likes?.some(like => like.user_id === currentUserId);
               const latestComments = post.comments?.slice(0, 2) || [];
 
+              const isOwnPost = post.user_id === currentUserId;
+              const isFollowing = followingUsers.has(post.user_id);
+
               return (
                 <div key={post.id} className="bg-white border-b border-gray-200 mb-2">
-                  <div className="px-4 py-3 flex items-center gap-3">
-                    {post.profiles?.avatar_url ? (
-                      <img
-                        src={post.profiles.avatar_url}
-                        alt={post.profiles.username}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-sm">
-                        {post.profiles?.username?.[0]?.toUpperCase()}
-                      </div>
+                  <div className="px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {post.profiles?.avatar_url ? (
+                        <img
+                          src={post.profiles.avatar_url}
+                          alt={post.profiles.username}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-sm">
+                          {post.profiles?.username?.[0]?.toUpperCase()}
+                        </div>
+                      )}
+                      <span className="font-semibold text-sm">{post.profiles?.username}</span>
+                      {!isOwnPost && (
+                        <button
+                          onClick={() => toggleFollow(post.user_id)}
+                          className="ml-2"
+                        >
+                          {isFollowing ? (
+                            <UserCheck className="w-5 h-5 text-orange-600" />
+                          ) : (
+                            <UserPlus className="w-5 h-5 text-gray-600 hover:text-orange-600" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    {isOwnPost && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-2 hover:bg-gray-100 rounded-full">
+                            <MoreVertical className="w-5 h-5 text-gray-600" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => setEditingPost({ id: post.id, caption: post.caption || '', recipeUrl: post.recipe_url || '' })}
+                            className="cursor-pointer"
+                          >
+                            <Edit3 className="w-4 h-4 mr-2" />
+                            Edit post
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setDeletePostId(post.id)}
+                            className="cursor-pointer text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete post
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
-                    <span className="font-semibold text-sm">{post.profiles?.username}</span>
                   </div>
 
                   <img
@@ -319,6 +478,62 @@ export function Discover() {
           onClose={() => setCommentModalPostId(null)}
         />
       )}
+
+      <AlertDialog open={!!deletePostId} onOpenChange={(open) => !open && setDeletePostId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your post.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePost} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Edit post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Update your caption and recipe link.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Caption</label>
+              <Textarea
+                value={editingPost?.caption || ''}
+                onChange={(e) => setEditingPost(prev => prev ? { ...prev, caption: e.target.value } : null)}
+                placeholder="Write a caption..."
+                className="resize-none"
+                rows={3}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Recipe URL</label>
+              <input
+                type="url"
+                value={editingPost?.recipeUrl || ''}
+                onChange={(e) => setEditingPost(prev => prev ? { ...prev, recipeUrl: e.target.value } : null)}
+                placeholder="https://..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
+              Save changes
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
