@@ -62,6 +62,7 @@ interface Post {
 
 export function Discover() {
   const { isAdmin } = useAuth();
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
