@@ -22,7 +22,7 @@ function AppContent() {
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
 
   const hash = window.location.hash;
-  const isPasswordReset = hash && hash.includes('type=recovery');
+  const isPasswordReset = hash && (hash.includes('type=recovery') || window.location.pathname === '/reset-password');
 
   const handleNavigate = (page: string) => {
     if (page === 'discover') {
@@ -52,6 +52,10 @@ function AppContent() {
     }
   };
 
+  if (isPasswordReset) {
+    return <ResetPassword />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
@@ -61,10 +65,6 @@ function AppContent() {
         </div>
       </div>
     );
-  }
-
-  if (isPasswordReset) {
-    return <ResetPassword />;
   }
 
   if (!user) {
