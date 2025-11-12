@@ -8,12 +8,14 @@ import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
-import { Video, Image, Sparkles, Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut } from 'lucide-react';
+import { Video, Image, Sparkles, Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe } from 'lucide-react';
 import { Slider } from '../components/ui/slider';
 import { Switch } from '../components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { extractRecipeFromText } from '../lib/recipeExtractor';
 import { toast } from 'sonner';
+import { getUserTimezone, COMMON_TIMEZONES } from '../lib/timezone';
+import { supabase } from '../lib/supabase';
 
 export function Settings() {
   const { state, dispatch } = useRecipes();
@@ -30,11 +32,59 @@ export function Settings() {
   });
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [testingVoice, setTestingVoice] = useState(false);
+  const [timezone, setTimezone] = useState<string>(getUserTimezone());
+  const [savingTimezone, setSavingTimezone] = useState(false);
 
   useEffect(() => {
     initializeUser();
     loadVoices();
+    loadTimezone();
   }, []);
+
+  const loadTimezone = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('timezone')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data?.timezone) {
+        setTimezone(data.timezone);
+      }
+    } catch (error) {
+      console.error('Error loading timezone:', error);
+    }
+  };
+
+  const handleTimezoneChange = async (newTimezone: string) => {
+    if (!user) {
+      setTimezone(newTimezone);
+      toast.info('Timezone updated locally. Sign in to save across devices.');
+      return;
+    }
+
+    setSavingTimezone(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ timezone: newTimezone })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setTimezone(newTimezone);
+      toast.success('Timezone updated successfully');
+    } catch (error) {
+      console.error('Error updating timezone:', error);
+      toast.error('Failed to update timezone');
+    } finally {
+      setSavingTimezone(false);
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem('voiceSettings', JSON.stringify(voiceSettings));
@@ -209,6 +259,53 @@ export function Settings() {
               </div>
             </CardHeader>
           </Card>
+
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
+                  <Globe className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl text-slate-900">Timezone</CardTitle>
+                  <CardDescription className="text-slate-600">
+                    Set your timezone for accurate meal planning
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="timezone-select" className="text-sm font-medium text-slate-700 mb-2 block">
+                    Select Timezone
+                  </Label>
+                  <Select value={timezone} onValueChange={handleTimezoneChange} disabled={savingTimezone}>
+                    <SelectTrigger id="timezone-select" className="w-full">
+                      <SelectValue placeholder="Select your timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMMON_TIMEZONES.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-slate-500 mt-2">
+                    Current timezone: <span className="font-medium text-slate-700">{timezone}</span>
+                  </p>
+                  {savingTimezone && (
+                    <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-gradient-to-br from-blue-50 to-cyan-50 border-b border-blue-100">
               <div className="flex items-center gap-3">

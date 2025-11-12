@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { consolidateGroceryListItems } from '../services/groceryListService.local';
+import { formatDateInTimezone, parseDateInTimezone } from '../lib/timezone';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
@@ -130,7 +131,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
 
   const getMealForSlot = (date: Date, mealType: MealType): MealPlanWithRecipe | undefined => {
     return mealPlans.find(
-      plan => isSameDay(new Date(plan.date), date) && plan.mealType === mealType
+      plan => isSameDay(parseDateInTimezone(plan.date), date) && plan.mealType === mealType
     );
   };
 
@@ -145,7 +146,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
   };
 
   const addMealToSlot = async (date: Date, mealType: MealType, recipe: Recipe) => {
-    const dateString = format(date, 'yyyy-MM-dd');
+    const dateString = formatDateInTimezone(date, 'local');
     const existingMeal = getMealForSlot(date, mealType);
 
     try {
