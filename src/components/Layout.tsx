@@ -154,7 +154,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         {!socialPages.includes(currentPage) && (
           <button
             onClick={() => onNavigate('discover')}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
           >
             <Compass className="w-5 h-5" />
             <span className="font-semibold">Social Feed</span>

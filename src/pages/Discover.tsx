@@ -104,6 +104,11 @@ export function Discover() {
             .select('user_id')
             .eq('post_id', post.id);
 
+          const { count: commentsCount } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', post.id);
+
           const { data: comments } = await supabase
             .from('comments')
             .select('id, text, created_at, user_id')
@@ -133,7 +138,7 @@ export function Discover() {
             comments: commentsWithProfiles,
             _count: {
               likes: likes?.length || 0,
-              comments: comments?.length || 0,
+              comments: commentsCount || 0,
             },
           };
         })

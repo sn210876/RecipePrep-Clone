@@ -3,7 +3,7 @@ import { RecipeCard } from '../components/RecipeCard';
 import { mockRecipes } from '../data/mockRecipes';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
-import { Search, TrendingUp, Zap, Star, Leaf, Globe, Users } from 'lucide-react';
+import { Search, TrendingUp, Zap, Star, Leaf, Globe } from 'lucide-react';
 import { useRecipes } from '../context/RecipeContext';
 import { getRecommendedRecipes, getRecommendationInsights } from '../services/recommendationService';
 import { CookMode } from '../components/CookMode';
@@ -16,7 +16,7 @@ interface DiscoverProps {
   onNavigate: (page: string) => void;
 }
 
-export function Discover({ onNavigate }: DiscoverProps) {
+export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   const { state, dispatch } = useRecipes();
   const { isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -165,17 +165,9 @@ export function Discover({ onNavigate }: DiscoverProps) {
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Discover Amazing Recipes
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Explore thousands of delicious recipes from around the world
           </p>
-          <Button
-            onClick={() => onNavigate('discover')}
-            size="lg"
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Users className="w-5 h-5 mr-2" />
-            Social Feed
-          </Button>
         </div>
 
         <div className="mb-12 space-y-6">
