@@ -18,7 +18,7 @@ interface MusicSelectionModalProps {
   selectedSong: Song | null;
 }
 
-export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: MusicSelectionModalProps) {
+export function MusicSelectionModal({ open, onClose, onSelect }: MusicSelectionModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(false);

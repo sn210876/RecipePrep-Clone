@@ -3,7 +3,7 @@ import { RecipeCard } from '../components/RecipeCard';
 import { mockRecipes } from '../data/mockRecipes';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
-import { Search, TrendingUp, Zap, Star, Leaf, Globe } from 'lucide-react';
+import { Search, TrendingUp, Zap, Star, Leaf, Globe, Heart, Cake } from 'lucide-react';
 import { useRecipes } from '../context/RecipeContext';
 import { getRecommendedRecipes, getRecommendationInsights } from '../services/recommendationService';
 import { CookMode } from '../components/CookMode';
@@ -92,6 +92,8 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   const [showAllQuick, setShowAllQuick] = useState(false);
   const [showAllHealthy, setShowAllHealthy] = useState(false);
   const [showAllInternational, setShowAllInternational] = useState(false);
+  const [showAllPetMeals, setShowAllPetMeals] = useState(false);
+  const [showAllBakedGoods, setShowAllBakedGoods] = useState(false);
 
   const trendingRecipes = useMemo(() => {
     const sorted = [...allRecipes]
@@ -112,11 +114,23 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   }, [allRecipes, showAllHealthy]);
 
   const internationalRecipes = useMemo(() => {
-    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian', 'Pet Meals'];
+    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'];
     const filtered = allRecipes
       .filter((r) => cuisines.includes(r.cuisineType));
     return showAllInternational ? filtered : filtered.slice(0, 12);
   }, [allRecipes, showAllInternational]);
+
+  const petMealsRecipes = useMemo(() => {
+    const filtered = allRecipes
+      .filter((r) => r.cuisineType === 'Pet Meals');
+    return showAllPetMeals ? filtered : filtered.slice(0, 12);
+  }, [allRecipes, showAllPetMeals]);
+
+  const bakedGoodsRecipes = useMemo(() => {
+    const filtered = allRecipes
+      .filter((r) => r.cuisineType === 'Culinary/Baked Goods');
+    return showAllBakedGoods ? filtered : filtered.slice(0, 12);
+  }, [allRecipes, showAllBakedGoods]);
 
   const [recommendedRecipes, setRecommendedRecipes] = useState<typeof mockRecipes>([]);
 
@@ -361,7 +375,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                   />
                 ))}
               </div>
-              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian', 'Pet Meals'].includes(r.cuisineType)).length > 12 && (
+              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'].includes(r.cuisineType)).length > 12 && (
                 <div className="text-center mt-8">
                   <Button
                     onClick={() => setShowAllInternational(!showAllInternational)}
@@ -374,6 +388,90 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                 </div>
               )}
             </section>
+
+            {petMealsRecipes.length > 0 && (
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-2 rounded-lg">
+                    <Heart className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">
+                      Pet Meals & Treats
+                    </h2>
+                    <p className="text-gray-600">
+                      Homemade recipes for your furry friends
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {petMealsRecipes.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      recipe={recipe}
+                      onSave={handleSave}
+                      onCook={handleCook}
+                      onDelete={handleDeleteRecipe}
+                      isAdmin={isAdmin}
+                    />
+                  ))}
+                </div>
+                {mockRecipes.filter((r) => r.cuisineType === 'Pet Meals').length > 12 && (
+                  <div className="text-center mt-8">
+                    <Button
+                      onClick={() => setShowAllPetMeals(!showAllPetMeals)}
+                      variant="outline"
+                      size="lg"
+                      className="border-pink-500 text-pink-600 hover:bg-pink-50"
+                    >
+                      {showAllPetMeals ? 'Show Less' : 'Show More Pet Recipes'}
+                    </Button>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {bakedGoodsRecipes.length > 0 && (
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-2 rounded-lg">
+                    <Cake className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">
+                      Culinary & Baked Goods
+                    </h2>
+                    <p className="text-gray-600">
+                      From artisan breads to elegant pastries
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {bakedGoodsRecipes.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      recipe={recipe}
+                      onSave={handleSave}
+                      onCook={handleCook}
+                      onDelete={handleDeleteRecipe}
+                      isAdmin={isAdmin}
+                    />
+                  ))}
+                </div>
+                {mockRecipes.filter((r) => r.cuisineType === 'Culinary/Baked Goods').length > 12 && (
+                  <div className="text-center mt-8">
+                    <Button
+                      onClick={() => setShowAllBakedGoods(!showAllBakedGoods)}
+                      variant="outline"
+                      size="lg"
+                      className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                    >
+                      {showAllBakedGoods ? 'Show Less' : 'Show More Baked Goods'}
+                    </Button>
+                  </div>
+                )}
+              </section>
+            )}
 
             <section>
               <div className="flex items-center gap-3 mb-6">
