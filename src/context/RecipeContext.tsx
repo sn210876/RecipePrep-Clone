@@ -101,12 +101,12 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
     case 'ADD_GROCERY_ITEM':
       return {
         ...state,
-        shoppingList: [...state.shoppingList, action.payload]
+        groceryList: [...state.groceryList, action.payload]
       };
     case 'REMOVE_GROCERY_ITEM':
       return {
         ...state,
-        shoppingList: state.shoppingList.filter(i => i.id !== action.payload)
+        shoppingList: state.groceryList.filter(i => i.id !== action.payload)
       };
     case 'TOGGLE_GROCERY_ITEM':
       return {
