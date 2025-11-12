@@ -8,10 +8,10 @@ const corsHeaders = {
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 
-async function parseWithAI(text: string): Promise<{ ingredients: string[], instructions: string[], notes: string }> {
-  if (!text.trim() || !OPENAI_API_KEY) return { ingredients: [], instructions: [], notes: "" };
+async function parseWithAI(text: string): Promise<{ ingredients: string[], instructions: string[], notes: string, prep_time: number, cook_time: number, yield: string }> {
+  if (!text.trim() || !OPENAI_API_KEY) return { ingredients: [], instructions: [], notes: "", prep_time: 0, cook_time: 0, yield: "" };
 
-  const prompt = `You are a recipe extraction expert. Extract ALL ingredients and ALL instructions from the recipe text. TRANSLATE EVERYTHING TO ENGLISH.
+  const prompt = `You are a recipe extraction expert. Extract ALL ingredients, ALL instructions, prep time, cook time, and yield from the recipe text. TRANSLATE EVERYTHING TO ENGLISH.
 
 CRITICAL RULES:
 1. If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
@@ -20,11 +20,16 @@ CRITICAL RULES:
 4. Preserve quantities, measurements, and cooking times exactly.
 5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include all of them.
 6. If there are detailed preparation steps, include them all.
+7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed).
+8. Extract yield/servings information.
 
 Return ONLY valid JSON in this exact format:
 {
   "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt", ...],
   "instructions": ["Step 1 with full details", "Step 2 with full details", ...],
+  "prep_time": 15,
+  "cook_time": 120,
+  "yield": "4-5 servings",
   "notes": "Any cooking tips or notes"
 }
 
@@ -56,13 +61,16 @@ ${text.slice(0, 20000)}`;
         ingredients: parsed.ingredients || [],
         instructions: parsed.instructions || [],
         notes: parsed.notes || "",
+        prep_time: parsed.prep_time || 0,
+        cook_time: parsed.cook_time || 0,
+        yield: parsed.yield || "",
       };
     }
   } catch (e) {
     console.error("AI parse error:", e);
   }
 
-  return { ingredients: [], instructions: [], notes: "" };
+  return { ingredients: [], instructions: [], notes: "", prep_time: 0, cook_time: 0, yield: "" };
 }
 
 async function scrapeRecipeSite(url: string) {
@@ -101,13 +109,26 @@ async function scrapeRecipeSite(url: string) {
                   ? recipe.recipeInstructions.split('\n').filter(Boolean)
                   : [];
 
+              const parseTime = (time: string) => {
+                if (!time) return 0;
+                const match = time.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+                if (match) {
+                  const hours = parseInt(match[1] || '0');
+                  const minutes = parseInt(match[2] || '0');
+                  return hours * 60 + minutes;
+                }
+                return 0;
+              };
+
               return {
                 title: recipe.name || title,
                 ingredients: recipe.recipeIngredient || [],
                 instructions,
                 image: recipe.image?.url || (Array.isArray(recipe.image) ? recipe.image[0] : recipe.image) || '',
                 yield: recipe.recipeYield || '',
-                time: recipe.totalTime || 0,
+                prep_time: parseTime(recipe.prepTime),
+                cook_time: parseTime(recipe.cookTime),
+                time: parseTime(recipe.totalTime) || (parseTime(recipe.prepTime) + parseTime(recipe.cookTime)),
                 notes: 'Extracted from structured data',
               };
             }
@@ -131,8 +152,10 @@ async function scrapeRecipeSite(url: string) {
         ingredients: aiResult.ingredients,
         instructions: aiResult.instructions,
         image: imageUrl,
-        yield: '',
-        time: 0,
+        yield: aiResult.yield || '',
+        prep_time: aiResult.prep_time || 0,
+        cook_time: aiResult.cook_time || 0,
+        time: aiResult.prep_time + aiResult.cook_time || 0,
         notes: `AI parsed: ${aiResult.notes}`,
       };
     }
