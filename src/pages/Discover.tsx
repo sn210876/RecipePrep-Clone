@@ -530,9 +530,10 @@ export function Discover() {
       }
       audioRef.current = new Audio(previewUrl);
       audioRef.current.muted = isMuted;
+      audioRef.current.crossOrigin = 'anonymous';
       audioRef.current.play().catch(error => {
         console.error('Error playing audio:', error);
-        toast.error('Unable to play music preview');
+        toast.error('Music preview unavailable - Deezer URLs may be restricted');
         setPlayingMusicId(null);
       });
       setPlayingMusicId(postId);
@@ -542,7 +543,7 @@ export function Discover() {
       };
 
       audioRef.current.onerror = () => {
-        console.error('Audio failed to load');
+        console.error('Audio failed to load - likely CORS or DNS issue with Deezer CDN');
         toast.error('Music preview not available');
         setPlayingMusicId(null);
       };

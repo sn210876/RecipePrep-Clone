@@ -19,12 +19,9 @@ import {
   Volume2,
   VolumeX,
   Star,
-  Camera,
   Users,
   Plus,
   Minus,
-  Edit3,
-  Check,
 } from 'lucide-react';
 import NoSleep from 'nosleep.js';
 import { ReviewForm } from './ReviewForm';
@@ -57,7 +54,6 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const noSleepRef = useRef<NoSleep | null>(null);
   const wakeLockRef = useRef<any>(null);
   const prevStepRef = useRef<number>(0);
-  const [editingIngredients, setEditingIngredients] = useState(false);
 
   const steps = recipe.steps || recipe.instructions.map((instruction, index) => ({
     stepNumber: index + 1,
@@ -614,37 +610,10 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                   )}
                   Ingredients
                 </h3>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditingIngredients(!editingIngredients)}
-                    className="h-8 text-xs"
-                  >
-                    {editingIngredients ? (
-                      <>
-                        <Check className="w-3 h-3 mr-1" />
-                        Done
-                      </>
-                    ) : (
-                      <>
-                        <Edit3 className="w-3 h-3 mr-1" />
-                        Edit
-                      </>
-                    )}
-                  </Button>
-                  <span className="text-xs sm:text-sm text-gray-600">
-                    {checkedIngredients.size}/{recipe.ingredients.length} checked
-                  </span>
-                </div>
+                <span className="text-xs sm:text-sm text-gray-600">
+                  {checkedIngredients.size}/{recipe.ingredients.length} checked
+                </span>
               </div>
-              {editingIngredients && (
-                <div className="mb-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <p className="text-xs text-yellow-800">
-                    Changes here won't be saved to the recipe. These are temporary adjustments for this cooking session only.
-                  </p>
-                </div>
-              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {scaledIngredients.map((ingredient, index) => (
                   <div
@@ -712,15 +681,6 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                     }`}>
                       Step {currentStep + 1}
                     </h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="gap-1"
-                    >
-                      <Camera className="w-4 h-4" />
-                      <span className="text-xs">Photo</span>
-                    </Button>
                   </div>
                   {steps[currentStep]?.duration && (
                     <div className="flex items-center gap-2">
@@ -795,7 +755,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               <span className="sm:hidden">Prev</span>
             </Button>
 
-            <div className="flex-1 text-center">
+            <div className="flex-1 text-center -mt-24">
               <p className="text-xs sm:text-sm text-gray-600">
                 {voiceModeActive ? 'Say "Next" or swipe' : 'Swipe to navigate'}
               </p>
@@ -814,15 +774,6 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="gap-2"
-                >
-                  <Camera className="w-4 h-4" />
-                  <span className="hidden sm:inline">Add Photo</span>
-                </Button>
                 <Button
                   size="lg"
                   onClick={() => setShowReviewForm(true)}

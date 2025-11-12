@@ -4,11 +4,10 @@ import { useRecipes } from '../context/RecipeContext';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
-import { Video, Image, Sparkles, Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe } from 'lucide-react';
+import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe } from 'lucide-react';
 import { Slider } from '../components/ui/slider';
 import { Switch } from '../components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
@@ -18,7 +17,7 @@ import { getUserTimezone, COMMON_TIMEZONES } from '../lib/timezone';
 import { supabase } from '../lib/supabase';
 
 export function Settings() {
-  const { state, dispatch } = useRecipes();
+  const { dispatch } = useRecipes();
   const { user, signOut } = useAuth();
   const [forwardingEmail, setForwardingEmail] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -121,13 +120,6 @@ export function Settings() {
       const r = Math.random() * 16 | 0;
       const v = c === 'x' ? r : (r & 0x3 | 0x8);
       return v.toString(16);
-    });
-  };
-
-  const handleVisualStyleChange = (value: 'videos' | 'diagrams' | 'auto') => {
-    dispatch({
-      type: 'UPDATE_PREFERENCES',
-      payload: { visualLearningStyle: value }
     });
   };
 
@@ -454,6 +446,47 @@ export function Settings() {
                     </ol>
                   </div>
                 </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                      <Copy className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-slate-900">Copy & Paste Link</h3>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                    <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 rounded-md flex items-center justify-center mb-3">
+                      <div className="text-center space-y-2">
+                        <Copy className="w-12 h-12 text-orange-600 mx-auto" />
+                        <p className="text-sm text-slate-600 px-4">
+                          Copy recipe URL → Paste in Add Recipe
+                        </p>
+                      </div>
+                    </div>
+                    <ol className="space-y-2 text-sm text-slate-700">
+                      <li className="flex items-start gap-2">
+                        <span className="font-semibold text-blue-600 shrink-0">1.</span>
+                        <span>Copy the recipe link from any website</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="font-semibold text-blue-600 shrink-0">2.</span>
+                        <span>Click the button below to go to Add Recipe page</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="font-semibold text-blue-600 shrink-0">3.</span>
+                        <span>Paste the link and let AI extract the recipe!</span>
+                      </li>
+                    </ol>
+                    <Button
+                      onClick={() => window.location.href = '/add-recipe'}
+                      className="w-full mt-4 bg-orange-600 hover:bg-orange-700"
+                    >
+                      <ArrowRight className="w-4 h-4 mr-2" />
+                      Go to Add Recipe
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-5 border-2 border-blue-200">
@@ -573,63 +606,6 @@ export function Settings() {
             </CardContent>
           </Card>
 
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50">
-              <CardTitle className="text-2xl text-slate-900">Visual Learning Style</CardTitle>
-              <CardDescription className="text-slate-600">
-                Choose how you prefer to learn cooking techniques
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <RadioGroup
-                value={state.userPreferences.visualLearningStyle || 'auto'}
-                onValueChange={handleVisualStyleChange}
-                className="space-y-4"
-              >
-                <div className="flex items-start space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-emerald-200 hover:bg-emerald-50/50 transition-all cursor-pointer">
-                  <RadioGroupItem value="videos" id="videos" className="mt-1" />
-                  <Label htmlFor="videos" className="flex-1 cursor-pointer">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Video className="w-5 h-5 text-emerald-600" />
-                      <span className="font-semibold text-lg text-slate-900">Videos</span>
-                    </div>
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      Prioritize stock video demonstrations for all cooking steps. Best for visual learners who prefer watching real-world examples.
-                    </p>
-                  </Label>
-                </div>
-
-                <div className="flex items-start space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-emerald-200 hover:bg-emerald-50/50 transition-all cursor-pointer">
-                  <RadioGroupItem value="diagrams" id="diagrams" className="mt-1" />
-                  <Label htmlFor="diagrams" className="flex-1 cursor-pointer">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Image className="w-5 h-5 text-emerald-600" />
-                      <span className="font-semibold text-lg text-slate-900">Diagrams</span>
-                    </div>
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      Prioritize animated diagrams and illustrations. Perfect for understanding techniques through simplified, step-by-step visuals.
-                    </p>
-                  </Label>
-                </div>
-
-                <div className="flex items-start space-x-3 p-4 rounded-lg border-2 border-transparent hover:border-emerald-200 hover:bg-emerald-50/50 transition-all cursor-pointer">
-                  <RadioGroupItem value="auto" id="auto" className="mt-1" />
-                  <Label htmlFor="auto" className="flex-1 cursor-pointer">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="w-5 h-5 text-emerald-600" />
-                      <span className="font-semibold text-lg text-slate-900">Auto</span>
-                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
-                        Recommended
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      Smart selection based on technique complexity. Shows videos for advanced techniques and diagrams for simpler ones, giving you the best of both worlds.
-                    </p>
-                  </Label>
-                </div>
-              </RadioGroup>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
