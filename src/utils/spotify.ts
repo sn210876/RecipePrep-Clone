@@ -41,7 +41,7 @@ export const searchSpotify = async (query: string) => {
     const authToken = await getSpotifyToken();
     console.log('Searching Spotify for:', query);
 
-    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=50&market=US`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
@@ -52,16 +52,31 @@ export const searchSpotify = async (query: string) => {
     }
 
     const data = await res.json();
-    const tracks = (data.tracks?.items || []).map((t: any) => ({
+
+    console.log('Raw Spotify response:', data.tracks?.items?.length, 'tracks');
+
+    const allTracks = (data.tracks?.items || []).map((t: any) => ({
       id: t.id,
       title: t.name,
-      artist: t.artists[0].name,
+      artist: t.artists[0]?.name || 'Unknown',
       preview: t.preview_url,
-      cover: t.album.images[1]?.url,
-    })).filter((s: any) => s.preview);
+      cover: t.album?.images?.[1]?.url || t.album?.images?.[0]?.url,
+      hasPreview: !!t.preview_url
+    }));
 
-    console.log(`Found ${tracks.length} tracks with previews`);
-    return tracks;
+    console.log('All tracks:', allTracks);
+    console.log('Tracks with previews:', allTracks.filter((t: any) => t.hasPreview).length);
+    console.log('Tracks without previews:', allTracks.filter((t: any) => !t.hasPreview).length);
+
+    const tracksWithPreview = allTracks.filter((s: any) => s.preview).slice(0, 10);
+
+    if (tracksWithPreview.length === 0 && allTracks.length > 0) {
+      console.warn('⚠️ Spotify returned tracks but none have preview URLs. This is common for some regions/accounts.');
+      console.warn('💡 Preview URLs are typically available for tracks in markets like US, UK, etc.');
+    }
+
+    console.log(`Found ${tracksWithPreview.length} tracks with previews out of ${allTracks.length} total`);
+    return tracksWithPreview;
   } catch (error) {
     console.error('Spotify search failed:', error);
     throw error;

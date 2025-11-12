@@ -39,10 +39,10 @@ export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: M
         const results = await searchSpotify(searchQuery);
         console.log('Search results:', results);
         if (results.length === 0) {
-          toast.info('No songs found with preview available. Try another search.');
+          toast.info('No songs with 30-sec previews found. Try popular songs like "Shape of You", "Blinding Lights", or "Levitating".');
           setSongs([]);
         } else {
-          toast.success(`Found ${results.length} songs!`);
+          toast.success(`Found ${results.length} songs with previews!`);
           setSongs(results);
         }
       } catch (error: any) {
