@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, LogOut, Upload as UploadIcon } from 'lucide-react';
+import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface Post {
@@ -221,8 +221,11 @@ export function Profile() {
             </div>
           </div>
 
-          <div>
+          <div className="flex items-center gap-2">
             <p className="font-semibold text-gray-900">{profile?.username}</p>
+            <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+              <Edit2 className="w-4 h-4 text-gray-600" />
+            </button>
           </div>
         </div>
 

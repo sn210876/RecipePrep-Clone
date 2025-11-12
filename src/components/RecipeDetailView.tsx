@@ -97,13 +97,30 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
       </div>
 
       <div className="relative mb-8 rounded-2xl overflow-hidden shadow-xl">
-        <img
-          src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-            ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-            : recipe.imageUrl}
-          alt={recipe.title}
-          className="w-full h-96 object-cover"
-        />
+        {recipe.videoUrl ? (
+          <div className="aspect-video w-full bg-black">
+            <iframe
+              src={recipe.videoUrl.includes('instagram.com')
+                ? `https://www.instagram.com/p/${recipe.videoUrl.split('/p/')[1]?.split('/')[0]}/embed/`
+                : recipe.videoUrl.includes('tiktok.com')
+                ? `https://www.tiktok.com/embed/${recipe.videoUrl.split('/video/')[1]?.split('?')[0]}`
+                : recipe.videoUrl.includes('youtube.com') || recipe.videoUrl.includes('youtu.be')
+                ? `https://www.youtube.com/embed/${recipe.videoUrl.includes('youtu.be') ? recipe.videoUrl.split('youtu.be/')[1] : recipe.videoUrl.split('v=')[1]?.split('&')[0]}`
+                : recipe.videoUrl}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        ) : (
+          <img
+            src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+              ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+              : recipe.imageUrl}
+            alt={recipe.title}
+            className="w-full h-96 object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           <h1 className="text-5xl font-bold mb-4">{recipe.title}</h1>
@@ -139,7 +156,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setCookMode(true)}>
           <CardContent className="flex items-center gap-4 p-6">
             <div className="bg-blue-100 p-3 rounded-lg">
               <Users className="w-6 h-6 text-blue-600" />

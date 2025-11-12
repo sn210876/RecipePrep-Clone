@@ -77,6 +77,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [videoUrl, setVideoUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showErrors, setShowErrors] = useState(false);
   const [urlInput, setUrlInput] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedRecipeData | null>(null);
@@ -237,6 +238,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('[AddRecipe] Form submitted');
+    setShowErrors(true);
 
     if (!validate()) {
       console.log('[AddRecipe] Validation failed, errors:', errors);
@@ -385,16 +387,18 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex justify-center">
-            <Button
-              type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-            >
-              Create Recipe
-            </Button>
+          <div className="sticky bottom-20 z-40 bg-white border-t border-gray-200 py-4 -mx-6 px-6 shadow-lg">
+            <div className="flex justify-center">
+              <Button
+                type="submit"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                Create Recipe
+              </Button>
+            </div>
           </div>
 
-          {Object.keys(errors).length > 0 && (
+          {showErrors && Object.keys(errors).length > 0 && (
             <Card className="border-red-200 bg-red-50">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
@@ -719,24 +723,29 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </CardContent>
           </Card>
 
-          <div className="flex flex-col items-center gap-4 pt-4">
-            <Button
-              type="submit"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-            >
-              Create Recipe
-            </Button>
-            {onNavigate && (
+          <div className="sticky bottom-20 z-40 bg-white border-t border-gray-200 py-4 -mx-6 px-6 shadow-lg">
+            <div className="flex flex-col items-center gap-4">
               <Button
-                type="button"
-                variant="outline"
-                onClick={() => onNavigate('my-recipes')}
-                className="text-sm"
+                type="submit"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-12 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
               >
-                Cancel
+                Create Recipe
               </Button>
-            )}
+              {onNavigate && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onNavigate('my-recipes')}
+                  className="text-sm"
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
           </div>
+
+          {/* Spacer to prevent content from being hidden under sticky button */}
+          <div className="h-24"></div>
         </form>
 
         <Dialog open={showPreview} onOpenChange={setShowPreview}>

@@ -82,8 +82,11 @@ async function scrapeRecipeSite(url: string) {
     const response = await fetch(url, { headers });
     const html = await response.text();
 
+    const ogTitleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i);
+    const twitterTitleMatch = html.match(/<meta\s+name="twitter:title"\s+content="([^"]+)"/i);
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].split('|')[0].trim() : 'Recipe';
+    const rawTitle = ogTitleMatch?.[1] || twitterTitleMatch?.[1] || (titleMatch ? titleMatch[1] : 'Recipe');
+    const title = rawTitle.split('|')[0].split('-')[0].split('•')[0].split(':')[0].trim();
 
     const recipeMatches = html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/gi);
     for (const match of recipeMatches) {
