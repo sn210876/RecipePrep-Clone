@@ -470,7 +470,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
           <DialogHeader>
             <DialogTitle>Add Item</DialogTitle>
             <DialogDescription>
-              Add a new item to your shopping list.
+              Add a new item to your grocery list.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -537,9 +537,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Recipe to Shopping List</DialogTitle>
+            <DialogTitle>Add Recipe to Grocery List</DialogTitle>
             <DialogDescription>
-              Select a recipe to add its ingredients to your shopping list.
+              Select a recipe to add its ingredients to your grocery list.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
