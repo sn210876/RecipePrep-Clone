@@ -6,7 +6,7 @@ import { buildUserProfile, UserProfile, trackRecipeInteraction, updateUserPrefer
 interface RecipeState {
   savedRecipes: Recipe[];
   mealPlan: MealPlanEntry[];
-  shoppingList: GroceryListItem[];
+  groceryList: GroceryListItem[];
   userPreferences: UserPreferences;
   userProfile: UserProfile;
   discoveryRecipes: Recipe[];
@@ -19,7 +19,7 @@ type RecipeAction =
   | { type: 'ADD_MEAL_PLAN'; payload: MealPlanEntry }
   | { type: 'REMOVE_MEAL_PLAN'; payload: string }
   | { type: 'UPDATE_MEAL_PLAN'; payload: MealPlanEntry }
-  | { type: 'ADD_GROCERY_ITEM'; payload: ShoppingListItem }
+  | { type: 'ADD_GROCERY_ITEM'; payload: GroceryListItem }
   | { type: 'REMOVE_GROCERY_ITEM'; payload: string }
   | { type: 'TOGGLE_GROCERY_ITEM'; payload: string }
   | { type: 'UPDATE_GROCERY_LIST'; payload: GroceryListItem[] }
