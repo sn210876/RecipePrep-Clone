@@ -43,7 +43,11 @@ interface MealPlanWithRecipe extends MealPlanEntry {
   recipe?: Recipe;
 }
 
-export function MealPlanner() {
+interface MealPlannerProps {
+  onNavigate?: (page: string) => void;
+}
+
+export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) {
   const { state, dispatch } = useRecipes();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [weeksToShow, setWeeksToShow] = useState<1 | 4>(1);

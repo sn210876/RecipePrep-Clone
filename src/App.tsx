@@ -44,9 +44,9 @@ function AppContent() {
       case 'add-recipe':
         return <AddRecipe onNavigate={handleNavigate} />;
       case 'meal-planner':
-        return <MealPlanner />;
+        return <MealPlanner onNavigate={handleNavigate} />;
       case 'shopping-list':
-        return <ShoppingList />;
+        return <ShoppingList onNavigate={handleNavigate} />;
       case 'settings':
         return <Settings />;
       case 'upload':

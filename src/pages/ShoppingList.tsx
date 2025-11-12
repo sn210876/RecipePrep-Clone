@@ -23,7 +23,11 @@ import {
 import { useRecipes } from '../context/RecipeContext';
 import { formatQuantity } from '../lib/unitConversion';
 
-export function ShoppingList() {
+interface ShoppingListProps {
+  onNavigate?: (page: string) => void;
+}
+
+export function ShoppingList({ onNavigate }: ShoppingListProps = {}) {
   const { state, dispatch } = useRecipes();
   const [categories, setCategories] = useState<ShoppingListCategory[]>(getDefaultCategories());
   const loading = false;
@@ -46,18 +50,33 @@ export function ShoppingList() {
   }, [startDate, endDate]);
 
   function loadMealPlannerItems() {
+    console.log('[ShoppingList] Loading meal planner items');
+    console.log('[ShoppingList] Date range:', startDate, 'to', endDate);
+    console.log('[ShoppingList] Total meals in plan:', state.mealPlan.length);
+    console.log('[ShoppingList] Meal plan data:', state.mealPlan);
+
     const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
     const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
     const mealsInRange = state.mealPlan.filter(meal => {
       const mealDate = new Date(meal.date);
-      return mealDate >= start && mealDate <= end;
+      mealDate.setHours(0, 0, 0, 0);
+      const inRange = mealDate >= start && mealDate <= end;
+      console.log('[ShoppingList] Meal date:', meal.date, 'in range:', inRange);
+      return inRange;
     });
+
+    console.log('[ShoppingList] Meals in range:', mealsInRange.length);
 
     const ingredientsToAdd: { [key: string]: ShoppingListItem } = {};
 
     mealsInRange.forEach(meal => {
       const recipe = state.savedRecipes.find(r => r.id === meal.recipeId);
+      console.log('[ShoppingList] Looking for recipe:', meal.recipeId, 'found:', !!recipe);
       if (recipe) {
+        console.log('[ShoppingList] Recipe:', recipe.title, 'ingredients:', recipe.ingredients.length);
         recipe.ingredients.forEach(ing => {
           const key = `${ing.name.toLowerCase()}-${ing.unit}`;
           if (ingredientsToAdd[key]) {
@@ -81,10 +100,14 @@ export function ShoppingList() {
       }
     });
 
+    console.log('[ShoppingList] Total ingredients to add:', Object.keys(ingredientsToAdd).length);
+
     const existingItemKeys = new Set(items.map(item => `${item.name.toLowerCase()}-${item.unit}`));
     const newItems = Object.values(ingredientsToAdd).filter(
       item => !existingItemKeys.has(`${item.name.toLowerCase()}-${item.unit}`)
     );
+
+    console.log('[ShoppingList] New items after filtering:', newItems.length);
 
     if (newItems.length > 0) {
       dispatch({
@@ -323,7 +346,7 @@ export function ShoppingList() {
             <p className="text-gray-500 mb-4">
               Your shopping list is empty. Add recipes to your meal plan to automatically generate a shopping list.
             </p>
-            <Button onClick={() => window.location.href = '/#/meal-planner'}>
+            <Button onClick={() => onNavigate?.('meal-planner')}>
               <Calendar className="w-4 h-4 mr-2" />
               Go to Meal Planner
             </Button>
