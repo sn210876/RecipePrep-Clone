@@ -158,10 +158,24 @@ export function Discover() {
     fetchPosts(0);
 
     const channel = supabase
-      .channel('posts-changes')
+      .channel('posts-and-comments-changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'posts' },
+        () => {
+          fetchPosts(0, true);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'comments' },
+        () => {
+          fetchPosts(0, true);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'likes' },
         () => {
           fetchPosts(0, true);
         }
