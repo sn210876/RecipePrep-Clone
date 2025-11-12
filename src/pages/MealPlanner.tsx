@@ -293,7 +293,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
               <h2 className="text-xl font-bold text-slate-900">My Recipes</h2>
             </div>
             <p className="text-sm text-slate-600">
-              Drag recipes to your calendar
+              "Select" By single clicking recipe and "Click" calendar date
             </p>
           </div>
 
