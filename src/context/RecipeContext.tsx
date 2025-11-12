@@ -106,19 +106,19 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
     case 'REMOVE_GROCERY_ITEM':
       return {
         ...state,
-        shoppingList: state.groceryList.filter(i => i.id !== action.payload)
+       groceryList: state.groceryList.filter(i => i.id !== action.payload)
       };
     case 'TOGGLE_GROCERY_ITEM':
       return {
         ...state,
-        shoppingList: state.shoppingList.map(i =>
+        groceryList: state.groceryList.map(i =>
           i.id === action.payload ? { ...i, checked: !i.checked } : i
         )
       };
     case 'UPDATE_GROCERY_LIST':
       return {
         ...state,
-        shoppingList: action.payload
+        groceryList: action.payload
       };
     case 'UPDATE_PREFERENCES': {
       const updatedPreferences = { ...state.userPreferences, ...action.payload };
