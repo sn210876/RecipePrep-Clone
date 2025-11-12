@@ -490,7 +490,9 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                                 const dateStr = (e.currentTarget as HTMLElement).getAttribute('data-date');
                                 const mealTypeStr = (e.currentTarget as HTMLElement).getAttribute('data-meal-type') as MealType;
                                 if (dateStr && mealTypeStr) {
-                                  handleDrop(new Date(dateStr), mealTypeStr);
+                                  const dropDate = new Date(dateStr);
+                                  const localDate = new Date(dropDate.getFullYear(), dropDate.getMonth(), dropDate.getDate());
+                                  handleDrop(localDate, mealTypeStr);
                                   setDragOverSlot(null);
                                 }
                               }}

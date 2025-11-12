@@ -5,6 +5,8 @@ import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPl
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { CommentModal } from '../components/CommentModal';
+import { RecipeDetailModal } from '../components/RecipeDetailModal';
+import { Recipe } from '../types/recipe';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +33,7 @@ interface Post {
   video_url: string | null;
   caption: string | null;
   recipe_url: string | null;
+  recipe_id: string | null;
   created_at: string;
   profiles: {
     username: string;
@@ -62,6 +65,7 @@ export function Discover() {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string } | null>(null);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   const POSTS_PER_PAGE = 10;
 
@@ -487,9 +491,21 @@ export function Discover() {
                       </div>
                     ))}
 
-                    {post.recipe_url && (
+                    {(post.recipe_id || post.recipe_url) && (
                       <Button
-                        onClick={() => window.open(post.recipe_url!, '_blank')}
+                        onClick={async () => {
+                          if (post.recipe_id) {
+                            const { getRecipeById } = await import('../services/recipeService');
+                            const recipe = await getRecipeById(post.recipe_id);
+                            if (recipe) {
+                              setSelectedRecipe(recipe);
+                            } else {
+                              toast.error('Recipe not found');
+                            }
+                          } else if (post.recipe_url) {
+                            window.open(post.recipe_url, '_blank');
+                          }
+                        }}
                         variant="outline"
                         size="sm"
                         className="w-full mt-2 border-orange-600 text-orange-600 hover:bg-orange-50"
@@ -581,6 +597,14 @@ export function Discover() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {selectedRecipe && (
+        <RecipeDetailModal
+          recipe={selectedRecipe}
+          open={!!selectedRecipe}
+          onOpenChange={(open) => !open && setSelectedRecipe(null)}
+        />
+      )}
     </div>
   );
 }

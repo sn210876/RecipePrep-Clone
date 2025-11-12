@@ -8,14 +8,19 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
+import { PostDetailModal } from '../components/PostDetailModal';
 
 interface Post {
   id: string;
+  user_id: string;
   title: string;
   image_url: string | null;
   video_url: string | null;
   caption: string | null;
+  recipe_url: string | null;
   created_at: string;
+  likes_count: number;
+  comments_count: number;
 }
 
 interface Profile {
@@ -36,6 +41,7 @@ export function Profile() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   useEffect(() => {
     loadProfile();
@@ -89,7 +95,7 @@ export function Profile() {
 
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('id, title, image_url, video_url, caption, created_at')
+        .select('id, user_id, title, image_url, video_url, caption, recipe_url, created_at, likes_count, comments_count')
         .eq('user_id', userData.user.id)
         .order('created_at', { ascending: false });
 
@@ -303,6 +309,7 @@ export function Profile() {
             {posts.map(post => (
               <div
                 key={post.id}
+                onClick={() => setSelectedPost(post)}
                 className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity relative"
               >
                 {post.image_url ? (
@@ -367,6 +374,18 @@ export function Profile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PostDetailModal
+        post={selectedPost}
+        open={!!selectedPost}
+        onClose={() => setSelectedPost(null)}
+        onDelete={(postId) => {
+          setPosts(posts.filter(p => p.id !== postId));
+        }}
+        onUpdate={() => {
+          loadProfile();
+        }}
+      />
     </div>
   );
 }

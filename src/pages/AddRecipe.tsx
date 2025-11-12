@@ -44,7 +44,7 @@ const UNITS = [
 
 const CUISINE_TYPES = [
   'Italian', 'Chinese', 'Mexican', 'Japanese', 'Indian', 'Thai',
-  'French', 'Mediterranean', 'American', 'Korean', 'Vietnamese', 'Vegan/Vegetarian','Other'
+  'French', 'Mediterranean', 'American', 'Korean', 'Vietnamese', 'Vegan/Vegetarian', 'Culinary/Baked Goods', 'Other'
 ];
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
@@ -302,6 +302,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               video_url: videoUrl.trim(),
               caption: notes.trim() || 'Check out my recipe!',
               recipe_url: videoUrl.trim(),
+              recipe_id: createdRecipe.id,
             });
 
             if (postError) {
