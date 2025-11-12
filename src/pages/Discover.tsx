@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { CommentModal } from '../components/CommentModal';
@@ -66,6 +66,10 @@ export function Discover() {
   const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string } | null>(null);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; username: string; avatar_url: string | null }>>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [viewingUserId, setViewingUserId] = useState<string | null>(null);
 
   const POSTS_PER_PAGE = 10;
 
@@ -349,10 +353,77 @@ export function Discover() {
     );
   }
 
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .ilike('username', `%${query}%`)
+      .limit(10);
+
+    setSearchResults(data || []);
+    setShowSearchResults(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto">
-        {posts.length === 0 ? (
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Search users..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="absolute left-0 right-0 bg-white border border-gray-200 rounded-lg mt-2 mx-4 max-h-60 overflow-y-auto shadow-lg z-20">
+              {searchResults.map((user) => (
+                <button
+                  key={user.id}
+                  onClick={() => {
+                    setViewingUserId(user.id);
+                    setShowSearchResults(false);
+                    setSearchQuery('');
+                  }}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                    {user.avatar_url && (
+                      <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                  <span className="font-medium">{user.username}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {viewingUserId ? (
+          <div className="p-4">
+            <Button
+              onClick={() => setViewingUserId(null)}
+              variant="outline"
+              className="mb-4"
+            >
+              ← Back to Feed
+            </Button>
+            {/* User profile view will go here */}
+            <div className="text-center py-8">
+              <p className="text-gray-500">User profile view coming soon</p>
+            </div>
+          </div>
+        ) : posts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No posts yet. Be the first to share!</p>
           </div>

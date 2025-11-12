@@ -20,7 +20,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     },
     {
       icon: ShoppingCart,
-      title: 'Smart Shopping Lists',
+      title: 'Smart Grocery Lists',
       description: 'Automatically generate organized shopping lists from your meal plan. Check off items as you shop.',
     },
   ];

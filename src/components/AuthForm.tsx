@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { ForgotPassword } from '../pages/ForgotPassword';
 
 export function AuthForm() {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

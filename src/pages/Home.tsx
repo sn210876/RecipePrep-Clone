@@ -27,7 +27,7 @@ export function Home({ onNavigate }: HomeProps) {
             </h1>
             <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
               Automate your <span className="font-semibold text-orange-700">Recipe</span>,{' '}
-              <span className="font-semibold text-amber-700">Shopping List</span>, and{' '}
+              <span className="font-semibold text-amber-700">Grocery List</span>, and{' '}
               <span className="font-semibold text-orange-600">Cooking</span> all in one place.
             </p>
           </div>
@@ -76,7 +76,7 @@ export function Home({ onNavigate }: HomeProps) {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-amber-500" />
-                <span>Smart Shopping Lists</span>
+                <span>Smart Grocery Lists</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-orange-600" />

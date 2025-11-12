@@ -311,7 +311,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                     key={recipe.id}
                     className="group"
                   >
-                    <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 border-slate-200 hover:border-blue-300 bg-white ${draggedItem?.recipe.id === recipe.id && dragOverSlot ? 'scale-50 opacity-30 shadow-lg' : ''}`}>
+                    <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 border-slate-200 hover:border-blue-300 bg-white ${draggedItem?.recipe.id === recipe.id ? 'scale-50 opacity-30 shadow-lg' : ''}`}>
                       <CardContent className="p-0">
                         <div
                           draggable
@@ -470,7 +470,9 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                         {MEAL_TYPES.map(mealType => {
                           const meal = getMealForSlot(day, mealType);
 
-                          const isHovered = dragOverSlot?.date?.getTime() === day.getTime() && dragOverSlot?.mealType === mealType;
+                          const dayStr = format(day, 'yyyy-MM-dd');
+                          const hoverDayStr = dragOverSlot?.date ? format(dragOverSlot.date, 'yyyy-MM-dd') : null;
+                          const isHovered = hoverDayStr === dayStr && dragOverSlot?.mealType === mealType;
 
                           return (
                             <div
@@ -479,24 +481,13 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                               data-meal-type={mealType}
                               onDragOver={(e) => {
                                 e.preventDefault();
-                                const dateStr = (e.currentTarget as HTMLElement).getAttribute('data-date');
-                                const mealTypeStr = (e.currentTarget as HTMLElement).getAttribute('data-meal-type') as MealType;
-                                if (dateStr && mealTypeStr) {
-                                  const parsedDate = new Date(dateStr);
-                                  const utcDate = new Date(Date.UTC(parsedDate.getUTCFullYear(), parsedDate.getUTCMonth(), parsedDate.getUTCDate(), 0, 0, 0, 0));
-                                  setDragOverSlot({date: utcDate, mealType: mealTypeStr});
-                                }
+                                setDragOverSlot({date: day, mealType});
                               }}
                               onDragLeave={() => setDragOverSlot(null)}
                               onDrop={(e) => {
-                                const dateStr = (e.currentTarget as HTMLElement).getAttribute('data-date');
-                                const mealTypeStr = (e.currentTarget as HTMLElement).getAttribute('data-meal-type') as MealType;
-                                if (dateStr && mealTypeStr) {
-                                  const parsedDate = new Date(dateStr);
-                                  const utcDate = new Date(Date.UTC(parsedDate.getUTCFullYear(), parsedDate.getUTCMonth(), parsedDate.getUTCDate(), 0, 0, 0, 0));
-                                  handleDrop(utcDate, mealTypeStr);
-                                  setDragOverSlot(null);
-                                }
+                                e.preventDefault();
+                                handleDrop(day, mealType);
+                                setDragOverSlot(null);
                               }}
                               className={`
                                 min-h-[100px] rounded-lg border-2 border-dashed p-2
