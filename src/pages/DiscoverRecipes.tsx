@@ -8,7 +8,9 @@ import { useRecipes } from '../context/RecipeContext';
 import { getRecommendedRecipes, getRecommendationInsights } from '../services/recommendationService';
 import { CookMode } from '../components/CookMode';
 import { Recipe } from '../types/recipe';
-import { getAllPublicRecipes } from '../services/recipeService';
+import { getAllPublicRecipes, deleteRecipe } from '../services/recipeService';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 
 interface DiscoverProps {
   onNavigate: (page: string) => void;
@@ -16,6 +18,7 @@ interface DiscoverProps {
 
 export function Discover({ onNavigate }: DiscoverProps) {
   const { state, dispatch } = useRecipes();
+  const { isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
@@ -49,6 +52,17 @@ export function Discover({ onNavigate }: DiscoverProps) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  const handleDeleteRecipe = async (recipeId: string) => {
+    try {
+      await deleteRecipe(recipeId);
+      setAllRecipes(allRecipes.filter(r => r.id !== recipeId));
+      toast.success('Recipe deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete recipe:', error);
+      toast.error('Failed to delete recipe');
+    }
+  };
 
   const cuisines = useMemo(() => {
     const cuisineSet = new Set(allRecipes.map((r) => r.cuisineType));
@@ -230,6 +244,8 @@ export function Discover({ onNavigate }: DiscoverProps) {
                     recipe={recipe}
                     onSave={handleSave}
                     onCook={handleCook}
+                    onDelete={handleDeleteRecipe}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>
@@ -268,6 +284,8 @@ export function Discover({ onNavigate }: DiscoverProps) {
                     recipe={recipe}
                     onSave={handleSave}
                     onCook={handleCook}
+                    onDelete={handleDeleteRecipe}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>
@@ -306,6 +324,8 @@ export function Discover({ onNavigate }: DiscoverProps) {
                     recipe={recipe}
                     onSave={handleSave}
                     onCook={handleCook}
+                    onDelete={handleDeleteRecipe}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>
@@ -344,6 +364,8 @@ export function Discover({ onNavigate }: DiscoverProps) {
                     recipe={recipe}
                     onSave={handleSave}
                     onCook={handleCook}
+                    onDelete={handleDeleteRecipe}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>
@@ -382,6 +404,8 @@ export function Discover({ onNavigate }: DiscoverProps) {
                     recipe={recipe}
                     onSave={handleSave}
                     onCook={handleCook}
+                    onDelete={handleDeleteRecipe}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>
@@ -406,6 +430,8 @@ export function Discover({ onNavigate }: DiscoverProps) {
                     recipe={recipe}
                     onSave={handleSave}
                     onCook={handleCook}
+                    onDelete={handleDeleteRecipe}
+                    isAdmin={isAdmin}
                   />
                 ))}
               </div>

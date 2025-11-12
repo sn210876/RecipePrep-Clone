@@ -146,6 +146,41 @@ export async function createReview(
     if (imagesError) throw imagesError;
   }
 
+  try {
+    const { data: recipe } = await supabase
+      .from('public_recipes')
+      .select('video_url')
+      .eq('id', recipeId)
+      .maybeSingle();
+
+    if (recipe?.video_url) {
+      const { data: post } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('recipe_url', recipe.video_url)
+        .maybeSingle();
+
+      if (post) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const ratingText = '🔥'.repeat(rating);
+        const commentText = comment ? `: ${comment}` : '';
+
+        await supabase.from('comments').insert({
+          post_id: post.id,
+          user_id: user.id,
+          text: `${profile?.username || 'User'} rated this ${ratingText}${commentText}`,
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Failed to add review as comment to social post:', error);
+  }
+
   return review;
 }
 

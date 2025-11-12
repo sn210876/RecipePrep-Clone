@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
@@ -49,6 +50,7 @@ interface Post {
 }
 
 export function Discover() {
+  const { isAdmin } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -363,7 +365,7 @@ export function Discover() {
                       )}
                     </div>
 
-                    {isOwnPost && (
+                    {(isOwnPost || isAdmin) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="p-2 hover:bg-gray-100 rounded-full">

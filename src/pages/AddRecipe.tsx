@@ -280,6 +280,31 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       console.log('[AddRecipe] Recipe created:', createdRecipe);
 
       dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+
+      if (videoUrl.trim()) {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const { data: { user } } = await supabase.auth.getUser();
+
+          if (user) {
+            const { error: postError } = await supabase.from('posts').insert({
+              user_id: user.id,
+              image_url: imageUrl.trim() || 'https://via.placeholder.com/400',
+              caption: `${title.trim()} - ${notes.trim() || 'Check out my recipe!'}`,
+              recipe_url: videoUrl.trim(),
+            });
+
+            if (postError) {
+              console.error('[AddRecipe] Failed to create social post:', postError);
+            } else {
+              console.log('[AddRecipe] Social post created successfully');
+            }
+          }
+        } catch (postError) {
+          console.error('[AddRecipe] Failed to create social post:', postError);
+        }
+      }
+
       toast.success('Recipe created and published successfully!');
 
       if (onNavigate) {

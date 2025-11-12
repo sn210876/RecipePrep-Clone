@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, ChefHat, Bookmark, Flame, Star } from 'lucide-react';
+import { Clock, ChefHat, Bookmark, Flame, Star, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardFooter } from './ui/card';
@@ -14,10 +14,12 @@ interface RecipeCardProps {
   recipe: Recipe;
   onSave?: (recipeId: string) => void;
   onCook?: (recipeId: string) => void;
+  onDelete?: (recipeId: string) => void;
   showReviewButton?: boolean;
+  isAdmin?: boolean;
 }
 
-export function RecipeCard({ recipe, onSave, onCook, showReviewButton = false }: RecipeCardProps) {
+export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton = false, isAdmin = false }: RecipeCardProps) {
   const { state } = useRecipes();
   const [showDetail, setShowDetail] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -54,52 +56,32 @@ export function RecipeCard({ recipe, onSave, onCook, showReviewButton = false }:
         onClick={() => setShowDetail(true)}
       >
       <div className="relative overflow-hidden aspect-[4/3]">
-        {recipe.videoUrl ? (
-          <div className="w-full h-full bg-black flex items-center justify-center">
-            {recipe.videoUrl.includes('tiktok.com') ? (
-              <iframe
-                src={`https://www.tiktok.com/embed/${recipe.videoUrl.match(/video\/(\d+)/)?.[1]}`}
-                className="w-full h-full"
-                allowFullScreen
-              />
-            ) : recipe.videoUrl.includes('youtube.com') || recipe.videoUrl.includes('youtu.be') ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${recipe.videoUrl.includes('youtu.be') ? recipe.videoUrl.split('/').pop() : new URLSearchParams(new URL(recipe.videoUrl).search).get('v')}`}
-                className="w-full h-full"
-                allowFullScreen
-              />
-            ) : recipe.videoUrl.includes('instagram.com') ? (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500">
-                <div className="text-white text-center p-4">
-                  <p className="text-sm font-semibold">Instagram Video</p>
-                  <p className="text-xs mt-1">Click to view details</p>
-                </div>
-              </div>
-            ) : (
-              <img
-                src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-                  : recipe.imageUrl}
-                alt={recipe.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
-            )}
-          </div>
-        ) : (
-          <img
-            src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-              ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-              : recipe.imageUrl}
-            alt={recipe.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        )}
+        <img
+          src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+            ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+            : recipe.imageUrl}
+          alt={recipe.title}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute top-3 right-3 flex gap-2">
           {isSaved && (
             <div className="bg-white/95 backdrop-blur-sm rounded-full p-2 shadow-lg">
               <Bookmark className="w-4 h-4 text-rose-500 fill-rose-500" />
             </div>
+          )}
+          {isAdmin && onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm('Are you sure you want to delete this recipe?')) {
+                  onDelete(recipe.id);
+                }
+              }}
+              className="bg-red-600/95 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="w-4 h-4 text-white" />
+            </button>
           )}
         </div>
       </div>

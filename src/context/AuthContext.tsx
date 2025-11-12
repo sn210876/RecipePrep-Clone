@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   isEmailVerified: boolean;
   showVerifying: boolean;
+  isAdmin: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [showVerifying, setShowVerifying] = useState(false);
 
   const isEmailVerified = user ? !!user.email_confirmed_at : false;
+  const isAdmin = user?.email === 'blurocket12@gmail.com';
 
   useEffect(() => {
     const initAuth = async () => {
@@ -85,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isEmailVerified, showVerifying, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isEmailVerified, showVerifying, isAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );
