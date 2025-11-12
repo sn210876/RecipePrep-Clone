@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Search, Music, Play, Pause, Check } from 'lucide-react';
-import { mockSongs, Song } from '../data/mockSongs';
+import { Search, Music, Play, Pause, Check, Loader2 } from 'lucide-react';
+import { Song } from '../data/mockSongs';
+import { searchSpotify, getFallbackSongs } from '../utils/spotify';
+import { toast } from 'sonner';
 
 interface MusicSelectionModalProps {
   open: boolean;
@@ -15,13 +17,46 @@ interface MusicSelectionModalProps {
 export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: MusicSelectionModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [songs, setSongs] = useState<Song[]>(getFallbackSongs());
+  const [searching, setSearching] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const filteredSongs = mockSongs.filter(
-    song =>
-      song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      song.artist.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSongs(getFallbackSongs());
+      return;
+    }
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const results = await searchSpotify(searchQuery);
+        if (results.length === 0) {
+          toast.info('No songs found with preview available');
+          setSongs(getFallbackSongs());
+        } else {
+          setSongs(results);
+        }
+      } catch (error) {
+        console.error('Spotify search error:', error);
+        toast.error('Failed to search songs, showing fallback');
+        setSongs(getFallbackSongs());
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   const handlePlay = (song: Song) => {
     if (playingId === song.id) {
@@ -32,10 +67,19 @@ export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: M
         audioRef.current.pause();
       }
       audioRef.current = new Audio(song.preview);
-      audioRef.current.play();
+      audioRef.current.crossOrigin = 'anonymous';
+      audioRef.current.play().catch(error => {
+        console.error('Error playing preview:', error);
+        toast.error('Unable to play preview');
+      });
       setPlayingId(song.id);
 
       audioRef.current.onended = () => {
+        setPlayingId(null);
+      };
+
+      audioRef.current.onerror = () => {
+        console.error('Audio failed to load');
         setPlayingId(null);
       };
     }
@@ -87,18 +131,21 @@ export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: M
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search songs..."
+            placeholder="Search for songs on Spotify..."
             className="pl-10"
           />
+          {searching && (
+            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-2">
-          {filteredSongs.length === 0 ? (
+          {songs.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No songs found
+              {searching ? 'Searching...' : 'No songs found'}
             </div>
           ) : (
-            filteredSongs.map((song) => {
+            songs.map((song) => {
               const isSelected = selectedSong?.id === song.id;
               const isPlaying = playingId === song.id;
 
