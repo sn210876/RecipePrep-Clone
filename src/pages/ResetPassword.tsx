@@ -15,30 +15,23 @@ export function ResetPassword() {
   // ✅ Verify recovery token on load (supports access_token or token)
   useEffect(() => {
     const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
+const params = new URLSearchParams(hash);
 
-    const token = params.get('access_token') || params.get('token');
-    const type = params.get('type') || 'recovery';
+const token = params.get('access_token') || params.get('token');
+const type = params.get('type') || 'recovery';
 
-    if (token && type === 'recovery') {
-      supabase.auth
-        .verifyOtp({ token_hash: token, type: 'recovery' })
-        .then(({ error }) => {
-          if (error) {
-            console.error('Verification error:', error);
-            setError('Link expired or invalid. Please request a new one.');
-          } else {
-            console.log('Recovery token verified successfully.');
-            setHasToken(true);
-          }
-        })
-        .catch((err) => {
-          console.error('Unexpected verification error:', err);
-          setError('Failed to verify link. Please try again.');
-        });
-    } else {
-      setError('Invalid reset link. Please request a new one.');
-    }
+if (token && type === 'recovery') {
+  supabase.auth.verifyOtp({ token_hash: token, type: 'recovery' })
+    .then(({ error }) => {
+      if (error) {
+        setError('Link expired or invalid. Please request a new one.');
+      } else {
+        setHasToken(true); // Show the form to enter new password
+      }
+    });
+} else {
+  setError('Invalid reset link. Please request a new one.');
+}
   }, []);
 
   // ✅ Handle password reset
