@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { ChefHat, Compass, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { BottomNav } from './BottomNav';
@@ -114,23 +115,31 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
               </h2>
             )}
 
-            <div className="flex items-center gap-2">
-              {navItems.slice(0, 6).map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.id;
-                return (
-                  <Button
-                    key={item.id}
-                    variant="ghost"
-                    size="icon"
-                    className={`${isActive ? 'text-orange-600' : 'text-gray-600'}`}
-                    onClick={() => onNavigate(item.id)}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </Button>
-                );
-              })}
-            </div>
+            <TooltipProvider>
+              <div className="flex items-center gap-2">
+                {navItems.slice(0, 6).map((item) => {
+                  const Icon = item.icon;
+                  const isActive = currentPage === item.id;
+                  return (
+                    <Tooltip key={item.id}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`${isActive ? 'text-orange-600' : 'text-gray-600'}`}
+                          onClick={() => onNavigate(item.id)}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{item.label}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
           </div>
         </header>
 
@@ -140,6 +149,16 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
         {socialPages.includes(currentPage) && (
           <BottomNav currentPage={currentPage} onNavigate={onNavigate} />
+        )}
+
+        {!socialPages.includes(currentPage) && (
+          <button
+            onClick={() => onNavigate('discover')}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
+          >
+            <Compass className="w-5 h-5" />
+            <span className="font-semibold">Social Feed</span>
+          </button>
         )}
       </div>
     </div>
