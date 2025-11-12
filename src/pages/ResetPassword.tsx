@@ -12,6 +12,7 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [hasToken, setHasToken] = useState(false);
 
+  // Verify recovery token on load
   useEffect(() => {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
@@ -35,7 +36,8 @@ export default function ResetPassword() {
     }
   }, []);
 
-    const handleResetPassword = async (e: React.FormEvent) => {
+  // Handle password reset
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -65,6 +67,7 @@ export default function ResetPassword() {
     }
   };
 
+  // Success Screen
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
@@ -97,6 +100,7 @@ export default function ResetPassword() {
     );
   }
 
+  // Invalid Link Screen
   if (!hasToken) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
@@ -127,6 +131,7 @@ export default function ResetPassword() {
     );
   }
 
+  // Password Form
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 flex items-center justify-center px-4">
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-red-200/30 to-transparent rounded-full blur-3xl" />
