@@ -19,7 +19,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       description: 'Drag and drop recipes onto your weekly calendar. Smart suggestions help you plan balanced, varied meals.',
     },
     {
-      icon: ShoppingCart,
+      icon: GroceryCart,
       title: 'Smart Grocery Lists',
       description: 'Automatically generate organized grocery lists from your meal plan. Check off items as you shop.',
     },
