@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
 import { CommentModal } from '../components/CommentModal';
 import { RecipeDetailModal } from '../components/RecipeDetailModal';
+import { UserProfileView } from '../components/UserProfileView';
 import { Recipe } from '../types/recipe';
 import {
   DropdownMenu,
@@ -697,96 +698,14 @@ export function Discover() {
         )}
 
         {viewingUserId ? (
-          <div className="p-4">
-            <Button
-              onClick={() => setViewingUserId(null)}
-              variant="outline"
-              className="mb-4"
-            >
-              ← Back to Feed
-            </Button>
-            {(() => {
-              const userPosts = posts.filter(p => p.user_id === viewingUserId);
-              const userProfile = userPosts[0]?.profiles;
-              const isFollowing = followingUsers.has(viewingUserId);
-
-              return (
-                <div>
-                  <div className="bg-white rounded-xl p-6 mb-4 shadow-sm">
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold">
-                        {userProfile?.username?.[0]?.toUpperCase() || '?'}
-                      </div>
-                      <div className="flex-1">
-                        <h2 className="text-2xl font-bold">{userProfile?.username || 'User'}</h2>
-                        <p className="text-gray-600">{userPosts.length} {userPosts.length === 1 ? 'post' : 'posts'}</p>
-                      </div>
-                      {viewingUserId !== currentUserId && (
-                        <Button
-                          onClick={() => toggleFollow(viewingUserId)}
-                          variant={isFollowing ? 'outline' : 'default'}
-                          className={isFollowing ? '' : 'bg-orange-500 hover:bg-orange-600'}
-                        >
-                          {isFollowing ? (
-                            <>
-                              <UserCheck className="w-4 h-4 mr-2" />
-                              Supporting
-                            </>
-                          ) : (
-                            <>
-                              <UserPlus className="w-4 h-4 mr-2" />
-                              Support
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {userPosts.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      No posts yet
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {userPosts.map(post => (
-                        <div key={post.id} className="bg-white rounded-xl shadow-md overflow-hidden">
-                          <div className="relative">
-                            {post.image_url ? (
-                              <img
-                                src={post.image_url}
-                                alt={post.title || 'Post'}
-                                className="w-full aspect-square object-cover"
-                              />
-                            ) : post.video_url ? (
-                              <video
-                                src={post.video_url}
-                                controls
-                                className="w-full aspect-square object-cover"
-                              />
-                            ) : null}
-                            {post.title && (
-                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-                                <h3 className="text-white text-sm font-semibold">{post.title}</h3>
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-4">
-                            <div className="text-sm text-gray-600">
-                              {post._count?.likes || 0} likes • {post._count?.comments || 0} comments
-                            </div>
-                            {post.caption && (
-                              <p className="text-sm mt-2">{post.caption}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-          </div>
+          <UserProfileView
+            userId={viewingUserId}
+            currentUserId={currentUserId}
+            posts={posts}
+            isFollowing={followingUsers.has(viewingUserId)}
+            onBack={() => setViewingUserId(null)}
+            onToggleFollow={toggleFollow}
+          />
         ) : posts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No posts yet. Be the first to share!</p>
