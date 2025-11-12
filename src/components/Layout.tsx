@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { ChefHat, Home, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X, LogOut } from 'lucide-react';
+import { ChefHat, Home, BookMarked, Plus, Calendar, GroceryCart, Settings, Menu, X, LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useAuth } from '../context/AuthContext';
