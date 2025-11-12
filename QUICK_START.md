@@ -13,7 +13,7 @@ The Vite config has been updated to work with bolt.new:
 - Manual recipe entry with full form
 - My Recipes - view and manage saved recipes
 - Cook Mode with voice controls
-- Shopping list generation
+- Grocery list generation
 - Meal planner
 - Recipe discovery and browsing
 
