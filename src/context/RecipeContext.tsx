@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Recipe, MealPlanEntry, ShoppingListItem, UserPreferences } from '../types/recipe';
+import { Recipe, MealPlanEntry, GroceryListItem, UserPreferences } from '../types/recipe';
 import { mockRecipes } from '../data/mockRecipes';
 import { buildUserProfile, UserProfile, trackRecipeInteraction, updateUserPreferenceAnalytics } from '../services/recommendationService';
 
 interface RecipeState {
   savedRecipes: Recipe[];
   mealPlan: MealPlanEntry[];
-  shoppingList: ShoppingListItem[];
+  shoppingList: GroceryListItem[];
   userPreferences: UserPreferences;
   userProfile: UserProfile;
   discoveryRecipes: Recipe[];
