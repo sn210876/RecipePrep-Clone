@@ -115,7 +115,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             )}
 
             <div className="flex items-center gap-2">
-              {navItems.slice(0, 3).map((item) => {
+              {navItems.slice(0, 6).map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPage === item.id;
                 return (
