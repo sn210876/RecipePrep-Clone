@@ -13,12 +13,38 @@ export function ResetPassword() {
   const [hasToken, setHasToken] = useState(false);
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash && hash.includes('access_token')) {
-      setHasToken(true);
-    } else {
-      setError('Invalid or expired reset link. Please request a new one.');
-    }
+    const initPasswordReset = async () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        try {
+          const params = new URLSearchParams(hash.substring(1));
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+
+            if (sessionError) {
+              setError('Session expired. Please request a new reset link.');
+            } else {
+              setHasToken(true);
+            }
+          } else {
+            setError('Invalid reset link. Please request a new one.');
+          }
+        } catch (err) {
+          console.error('Error setting session:', err);
+          setError('Failed to verify reset link. Please try again.');
+        }
+      } else {
+        setError('Invalid or expired reset link. Please request a new one.');
+      }
+    };
+
+    initPasswordReset();
   }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
