@@ -18,13 +18,13 @@ import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import {
   getDefaultCategories,
-  type ShoppingListCategory,
-  type ShoppingListItem,
-} from '../services/shoppingListService.local';
+  type GroceryListCategory,
+  type GroceryListItem,
+} from '../services/groceryListService.local';
 import { useRecipes } from '../context/RecipeContext';
 import { formatQuantity } from '../lib/unitConversion';
 
-interface ShoppingListProps {
+interface GroceryListProps {
   onNavigate?: (page: string) => void;
 }
 
