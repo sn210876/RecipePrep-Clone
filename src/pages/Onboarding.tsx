@@ -1,4 +1,4 @@
-import { ChefHat, Calendar, ShoppingCart } from 'lucide-react';
+import { ChefHat, Calendar, GroceryCart } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 
