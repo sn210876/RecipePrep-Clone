@@ -231,7 +231,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       item.id === itemId ? { ...item, categoryId: newCategoryId } : item
     );
     dispatch({
-      type: 'UPDATE_SHOPPING_LIST',
+      type: 'UPDATE_GROCERY_LIST',
       payload: updatedItems
     });
   }
@@ -282,7 +282,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const itemsByCategory = categories.reduce((acc, category) => {
     acc[category.id] = items.filter(item => item.categoryId === category.id);
     return acc;
-  }, {} as Record<string, ShoppingListItem[]>);
+  }, {} as Record<string, GroceryListItem[]>);
 
   const checkedCount = items.filter(item => item.checked).length;
   const totalCount = items.length;
@@ -374,7 +374,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-gray-500 mb-4">
-              Your shopping list is empty. Add recipes to your meal plan to automatically generate a shopping list.
+              Your grocery list is empty. Add recipes to your meal plan to automatically generate a grocery list.
             </p>
             <Button onClick={() => onNavigate?.('meal-planner')}>
               <Calendar className="w-4 h-4 mr-2" />
