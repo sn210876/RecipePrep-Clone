@@ -138,7 +138,7 @@ function normalizeIngredientName(name: string): string {
     .replace(/[^a-z0-9\s]/g, '');
 }
 
-function getCategoryForIngredient(ingredientName: string, categories: ShoppingListCategory[]): string {
+function getCategoryForIngredient(ingredientName: string, categories: GroceryListCategory[]): string {
   const normalized = normalizeIngredientName(ingredientName);
 
   for (const [key, categoryName] of Object.entries(INGREDIENT_CATEGORY_MAP)) {
