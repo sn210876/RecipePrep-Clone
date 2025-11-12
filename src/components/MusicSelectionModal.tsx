@@ -35,16 +35,19 @@ export function MusicSelectionModal({ open, onClose, onSelect, selectedSong }: M
     searchTimeoutRef.current = setTimeout(async () => {
       setSearching(true);
       try {
+        console.log('Starting search for:', searchQuery);
         const results = await searchSpotify(searchQuery);
+        console.log('Search results:', results);
         if (results.length === 0) {
           toast.info('No songs found with preview available. Try another search.');
           setSongs([]);
         } else {
+          toast.success(`Found ${results.length} songs!`);
           setSongs(results);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Spotify search error:', error);
-        toast.error('Failed to search songs. Please try again.');
+        toast.error(error.message || 'Failed to search songs. Please check console for details.');
         setSongs([]);
       } finally {
         setSearching(false);
