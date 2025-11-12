@@ -46,7 +46,7 @@ function AppContent() {
       case 'meal-planner':
         return <MealPlanner onNavigate={handleNavigate} />;
       case 'grocery-list':
-        return <ShoppingList onNavigate={handleNavigate} />;
+        return <GroceryList onNavigate={handleNavigate} />;
       case 'settings':
         return <Settings />;
       case 'upload':
