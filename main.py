@@ -138,7 +138,26 @@ class YTMusicRequest(BaseModel):
 @app.post("/ytmusic-search")
 async def ytmusic_search_endpoint(request: YTMusicRequest):
     results = search_ytmusic(request.query, request.limit)
-    return {"songs": results}
+    return JSONResponse(
+        content={"songs": results},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+@app.options("/ytmusic-search")
+async def ytmusic_search_options():
+    return JSONResponse(
+        content={},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "600",
+        }
+    )
 
 @app.get("/")
 async def root():
