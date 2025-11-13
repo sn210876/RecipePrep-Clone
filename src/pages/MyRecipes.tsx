@@ -60,7 +60,7 @@ export function MyRecipes() {
               onCook={(recipeId) => {
                 const recipe = state.savedRecipes.find(r => r.id === recipeId);
                 if (recipe) {
-                  console.log('Cook Now clicked for:', recipe.title);
+                  console.log('Cook clicked for:', recipe.title);
                   setCookingRecipe(recipe);
                 }
               }}
