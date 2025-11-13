@@ -51,6 +51,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       if (userData.user) {
         setCurrentUserId(userData.user.id);
 
+        await markMessageNotificationsAsRead(userData.user.id);
+
         if (recipientUserId && recipientUsername) {
           await startConversation(recipientUserId, recipientUsername, userData.user.id);
         } else {
@@ -62,6 +64,19 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
     init();
   }, [recipientUserId]);
+
+  const markMessageNotificationsAsRead = async (userId: string) => {
+    try {
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', userId)
+        .eq('type', 'message')
+        .eq('read', false);
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+    }
+  };
 
   useEffect(() => {
     if (selectedConversation) {
