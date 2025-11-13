@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Bell, PiggyBank } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -437,6 +437,16 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
       } else {
         await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
 
+        const post = posts.find(p => p.id === postId);
+        if (post && post.user_id !== currentUserId) {
+          await supabase.from('notifications').insert({
+            user_id: post.user_id,
+            actor_id: currentUserId,
+            type: 'like',
+            post_id: postId,
+          });
+        }
+
         setPosts(prev =>
           prev.map(p =>
             p.id === postId
@@ -591,7 +601,17 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
               )}
             </div>
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
+              onClick={async () => {
+                setShowNotifications(!showNotifications);
+                if (!showNotifications && currentUserId) {
+                  await supabase
+                    .from('notifications')
+                    .update({ read: true })
+                    .eq('user_id', currentUserId)
+                    .eq('read', false);
+                  setUnreadNotifications(0);
+                }
+              }}
               className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <Bell className="w-6 h-6 text-gray-700" />
@@ -688,9 +708,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
             {posts.map(post => {
               const isLiked = post.likes?.some(like => like.user_id === currentUserId);
               const latestComments = post.comments?.slice(0, 2) || [];
-
               const isOwnPost = post.user_id === currentUserId;
-              const isFollowing = followingUsers.has(post.user_id);
 
               return (
                 <div key={post.id} className="bg-white border-b border-gray-200 mb-2">
@@ -707,25 +725,12 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                           {post.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-4 h-4" />}
                         </div>
                       )}
-                      <span className="font-semibold text-sm">{post.profiles?.username}</span>
-                      {!isOwnPost && (
-                        <button
-                          onClick={() => toggleFollow(post.user_id)}
-                          className="ml-2"
-                        >
-                          {isFollowing ? (
-                            <>
-                              <UserCheck className="w-5 h-5 text-orange-600" />
-                              <span className="text-xs text-orange-600">Supporting</span>
-                            </>
-                          ) : (
-                            <>
-                              <UserPlus className="w-5 h-5 text-gray-600 hover:text-orange-600" />
-                              <span className="text-xs text-gray-600">Support</span>
-                            </>
-                          )}
-                        </button>
-                      )}
+                      <button
+                        onClick={() => setViewingUserId(post.user_id)}
+                        className="font-semibold text-sm hover:underline"
+                      >
+                        {post.profiles?.username}
+                      </button>
                     </div>
 
                     {(isOwnPost || isAdmin) && (

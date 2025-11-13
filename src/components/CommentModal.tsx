@@ -67,6 +67,12 @@ export function CommentModal({ postId, isOpen, onClose }: CommentModalProps) {
 
     setSubmitting(true);
     try {
+      const { data: postData } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', postId)
+        .maybeSingle();
+
       const { error } = await supabase.from('comments').insert({
         post_id: postId,
         user_id: currentUserId,
@@ -75,9 +81,19 @@ export function CommentModal({ postId, isOpen, onClose }: CommentModalProps) {
 
       if (error) throw error;
 
+      if (postData && postData.user_id !== currentUserId) {
+        await supabase.from('notifications').insert({
+          user_id: postData.user_id,
+          actor_id: currentUserId,
+          type: 'comment',
+          post_id: postId,
+        });
+      }
+
       setNewComment('');
       await loadComments();
       toast.success('Comment posted!');
+      onClose();
     } catch (error: any) {
       console.error('Error posting comment:', error);
       toast.error('Failed to post comment');

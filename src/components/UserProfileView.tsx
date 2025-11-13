@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { UserPlus, UserCheck, PiggyBank, Send } from 'lucide-react';
+import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { toast } from 'sonner';
+import { CommentModal } from './CommentModal';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +49,8 @@ export function UserProfileView({
 }: UserProfileViewProps) {
   const userPosts = posts.filter(p => p.user_id === userId);
   const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null; bio?: string } | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
 
   const [supportersCount, setSupportersCount] = useState(0);
   const [supportingCount, setSupportingCount] = useState(0);
@@ -83,9 +87,24 @@ export function UserProfileView({
       setSupportingCount(followingCount || 0);
     };
 
+    const fetchLikes = async () => {
+      if (!currentUserId) return;
+
+      const { data } = await supabase
+        .from('likes')
+        .select('post_id')
+        .eq('user_id', currentUserId)
+        .in('post_id', userPosts.map(p => p.id));
+
+      if (data) {
+        setLikedPosts(new Set(data.map(like => like.post_id)));
+      }
+    };
+
     fetchProfile();
     fetchCounts();
-  }, [userId]);
+    fetchLikes();
+  }, [userId, currentUserId, userPosts.length]);
 
   const loadSupporters = async () => {
     const { data } = await supabase
@@ -105,6 +124,44 @@ export function UserProfileView({
 
     setSupporting(data || []);
     setShowSupporting(true);
+  };
+
+  const toggleLike = async (postId: string) => {
+    if (!currentUserId) return;
+
+    const isLiked = likedPosts.has(postId);
+
+    try {
+      if (isLiked) {
+        await supabase
+          .from('likes')
+          .delete()
+          .match({ post_id: postId, user_id: currentUserId });
+
+        setLikedPosts(prev => {
+          const next = new Set(prev);
+          next.delete(postId);
+          return next;
+        });
+      } else {
+        await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
+
+        const post = userPosts.find(p => p.id === postId);
+        if (post && post.user_id !== currentUserId) {
+          await supabase.from('notifications').insert({
+            user_id: post.user_id,
+            actor_id: currentUserId,
+            type: 'like',
+            post_id: postId,
+          });
+        }
+
+        setLikedPosts(prev => new Set(prev).add(postId));
+      }
+    } catch (error: any) {
+      console.error('Error toggling like:', error);
+      toast.error('Failed to update like');
+    }
   };
 
   return (
@@ -190,40 +247,67 @@ export function UserProfileView({
         </div>
       ) : (
         <div className="space-y-4">
-          {userPosts.map(post => (
-            <div key={post.id} className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="relative">
-                {post.image_url ? (
-                  <img
-                    src={post.image_url}
-                    alt={post.title || 'Post'}
-                    className="w-full aspect-square object-cover"
-                  />
-                ) : post.video_url ? (
-                  <video
-                    src={post.video_url}
-                    controls
-                    className="w-full aspect-square object-cover"
-                  />
-                ) : null}
-                {post.title && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-                    <h3 className="text-white text-sm font-semibold">{post.title}</h3>
-                  </div>
-                )}
-              </div>
-              <div className="p-4">
-                <div className="text-sm text-gray-600">
-                  {post._count?.likes || 0} likes • {post._count?.comments || 0} comments
+          {userPosts.map(post => {
+            const isLiked = likedPosts.has(post.id);
+            return (
+              <div key={post.id} className="bg-white rounded-xl shadow-md overflow-hidden">
+                <div className="relative">
+                  {post.image_url ? (
+                    <img
+                      src={post.image_url}
+                      alt={post.title || 'Post'}
+                      className="w-full aspect-square object-cover"
+                    />
+                  ) : post.video_url ? (
+                    <video
+                      src={post.video_url}
+                      controls
+                      className="w-full aspect-square object-cover"
+                    />
+                  ) : null}
+                  {post.title && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
+                      <h3 className="text-white text-sm font-semibold">{post.title}</h3>
+                    </div>
+                  )}
                 </div>
-                {post.caption && (
-                  <p className="text-sm mt-2">{post.caption}</p>
-                )}
+                <div className="p-4">
+                  <div className="flex gap-4 mb-3">
+                    <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110">
+                      <Heart
+                        className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+                      />
+                    </button>
+                    <button onClick={() => setSelectedPostId(post.id)} className="transition-transform hover:scale-110">
+                      <MessageCircle className="w-6 h-6 text-gray-600" />
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    {post._count?.likes || 0} likes
+                  </div>
+                  {post.caption && (
+                    <p className="text-sm">{post.caption}</p>
+                  )}
+                  {post._count && post._count.comments > 0 && (
+                    <button
+                      onClick={() => setSelectedPostId(post.id)}
+                      className="text-sm text-gray-500 mt-2 hover:text-gray-700"
+                    >
+                      View all {post._count.comments} comments
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
+
+      <CommentModal
+        postId={selectedPostId || ''}
+        isOpen={!!selectedPostId}
+        onClose={() => setSelectedPostId(null)}
+      />
 
       <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
         <DialogContent>
