@@ -52,7 +52,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         setCurrentUserId(userData.user.id);
 
         if (recipientUserId && recipientUsername) {
-          await startConversation(recipientUserId, recipientUsername);
+          await startConversation(recipientUserId, recipientUsername, userData.user.id);
         } else {
           await loadConversations(userData.user.id);
         }
@@ -123,10 +123,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     setConversations(conversationsWithUsers);
   };
 
-  const startConversation = async (otherUserId: string, username: string) => {
-    if (!currentUserId) return;
+  const startConversation = async (otherUserId: string, username: string, userId?: string) => {
+    const activeUserId = userId || currentUserId;
+    if (!activeUserId) return;
 
-    const [smaller, larger] = [currentUserId, otherUserId].sort();
+    const [smaller, larger] = [activeUserId, otherUserId].sort();
 
     let { data: existingConvo } = await supabase
       .from('conversations')

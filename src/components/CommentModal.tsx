@@ -49,7 +49,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
         .from('comments')
         .select(`
           *,
-          profiles:user_id (username, avatar_url)
+          profiles (username, avatar_url)
         `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
