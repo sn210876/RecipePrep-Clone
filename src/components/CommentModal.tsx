@@ -45,21 +45,51 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
-        .select(`
-          *,
-          profiles (username, avatar_url)
-        `)
+        .select('*')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Error loading comments:', error);
-        throw error;
+      if (commentsError) {
+        console.error('Error loading comments:', commentsError);
+        throw commentsError;
       }
 
-      setComments(data || []);
+      if (!commentsData || commentsData.length === 0) {
+        setComments([]);
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(commentsData.map(c => c.user_id))];
+
+      // Fetch profiles for all users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
+        throw profilesError;
+      }
+
+      // Create a map of user_id to profile
+      const profilesMap = new Map(
+        (profilesData || []).map(p => [p.id, p])
+      );
+
+      // Merge comments with profiles
+      const commentsWithProfiles = commentsData.map(comment => ({
+        ...comment,
+        profiles: profilesMap.get(comment.user_id) || {
+          username: 'Unknown User',
+          avatar_url: null,
+        },
+      }));
+
+      setComments(commentsWithProfiles);
     } catch (error: any) {
       console.error('Error loading comments:', error);
       toast.error('Failed to load comments');
