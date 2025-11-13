@@ -181,16 +181,14 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           >
             <Star className="w-4 h-4 mr-2" />
             {reviewCount > 0 ? (
-              <span className="flex items-center gap-2">
-                <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                <span className="text-gray-500">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
-              </span>
-            ) : (
-              'Write Review'
-               <span className={fire <= rating ? 'opacity-100' : 'opacity-30 grayscale'}>
-            🔥
-          </span>
-        </button>
+              <span className="w-4 h-4 mr-2 inline-flex items-center justify-center">Fire</span>
+  {reviewCount > 0 ? (
+    <span className="flex items-center gap-2">
+      <span className="font-semibold">{averageRating.toFixed(1)}</span>
+      <span className="text-gray-500">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+    </span>
+  ) : (
+    'Write Review'
             )}
           </Button>
         )}
