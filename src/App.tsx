@@ -8,6 +8,7 @@ import { MyRecipes } from './pages/MyRecipes';
 import { AddRecipe } from './pages/AddRecipe';
 import { MealPlanner } from './pages/MealPlanner';
 import { GroceryList } from './pages/GroceryList';
+import { Cart } from './pages/Cart';
 import { Settings } from './pages/Settings';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
@@ -55,6 +56,8 @@ function AppContent() {
         return <MealPlanner onNavigate={handleNavigate} />;
       case 'grocery-list':
         return <GroceryList onNavigate={handleNavigate} />;
+      case 'cart':
+        return <Cart onNavigate={handleNavigate} />;
       case 'settings':
         return <Settings />;
       case 'upload':

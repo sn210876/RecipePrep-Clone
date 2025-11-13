@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -69,6 +69,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
   const [hasMore, setHasMore] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
+  const [postRatings, setPostRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string } | null>(null);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
@@ -205,7 +206,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
 
           const { data: comments } = await supabase
             .from('comments')
-            .select('id, text, created_at, user_id')
+            .select('id, text, created_at, user_id, rating')
             .eq('post_id', post.id)
             .order('created_at', { ascending: false })
             .limit(2);
@@ -224,6 +225,22 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
               };
             })
           );
+
+          const { data: allCommentsWithRatings } = await supabase
+            .from('comments')
+            .select('rating')
+            .eq('post_id', post.id)
+            .not('rating', 'is', null);
+
+          const ratingsCount = allCommentsWithRatings?.length || 0;
+          const averageRating = ratingsCount > 0
+            ? allCommentsWithRatings!.reduce((sum, c) => sum + (c.rating || 0), 0) / ratingsCount
+            : 0;
+
+          setPostRatings(prev => ({
+            ...prev,
+            [post.id]: { average: averageRating, count: ratingsCount }
+          }));
 
           return {
             ...post,
@@ -776,7 +793,20 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                     ) : null}
                     {post.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-                        <h3 className="text-white text-sm font-semibold">{post.title}</h3>
+                        <div className="flex items-end justify-between gap-2">
+                          <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
+                          {postRatings[post.id] && postRatings[post.id].count > 0 && (
+                            <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
+                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-white text-xs font-semibold">
+                                {postRatings[post.id].average.toFixed(1)}
+                              </span>
+                              <span className="text-white/70 text-xs">
+                                ({postRatings[post.id].count})
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

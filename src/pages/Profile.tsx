@@ -296,8 +296,8 @@ export function Profile() {
           </div>
 
           <div className="p-6">
-            <div className="flex items-end gap-6 mb-6 -mt-14">
-              <div className="relative">
+            <div className="flex flex-col items-center mb-6 -mt-14">
+              <div className="relative mb-3">
                 {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
@@ -320,9 +320,31 @@ export function Profile() {
                   <Camera className="w-4 h-4 text-gray-600" />
                 </label>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-8">
-                  <div className="text-center">
+
+              <div className="flex items-center gap-2 mb-2">
+                <p className="font-semibold text-gray-900 text-lg">{profile?.username}</p>
+                <button
+                  onClick={() => {
+                    setNewUsername(profile?.username || '');
+                    setNewBio(profile?.bio || '');
+                    setEditingProfile(true);
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <Edit2 className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
+
+              {profile?.bio ? (
+                <p className="text-sm text-gray-700 text-center mb-4">{profile.bio}</p>
+              ) : (
+                <p className="text-sm text-gray-400 italic text-center mb-4">Add your bio here</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-around border-t border-gray-200 pt-4">
+                <div className="text-center">
                   <div className="text-xl font-bold">{posts.length}</div>
                   <div className="text-sm text-gray-500">posts</div>
                 </div>
@@ -333,30 +355,11 @@ export function Profile() {
                 <div className="text-center">
                   <div className="text-xl font-bold">{profile?.following_count || 0}</div>
                   <div className="text-sm text-gray-500">supporting</div>
-                  </div>
                 </div>
               </div>
             </div>
 
-            <div>
-            <div className="flex items-center gap-2 mb-1">
-              <p className="font-semibold text-gray-900">{profile?.username}</p>
-              <button
-                onClick={() => {
-                  setNewUsername(profile?.username || '');
-                  setNewBio(profile?.bio || '');
-                  setEditingProfile(true);
-                }}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <Edit2 className="w-4 h-4 text-gray-600" />
-              </button>
-            </div>
-            {profile?.bio ? (
-              <p className="text-sm text-gray-700">{profile.bio}</p>
-            ) : (
-              <p className="text-sm text-gray-400 italic">Add your bio here</p>
-            )}
+            <div className="hidden">
             </div>
           </div>
         </div>
