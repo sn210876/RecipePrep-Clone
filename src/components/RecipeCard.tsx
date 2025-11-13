@@ -55,11 +55,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
 
       const { data: postByRecipeId, error: recipeIdError } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles!posts_user_id_fkey(username, avatar_url),
-          likes(user_id)
-        `)
+        .select('*')
         .eq('recipe_id', recipe.id)
         .maybeSingle();
 
@@ -79,11 +75,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
         if (recipeData?.video_url) {
           const { data: postByUrl } = await supabase
             .from('posts')
-            .select(`
-              *,
-              profiles!posts_user_id_fkey(username, avatar_url),
-              likes(user_id)
-            `)
+            .select('*')
             .eq('recipe_url', recipeData.video_url)
             .maybeSingle();
 
@@ -93,11 +85,22 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
       }
 
       if (postData) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('user_id', postData.user_id)
+          .maybeSingle();
+
+        const { data: likes } = await supabase
+          .from('likes')
+          .select('user_id')
+          .eq('post_id', postData.id);
+
         setSocialPost({
           ...postData,
-          profiles: postData.profiles,
+          profiles: profile,
           _count: {
-            likes: postData.likes?.length || 0,
+            likes: likes?.length || 0,
             comments: 0
           }
         });
