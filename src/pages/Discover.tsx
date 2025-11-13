@@ -73,6 +73,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
   const [postRatings, setPostRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string; photoUrl: string } | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -396,6 +397,35 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
     } catch (error: any) {
       console.error('Error deleting post:', error);
       toast.error('Failed to delete post');
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingPost) return;
+
+    setUploadingPhoto(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      setEditingPost(prev => prev ? { ...prev, photoUrl: urlData.publicUrl } : null);
+      toast.success('Photo uploaded!');
+    } catch (error: any) {
+      console.error('Error uploading photo:', error);
+      toast.error('Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -971,14 +1001,15 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Photo URL (Change Thumbnail)</label>
+              <label className="text-sm font-medium mb-2 block">Change Photo (Upload from device)</label>
               <input
-                type="url"
-                value={editingPost?.photoUrl || ''}
-                onChange={(e) => setEditingPost(prev => prev ? { ...prev, photoUrl: e.target.value } : null)}
-                placeholder="https://... (paste image URL to change photo)"
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                disabled={uploadingPhoto}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
+              {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
               {editingPost?.photoUrl && (
                 <img
                   src={editingPost.photoUrl}

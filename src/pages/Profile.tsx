@@ -273,7 +273,7 @@ export function Profile() {
 
       <div className="max-w-lg mx-auto">
         <div className="bg-white border-b border-gray-200 overflow-hidden">
-          <div className="relative">
+          <div className="relative pb-10">
             {profile?.banner_url ? (
               <img
                 src={profile.banner_url}
@@ -283,7 +283,7 @@ export function Profile() {
             ) : (
               <div className="w-full h-40 bg-gradient-to-br from-orange-100 to-amber-100" />
             )}
-            <label className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+            <label className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
               <input
                 type="file"
                 accept="image/*"
@@ -293,76 +293,73 @@ export function Profile() {
               />
               <Camera className="w-4 h-4 text-gray-600" />
             </label>
-          </div>
 
-          <div className="p-6">
-            <div className="mb-6">
-              {/* Bio in center below banner */}
-              <div className="text-center mb-6 -mt-2">
+            {/* Profile picture and username overlaid at bottom left of banner */}
+            <div className="absolute bottom-0 left-4 flex items-end gap-3">
+              <div className="relative">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.username}
+                    className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
+                    {profile?.username?.[0]?.toUpperCase()}
+                  </div>
+                )}
+                <label className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  <Camera className="w-3 h-3 text-gray-600" />
+                </label>
+              </div>
+              <div className="pb-2 flex items-center gap-2">
+                <p className="font-bold text-white text-xl drop-shadow-lg">{profile?.username}</p>
                 <button
                   onClick={() => {
                     setNewUsername(profile?.username || '');
                     setNewBio(profile?.bio || '');
                     setEditingProfile(true);
                   }}
-                  className="inline-flex items-center gap-2 p-1 hover:bg-gray-100 rounded-full transition-colors mb-2"
+                  className="bg-white/90 hover:bg-white rounded-full p-1.5 transition-colors shadow-md"
                 >
-                  <Edit2 className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm text-gray-600">Edit Profile</span>
+                  <Edit2 className="w-4 h-4 text-gray-700" />
                 </button>
-                {profile?.bio ? (
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {profile.bio.split(' ').map((word, i) => {
-                      if (word.startsWith('http://') || word.startsWith('https://')) {
-                        return (
-                          <a
-                            key={i}
-                            href={word}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            {word}{' '}
-                          </a>
-                        );
-                      }
-                      return word + ' ';
-                    })}
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-400 italic">Add your bio here (hyperlinks supported)</p>
-                )}
               </div>
+            </div>
+          </div>
 
-              {/* Profile picture and username in bottom left */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="relative">
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt={profile.username}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-xl font-bold border-2 border-white shadow-md">
-                      {profile?.username?.[0]?.toUpperCase()}
-                    </div>
-                  )}
-                  <label className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      disabled={uploading}
-                      className="hidden"
-                    />
-                    <Camera className="w-3 h-3 text-gray-600" />
-                  </label>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 text-lg">{profile?.username}</p>
-                </div>
-              </div>
+          <div className="p-6">
+            {/* Bio in center below banner */}
+            <div className="text-center mb-6">
+              {profile?.bio ? (
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                  {profile.bio.split(' ').map((word, i) => {
+                    if (word.startsWith('http://') || word.startsWith('https://')) {
+                      return (
+                        <a
+                          key={i}
+                          href={word}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {word}{' '}
+                        </a>
+                      );
+                    }
+                    return word + ' ';
+                  })}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">Add your bio here (hyperlinks supported)</p>
+              )}
             </div>
 
             <div>
