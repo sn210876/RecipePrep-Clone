@@ -1,5 +1,3 @@
-import { Star } from 'lucide-react';
-
 interface RatingDisplayProps {
   rating: number;
   size?: 'sm' | 'md' | 'lg';
@@ -8,24 +6,24 @@ interface RatingDisplayProps {
 }
 
 export function RatingDisplay({ rating, size = 'md', interactive = false, onRate }: RatingDisplayProps) {
-  const sizeClass = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6',
+  const fontSize = {
+    sm: 'text-base',
+    md: 'text-xl',
+    lg: 'text-2xl',
   }[size];
 
   return (
     <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
+      {[1, 2, 3, 4, 5].map((fire) => (
         <button
-          key={star}
-          onClick={() => interactive && onRate?.(star)}
+          key={fire}
+          onClick={() => interactive && onRate?.(fire)}
           disabled={!interactive}
-          className={`transition-colors ${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`}
+          className={`transition-transform ${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'} ${fontSize}`}
         >
-          <Star
-            className={`${sizeClass} ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-          />
+          <span className={fire <= rating ? 'opacity-100' : 'opacity-30 grayscale'}>
+            🔥
+          </span>
         </button>
       ))}
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, GripVertical, Loader2, Calendar, ChefHat } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Loader2, Calendar, ChefHat, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -23,6 +23,7 @@ import {
 } from '../services/groceryListService.local';
 import { useRecipes } from '../context/RecipeContext';
 import { formatQuantity } from '../lib/unitConversion';
+import { supabase } from '../lib/supabase';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -279,6 +280,45 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     setDraggedCategory(null);
   }
 
+  async function handleSendToCart() {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        toast.error('Please sign in to add items to cart');
+        return;
+      }
+
+      if (items.length === 0) {
+        toast.error('No items to send to cart');
+        return;
+      }
+
+      const cartItems = items.map(item => ({
+        user_id: userData.user.id,
+        product_name: item.name,
+        quantity: `${item.quantity} ${item.unit}`.trim(),
+        price: '0.00',
+        image_url: null,
+        affiliate_link: null,
+      }));
+
+      const { error } = await supabase
+        .from('cart_items')
+        .insert(cartItems);
+
+      if (error) throw error;
+
+      toast.success(`Added ${items.length} items to cart!`);
+
+      if (onNavigate) {
+        setTimeout(() => onNavigate('cart'), 1000);
+      }
+    } catch (error) {
+      console.error('Failed to send to cart:', error);
+      toast.error('Failed to send items to cart');
+    }
+  }
+
   const itemsByCategory = categories.reduce((acc, category) => {
     acc[category.id] = items.filter(item => item.categoryId === category.id);
     return acc;
@@ -306,6 +346,15 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             </p>
           </div>
           <div className="flex gap-2">
+          {totalCount > 0 && (
+            <Button
+              onClick={handleSendToCart}
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Send List To Cart
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => setShowAddRecipeDialog(true)}

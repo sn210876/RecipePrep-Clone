@@ -196,11 +196,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     setSelectedDietaryTags(extractedData.dietaryTags);
     setImageUrl(extractedData.imageUrl);
     setVideoUrl(extractedData.videoUrl || '');
-    setNotes(extractedData.notes);
+    const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
+    setNotes(sourceNote + (extractedData.notes || ''));
 
     setShowPreview(false);
     setExtractedData(null);
-    setUrlInput('');
 
     toast.success('Recipe loaded! Edit any details as needed.');
   };

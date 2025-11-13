@@ -72,10 +72,11 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const isSocialMedia = url.includes('tiktok.com') || url.includes('instagram.com') ||
                          url.includes('youtube.com') || url.includes('youtu.be');
+  const isTikTokOrInstagram = url.includes('tiktok.com') || url.includes('instagram.com');
   const videoUrl = isSocialMedia ? url : '';
 
   const result: ExtractedRecipeData = {
-    title: data.title || 'Untitled Recipe',
+    title: isTikTokOrInstagram ? '' : (data.title || 'Untitled Recipe'),
     description: 'Extracted recipe',
     creator: data.author || 'Unknown',
     ingredients,
