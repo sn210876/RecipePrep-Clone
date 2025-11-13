@@ -136,7 +136,7 @@ export function Upload({ onNavigate }: UploadProps) {
       const songTitle = selectedSong?.title || null;
       const songArtist = selectedSong?.artist || null;
       const songPreview = songId
-        ? `https://www.youtube.com/embed/${songId}?autoplay=1&mute=1&loop=1&playlist=${songId}&modestbranding=1&controls=0`
+        ? `https://music.youtube.com/watch?v=${songId}`
         : null;
 
       const postData: any = {

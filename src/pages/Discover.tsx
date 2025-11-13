@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Music, Play, Pause, Volume2, VolumeX, Bell, PiggyBank } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Music, Bell, PiggyBank } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -79,9 +79,6 @@ export function Discover() {
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [filterHashtag, setFilterHashtag] = useState<string | null>(null);
-  const [playingMusicId, setPlayingMusicId] = useState<string | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -107,12 +104,7 @@ export function Discover() {
   }, []);
 
   useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
+    return () => {};
   }, []);
 
   useEffect(() => {
@@ -520,42 +512,6 @@ export function Discover() {
     }, 300);
   };
 
-  const toggleMusic = (postId: string, previewUrl: string) => {
-    if (playingMusicId === postId) {
-      audioRef.current?.pause();
-      setPlayingMusicId(null);
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      audioRef.current = new Audio(previewUrl);
-      audioRef.current.muted = isMuted;
-      audioRef.current.crossOrigin = 'anonymous';
-      audioRef.current.play().catch(error => {
-        console.error('Error playing audio:', error);
-        toast.error('Music preview unavailable');
-        setPlayingMusicId(null);
-      });
-      setPlayingMusicId(postId);
-
-      audioRef.current.onended = () => {
-        setPlayingMusicId(null);
-      };
-
-      audioRef.current.onerror = () => {
-        console.error('Audio failed to load');
-        toast.error('Music preview not available');
-        setPlayingMusicId(null);
-      };
-    }
-  };
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-    }
-  };
 
   const markNotificationRead = async (notificationId: string) => {
     await supabase
@@ -809,40 +765,19 @@ export function Discover() {
                       />
                     ) : null}
                     {post.song_title && post.song_artist && post.song_preview_url && (
-                      <div className="absolute bottom-16 left-4 right-4 flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMusic(post.id, post.song_preview_url!);
-                          }}
-                          className="inline-flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-full hover:bg-black/70 transition-colors cursor-pointer"
-                        >
-                          {playingMusicId === post.id ? (
-                            <Pause className="w-4 h-4 text-white" />
-                          ) : (
-                            <Play className="w-4 h-4 text-white" />
-                          )}
-                          <Music className="w-4 h-4 text-white" />
-                          <span className="text-white text-xs font-medium truncate max-w-[200px]">
-                            {post.song_title} • {post.song_artist}
-                          </span>
-                        </button>
-                        {playingMusicId === post.id && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleMute();
-                            }}
-                            className="bg-black/60 backdrop-blur-sm p-2 rounded-full hover:bg-black/70 transition-colors"
-                          >
-                            {isMuted ? (
-                              <VolumeX className="w-4 h-4 text-white" />
-                            ) : (
-                              <Volume2 className="w-4 h-4 text-white" />
-                            )}
-                          </button>
-                        )}
-                      </div>
+                      <a
+                        href={post.song_preview_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute bottom-16 left-4 right-4 inline-flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-full hover:bg-black/70 transition-colors"
+                      >
+                        <Music className="w-4 h-4 text-white" />
+                        <span className="text-white text-xs font-medium truncate max-w-[200px]">
+                          {post.song_title} • {post.song_artist}
+                        </span>
+                        <ExternalLink className="w-3 h-3 text-white/80" />
+                      </a>
                     )}
                     {post.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
