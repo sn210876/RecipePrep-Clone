@@ -273,7 +273,7 @@ export function Profile() {
 
       <div className="max-w-lg mx-auto">
         <div className="bg-white border-b border-gray-200 overflow-hidden">
-          <div className="relative pb-10">
+          <div className="rel<div className="relative pb-24"> {/* Increased bottom padding for avatar */}ative pb-10">
             {profile?.banner_url ? (
               <img
                 src={profile.banner_url}
