@@ -27,11 +27,13 @@ export function Upload({ onNavigate }: UploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileType, setFileType] = useState<'image' | 'video' | null>(null);
+  const [postType, setPostType] = useState<'post' | 'daily'>('post');
   const [title, setTitle] = useState('');
   const [caption, setCaption] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>('');
   const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [videoDuration, setVideoDuration] = useState<number>(0);
 
   useEffect(() => {
     loadUserRecipes();
@@ -62,14 +64,30 @@ export function Upload({ onNavigate }: UploadProps) {
           return;
         }
         setFileType('image');
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
       } else if (file.type.startsWith('video/')) {
-        setFileType('video');
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = () => {
+          window.URL.revokeObjectURL(video.src);
+          const duration = Math.floor(video.duration);
+          setVideoDuration(duration);
+
+          if (postType === 'daily' && duration > 30) {
+            toast.error('Daily videos must be 30 seconds or less');
+            return;
+          }
+
+          setFileType('video');
+          setSelectedFile(file);
+          setPreviewUrl(URL.createObjectURL(file));
+        };
+        video.src = URL.createObjectURL(file);
       } else {
         toast.error('Please select an image or video file');
         return;
       }
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -87,10 +105,17 @@ export function Upload({ onNavigate }: UploadProps) {
       toast.error('Please select an image or video');
       return;
     }
-    if (!title.trim()) {
+
+    if (postType === 'post' && !title.trim()) {
       toast.error('Please enter a title');
       return;
     }
+
+    if (postType === 'daily' && fileType === 'video' && videoDuration > 30) {
+      toast.error('Daily videos must be 30 seconds or less');
+      return;
+    }
+
     setUploading(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
@@ -117,6 +142,32 @@ export function Upload({ onNavigate }: UploadProps) {
         });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+
+      if (postType === 'daily') {
+        const dailyData: any = {
+          user_id: userData.user.id,
+          media_url: urlData.publicUrl,
+          media_type: fileType === 'image' ? 'photo' : 'video',
+          caption: caption.trim() || null,
+        };
+
+        if (fileType === 'video') {
+          dailyData.duration = videoDuration;
+        }
+
+        const { error: insertError } = await supabase
+          .from('dailies')
+          .insert(dailyData);
+        if (insertError) throw insertError;
+
+        toast.success('Daily posted successfully!');
+        handleClearImage();
+        setTitle('');
+        setCaption('');
+        onNavigate('discover');
+        return;
+      }
+
       let recipeLink = null;
       if (selectedRecipeId) {
         recipeLink = `${window.location.origin}/#recipe/${selectedRecipeId}`;
@@ -199,10 +250,10 @@ export function Upload({ onNavigate }: UploadProps) {
           >
             Cancel
           </button>
-          <h1 className="text-lg font-semibold">New Post</h1>
+          <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
           <Button
             onClick={handleUpload}
-            disabled={!selectedFile || !title.trim() || uploading}
+            disabled={!selectedFile || (postType === 'post' && !title.trim()) || uploading}
             size="sm"
             className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
           >
@@ -211,6 +262,37 @@ export function Upload({ onNavigate }: UploadProps) {
         </div>
       </div>
       <div className="max-w-lg mx-auto p-4 space-y-4">
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <label className="text-sm font-medium text-gray-700 mb-2 block">Post Type</label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPostType('post')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+                postType === 'post'
+                  ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Post
+            </button>
+            <button
+              onClick={() => setPostType('daily')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
+                postType === 'daily'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Daily
+            </button>
+          </div>
+          {postType === 'daily' && (
+            <p className="text-xs text-gray-500 mt-2">
+              Dailies expire after 24 hours. Videos must be 30 seconds or less.
+            </p>
+          )}
+        </div>
+
         {!previewUrl ? (
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
             <label className="cursor-pointer">
@@ -261,20 +343,22 @@ export function Upload({ onNavigate }: UploadProps) {
           </div>
         )}
         <div className="space-y-4 bg-white rounded-xl p-4 shadow-sm">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter a title for your post"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              maxLength={200}
-            />
-            <p className="text-xs text-gray-400 mt-1">{title.length}/200</p>
-          </div>
+          {postType === 'post' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter a title for your post"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                maxLength={200}
+              />
+              <p className="text-xs text-gray-400 mt-1">{title.length}/200</p>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Caption
@@ -288,11 +372,12 @@ export function Upload({ onNavigate }: UploadProps) {
             />
             <p className="text-xs text-gray-400 mt-1">{caption.length}/2200</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Link to Recipe (optional)
-            </label>
-            <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
+          {postType === 'post' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Link to Recipe (optional)
+              </label>
+              <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a recipe from your collection" />
               </SelectTrigger>
@@ -322,7 +407,8 @@ export function Upload({ onNavigate }: UploadProps) {
             <p className="text-xs text-gray-500 mt-1">
               Choose a recipe from your collection to link with this post
             </p>
-          </div>
+            </div>
+          )}
         </div>
         {selectedFile && (
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
