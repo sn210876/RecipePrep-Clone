@@ -267,19 +267,32 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
+              className={`flex group ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
             >
-              <div
-                className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                  msg.sender_id === currentUserId
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-white border border-gray-200'
-                }`}
-              >
-                <p className="text-sm">{msg.content}</p>
-                <p className={`text-xs mt-1 ${msg.sender_id === currentUserId ? 'text-orange-100' : 'text-gray-400'}`}>
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
+              <div className="relative">
+                <div
+                  className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                    msg.sender_id === currentUserId
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-white border border-gray-200'
+                  }`}
+                >
+                  <p className="text-sm">{msg.content}</p>
+                  <p className={`text-xs mt-1 ${msg.sender_id === currentUserId ? 'text-orange-100' : 'text-gray-400'}`}>
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                {msg.sender_id === currentUserId && (
+                  <button
+                    onClick={async () => {
+                      await supabase.from('messages').delete().eq('id', msg.id);
+                      loadMessages(selectedConversation.id);
+                    }}
+                    className="ml-2 opacity-0 group-hover:opacity-100 text-xs text-red-500 hover:text-red-700 transition-opacity"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))}

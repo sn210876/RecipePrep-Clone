@@ -31,7 +31,7 @@ export function CommentModal({ postId, isOpen, onClose }: CommentModalProps) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && postId) {
       loadComments();
       supabase.auth.getUser().then(({ data }) => {
         setCurrentUserId(data.user?.id || null);
@@ -40,6 +40,8 @@ export function CommentModal({ postId, isOpen, onClose }: CommentModalProps) {
   }, [isOpen, postId]);
 
   const loadComments = async () => {
+    if (!postId) return;
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -51,7 +53,11 @@ export function CommentModal({ postId, isOpen, onClose }: CommentModalProps) {
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading comments:', error);
+        throw error;
+      }
+
       setComments(data || []);
     } catch (error: any) {
       console.error('Error loading comments:', error);

@@ -303,11 +303,13 @@ export function UserProfileView({
         </div>
       )}
 
-      <CommentModal
-        postId={selectedPostId || ''}
-        isOpen={!!selectedPostId}
-        onClose={() => setSelectedPostId(null)}
-      />
+      {selectedPostId && (
+        <CommentModal
+          postId={selectedPostId}
+          isOpen={true}
+          onClose={() => setSelectedPostId(null)}
+        />
+      )}
 
       <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
         <DialogContent>
