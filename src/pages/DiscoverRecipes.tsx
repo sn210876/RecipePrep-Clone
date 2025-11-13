@@ -252,6 +252,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                     onCook={handleCook}
                     onDelete={handleDeleteRecipe}
                     isAdmin={isAdmin}
+                    showReviewButton={true}
                   />
                 ))}
               </div>
@@ -292,6 +293,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                     onCook={handleCook}
                     onDelete={handleDeleteRecipe}
                     isAdmin={isAdmin}
+                    showReviewButton={true}
                   />
                 ))}
               </div>
@@ -332,6 +334,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                     onCook={handleCook}
                     onDelete={handleDeleteRecipe}
                     isAdmin={isAdmin}
+                    showReviewButton={true}
                   />
                 ))}
               </div>
@@ -372,6 +375,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                     onCook={handleCook}
                     onDelete={handleDeleteRecipe}
                     isAdmin={isAdmin}
+                    showReviewButton={true}
                   />
                 ))}
               </div>
@@ -413,6 +417,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                       onCook={handleCook}
                       onDelete={handleDeleteRecipe}
                       isAdmin={isAdmin}
+                      showReviewButton={true}
                     />
                   ))}
                 </div>
@@ -455,6 +460,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                       onCook={handleCook}
                       onDelete={handleDeleteRecipe}
                       isAdmin={isAdmin}
+                      showReviewButton={true}
                     />
                   ))}
                 </div>
@@ -496,6 +502,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                     onCook={handleCook}
                     onDelete={handleDeleteRecipe}
                     isAdmin={isAdmin}
+                    showReviewButton={true}
                   />
                 ))}
               </div>
@@ -522,6 +529,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                     onCook={handleCook}
                     onDelete={handleDeleteRecipe}
                     isAdmin={isAdmin}
+                    showReviewButton={true}
                   />
                 ))}
               </div>
