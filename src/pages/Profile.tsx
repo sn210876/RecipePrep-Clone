@@ -27,6 +27,7 @@ interface Post {
 interface Profile {
   username: string;
   avatar_url: string | null;
+  banner_url?: string | null;
   bio?: string | null;
   followers_count?: number;
   following_count?: number;
@@ -57,7 +58,7 @@ export function Profile() {
 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('username, avatar_url, bio')
+        .select('username, avatar_url, banner_url, bio')
         .eq('id', userData.user.id)
         .maybeSingle();
 
@@ -158,6 +159,53 @@ export function Profile() {
     }
   };
 
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/banner.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ banner_url: urlData.publicUrl })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, banner_url: urlData.publicUrl } : null);
+      toast.success('Banner updated successfully!');
+    } catch (error: any) {
+      console.error('Error uploading banner:', error);
+      toast.error('Failed to upload banner');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleEditProfile = async () => {
     if (!userId) return;
 
@@ -224,35 +272,57 @@ export function Profile() {
       </div>
 
       <div className="max-w-lg mx-auto">
-        <div className="bg-white border-b border-gray-200 p-6">
-          <div className="flex items-center gap-6 mb-6">
-            <div className="relative">
-              {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.username}
-                  className="w-20 h-20 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold">
-                  {profile?.username?.[0]?.toUpperCase()}
-                </div>
-              )}
-              <label className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  disabled={uploading}
-                  className="hidden"
-                />
-                <Camera className="w-4 h-4 text-gray-600" />
-              </label>
-            </div>
+        <div className="bg-white border-b border-gray-200 overflow-hidden">
+          <div className="relative">
+            {profile?.banner_url ? (
+              <img
+                src={profile.banner_url}
+                alt="Banner"
+                className="w-full h-40 object-cover"
+              />
+            ) : (
+              <div className="w-full h-40 bg-gradient-to-br from-orange-100 to-amber-100" />
+            )}
+            <label className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleBannerUpload}
+                disabled={uploading}
+                className="hidden"
+              />
+              <Camera className="w-4 h-4 text-gray-600" />
+            </label>
+          </div>
 
-            <div className="flex-1">
-              <div className="flex items-center gap-8">
-                <div className="text-center">
+          <div className="p-6">
+            <div className="flex items-end gap-6 mb-6 -mt-14">
+              <div className="relative">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.username}
+                    className="w-24 h-24 rounded-full object-cover border-4 border-white"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white">
+                    {profile?.username?.[0]?.toUpperCase()}
+                  </div>
+                )}
+                <label className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  <Camera className="w-4 h-4 text-gray-600" />
+                </label>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-8">
+                  <div className="text-center">
                   <div className="text-xl font-bold">{posts.length}</div>
                   <div className="text-sm text-gray-500">posts</div>
                 </div>
@@ -263,12 +333,12 @@ export function Profile() {
                 <div className="text-center">
                   <div className="text-xl font-bold">{profile?.following_count || 0}</div>
                   <div className="text-sm text-gray-500">supporting</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div>
+            <div>
             <div className="flex items-center gap-2 mb-1">
               <p className="font-semibold text-gray-900">{profile?.username}</p>
               <button
@@ -287,6 +357,7 @@ export function Profile() {
             ) : (
               <p className="text-sm text-gray-400 italic">Add your bio here</p>
             )}
+            </div>
           </div>
         </div>
 

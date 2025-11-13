@@ -878,6 +878,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
           postId={commentModalPostId}
           isOpen={!!commentModalPostId}
           onClose={() => setCommentModalPostId(null)}
+          onCommentPosted={() => fetchPosts(0, true)}
         />
       )}
 

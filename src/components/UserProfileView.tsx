@@ -48,7 +48,7 @@ export function UserProfileView({
   onMessage,
 }: UserProfileViewProps) {
   const userPosts = posts.filter(p => p.user_id === userId);
-  const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null; bio?: string } | null>(null);
+  const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null; bio?: string; banner_url?: string | null } | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
 
@@ -63,7 +63,7 @@ export function UserProfileView({
     const fetchProfile = async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('username, avatar_url, bio')
+        .select('username, avatar_url, bio, banner_url')
         .eq('id', userId)
         .maybeSingle();
 
@@ -174,15 +174,24 @@ export function UserProfileView({
         ← Back to Feed
       </Button>
 
-      <div className="bg-white rounded-xl p-6 mb-4 shadow-sm">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
-            {userProfile?.avatar_url ? (
-              <img src={userProfile.avatar_url} alt={userProfile.username} className="w-full h-full object-cover" />
-            ) : (
-              userProfile?.username?.[0]?.toUpperCase() || <PiggyBank className="w-10 h-10" />
-            )}
+      <div className="bg-white rounded-xl mb-4 shadow-sm overflow-hidden">
+        {userProfile?.banner_url ? (
+          <div className="w-full h-48 bg-gradient-to-br from-orange-100 to-amber-100">
+            <img src={userProfile.banner_url} alt="Banner" className="w-full h-full object-cover" />
           </div>
+        ) : (
+          <div className="w-full h-48 bg-gradient-to-br from-orange-100 to-amber-100" />
+        )}
+
+        <div className="px-6 pb-6">
+          <div className="flex items-end gap-4 -mt-10 mb-4">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden border-4 border-white">
+              {userProfile?.avatar_url ? (
+                <img src={userProfile.avatar_url} alt={userProfile.username} className="w-full h-full object-cover" />
+              ) : (
+                userProfile?.username?.[0]?.toUpperCase() || <PiggyBank className="w-10 h-10" />
+              )}
+            </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold">{userProfile?.username || 'Loading...'}</h2>
             <div className="flex gap-4 mt-2">
@@ -197,14 +206,14 @@ export function UserProfileView({
               </span>
             </div>
           </div>
-        </div>
-        {userProfile?.bio && (
-          <div className="px-2">
-            <p className="text-gray-700 text-sm">{userProfile.bio}</p>
           </div>
-        )}
-        <div className="flex items-center justify-center gap-2 mt-4">
-          {userId !== currentUserId && (
+          {userProfile?.bio && (
+            <div className="mt-2">
+              <p className="text-gray-700 text-sm">{userProfile.bio}</p>
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-2 mt-4">
+            {userId !== currentUserId && (
             <div className="flex gap-2">
               <Button
                 onClick={() => {
@@ -237,7 +246,8 @@ export function UserProfileView({
                 )}
               </Button>
             </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

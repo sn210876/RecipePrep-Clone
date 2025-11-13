@@ -21,9 +21,10 @@ interface CommentModalProps {
   postId: string;
   isOpen: boolean;
   onClose: () => void;
+  onCommentPosted?: () => void;
 }
 
-export function CommentModal({ postId, isOpen, onClose }: CommentModalProps) {
+export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: CommentModalProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -99,6 +100,9 @@ export function CommentModal({ postId, isOpen, onClose }: CommentModalProps) {
       setNewComment('');
       await loadComments();
       toast.success('Comment posted!');
+      if (onCommentPosted) {
+        onCommentPosted();
+      }
       onClose();
     } catch (error: any) {
       console.error('Error posting comment:', error);
