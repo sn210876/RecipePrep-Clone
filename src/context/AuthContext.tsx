@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [showVerifying, setShowVerifying] = useState(false);
 
   const isEmailVerified = user ? !!user.email_confirmed_at : false;
-  const isAdmin = user?.email === 'blurocket12@gmail.com';
+  const isAdmin = user?.email === 'snguyen7@msn..com';
 
   useEffect(() => {
     const initAuth = async () => {
