@@ -32,6 +32,7 @@ interface Post {
   user_id: string;
   title: string;
   image_url: string | null;
+  photo_url: string | null;
   video_url: string | null;
   caption: string | null;
   recipe_url: string | null;
@@ -71,7 +72,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [postRatings, setPostRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
-  const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string } | null>(null);
+  const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string; photoUrl: string } | null>(null);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -407,6 +408,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
         .update({
           caption: editingPost.caption.trim() || null,
           recipe_url: editingPost.recipeUrl.trim() || null,
+          photo_url: editingPost.photoUrl.trim() || null,
         })
         .eq('id', editingPost.id);
 
@@ -415,7 +417,12 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
       setPosts(prev =>
         prev.map(p =>
           p.id === editingPost.id
-            ? { ...p, caption: editingPost.caption.trim() || null, recipe_url: editingPost.recipeUrl.trim() || null }
+            ? {
+                ...p,
+                caption: editingPost.caption.trim() || null,
+                recipe_url: editingPost.recipeUrl.trim() || null,
+                photo_url: editingPost.photoUrl.trim() || null
+              }
             : p
         )
       );
@@ -759,7 +766,12 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() => setEditingPost({ id: post.id, caption: post.caption || '', recipeUrl: post.recipe_url || '' })}
+                            onClick={() => setEditingPost({
+                              id: post.id,
+                              caption: post.caption || '',
+                              recipeUrl: post.recipe_url || '',
+                              photoUrl: post.photo_url || ''
+                            })}
                             className="cursor-pointer"
                           >
                             <Edit3 className="w-4 h-4 mr-2" />
@@ -957,6 +969,26 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                 placeholder="https://..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Photo URL (Change Thumbnail)</label>
+              <input
+                type="url"
+                value={editingPost?.photoUrl || ''}
+                onChange={(e) => setEditingPost(prev => prev ? { ...prev, photoUrl: e.target.value } : null)}
+                placeholder="https://... (paste image URL to change photo)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              {editingPost?.photoUrl && (
+                <img
+                  src={editingPost.photoUrl}
+                  alt="Preview"
+                  className="mt-2 w-32 h-32 object-cover rounded-lg"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
             </div>
           </div>
           <AlertDialogFooter>

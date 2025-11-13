@@ -16,7 +16,7 @@ export function extractHashtags(text: string): string[] {
 export function makeHashtagsClickable(text: string, onHashtagClick: (tag: string) => void): React.ReactNode {
   if (!text) return text;
 
-  const parts = text.split(/(#\w+)/g);
+  const parts = text.split(/(\s+)/g);
 
   return parts.map((part, index) => {
     if (part.startsWith('#')) {
@@ -34,6 +34,22 @@ export function makeHashtagsClickable(text: string, onHashtagClick: (tag: string
         part
       );
     }
+
+    if (part.startsWith('http://') || part.startsWith('https://')) {
+      return React.createElement(
+        'a',
+        {
+          key: index,
+          href: part,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          onClick: (e: React.MouseEvent) => e.stopPropagation(),
+          className: 'text-blue-600 hover:underline'
+        },
+        part
+      );
+    }
+
     return React.createElement('span', { key: index }, part);
   });
 }

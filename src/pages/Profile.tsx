@@ -296,50 +296,73 @@ export function Profile() {
           </div>
 
           <div className="p-6">
-            <div className="flex flex-col items-center mb-6 -mt-14">
-              <div className="relative mb-3">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.username}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-white"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white">
-                    {profile?.username?.[0]?.toUpperCase()}
-                  </div>
-                )}
-                <label className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    disabled={uploading}
-                    className="hidden"
-                  />
-                  <Camera className="w-4 h-4 text-gray-600" />
-                </label>
-              </div>
-
-              <div className="flex items-center gap-2 mb-2">
-                <p className="font-semibold text-gray-900 text-lg">{profile?.username}</p>
+            <div className="mb-6">
+              {/* Bio in center below banner */}
+              <div className="text-center mb-6 -mt-2">
                 <button
                   onClick={() => {
                     setNewUsername(profile?.username || '');
                     setNewBio(profile?.bio || '');
                     setEditingProfile(true);
                   }}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  className="inline-flex items-center gap-2 p-1 hover:bg-gray-100 rounded-full transition-colors mb-2"
                 >
                   <Edit2 className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm text-gray-600">Edit Profile</span>
                 </button>
+                {profile?.bio ? (
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {profile.bio.split(' ').map((word, i) => {
+                      if (word.startsWith('http://') || word.startsWith('https://')) {
+                        return (
+                          <a
+                            key={i}
+                            href={word}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            {word}{' '}
+                          </a>
+                        );
+                      }
+                      return word + ' ';
+                    })}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">Add your bio here (hyperlinks supported)</p>
+                )}
               </div>
 
-              {profile?.bio ? (
-                <p className="text-sm text-gray-700 text-center mb-4">{profile.bio}</p>
-              ) : (
-                <p className="text-sm text-gray-400 italic text-center mb-4">Add your bio here</p>
-              )}
+              {/* Profile picture and username in bottom left */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.username}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-xl font-bold border-2 border-white shadow-md">
+                      {profile?.username?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <label className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                    <Camera className="w-3 h-3 text-gray-600" />
+                  </label>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-lg">{profile?.username}</p>
+                </div>
+              </div>
             </div>
 
             <div>

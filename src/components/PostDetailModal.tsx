@@ -311,7 +311,24 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-700">{post.caption}</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {post.caption?.split(' ').map((word, i) => {
+                      if (word.startsWith('http://') || word.startsWith('https://')) {
+                        return (
+                          <a
+                            key={i}
+                            href={word}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            {word}
+                          </a>
+                        );
+                      }
+                      return word + ' ';
+                    })}
+                  </p>
                 )}
               </div>
 
