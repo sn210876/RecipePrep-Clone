@@ -294,45 +294,48 @@ export function Profile() {
               <Camera className="w-4 h-4 text-gray-600" />
             </label>
 
-            {/* Profile picture and username overlaid at bottom left of banner */}
-            <div className="absolute bottom-0 left-4 flex items-end gap-3">
-              <div className="relative">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.username}
-                    className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
-                    {profile?.username?.[0]?.toUpperCase()}
-                  </div>
-                )}
-                <label className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    disabled={uploading}
-                    className="hidden"
-                  />
-                  <Camera className="w-3 h-3 text-gray-600" />
-                </label>
-              </div>
-              <div className="pb-2 flex items-center gap-2">
-                <p className="font-bold text-white text-xl drop-shadow-lg">{profile?.username}</p>
-                <button
-                  onClick={() => {
-                    setNewUsername(profile?.username || '');
-                    setNewBio(profile?.bio || '');
-                    setEditingProfile(true);
-                  }}
-                  className="bg-white/90 hover:bg-white rounded-full p-1.5 transition-colors shadow-md"
-                >
-                  <Edit2 className="w-4 h-4 text-gray-700" />
-                </button>
-              </div>
-            </div>
+            {/* Avatar on the left, under banner */}
+<div className="absolute -bottom-10 left-6">
+  <div className="relative">
+    {profile?.avatar_url ? (
+      <img
+        src={profile.avatar_url}
+        alt={profile.username}
+        className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-2xl"
+      />
+    ) : (
+      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-2xl">
+        {profile?.username?.[0]?.toUpperCase()}
+      </div>
+    )}
+    <label className="absolute bottom-1 right-1 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleAvatarUpload}
+        disabled={uploading}
+        className="hidden"
+      />
+      <Camera className="w-5 h-5 text-gray-700" />
+    </label>
+  </div>
+</div>
+
+{/* Username + Edit button centered below banner */}
+<div className="pt-16 pb-4 text-center">
+  <h2 className="text-2xl font-bold text-gray-900">{profile?.username}</h2>
+  <button
+    onClick={() => {
+      setNewUsername(profile?.username || '');
+      setNewBio(profile?.bio || '');
+      setEditingProfile(true);
+    }}
+    className="mt-3 inline-flex items-center gap-2 px-6 py-2.5 bg-orange-600 text-white font-medium rounded-full hover:bg-orange-700 transition-colors shadow-md"
+  >
+    <Edit2 className="w-4 h-4" />
+    Edit Profile
+  </button>
+</div>
           </div>
 
           <div className="p-6">
