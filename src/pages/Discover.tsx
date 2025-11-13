@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Music, Bell, PiggyBank } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, UserPlus, UserCheck, Search, Hash, Bell, PiggyBank } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -36,10 +36,6 @@ interface Post {
   caption: string | null;
   recipe_url: string | null;
   recipe_id: string | null;
-  song_id: string | null;
-  song_title: string | null;
-  song_artist: string | null;
-  song_preview_url: string | null;
   created_at: string;
   profiles: {
     username: string;
@@ -544,7 +540,7 @@ export function Discover() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto">
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
+        <div className="sticky top-0 z-50 bg-white border-b border-gray-200 p-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -556,21 +552,8 @@ export function Discover() {
                 placeholder="Search users..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
-            </div>
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <Bell className="w-6 h-6 text-gray-700" />
-              {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                </span>
-              )}
-            </button>
-          </div>
-          {showSearchResults && (
-            <div className="absolute left-4 right-4 bg-white border border-gray-200 rounded-lg mt-2 max-h-60 overflow-y-auto shadow-lg z-20">
+              {showSearchResults && (
+                <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-60 overflow-y-auto shadow-lg z-50">
               {searchResults.length > 0 ? (
                 searchResults.map((user) => (
                   <button
@@ -600,10 +583,23 @@ export function Discover() {
                   No users found
                 </div>
               )}
+                </div>
+              )}
             </div>
-          )}
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <Bell className="w-6 h-6 text-gray-700" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                </span>
+              )}
+            </button>
+          </div>
           {showNotifications && (
-            <div className="absolute left-4 right-4 bg-white border border-gray-200 rounded-lg mt-2 max-h-96 overflow-y-auto shadow-lg z-20">
+            <div className="absolute left-4 right-4 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto shadow-lg z-50">
               {notifications.length === 0 ? (
                 <div className="p-4 text-center text-gray-500 text-sm">
                   No notifications yet
@@ -764,21 +760,6 @@ export function Discover() {
                         className="w-full aspect-square object-cover"
                       />
                     ) : null}
-                    {post.song_title && post.song_artist && post.song_preview_url && (
-                      <a
-                        href={post.song_preview_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute bottom-16 left-4 right-4 inline-flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-full hover:bg-black/70 transition-colors"
-                      >
-                        <Music className="w-4 h-4 text-white" />
-                        <span className="text-white text-xs font-medium truncate max-w-[200px]">
-                          {post.song_title} • {post.song_artist}
-                        </span>
-                        <ExternalLink className="w-3 h-3 text-white/80" />
-                      </a>
-                    )}
                     {post.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
                         <h3 className="text-white text-sm font-semibold">{post.title}</h3>

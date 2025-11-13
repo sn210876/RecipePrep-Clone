@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { UserPlus, UserCheck, PiggyBank } from 'lucide-react';
+import { UserPlus, UserCheck, PiggyBank, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import {
   Dialog,
@@ -122,23 +122,34 @@ export function UserProfileView({
             </div>
           </div>
           {userId !== currentUserId && (
-            <Button
-              onClick={() => onToggleFollow(userId)}
-              variant={isFollowing ? 'outline' : 'default'}
-              className={isFollowing ? '' : 'bg-orange-500 hover:bg-orange-600'}
-            >
-              {isFollowing ? (
-                <>
-                  <UserCheck className="w-4 h-4 mr-2" />
-                  Supporting
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Support
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => window.alert('DM feature coming soon!')}
+                variant="outline"
+                size="sm"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Message
+              </Button>
+              <Button
+                onClick={() => onToggleFollow(userId)}
+                variant={isFollowing ? 'outline' : 'default'}
+                size="sm"
+                className={isFollowing ? '' : 'bg-orange-500 hover:bg-orange-600'}
+              >
+                {isFollowing ? (
+                  <>
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    Supporting
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Support
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </div>
       </div>
