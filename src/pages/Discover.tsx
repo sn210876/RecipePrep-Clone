@@ -58,9 +58,10 @@ interface Post {
 
 interface DiscoverProps {
   onNavigateToMessages?: (userId: string, username: string) => void;
+  onNavigate?: (page: string) => void;
 }
 
-export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
+export function Discover({ onNavigateToMessages, onNavigate }: DiscoverProps = {}) {
   const { isAdmin } = useAuth();
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -637,6 +638,13 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                   {unreadNotifications > 9 ? '9+' : unreadNotifications}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => onNavigate?.('cart')}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Cart"
+            >
+              <PiggyBank className="w-6 h-6 text-gray-700" />
             </button>
           </div>
           {showNotifications && (

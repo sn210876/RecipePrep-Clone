@@ -293,7 +293,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                       : 'bg-white border border-gray-200'
                   }`}
                 >
-                  <p className="text-sm">{msg.content}</p>
+                  <p className="text-sm break-words whitespace-pre-wrap">{msg.content}</p>
                   <p className={`text-xs mt-1 ${msg.sender_id === currentUserId ? 'text-orange-100' : 'text-gray-400'}`}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>

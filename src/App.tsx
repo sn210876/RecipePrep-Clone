@@ -47,6 +47,7 @@ function AppContent() {
             setMessageRecipient({ userId, username });
             setCurrentPage('messages');
           }}
+          onNavigate={handleNavigate}
         />;
       case 'my-recipes':
         return <MyRecipes />;

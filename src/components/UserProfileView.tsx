@@ -184,34 +184,33 @@ export function UserProfileView({
         )}
 
         <div className="px-6 pb-6">
-          <div className="flex items-end gap-4 -mt-10 mb-4">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden border-4 border-white">
+          <div className="flex flex-col items-center -mt-10 mb-4">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden border-4 border-white mb-3">
               {userProfile?.avatar_url ? (
                 <img src={userProfile.avatar_url} alt={userProfile.username} className="w-full h-full object-cover" />
               ) : (
                 userProfile?.username?.[0]?.toUpperCase() || <PiggyBank className="w-10 h-10" />
               )}
             </div>
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold">{userProfile?.username || 'Loading...'}</h2>
-            <div className="flex gap-4 mt-2">
-              <button onClick={loadSupporters} className="text-sm hover:underline">
-                <span className="font-semibold">{supportersCount}</span> <span className="text-gray-600">supporters</span>
-              </button>
-              <button onClick={loadSupporting} className="text-sm hover:underline">
-                <span className="font-semibold">{supportingCount}</span> <span className="text-gray-600">supporting</span>
-              </button>
-              <span className="text-sm">
-                <span className="font-semibold">{userPosts.length}</span> <span className="text-gray-600">{userPosts.length === 1 ? 'post' : 'posts'}</span>
-              </span>
+            <h2 className="text-2xl font-bold mb-2">{userProfile?.username || 'Loading...'}</h2>
+            {userProfile?.bio && (
+              <p className="text-gray-700 text-sm text-center mb-4">{userProfile.bio}</p>
+            )}
+          </div>
+          <div className="flex items-center justify-around border-t border-gray-200 pt-4 mb-4">
+            <button onClick={loadSupporters} className="text-center hover:bg-gray-50 px-4 py-2 rounded-lg transition">
+              <div className="font-semibold text-xl">{supportersCount}</div>
+              <div className="text-gray-600 text-sm">supporters</div>
+            </button>
+            <button onClick={loadSupporting} className="text-center hover:bg-gray-50 px-4 py-2 rounded-lg transition">
+              <div className="font-semibold text-xl">{supportingCount}</div>
+              <div className="text-gray-600 text-sm">supporting</div>
+            </button>
+            <div className="text-center px-4 py-2">
+              <div className="font-semibold text-xl">{userPosts.length}</div>
+              <div className="text-gray-600 text-sm">{userPosts.length === 1 ? 'post' : 'posts'}</div>
             </div>
           </div>
-          </div>
-          {userProfile?.bio && (
-            <div className="mt-2">
-              <p className="text-gray-700 text-sm">{userProfile.bio}</p>
-            </div>
-          )}
           <div className="flex items-center justify-center gap-2 mt-4">
             {userId !== currentUserId && (
             <div className="flex gap-2">
