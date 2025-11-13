@@ -51,33 +51,59 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
 
   const loadSocialPost = async () => {
     try {
-      const { data: recipeData } = await supabase
-        .from('public_recipes')
-        .select('video_url')
-        .eq('id', recipe.id)
+      let postData = null;
+
+      const { data: postByRecipeId, error: recipeIdError } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles!posts_user_id_fkey(username, avatar_url),
+          likes(user_id)
+        `)
+        .eq('recipe_id', recipe.id)
         .maybeSingle();
 
-      if (recipeData?.video_url) {
-        const { data: postData } = await supabase
-          .from('posts')
-          .select(`
-            *,
-            profiles!posts_user_id_fkey(username, avatar_url),
-            likes(user_id)
-          `)
-          .eq('recipe_url', recipeData.video_url)
+      console.log('Search by recipe_id:', recipe.id, 'Found:', postByRecipeId ? 'YES' : 'NO', 'Error:', recipeIdError);
+
+      if (postByRecipeId) {
+        postData = postByRecipeId;
+      } else {
+        const { data: recipeData } = await supabase
+          .from('public_recipes')
+          .select('video_url')
+          .eq('id', recipe.id)
           .maybeSingle();
 
-        if (postData) {
-          setSocialPost({
-            ...postData,
-            profiles: postData.profiles,
-            _count: {
-              likes: postData.likes?.length || 0,
-              comments: 0
-            }
-          });
+        console.log('Search by video_url. Recipe DB entry:', recipeData?.video_url);
+
+        if (recipeData?.video_url) {
+          const { data: postByUrl } = await supabase
+            .from('posts')
+            .select(`
+              *,
+              profiles!posts_user_id_fkey(username, avatar_url),
+              likes(user_id)
+            `)
+            .eq('recipe_url', recipeData.video_url)
+            .maybeSingle();
+
+          console.log('Found post by URL:', postByUrl ? 'YES' : 'NO');
+          postData = postByUrl;
         }
+      }
+
+      if (postData) {
+        setSocialPost({
+          ...postData,
+          profiles: postData.profiles,
+          _count: {
+            likes: postData.likes?.length || 0,
+            comments: 0
+          }
+        });
+        console.log('✅ Social post loaded for recipe:', recipe.id);
+      } else {
+        console.log('❌ No social post found for recipe:', recipe.id);
       }
     } catch (error) {
       console.error('Failed to load social post:', error);
@@ -88,6 +114,10 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
     loadReviewData();
     loadSocialPost();
   }, [recipe.id]);
+
+  useEffect(() => {
+    console.log('Recipe:', recipe.id, 'Review count:', reviewCount, 'Social post:', socialPost ? 'EXISTS' : 'NULL');
+  }, [reviewCount, socialPost]);
 
   return (
     <>
