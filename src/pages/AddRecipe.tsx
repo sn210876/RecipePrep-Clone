@@ -43,8 +43,9 @@ const UNITS = [
 ];
 
 const CUISINE_TYPES = [
-  'Italian', 'Chinese', 'Mexican', 'Japanese', 'Indian', 'Thai',
-  'French', 'Mediterranean', 'American', 'Korean', 'Vietnamese', 'Vegan/Vegetarian', 'Culinary/Baked Goods', 'Pet Meals', 'Other'
+  'American', 'Chinese', 'Culinary/Baked Goods', 'French', 'Indian', 'Italian',
+  'Japanese', 'Korean', 'Mediterranean', 'Mexican', 'Other', 'Pet Meals',
+  'Thai', 'Vegan/Vegetarian', 'Vietnamese'
 ];
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];

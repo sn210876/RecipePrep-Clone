@@ -218,11 +218,18 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         conversation_id: selectedConversation.id,
         sender_id: currentUserId,
         content: newMessage.trim(),
-      });
+        read: false,
+      })
+      .select();
 
     if (msgError) {
       console.error('Error sending message:', msgError);
-      toast.error('Failed to send message');
+      console.error('Message details:', {
+        conversation_id: selectedConversation.id,
+        sender_id: currentUserId,
+        content: newMessage.trim(),
+      });
+      toast.error(`Failed to send message: ${msgError.message}`);
       return;
     }
 
