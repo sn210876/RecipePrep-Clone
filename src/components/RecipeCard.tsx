@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, ChefHat, Bookmark, Flame, Star, Trash2 } from 'lucide-react';
+import { Clock, ChefHat, Bookmark, Flame, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardFooter } from './ui/card';
@@ -179,7 +179,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
               setShowReviewForm(true);
             }}
           >
-            <Fire className="w-4 h-4 mr-2" />
+            <span className="text-base mr-2">🔥</span>
             {reviewCount > 0 ? (
               <span className="flex items-center gap-2">
                 <span className="font-semibold">{averageRating.toFixed(1)}</span>

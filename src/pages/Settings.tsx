@@ -16,7 +16,11 @@ import { toast } from 'sonner';
 import { getUserTimezone, COMMON_TIMEZONES } from '../lib/timezone';
 import { supabase } from '../lib/supabase';
 
-export function Settings() {
+interface SettingsProps {
+  onNavigate?: (page: string) => void;
+}
+
+export function Settings({ onNavigate }: SettingsProps = {}) {
   const { dispatch } = useRecipes();
   const { user, signOut } = useAuth();
   const [forwardingEmail, setForwardingEmail] = useState<string>('');
@@ -479,7 +483,7 @@ export function Settings() {
                       </li>
                     </ol>
                     <Button
-                      onClick={() => window.location.href = '/add-recipe'}
+                      onClick={() => onNavigate?.('add-recipe')}
                       className="w-full mt-4 bg-orange-600 hover:bg-orange-700"
                     >
                       <ArrowRight className="w-4 h-4 mr-2" />

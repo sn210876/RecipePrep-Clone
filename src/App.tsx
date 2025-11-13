@@ -59,7 +59,7 @@ function AppContent() {
       case 'cart':
         return <Cart onNavigate={handleNavigate} />;
       case 'settings':
-        return <Settings />;
+        return <Settings onNavigate={handleNavigate} />;
       case 'upload':
         return <Upload onNavigate={handleNavigate} />;
       case 'profile':
