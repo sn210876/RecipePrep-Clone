@@ -56,7 +56,11 @@ interface Post {
   };
 }
 
-export function Discover() {
+interface DiscoverProps {
+  onNavigateToMessages?: (userId: string, username: string) => void;
+}
+
+export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
   const { isAdmin } = useAuth();
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -669,6 +673,11 @@ export function Discover() {
             isFollowing={followingUsers.has(viewingUserId)}
             onBack={() => setViewingUserId(null)}
             onToggleFollow={toggleFollow}
+            onMessage={(userId, username) => {
+              if (onNavigateToMessages) {
+                onNavigateToMessages(userId, username);
+              }
+            }}
           />
         ) : posts.length === 0 ? (
           <div className="text-center py-12">

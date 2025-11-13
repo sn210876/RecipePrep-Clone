@@ -33,6 +33,7 @@ interface UserProfileViewProps {
   isFollowing: boolean;
   onBack: () => void;
   onToggleFollow: (userId: string) => void;
+  onMessage?: (userId: string, username: string) => void;
 }
 
 export function UserProfileView({
@@ -42,9 +43,10 @@ export function UserProfileView({
   isFollowing,
   onBack,
   onToggleFollow,
+  onMessage,
 }: UserProfileViewProps) {
   const userPosts = posts.filter(p => p.user_id === userId);
-  const userProfile = userPosts[0]?.profiles;
+  const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null; bio?: string } | null>(null);
 
   const [supportersCount, setSupportersCount] = useState(0);
   const [supportingCount, setSupportingCount] = useState(0);
@@ -54,6 +56,18 @@ export function UserProfileView({
   const [supporting, setSupporting] = useState<any[]>([]);
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('username, avatar_url, bio')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (data) {
+        setUserProfile(data);
+      }
+    };
+
     const fetchCounts = async () => {
       const { count: followersCount } = await supabase
         .from('follows')
@@ -69,6 +83,7 @@ export function UserProfileView({
       setSupportingCount(followingCount || 0);
     };
 
+    fetchProfile();
     fetchCounts();
   }, [userId]);
 
@@ -103,12 +118,16 @@ export function UserProfileView({
       </Button>
 
       <div className="bg-white rounded-xl p-6 mb-4 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold">
-            {userProfile?.username?.[0]?.toUpperCase() || <PiggyBank className="w-10 h-10" />}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+            {userProfile?.avatar_url ? (
+              <img src={userProfile.avatar_url} alt={userProfile.username} className="w-full h-full object-cover" />
+            ) : (
+              userProfile?.username?.[0]?.toUpperCase() || <PiggyBank className="w-10 h-10" />
+            )}
           </div>
           <div className="flex-1">
-            <h2 className="text-2xl font-bold">{userProfile?.username || 'User'}</h2>
+            <h2 className="text-2xl font-bold">{userProfile?.username || 'Loading...'}</h2>
             <div className="flex gap-4 mt-2">
               <button onClick={loadSupporters} className="text-sm hover:underline">
                 <span className="font-semibold">{supportersCount}</span> <span className="text-gray-600">supporters</span>
@@ -121,10 +140,21 @@ export function UserProfileView({
               </span>
             </div>
           </div>
+        </div>
+        {userProfile?.bio && (
+          <div className="px-2">
+            <p className="text-gray-700 text-sm">{userProfile.bio}</p>
+          </div>
+        )}
+        <div className="flex items-center justify-center gap-2 mt-4">
           {userId !== currentUserId && (
             <div className="flex gap-2">
               <Button
-                onClick={() => window.alert('DM feature coming soon!')}
+                onClick={() => {
+                  if (onMessage && userProfile) {
+                    onMessage(userId, userProfile.username);
+                  }
+                }}
                 variant="outline"
                 size="sm"
               >

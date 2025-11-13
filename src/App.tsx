@@ -14,6 +14,7 @@ import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { Verifying } from './pages/Verifying';
 import { ResetPassword } from './pages/ResetPassword';
+import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 
@@ -21,6 +22,7 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState('discover-recipes');
   const [discoverKey, setDiscoverKey] = useState(0);
   const [completedVerifying, setCompletedVerifying] = useState(false);
+  const [messageRecipient, setMessageRecipient] = useState<{ userId: string; username: string } | null>(null);
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
 
   const hash = window.location.hash;
@@ -38,7 +40,13 @@ function AppContent() {
       case 'discover-recipes':
         return <DiscoverRecipes onNavigate={handleNavigate} />;
       case 'discover':
-        return <Discover key={discoverKey} />;
+        return <Discover
+          key={discoverKey}
+          onNavigateToMessages={(userId, username) => {
+            setMessageRecipient({ userId, username });
+            setCurrentPage('messages');
+          }}
+        />;
       case 'my-recipes':
         return <MyRecipes />;
       case 'add-recipe':
@@ -53,6 +61,15 @@ function AppContent() {
         return <Upload onNavigate={handleNavigate} />;
       case 'profile':
         return <Profile />;
+      case 'messages':
+        return <Messages
+          recipientUserId={messageRecipient?.userId}
+          recipientUsername={messageRecipient?.username}
+          onBack={() => {
+            setMessageRecipient(null);
+            setCurrentPage('discover');
+          }}
+        />;
       default:
         return <DiscoverRecipes onNavigate={handleNavigate} />;
     }
