@@ -9,6 +9,7 @@ import {
   Users,
   ChefHat,
   PlayCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { CookMode } from './CookMode';
 import { ReviewForm } from './ReviewForm';
@@ -124,6 +125,17 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           <h1 className="text-5xl font-bold mb-4">{recipe.title}</h1>
+          {recipe.sourceUrl && (
+            <a
+              href={recipe.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg transition-all"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span className="font-medium">View Original Recipe</span>
+            </a>
+          )}
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-white/90 text-gray-900 hover:bg-white">
               {recipe.cuisineType}

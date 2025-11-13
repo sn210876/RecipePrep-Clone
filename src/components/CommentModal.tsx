@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import { Send } from 'lucide-react';
+import { Send, Star } from 'lucide-react';
 
 interface Comment {
   id: string;
@@ -30,12 +30,20 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [totalRatings, setTotalRatings] = useState<number>(0);
 
   useEffect(() => {
     if (isOpen && postId) {
       loadComments();
+      loadRatings();
       supabase.auth.getUser().then(({ data }) => {
         setCurrentUserId(data.user?.id || null);
+        if (data.user?.id) {
+          loadUserRating(data.user.id);
+        }
       });
     }
   }, [isOpen, postId]);
@@ -98,6 +106,76 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     }
   };
 
+  const loadRatings = async () => {
+    if (!postId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', postId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+        setAverageRating(avg);
+        setTotalRatings(data.length);
+      } else {
+        setAverageRating(0);
+        setTotalRatings(0);
+      }
+    } catch (error) {
+      console.error('Error loading ratings:', error);
+    }
+  };
+
+  const loadUserRating = async (userId: string) => {
+    if (!postId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', postId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setUserRating(data?.rating || 0);
+    } catch (error) {
+      console.error('Error loading user rating:', error);
+    }
+  };
+
+  const handleRatingClick = async (rating: number) => {
+    if (!currentUserId) {
+      toast.error('Please log in to rate');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('post_ratings')
+        .upsert({
+          post_id: postId,
+          user_id: currentUserId,
+          rating: rating,
+        }, {
+          onConflict: 'post_id,user_id'
+        });
+
+      if (error) throw error;
+
+      setUserRating(rating);
+      await loadRatings();
+      toast.success('Rating submitted!');
+    } catch (error: any) {
+      console.error('Error submitting rating:', error);
+      toast.error('Failed to submit rating');
+    }
+  };
+
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !currentUserId) return;
@@ -146,7 +224,52 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg h-[80vh] flex flex-col p-0">
         <DialogHeader className="px-4 py-3 border-b">
-          <DialogTitle>Comments</DialogTitle>
+          <DialogTitle>Comments & Ratings</DialogTitle>
+
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-5 h-5 ${
+                      star <= averageRating
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-gray-600">
+                {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
+                {totalRatings > 0 && ` (${totalRatings} ${totalRatings === 1 ? 'rating' : 'ratings'})`}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 font-medium">Your rating:</span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => handleRatingClick(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={`w-6 h-6 ${
+                        star <= (hoverRating || userRating)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
