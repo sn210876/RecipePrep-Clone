@@ -187,6 +187,10 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
               </span>
             ) : (
               'Write Review'
+               <span className={fire <= rating ? 'opacity-100' : 'opacity-30 grayscale'}>
+            🔥
+          </span>
+        </button>
             )}
           </Button>
         )}
