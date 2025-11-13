@@ -27,9 +27,13 @@ export function MusicSelectionModal({ open, onClose, onSelect }: MusicSelectionM
     if (!searchQuery.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch('https://recipe-backend-nodejs-1.onrender.com/ytmusic-search', {
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ytmusic-search`;
+      const res = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
         body: JSON.stringify({ query: searchQuery, limit: 10 }),
       });
       const data = await res.json();
