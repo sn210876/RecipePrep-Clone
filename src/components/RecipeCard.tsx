@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Clock, ChefHat, Bookmark, Flame, Trash2 } from 'lucide-react';
+import { Clock, ChefHat, Bookmark, Flame, Trash2, MessageSquare } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardFooter } from './ui/card';
 import { Recipe } from '../types/recipe';
 import { RecipeDetailModal } from './RecipeDetailModal';
+import { PostDetailModal } from './PostDetailModal';
 import { useRecipes } from '../context/RecipeContext';
 import { RatingDisplay } from './RatingDisplay';
 import { getRecipeReviews, getAverageRating } from '../services/reviewService';
 import { ReviewForm } from './ReviewForm';
+import { supabase } from '../lib/supabase';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -25,6 +27,8 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  const [socialPost, setSocialPost] = useState<any>(null);
+  const [showSocialPost, setShowSocialPost] = useState(false);
   const totalTime = recipe.prepTime + recipe.cookTime;
   const isSaved = state.savedRecipes.some(r => r.id === recipe.id);
 
@@ -45,8 +49,44 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
     }
   };
 
+  const loadSocialPost = async () => {
+    try {
+      const { data: recipeData } = await supabase
+        .from('public_recipes')
+        .select('video_url')
+        .eq('id', recipe.id)
+        .maybeSingle();
+
+      if (recipeData?.video_url) {
+        const { data: postData } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profiles!posts_user_id_fkey(username, avatar_url),
+            likes(user_id)
+          `)
+          .eq('recipe_url', recipeData.video_url)
+          .maybeSingle();
+
+        if (postData) {
+          setSocialPost({
+            ...postData,
+            profiles: postData.profiles,
+            _count: {
+              likes: postData.likes?.length || 0,
+              comments: 0
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load social post:', error);
+    }
+  };
+
   useEffect(() => {
     loadReviewData();
+    loadSocialPost();
   }, [recipe.id]);
 
   return (
@@ -170,25 +210,41 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           </Button>
         </div>
         {showReviewButton && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full border-gray-300 hover:bg-orange-50 hover:border-primary transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowReviewForm(true);
-            }}
-          >
-            <span className="text-base mr-2">🔥</span>
-            {reviewCount > 0 ? (
-              <span className="flex items-center gap-2">
-                <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                <span className="text-gray-500">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
-              </span>
-            ) : (
-              'Write Review'
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 border-gray-300 hover:bg-orange-50 hover:border-primary transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowReviewForm(true);
+              }}
+            >
+              <span className="text-base mr-2">🔥</span>
+              {reviewCount > 0 ? (
+                <span className="flex items-center gap-2">
+                  <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                  <span className="text-gray-500">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+                </span>
+              ) : (
+                'Write Review'
+              )}
+            </Button>
+            {reviewCount > 0 && socialPost && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-gray-300 hover:bg-blue-50 hover:border-blue-500 transition-all"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSocialPost(true);
+                }}
+                title="View all reviews on social feed"
+              >
+                <MessageSquare className="w-4 h-4" />
+              </Button>
             )}
-          </Button>
+          </div>
         )}
       </CardFooter>
     </Card>
@@ -207,6 +263,16 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           loadReviewData();
         }}
       />
+
+      {socialPost && (
+        <PostDetailModal
+          post={socialPost}
+          open={showSocialPost}
+          onClose={() => setShowSocialPost(false)}
+          onDelete={() => {}}
+          onUpdate={() => {}}
+        />
+      )}
     </>
   );
 }
