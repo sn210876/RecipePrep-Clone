@@ -90,15 +90,6 @@ def parse_with_ai(text: str):
     return [], [], ""
 
 @app.post("/extract")
-# NEW: YTMusic Search Endpoint
-class YTMusicRequest(BaseModel):
-    query: str
-    limit: int = 5
-
-@app.post("/ytmusic-search")
-async def ytmusic_search_endpoint(request: YTMusicRequest):
-    results = search_ytmusic(request.query, request.limit)
-    return {"songs": results}
 async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
@@ -139,7 +130,7 @@ async def extract_recipe(request: ExtractRequest):
     finally:
         if cookie_file and os.path.exists(cookie_file): os.unlink(cookie_file)
 
-# NEW: YOUTUBE MUSIC SEARCH ENDPOINT
+# === YOUTUBE MUSIC SEARCH ENDPOINT (CORRECTLY PLACED) ===
 class YTMusicRequest(BaseModel):
     query: str
     limit: int = 5
