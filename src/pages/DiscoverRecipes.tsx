@@ -167,7 +167,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   const handleCook = (recipeId: string) => {
     const recipe = allRecipes.find(r => r.id === recipeId);
     if (recipe) {
-      console.log('Cook Now clicked for:', recipe.title);
+      console.log('Cook clicked for:', recipe.title);
       setCookingRecipe(recipe);
     }
   };
