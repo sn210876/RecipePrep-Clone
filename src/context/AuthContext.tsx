@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, isAdmin as checkIsAdmin } from '../lib/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -19,9 +19,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [showVerifying, setShowVerifying] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const isEmailVerified = user ? !!user.email_confirmed_at : false;
-  const isAdmin = user?.email === 'snguyen7@msn..com';
 
   useEffect(() => {
     const initAuth = async () => {
@@ -51,6 +51,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        const adminStatus = await checkIsAdmin();
+        setIsAdmin(adminStatus);
+      }
+
       setLoading(false);
     };
 
@@ -74,6 +80,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setSession(session);
         setUser(session?.user ?? null);
+
+        if (session?.user) {
+          checkIsAdmin().then(setIsAdmin);
+        } else {
+          setIsAdmin(false);
+        }
       })();
     });
 

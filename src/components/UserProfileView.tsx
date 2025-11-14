@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle } from 'lucide-react';
+import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle, Crown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { CommentModal } from './CommentModal';
@@ -192,7 +192,12 @@ export function UserProfileView({
                 userProfile?.username?.[0]?.toUpperCase() || <PiggyBank className="w-10 h-10" />
               )}
             </div>
-            <h2 className="text-2xl font-bold mb-2">{userProfile?.username || 'Loading...'}</h2>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <h2 className="text-2xl font-bold">{userProfile?.username || 'Loading...'}</h2>
+              {userId === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                <Crown className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+              )}
+            </div>
             {userProfile?.bio && (
               <p className="text-gray-700 text-sm text-center mb-4">{userProfile.bio}</p>
             )}

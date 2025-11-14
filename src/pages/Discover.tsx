@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -45,6 +45,7 @@ interface Post {
   likes: { user_id: string }[];
   comments: {
     id: string;
+    user_id: string;
     text: string;
     created_at: string;
     profiles: {
@@ -779,12 +780,17 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                           {post.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-4 h-4" />}
                         </div>
                       )}
-                      <button
-                        onClick={() => setViewingUserId(post.user_id)}
-                        className="font-semibold text-sm hover:underline"
-                      >
-                        {post.profiles?.username}
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => setViewingUserId(post.user_id)}
+                          className="font-semibold text-sm hover:underline"
+                        >
+                          {post.profiles?.username}
+                        </button>
+                        {post.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                          <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        )}
+                      </div>
                     </div>
 
                     {(isOwnPost || isAdmin) && (
@@ -876,7 +882,12 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
 
                     {post.caption && (
                       <div className="text-sm">
-                        <span className="font-semibold">{post.profiles?.username}</span>{' '}
+                        <span className="inline-flex items-center gap-1">
+                          <span className="font-semibold">{post.profiles?.username}</span>
+                          {post.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                            <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                          )}
+                        </span>{' '}
                         <span className="text-gray-700">
                           {makeHashtagsClickable(post.caption, (tag) => {
                             setFilterHashtag(tag);
@@ -897,7 +908,12 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
 
                     {latestComments.map(comment => (
                       <div key={comment.id} className="text-sm">
-                        <span className="font-semibold">{comment.profiles?.username}</span>{' '}
+                        <span className="inline-flex items-center gap-1">
+                          <span className="font-semibold">{comment.profiles?.username}</span>
+                          {comment.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                            <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                          )}
+                        </span>{' '}
                         <span className="text-gray-700">{comment.text}</span>
                       </div>
                     ))}
