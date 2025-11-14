@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown, Utensils, Send, Copy, Check } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown, Send, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -1013,9 +1013,9 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                       </button>
                       <button
                         onClick={() => handleSharePost(post.id)}
-                        className="transition-transform hover:scale-110"
+                        className="transition-transform hover:scale-110 text-2xl"
                       >
-                        <Utensils className="w-7 h-7 text-gray-700" />
+                        🥄
                       </button>
                     </div>
 

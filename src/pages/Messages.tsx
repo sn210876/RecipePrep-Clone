@@ -309,6 +309,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       .select('*')
       .eq('user1_id', smaller)
       .eq('user2_id', larger)
+      .eq('is_group', false)
       .maybeSingle();
 
     if (!existingConvo) {
@@ -317,6 +318,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         .insert({
           user1_id: smaller,
           user2_id: larger,
+          is_group: false,
         })
         .select()
         .single();
