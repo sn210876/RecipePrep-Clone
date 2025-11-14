@@ -658,7 +658,8 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
               )}
             </div>
             <button
-              onClick={async () => {
+              onClick={async (e) => {
+                e.stopPropagation();
                 setShowNotifications(!showNotifications);
                 if (!showNotifications && currentUserId) {
                   await supabase

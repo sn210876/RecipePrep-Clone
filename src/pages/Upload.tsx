@@ -160,6 +160,26 @@ export function Upload({ onNavigate }: UploadProps) {
           .insert(dailyData);
         if (insertError) throw insertError;
 
+        const postData: any = {
+          user_id: userData.user.id,
+          title: 'Daily',
+          caption: caption.trim() || null,
+        };
+
+        if (fileType === 'image') {
+          postData.image_url = urlData.publicUrl;
+        } else if (fileType === 'video') {
+          postData.video_url = urlData.publicUrl;
+        }
+
+        const { error: postInsertError } = await supabase
+          .from('posts')
+          .insert(postData);
+
+        if (postInsertError) {
+          console.error('Error creating post for daily:', postInsertError);
+        }
+
         toast.success('Daily posted successfully!');
         handleClearImage();
         setTitle('');

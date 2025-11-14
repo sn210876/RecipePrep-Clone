@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, Send as SendIcon } from 'lucide-react';
+import { ArrowLeft, Send as SendIcon, UserPlus, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
 interface Conversation {
   id: string;
@@ -44,6 +45,10 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showStartChat, setShowStartChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -76,6 +81,41 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     } catch (error) {
       console.error('Error marking notifications as read:', error);
     }
+  };
+
+  const searchUsers = async (query: string) => {
+    if (!query.trim() || !currentUserId) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearchingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .ilike('username', `%${query}%`)
+        .neq('id', currentUserId)
+        .limit(10);
+
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      setSearchResults([]);
+    } finally {
+      setSearchingUsers(false);
+    }
+  };
+
+  const handleStartChatWithUser = async (userId: string, username: string) => {
+    if (!currentUserId) return;
+
+    setShowStartChat(false);
+    setSearchQuery('');
+    setSearchResults([]);
+
+    await startConversation(userId, username, currentUserId);
   };
 
   useEffect(() => {
@@ -352,12 +392,22 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold">Messages</h1>
           </div>
-          <button
-            onClick={onBack}
-            className="text-sm text-cyan-600 hover:text-cyan-700 font-medium"
-          >
-            Back to Feed
-          </button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowStartChat(true)}
+              size="sm"
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Start Chat
+            </Button>
+            <button
+              onClick={onBack}
+              className="text-sm text-cyan-600 hover:text-cyan-700 font-medium"
+            >
+              Back to Feed
+            </button>
+          </div>
         </div>
       </div>
 
@@ -407,6 +457,81 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           </div>
         )}
       </div>
+
+      <Dialog open={showStartChat} onOpenChange={setShowStartChat}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Start a New Chat</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  searchUsers(e.target.value);
+                }}
+                placeholder="Search users..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSearchResults([]);
+                  }}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                  <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
+            </div>
+
+            {searchingUsers && (
+              <div className="text-center py-4 text-gray-500">Searching...</div>
+            )}
+
+            {!searchingUsers && searchResults.length > 0 && (
+              <div className="max-h-64 overflow-y-auto space-y-2">
+                {searchResults.map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => handleStartChatWithUser(user.id, user.username)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                      {user.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt={user.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        user.username[0]?.toUpperCase()
+                      )}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold">{user.username}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {!searchingUsers && searchQuery && searchResults.length === 0 && (
+              <div className="text-center py-4 text-gray-500">No users found</div>
+            )}
+
+            {!searchQuery && (
+              <div className="text-center py-4 text-gray-400 text-sm">
+                Type to search for users
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
