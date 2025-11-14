@@ -2,7 +2,10 @@ import { Ingredient } from '@/types/recipe';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://vohvdarghgqskzqjclux.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
+
+// These point to your REAL working functions
+const RECIPE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
+const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
 export interface ExtractedRecipeData {
   title: string;
@@ -28,10 +31,10 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('Please enter a valid URL');
   }
 
-  console.log('[RecipeExtractor] Supabase Edge Function:', API_URL);
+  console.log('[RecipeExtractor] Supabase Edge Function:', RECIPE_FUNCTION_URL);
   console.log('[RecipeExtractor] URL to extract:', url);
 
-  const response = await fetch(API_URL, {
+  const response = await fetch(RECIPE_FUNCTION_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -51,13 +54,6 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const data = await response.json();
   console.log('[RecipeExtractor] Success:', data);
-  console.log('[RecipeExtractor] Data details:', {
-    ingredients: data.ingredients,
-    ingredientsLength: data.ingredients?.length,
-    instructions: data.instructions,
-    instructionsLength: data.instructions?.length,
-    image: data.image,
-  });
 
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
@@ -85,6 +81,12 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const isTikTokOrInstagram = url.includes('tiktok.com') || url.includes('instagram.com');
   const videoUrl = isSocialMedia ? url : '';
 
+  // THIS IS THE KEY FIX: proxy the image through your working image-proxy function
+  const rawImageUrl = data.image || '';
+  const proxiedImageUrl = rawImageUrl 
+    ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(rawImageUrl)}`
+    : '';
+
   const result: ExtractedRecipeData = {
     title: isTikTokOrInstagram ? '' : (data.title || 'Untitled Recipe'),
     description: 'Extracted recipe',
@@ -98,7 +100,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     difficulty: 'Medium',
     mealTypes: ['Dinner'],
     dietaryTags: [],
-    imageUrl: data.image || '',
+    imageUrl: proxiedImageUrl,  // Now uses your working image-proxy
     videoUrl,
     notes: data.notes || '',
     sourceUrl: url,
