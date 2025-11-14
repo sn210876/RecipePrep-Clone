@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown, UtensilsCrossed, Send, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 import { Textarea } from '../components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
 interface Post {
   id: string;
@@ -86,6 +87,11 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [sharePostId, setSharePostId] = useState<string | null>(null);
+  const [shareModalTab, setShareModalTab] = useState<'followers' | 'link'>('followers');
+  const [followers, setFollowers] = useState<any[]>([]);
+  const [selectedFollowers, setSelectedFollowers] = useState<Set<string>>(new Set());
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const POSTS_PER_PAGE = 10;
 
@@ -608,6 +614,112 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
     }
   };
 
+  const handleSharePost = async (postId: string) => {
+    setSharePostId(postId);
+    setShareModalTab('followers');
+    setSelectedFollowers(new Set());
+    setCopiedLink(false);
+
+    if (currentUserId) {
+      const { data } = await supabase
+        .from('follows')
+        .select('following_id, profiles:following_id(id, username, avatar_url)')
+        .eq('follower_id', currentUserId);
+
+      setFollowers(data || []);
+    }
+  };
+
+  const handleNativeShare = async (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const shareUrl = `${window.location.origin}/#post/${postId}`;
+    const shareData = {
+      title: post.title || 'Check out this recipe!',
+      text: post.caption || 'Found this amazing recipe on RecipePrep!',
+      url: shareUrl
+    };
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast.success('Shared successfully!');
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied to clipboard!');
+    }
+  };
+
+  const handleCopyLink = (postId: string) => {
+    const shareUrl = `${window.location.origin}/#post/${postId}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedLink(true);
+    toast.success('Link copied to clipboard!');
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleSendToFollowers = async () => {
+    if (!sharePostId || selectedFollowers.size === 0) return;
+
+    const post = posts.find(p => p.id === sharePostId);
+    if (!post) return;
+
+    const shareUrl = `${window.location.origin}/#post/${sharePostId}`;
+    const messageContent = `Check out this recipe: ${post.title || 'Shared post'}\n${shareUrl}`;
+
+    try {
+      for (const followerId of selectedFollowers) {
+        let conversationId = null;
+
+        const { data: existingConvo } = await supabase
+          .from('conversations')
+          .select('id')
+          .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${followerId}),and(user1_id.eq.${followerId},user2_id.eq.${currentUserId})`)
+          .maybeSingle();
+
+        if (existingConvo) {
+          conversationId = existingConvo.id;
+        } else {
+          const { data: newConvo, error } = await supabase
+            .from('conversations')
+            .insert({
+              user1_id: currentUserId,
+              user2_id: followerId,
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          conversationId = newConvo.id;
+        }
+
+        await supabase.from('messages').insert({
+          conversation_id: conversationId,
+          sender_id: currentUserId,
+          content: messageContent,
+        });
+
+        await supabase.from('conversations').update({
+          updated_at: new Date().toISOString(),
+          last_message_at: new Date().toISOString(),
+        }).eq('id', conversationId);
+      }
+
+      toast.success(`Shared with ${selectedFollowers.size} ${selectedFollowers.size === 1 ? 'person' : 'people'}!`);
+      setSharePostId(null);
+      setSelectedFollowers(new Set());
+    } catch (error) {
+      console.error('Error sharing post:', error);
+      toast.error('Failed to share post');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
@@ -878,6 +990,12 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                       >
                         <MessageCircle className="w-7 h-7 text-gray-700" />
                       </button>
+                      <button
+                        onClick={() => handleSharePost(post.id)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <UtensilsCrossed className="w-7 h-7 text-gray-700" />
+                      </button>
                     </div>
 
                     <div className="text-sm font-semibold">
@@ -1058,6 +1176,130 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
           onOpenChange={(open) => !open && setSelectedRecipe(null)}
         />
       )}
+
+      <Dialog open={!!sharePostId} onOpenChange={(open) => !open && setSharePostId(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Post</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex gap-2 border-b border-gray-200">
+              <button
+                onClick={() => setShareModalTab('followers')}
+                className={`flex-1 py-2 px-4 font-medium transition-colors ${
+                  shareModalTab === 'followers'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Send to Followers
+              </button>
+              <button
+                onClick={() => setShareModalTab('link')}
+                className={`flex-1 py-2 px-4 font-medium transition-colors ${
+                  shareModalTab === 'link'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Share Link
+              </button>
+            </div>
+
+            {shareModalTab === 'followers' && (
+              <div className="space-y-4">
+                {followers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    You don't have any followers yet
+                  </div>
+                ) : (
+                  <>
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {followers.map((follower) => {
+                        const profile = follower.profiles;
+                        const isSelected = selectedFollowers.has(follower.following_id);
+                        return (
+                          <button
+                            key={follower.following_id}
+                            onClick={() => {
+                              const newSelected = new Set(selectedFollowers);
+                              if (isSelected) {
+                                newSelected.delete(follower.following_id);
+                              } else {
+                                newSelected.add(follower.following_id);
+                              }
+                              setSelectedFollowers(newSelected);
+                            }}
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                              isSelected ? 'bg-orange-50 border-2 border-orange-500' : 'hover:bg-gray-50 border-2 border-transparent'
+                            }`}
+                          >
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                              {profile?.avatar_url ? (
+                                <img
+                                  src={profile.avatar_url}
+                                  alt={profile.username}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                profile?.username?.[0]?.toUpperCase()
+                              )}
+                            </div>
+                            <div className="flex-1 text-left">
+                              <div className="font-semibold">{profile?.username}</div>
+                            </div>
+                            {isSelected && (
+                              <Check className="w-5 h-5 text-orange-600" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <Button
+                      onClick={handleSendToFollowers}
+                      disabled={selectedFollowers.size === 0}
+                      className="w-full bg-orange-500 hover:bg-orange-600"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Send to {selectedFollowers.size} {selectedFollowers.size === 1 ? 'person' : 'people'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {shareModalTab === 'link' && (
+              <div className="space-y-4">
+                <Button
+                  onClick={() => sharePostId && handleNativeShare(sharePostId)}
+                  className="w-full bg-blue-500 hover:bg-blue-600"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Share via Apps
+                </Button>
+                <Button
+                  onClick={() => sharePostId && handleCopyLink(sharePostId)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Link Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Link
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );
