@@ -239,7 +239,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
             }}
           >
             <Flame className="w-4 h-4 mr-2" />
-            Cook Now
+            Cook
           </Button>
         </div>
         {showReviewButton && (
