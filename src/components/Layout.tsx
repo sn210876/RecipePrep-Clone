@@ -101,7 +101,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
       <div className="lg:pl-64">
         {/* Desktop top navigation icons */}
-        <div className="hidden lg:block fixed top-4 right-4 z-50">
+        <div className="hidden lg:block fixed top-4 right-4 z-[100]">
           <TooltipProvider>
             <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2">
               {navItems.slice(0, 7).map((item) => {

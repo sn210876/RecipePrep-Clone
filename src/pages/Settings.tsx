@@ -7,7 +7,7 @@ import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
-import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe } from 'lucide-react';
+import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock } from 'lucide-react';
 import { Slider } from '../components/ui/slider';
 import { Switch } from '../components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
@@ -37,6 +37,10 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
   const [testingVoice, setTestingVoice] = useState(false);
   const [timezone, setTimezone] = useState<string>(getUserTimezone());
   const [savingTimezone, setSavingTimezone] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     initializeUser();
@@ -299,6 +303,31 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                   )}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 border-b border-purple-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
+                  <Lock className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl text-slate-900">Change Password</CardTitle>
+                  <CardDescription className="text-slate-600">
+                    Update your account password
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <Button
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full bg-purple-600 hover:bg-purple-700"
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                Change Password
+              </Button>
             </CardContent>
           </Card>
 
@@ -684,6 +713,93 @@ Instructions:
                 }}
                 variant="outline"
                 disabled={importing}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter your new password. Must be at least 6 characters.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="new-password">New Password</Label>
+              <input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Confirm new password"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={async () => {
+                  if (newPassword !== confirmPassword) {
+                    toast.error('Passwords do not match');
+                    return;
+                  }
+                  if (newPassword.length < 6) {
+                    toast.error('Password must be at least 6 characters');
+                    return;
+                  }
+                  setChangingPassword(true);
+                  try {
+                    const { error } = await supabase.auth.updateUser({
+                      password: newPassword
+                    });
+                    if (error) throw error;
+                    toast.success('Password updated successfully');
+                    setShowPasswordModal(false);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  } catch (error: any) {
+                    console.error('Error changing password:', error);
+                    toast.error(error.message || 'Failed to change password');
+                  } finally {
+                    setChangingPassword(false);
+                  }
+                }}
+                disabled={changingPassword || !newPassword || !confirmPassword}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                {changingPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Password'
+                )}
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setNewPassword('');
+                  setConfirmPassword('');
+                }}
+                variant="outline"
+                disabled={changingPassword}
               >
                 Cancel
               </Button>

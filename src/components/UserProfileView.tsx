@@ -174,51 +174,61 @@ export function UserProfileView({
         ← Back to Feed
       </Button>
 
-      <div className="bg-white rounded-xl mb-4 shadow-sm overflow-hidden">
-        {userProfile?.banner_url ? (
-          <div className="w-full h-48 bg-gradient-to-br from-orange-100 to-amber-100">
-            <img src={userProfile.banner_url} alt="Banner" className="w-full h-full object-cover" />
-          </div>
-        ) : (
-          <div className="w-full h-48 bg-gradient-to-br from-orange-100 to-amber-100" />
-        )}
+      <div className="bg-white border-b border-gray-200 mb-4">
+        {/* Banner */}
+        <div className="relative h-32">
+          {userProfile?.banner_url ? (
+            <img
+              src={userProfile.banner_url}
+              alt="Banner"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100" />
+          )}
+        </div>
 
-        <div className="px-6 pb-6">
-          <div className="flex flex-col items-center -mt-10 mb-4">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white text-2xl font-bold overflow-hidden border-4 border-white mb-3">
+        {/* Avatar + Username + Bio section - Instagram style left-aligned */}
+        <div className="relative px-4 pb-3">
+          <div className="flex items-start gap-3 -mt-10">
+            {/* Avatar overlapping banner */}
+            <div className="relative flex-shrink-0">
               {userProfile?.avatar_url ? (
-                <img src={userProfile.avatar_url} alt={userProfile.username} className="w-full h-full object-cover" />
+                <img
+                  src={userProfile.avatar_url}
+                  alt={userProfile.username}
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                />
               ) : (
-                userProfile?.username?.[0]?.toUpperCase() || <PiggyBank className="w-10 h-10" />
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
+                  {userProfile?.username?.[0]?.toUpperCase()}
+                </div>
               )}
             </div>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <h2 className="text-2xl font-bold">{userProfile?.username || 'Loading...'}</h2>
-              {userId === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
-                <Crown className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+
+            {/* Bio aligned to right of avatar, vertically centered */}
+            <div className="flex-1 pt-10 min-w-0">
+              {userProfile?.bio ? (
+                <p className="text-sm text-gray-700 line-clamp-1 overflow-hidden text-ellipsis">
+                  {userProfile.bio}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">No bio</p>
               )}
             </div>
-            {userProfile?.bio && (
-              <p className="text-gray-700 text-sm text-center mb-4">{userProfile.bio}</p>
+          </div>
+
+          {/* Username directly under avatar with minimal gap */}
+          <div className="mt-2 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-gray-900">{userProfile?.username || 'Loading...'}</h2>
+            {userId === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
+              <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />
             )}
           </div>
-          <div className="flex items-center justify-around border-t border-gray-200 pt-4 mb-4">
-            <button onClick={loadSupporters} className="text-center hover:bg-gray-50 px-4 py-2 rounded-lg transition">
-              <div className="font-semibold text-xl">{supportersCount}</div>
-              <div className="text-gray-600 text-sm">supporters</div>
-            </button>
-            <button onClick={loadSupporting} className="text-center hover:bg-gray-50 px-4 py-2 rounded-lg transition">
-              <div className="font-semibold text-xl">{supportingCount}</div>
-              <div className="text-gray-600 text-sm">supporting</div>
-            </button>
-            <div className="text-center px-4 py-2">
-              <div className="font-semibold text-xl">{userPosts.length}</div>
-              <div className="text-gray-600 text-sm">{userPosts.length === 1 ? 'post' : 'posts'}</div>
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            {userId !== currentUserId && (
-            <div className="flex gap-2">
+
+          {/* Follow/Message buttons */}
+          {userId !== currentUserId && (
+            <div className="flex gap-2 mt-3">
               <Button
                 onClick={() => {
                   if (onMessage && userProfile) {
@@ -227,6 +237,7 @@ export function UserProfileView({
                 }}
                 variant="outline"
                 size="sm"
+                className="flex-1"
               >
                 <Send className="w-4 h-4 mr-2" />
                 Message
@@ -235,7 +246,7 @@ export function UserProfileView({
                 onClick={() => onToggleFollow(userId)}
                 variant={isFollowing ? 'outline' : 'default'}
                 size="sm"
-                className={isFollowing ? '' : 'bg-orange-500 hover:bg-orange-600'}
+                className={isFollowing ? 'flex-1' : 'flex-1 bg-orange-500 hover:bg-orange-600'}
               >
                 {isFollowing ? (
                   <>
@@ -250,7 +261,24 @@ export function UserProfileView({
                 )}
               </Button>
             </div>
-            )}
+          )}
+        </div>
+
+        {/* Stats section - centered with reduced gaps */}
+        <div className="px-4 py-3 border-t border-gray-200">
+          <div className="flex items-center justify-center gap-8">
+            <div className="text-center">
+              <div className="text-lg font-bold">{userPosts.length}</div>
+              <div className="text-xs text-gray-500">posts</div>
+            </div>
+            <button onClick={loadSupporters} className="text-center hover:bg-gray-50 px-3 py-1 rounded-lg transition">
+              <div className="text-lg font-bold">{supportersCount}</div>
+              <div className="text-xs text-gray-500">supporters</div>
+            </button>
+            <button onClick={loadSupporting} className="text-center hover:bg-gray-50 px-3 py-1 rounded-lg transition">
+              <div className="text-lg font-bold">{supportingCount}</div>
+              <div className="text-xs text-gray-500">supporting</div>
+            </button>
           </div>
         </div>
       </div>

@@ -20,13 +20,14 @@ import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState('discover-recipes');
+  const hash = window.location.hash;
+  const initialPage = hash === '#settings' ? 'settings' : 'discover-recipes';
+  const [currentPage, setCurrentPage] = useState(initialPage);
   const [discoverKey, setDiscoverKey] = useState(0);
   const [completedVerifying, setCompletedVerifying] = useState(false);
   const [messageRecipient, setMessageRecipient] = useState<{ userId: string; username: string } | null>(null);
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
 
-  const hash = window.location.hash;
   const isPasswordReset = hash && (hash.includes('type=recovery') || window.location.pathname === '/reset-password');
 
   const handleNavigate = (page: string) => {

@@ -217,66 +217,64 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
       </CardContent>
 
       <CardFooter className="p-5 pt-0 flex flex-col gap-2">
-        <div className="flex gap-2 w-full">
-          <Button
-            variant={isSaved ? "default" : "outline"}
-            size="sm"
-            className={isSaved ? "flex-1 bg-secondary hover:bg-secondary/90 text-white" : "flex-1 border-gray-300 hover:bg-primary hover:text-white transition-all"}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSave?.(recipe.id);
-            }}
-          >
-            <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-white' : ''}`} />
-            {isSaved ? 'Saved' : 'Add to My Recipes'}
-          </Button>
-          <Button
-            size="sm"
-            className="flex-1 bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCook?.(recipe.id);
-            }}
-          >
-            <Flame className="w-4 h-4 mr-2" />
-            Cook
-          </Button>
-        </div>
+        <Button
+          variant={isSaved ? "default" : "outline"}
+          size="sm"
+          className={isSaved ? "w-full bg-secondary hover:bg-secondary/90 text-white" : "w-full border-gray-300 hover:bg-primary hover:text-white transition-all"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSave?.(recipe.id);
+          }}
+        >
+          <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-white' : ''}`} />
+          {isSaved ? 'Saved' : 'Add to My Recipes'}
+        </Button>
+        <Button
+          size="sm"
+          className="w-full bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg transition-all"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCook?.(recipe.id);
+          }}
+        >
+          <Flame className="w-4 h-4 mr-2" />
+          Cook
+        </Button>
         {showReviewButton && (
-          <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full border-gray-300 hover:bg-orange-50 hover:border-primary transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowReviewForm(true);
+            }}
+          >
+            <span className="text-base mr-2">🔥</span>
+            {reviewCount > 0 ? (
+              <span className="flex items-center gap-2">
+                <span className="font-semibold">{averageRating.toFixed(1)}</span>
+                <span className="text-gray-500">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
+              </span>
+            ) : (
+              'Write Review'
+            )}
+          </Button>
+        )}
+        {showReviewButton && socialPost && (
+          <div className="w-full">
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 border-gray-300 hover:bg-orange-50 hover:border-primary transition-all"
+              className="w-full border-gray-300 hover:bg-blue-50 hover:border-blue-500 transition-all"
               onClick={(e) => {
                 e.stopPropagation();
-                setShowReviewForm(true);
+                setShowSocialPost(true);
               }}
             >
-              <span className="text-base mr-2">🔥</span>
-              {reviewCount > 0 ? (
-                <span className="flex items-center gap-2">
-                  <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                  <span className="text-gray-500">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
-                </span>
-              ) : (
-                'Write Review'
-              )}
+              <MessageSquare className="w-4 h-4 mr-2" />
+              View Social Post
             </Button>
-            {reviewCount > 0 && socialPost && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-gray-300 hover:bg-blue-50 hover:border-blue-500 transition-all"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowSocialPost(true);
-                }}
-                title="View all reviews on social feed"
-              >
-                <MessageSquare className="w-4 h-4" />
-              </Button>
-            )}
           </div>
         )}
       </CardFooter>

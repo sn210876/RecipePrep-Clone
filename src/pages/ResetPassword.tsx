@@ -73,7 +73,8 @@ export function ResetPassword() {
       if (updateError) throw updateError;
       setSuccess(true);
       setTimeout(() => {
-        window.location.href = '/login'; // ✅ Redirect to login instead of homepage
+        window.location.href = '/#settings';
+        window.location.reload();
       }, 2000);
     } catch (err: any) {
       console.error('Password reset failed:', err);
