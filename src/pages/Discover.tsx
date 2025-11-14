@@ -610,7 +610,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
+      <div className="max-w-sm ml-auto mr-4" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
         <div className="sticky top-0 z-50 bg-white border-b border-gray-200 p-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -1019,10 +1019,10 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">Change Photo (Upload from device)</label>
+              <label className="text-sm font-medium mb-2 block">Change Photo/Video (Upload from device)</label>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
                 onChange={handlePhotoUpload}
                 disabled={uploadingPhoto}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
