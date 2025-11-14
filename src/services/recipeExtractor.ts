@@ -70,6 +70,23 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
       recipeData = recipe;
       console.log('[RecipeExtractor] Parsed Recipe schema:', recipeData);
     }
+  } else {
+    console.warn('[RecipeExtractor] No structured data found - HTML parsing would be needed');
+    console.log('[RecipeExtractor] HTML length:', data.html?.length || 0);
+    
+    // Fallback: Try to extract basic data from HTML manually
+    if (data.html) {
+      const html = data.html;
+      
+      // Try to find recipe name in title or h1
+      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i) || 
+                        html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+      if (titleMatch) {
+        recipeData.name = titleMatch[1].replace(/\s*\|\s*.*$/, '').trim();
+      }
+      
+      console.log('[RecipeExtractor] Fallback extracted title:', recipeData.name);
+    }
   }
 
   // Extract ingredients from structured data
