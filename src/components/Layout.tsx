@@ -104,7 +104,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         <div className="hidden lg:block fixed top-4 right-4 z-[100]">
           <TooltipProvider>
             <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2">
-              {navItems.slice(0, 7).map((item) => {
+              {navItems.filter(item => item.id !== 'discover').slice(0, 7).map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPage === item.id;
                 return (
@@ -148,7 +148,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
             <TooltipProvider>
               <div className="flex items-center gap-2">
-                {navItems.slice(0, 7).map((item) => {
+                {navItems.filter(item => item.id !== 'discover').slice(0, 7).map((item) => {
                   const Icon = item.icon;
                   const isActive = currentPage === item.id;
                   return (

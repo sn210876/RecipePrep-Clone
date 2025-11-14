@@ -611,7 +611,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-        <div className="sticky top-0 z-50 bg-white border-b border-gray-200 p-4">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -723,6 +723,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
           )}
         </div>
 
+        <div className="pt-20">
         {filterHashtag && (
           <div className="bg-blue-50 border-b border-blue-200 p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1056,6 +1057,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
           onOpenChange={(open) => !open && setSelectedRecipe(null)}
         />
       )}
+      </div>
     </div>
   );
 }
