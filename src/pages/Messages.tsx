@@ -302,7 +302,9 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     const activeUserId = userId || currentUserId;
     if (!activeUserId) return;
 
-    const [smaller, larger] = [activeUserId, otherUserId].sort();
+    const [smaller, larger] = activeUserId < otherUserId
+      ? [activeUserId, otherUserId]
+      : [otherUserId, activeUserId];
 
     let { data: existingConvo } = await supabase
       .from('conversations')
