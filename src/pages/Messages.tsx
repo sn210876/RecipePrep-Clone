@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, Send as SendIcon, UserPlus, Search, X } from 'lucide-react';
+import { ArrowLeft, Send as SendIcon, UserPlus, Search, X, Check, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
@@ -49,6 +49,9 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [groupName, setGroupName] = useState('');
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -114,8 +117,80 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     setShowStartChat(false);
     setSearchQuery('');
     setSearchResults([]);
+    setSelectedUsers(new Set());
+    setGroupName('');
 
     await startConversation(userId, username, currentUserId);
+  };
+
+  const handleToggleUserSelection = (userId: string) => {
+    const newSelected = new Set(selectedUsers);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      if (newSelected.size >= 100) {
+        toast.error('Maximum 100 participants allowed');
+        return;
+      }
+      newSelected.add(userId);
+    }
+    setSelectedUsers(newSelected);
+  };
+
+  const handleCreateGroupChat = async () => {
+    if (!currentUserId || selectedUsers.size === 0) return;
+
+    if (selectedUsers.size === 1 && !groupName) {
+      const userId = Array.from(selectedUsers)[0];
+      const user = searchResults.find(u => u.id === userId);
+      if (user) {
+        await handleStartChatWithUser(userId, user.username);
+      }
+      return;
+    }
+
+    setIsCreatingGroup(true);
+    try {
+      const { data: newConvo, error: convoError } = await supabase
+        .from('conversations')
+        .insert({
+          is_group: true,
+          group_name: groupName.trim() || `Group (${selectedUsers.size + 1})`,
+          created_by: currentUserId,
+        })
+        .select()
+        .single();
+
+      if (convoError) throw convoError;
+
+      const participants = [
+        { conversation_id: newConvo.id, user_id: currentUserId },
+        ...Array.from(selectedUsers).map(userId => ({
+          conversation_id: newConvo.id,
+          user_id: userId,
+        })),
+      ];
+
+      const { error: participantsError } = await supabase
+        .from('conversation_participants')
+        .insert(participants);
+
+      if (participantsError) throw participantsError;
+
+      toast.success('Group chat created!');
+      setShowStartChat(false);
+      setSearchQuery('');
+      setSearchResults([]);
+      setSelectedUsers(new Set());
+      setGroupName('');
+
+      await loadConversations(currentUserId);
+    } catch (error) {
+      console.error('Error creating group chat:', error);
+      toast.error('Failed to create group chat');
+    } finally {
+      setIsCreatingGroup(false);
+    }
   };
 
   useEffect(() => {
@@ -459,11 +534,28 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       </div>
 
       <Dialog open={showStartChat} onOpenChange={setShowStartChat}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Start a New Chat</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {selectedUsers.size > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Users className="w-4 h-4" />
+                  <span>{selectedUsers.size} user{selectedUsers.size !== 1 ? 's' : ''} selected (max 100)</span>
+                </div>
+                {selectedUsers.size > 1 && (
+                  <input
+                    type="text"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="Group name (optional)"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                )}
+              </div>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -494,30 +586,49 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             )}
 
             {!searchingUsers && searchResults.length > 0 && (
-              <div className="max-h-64 overflow-y-auto space-y-2">
-                {searchResults.map((user) => (
-                  <button
-                    key={user.id}
-                    onClick={() => handleStartChatWithUser(user.id, user.username)}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+              <>
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {searchResults.map((user) => {
+                    const isSelected = selectedUsers.has(user.id);
+                    return (
+                      <button
+                        key={user.id}
+                        onClick={() => handleToggleUserSelection(user.id)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                          isSelected ? 'bg-orange-50 border-2 border-orange-500' : 'hover:bg-gray-50 border-2 border-transparent'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                          {user.avatar_url ? (
+                            <img
+                              src={user.avatar_url}
+                              alt={user.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            user.username[0]?.toUpperCase()
+                          )}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <div className="font-semibold">{user.username}</div>
+                        </div>
+                        {isSelected && (
+                          <Check className="w-5 h-5 text-orange-600" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedUsers.size > 0 && (
+                  <Button
+                    onClick={handleCreateGroupChat}
+                    disabled={isCreatingGroup}
+                    className="w-full bg-orange-500 hover:bg-orange-600"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
-                      {user.avatar_url ? (
-                        <img
-                          src={user.avatar_url}
-                          alt={user.username}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        user.username[0]?.toUpperCase()
-                      )}
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-semibold">{user.username}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    {isCreatingGroup ? 'Creating...' : `Start Chat (${selectedUsers.size})`}
+                  </Button>
+                )}
+              </>
             )}
 
             {!searchingUsers && searchQuery && searchResults.length === 0 && (
@@ -526,7 +637,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
             {!searchQuery && (
               <div className="text-center py-4 text-gray-400 text-sm">
-                Type to search for users
+                Type to search for users. Select multiple to create a group chat.
               </div>
             )}
           </div>

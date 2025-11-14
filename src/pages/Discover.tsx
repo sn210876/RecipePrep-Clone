@@ -125,6 +125,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
         .from('notifications')
         .select('*, actor:actor_id(username, avatar_url)')
         .eq('user_id', currentUserId)
+        .neq('type', 'message')
         .order('created_at', { ascending: false })
         .limit(20);
 
