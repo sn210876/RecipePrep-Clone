@@ -54,39 +54,50 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const data = await response.json();
   console.log('[RecipeExtractor] Raw response:', data);
 
-  // Extract structured data if available
+  // Parse HTML for JSON-LD structured data
   let recipeData: any = {};
-  
-  if (data.structuredData) {
-    console.log('[RecipeExtractor] Found structured data!');
-    
-    // Handle @graph structure (common in schema.org)
-    let recipe = data.structuredData;
-    if (recipe['@graph']) {
-      recipe = recipe['@graph'].find((item: any) => item['@type'] === 'Recipe') || recipe;
+
+  if (data.html) {
+    const html = data.html;
+    console.log('[RecipeExtractor] HTML length:', html.length);
+
+    // Search for all <script type="application/ld+json"> tags
+    const jsonLdMatches = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+
+    for (const match of jsonLdMatches) {
+      try {
+        const jsonContent = match[1].trim();
+        const parsed = JSON.parse(jsonContent);
+
+        console.log('[RecipeExtractor] Found JSON-LD block:', parsed['@type']);
+
+        // Check if it's a Recipe directly
+        if (parsed['@type'] === 'Recipe') {
+          recipeData = parsed;
+          console.log('[RecipeExtractor] ✓ Found Recipe schema!');
+          break;
+        }
+
+        // Check if it has @graph array (common in schema.org)
+        if (Array.isArray(parsed['@graph'])) {
+          const recipe = parsed['@graph'].find((item: any) => item['@type'] === 'Recipe');
+          if (recipe) {
+            recipeData = recipe;
+            console.log('[RecipeExtractor] ✓ Found Recipe in @graph!');
+            break;
+          }
+        }
+      } catch (e) {
+        console.error('[RecipeExtractor] Failed to parse JSON-LD:', e);
+      }
     }
-    
-    if (recipe['@type'] === 'Recipe') {
-      recipeData = recipe;
-      console.log('[RecipeExtractor] Parsed Recipe schema:', recipeData);
+
+    if (!recipeData || !recipeData['@type']) {
+      console.error('[RecipeExtractor] ✗ No Recipe schema found in HTML');
+      throw new Error('Could not extract recipe - site may not be supported. Please try a different recipe URL from AllRecipes, Food Network, or similar sites.');
     }
   } else {
-    console.warn('[RecipeExtractor] No structured data found - HTML parsing would be needed');
-    console.log('[RecipeExtractor] HTML length:', data.html?.length || 0);
-    
-    // Fallback: Try to extract basic data from HTML manually
-    if (data.html) {
-      const html = data.html;
-      
-      // Try to find recipe name in title or h1
-      const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i) || 
-                        html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-      if (titleMatch) {
-        recipeData.name = titleMatch[1].replace(/\s*\|\s*.*$/, '').trim();
-      }
-      
-      console.log('[RecipeExtractor] Fallback extracted title:', recipeData.name);
-    }
+    throw new Error('No HTML data received from server');
   }
 
   // Extract ingredients from structured data
