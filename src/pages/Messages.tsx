@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { ArrowLeft, Send as SendIcon, UserPlus, Search, X, Check, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
 
 interface Conversation {
   id: string;
@@ -154,6 +154,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       const { data: newConvo, error: convoError } = await supabase
         .from('conversations')
         .insert({
+          user1_id: currentUserId,
           is_group: true,
           group_name: groupName.trim() || `Group (${selectedUsers.size + 1})`,
           created_by: currentUserId,
@@ -537,6 +538,9 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Start a New Chat</DialogTitle>
+            <DialogDescription>
+              Search for users and select them to start a chat. Select multiple users to create a group chat.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {selectedUsers.size > 0 && (

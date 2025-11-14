@@ -21,11 +21,20 @@ import { AuthForm } from './components/AuthForm';
 
 function AppContent() {
   const hash = window.location.hash;
-  const initialPage = hash === '#settings' ? 'settings' : 'discover-recipes';
-  const [currentPage, setCurrentPage] = useState(initialPage);
+
+  const getInitialPage = () => {
+    if (hash === '#settings') return 'settings';
+    if (hash.startsWith('#post/')) return 'discover';
+    return 'discover-recipes';
+  };
+
+  const [currentPage, setCurrentPage] = useState(getInitialPage());
   const [discoverKey, setDiscoverKey] = useState(0);
   const [completedVerifying, setCompletedVerifying] = useState(false);
   const [messageRecipient, setMessageRecipient] = useState<{ userId: string; username: string } | null>(null);
+  const [sharedPostId, setSharedPostId] = useState<string | null>(
+    hash.startsWith('#post/') ? hash.replace('#post/', '') : null
+  );
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
 
   const isPasswordReset = hash && (hash.includes('type=recovery') || window.location.pathname === '/reset-password');
@@ -44,10 +53,12 @@ function AppContent() {
       case 'discover':
         return <Discover
           key={discoverKey}
+          sharedPostId={sharedPostId}
           onNavigateToMessages={(userId, username) => {
             setMessageRecipient({ userId, username });
             setCurrentPage('messages');
           }}
+          onPostViewed={() => setSharedPostId(null)}
         />;
       case 'my-recipes':
         return <MyRecipes />;

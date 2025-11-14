@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown, UtensilsCrossed, Send, Copy, Check } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown, Utensils, Send, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -61,9 +61,11 @@ interface Post {
 
 interface DiscoverProps {
   onNavigateToMessages?: (userId: string, username: string) => void;
+  sharedPostId?: string | null;
+  onPostViewed?: () => void;
 }
 
-export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
+export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: DiscoverProps = {}) {
   const { isAdmin } = useAuth();
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -152,6 +154,24 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
       supabase.removeChannel(channel);
     };
   }, [currentUserId]);
+
+  useEffect(() => {
+    if (sharedPostId && currentUserId) {
+      const loadSharedPost = async () => {
+        const { data: post } = await supabase
+          .from('posts')
+          .select('*, profiles(username, avatar_url), likes(user_id), comments(id)')
+          .eq('id', sharedPostId)
+          .maybeSingle();
+
+        if (post) {
+          setCommentModalPostId(sharedPostId);
+          if (onPostViewed) onPostViewed();
+        }
+      };
+      loadSharedPost();
+    }
+  }, [sharedPostId, currentUserId, onPostViewed]);
 
   const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
     try {
@@ -995,7 +1015,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                         onClick={() => handleSharePost(post.id)}
                         className="transition-transform hover:scale-110"
                       >
-                        <UtensilsCrossed className="w-7 h-7 text-gray-700" />
+                        <Utensils className="w-7 h-7 text-gray-700" />
                       </button>
                     </div>
 
