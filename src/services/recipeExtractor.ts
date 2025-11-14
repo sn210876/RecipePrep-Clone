@@ -1,6 +1,7 @@
 import { Ingredient } from '@/types/recipe';
 
-const SUPABASE_URL = 'https://vohvdarghgqskzqjclux.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://vohvdarghgqskzqjclux.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/smart-handler`;
 
 export interface ExtractedRecipeData {
@@ -34,6 +35,8 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_ANON_KEY,
     },
     body: JSON.stringify({ url: url.trim() }),
   });
