@@ -28,7 +28,7 @@ CRITICAL RULES:
 Return ONLY valid JSON in this exact format:
 {
   "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt", ...],
-  "instructions": ["Step 1 with full details", "Step 2 with full details", ...],
+  "instructions": ["Step 1 with full details including temperatures and times", "Step 2 with full details", ...],
   "prep_time": 15,
   "cook_time": 120,
   "yield": "4-5 servings",
@@ -79,10 +79,15 @@ async function scrapeRecipeSite(url: string) {
   try {
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.5',
+      'Referer': 'https://www.google.com/'
     };
 
     const response = await fetch(url, { headers });
     const html = await response.text();
+
+    console.log("[recipe-proxy] HTML fetched, length:", html.length);
 
     const ogTitleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i);
     const twitterTitleMatch = html.match(/<meta\s+name="twitter:title"\s+content="([^"]+)"/i);
@@ -90,7 +95,7 @@ async function scrapeRecipeSite(url: string) {
     const rawTitle = ogTitleMatch?.[1] || twitterTitleMatch?.[1] || (titleMatch ? titleMatch[1] : 'Recipe');
     const title = rawTitle.split('|')[0].split('-')[0].split('•')[0].split(':')[0].trim();
 
-    const recipeMatches = html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/gi);
+    const recipeMatches = html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
     for (const match of recipeMatches) {
       try {
         const json = JSON.parse(match[1]);
@@ -141,7 +146,7 @@ async function scrapeRecipeSite(url: string) {
                 return '';
               };
 
-              console.log('Structured data found:', {
+              console.log('[recipe-proxy] Structured data found:', {
                 title: recipe.name || title,
                 ingredientsCount: recipe.recipeIngredient?.length,
                 instructionsCount: instructions.length,
@@ -163,7 +168,7 @@ async function scrapeRecipeSite(url: string) {
           }
         }
       } catch (e) {
-        console.error("JSON parse error:", e);
+        console.error("[recipe-proxy] JSON parse error:", e);
         continue;
       }
     }
@@ -173,6 +178,7 @@ async function scrapeRecipeSite(url: string) {
     const firstImgMatch = html.match(/<img[^>]+src="([^"]+)"/i);
     const imageUrl = ogImageMatch?.[1] || twitterImageMatch?.[1] || firstImgMatch?.[1] || '';
 
+    console.log("[recipe-proxy] No structured data, using AI fallback");
     const aiResult = await parseWithAI(html);
     if (aiResult.ingredients.length > 0) {
       return {
@@ -190,7 +196,7 @@ async function scrapeRecipeSite(url: string) {
 
     return null;
   } catch (e) {
-    console.error("Scrape error:", e);
+    console.error("[recipe-proxy] Scrape error:", e);
     return null;
   }
 }
@@ -219,11 +225,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("Extracting from:", url);
+    console.log("[recipe-proxy] Extracting from:", url);
 
     const result = await scrapeRecipeSite(url);
 
     if (result) {
+      console.log("[recipe-proxy] Returning result:", {
+        title: result.title,
+        ingredientsCount: result.ingredients?.length,
+        instructionsCount: result.instructions?.length,
+      });
+
       return new Response(
         JSON.stringify(result),
         {
@@ -236,20 +248,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const renderResponse = await fetch("https://recipe-backend-nodejs-1.onrender.com/extract", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url }),
-    });
-
-    const renderData = await renderResponse.json();
-
     return new Response(
-      JSON.stringify(renderData),
+      JSON.stringify({ error: "Failed to extract recipe data" }),
       {
-        status: renderResponse.ok ? 200 : renderResponse.status,
+        status: 500,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
@@ -257,6 +259,7 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error) {
+    console.error("[recipe-proxy] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message || "Failed to extract recipe" }),
       {
