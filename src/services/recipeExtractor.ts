@@ -84,8 +84,8 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   // THIS IS THE KEY FIX: proxy the image through your working image-proxy function
   const rawImageUrl = data.image || '';
   const proxiedImageUrl = rawImageUrl 
-    ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(rawImageUrl)}`
-    : '';
+  ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(rawImageUrl)}&apikey=${SUPABASE_ANON_KEY}`
+  : '';
 
   const result: ExtractedRecipeData = {
     title: isTikTokOrInstagram ? '' : (data.title || 'Untitled Recipe'),
