@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Edit2, Trash2, Heart, MessageCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isAdmin } from '@/lib/supabase'; // ← Added isAdmin
 import { toast } from 'sonner';
 
 interface Post {
@@ -53,18 +53,29 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
     if (post) {
       setCaption(post.caption || '');
       loadReviewsAndComments();
       checkLikeStatus();
+      loadCurrentUserAndAdminStatus();
     }
   }, [post]);
 
+  const loadCurrentUserAndAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setCurrentUserId(user.id);
+      const admin = await isAdmin();
+      setIsUserAdmin(admin);
+    }
+  };
+
   const loadReviewsAndComments = async () => {
     if (!post?.recipe_url) return;
-
     try {
       const { data: recipeData } = await supabase
         .from('public_recipes')
@@ -119,32 +130,26 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
   const checkLikeStatus = async () => {
     if (!post) return;
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
     const { data } = await supabase
       .from('likes')
       .select('id')
       .eq('post_id', post.id)
       .eq('user_id', user.id)
       .maybeSingle();
-
     setIsLiked(!!data);
   };
 
   const handleUpdateCaption = async () => {
     if (!post) return;
-
     setLoading(true);
     try {
       const { error } = await supabase
         .from('posts')
         .update({ caption: caption.trim() })
         .eq('id', post.id);
-
       if (error) throw error;
-
       toast.success('Caption updated!');
       setEditingCaption(false);
       onUpdate();
@@ -158,18 +163,14 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
   const handleDeletePost = async () => {
     if (!post) return;
-
     if (!confirm('Are you sure you want to delete this post?')) return;
-
     setLoading(true);
     try {
       const { error } = await supabase
         .from('posts')
         .delete()
         .eq('id', post.id);
-
       if (error) throw error;
-
       toast.success('Post deleted!');
       onDelete(post.id);
       onClose();
@@ -181,14 +182,27 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('Delete this comment?')) return;
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+      if (error) throw error;
+      setComments(comments.filter(c => c.id !== commentId));
+      toast.success('Comment deleted');
+    } catch (error) {
+      toast.error('Failed to delete comment');
+    }
+  };
+
   const handleAddComment = async () => {
     if (!post || !newComment.trim()) return;
-
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-
       const { error } = await supabase
         .from('comments')
         .insert({
@@ -196,9 +210,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
           user_id: user.id,
           text: newComment.trim()
         });
-
       if (error) throw error;
-
       setNewComment('');
       await loadReviewsAndComments();
       toast.success('Comment added!');
@@ -212,10 +224,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
   const handleToggleLike = async () => {
     if (!post) return;
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
     try {
       if (isLiked) {
         await supabase
@@ -228,7 +238,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
           .from('likes')
           .insert({ post_id: post.id, user_id: user.id });
       }
-
       setIsLiked(!isLiked);
       onUpdate();
     } catch (error) {
@@ -237,6 +246,9 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   };
 
   if (!post) return null;
+
+  const canDeletePost = post.user_id === currentUserId || isUserAdmin;
+  const canDeleteComment = (commentUserId: string) => commentUserId === currentUserId || isUserAdmin;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -262,21 +274,25 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold text-lg">{post.title || 'Post'}</h3>
               <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingCaption(!editingCaption)}
-                >
-                  <Edit2 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDeletePost}
-                  disabled={loading}
-                >
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                </Button>
+                {(post.user_id === currentUserId) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingCaption(!editingCaption)}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                )}
+                {canDeletePost && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDeletePost}
+                    disabled={loading}
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -291,11 +307,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                       rows={3}
                     />
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={handleUpdateCaption}
-                        disabled={loading}
-                      >
+                      <Button size="sm" onClick={handleUpdateCaption} disabled={loading}>
                         Save
                       </Button>
                       <Button
@@ -342,7 +354,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}>
-                              ★
+                              Star
                             </span>
                           ))}
                         </div>
@@ -354,14 +366,22 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
               )}
 
               {comments.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <h4 className="font-semibold text-sm">Comments</h4>
                   {comments.map((comment) => (
-                    <div key={comment.id} className="space-y-1">
-                      <div className="flex items-start gap-2">
+                    <div key={comment.id} className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
                         <span className="font-medium text-sm">{comment.username || 'User'}</span>
-                        <p className="text-sm text-gray-700">{comment.text}</p>
+                        <p className="text-sm text-gray-700 mt-0.5">{comment.text}</p>
                       </div>
+                      {canDeleteComment(comment.user_id) && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="text-red-600 hover:text-red-800 p-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -370,15 +390,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
             <div className="border-t p-4 space-y-3">
               <div className="flex items-center gap-4">
-                <button
-                  onClick={handleToggleLike}
-                  className="transition-transform hover:scale-110"
-                >
-                  <Heart
-                    className={`w-6 h-6 ${
-                      isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'
-                    }`}
-                  />
+                <button onClick={handleToggleLike} className="transition-transform hover:scale-110">
+                  <Heart className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
                 </button>
                 <MessageCircle className="w-6 h-6 text-gray-700" />
               </div>
@@ -396,11 +409,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                     }
                   }}
                 />
-                <Button
-                  onClick={handleAddComment}
-                  disabled={loading || !newComment.trim()}
-                  size="sm"
-                >
+                <Button onClick={handleAddComment} disabled={loading || !newComment.trim()} size="sm">
                   Post
                 </Button>
               </div>
