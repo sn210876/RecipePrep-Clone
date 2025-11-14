@@ -37,7 +37,10 @@ function AppContent() {
   );
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
 
-  const isPasswordReset = hash && (hash.includes('type=recovery') || window.location.pathname === '/reset-password');
+  const isPasswordReset =
+    (hash && (hash.includes('type=recovery') || hash.includes('access_token'))) ||
+    window.location.pathname === '/reset-password' ||
+    window.location.pathname.includes('reset-password');
 
   const handleNavigate = (page: string) => {
     if (page === 'discover') {
