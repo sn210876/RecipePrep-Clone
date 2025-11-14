@@ -122,11 +122,14 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   }, [messages]);
 
   const loadConversations = async (userId: string) => {
+    console.log('[Messages] Loading conversations for user:', userId);
     const { data: convos, error } = await supabase
       .from('conversations')
       .select('*')
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
       .order('updated_at', { ascending: false });
+
+    console.log('[Messages] Conversations query result:', { convos, error });
 
     if (error) {
       console.error('Error loading conversations:', error);
@@ -167,6 +170,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       })
     );
 
+    console.log('[Messages] Final conversations with users:', conversationsWithUsers);
     setConversations(conversationsWithUsers);
   };
 
