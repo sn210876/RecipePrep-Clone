@@ -610,7 +610,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-sm ml-auto mr-4" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
+      <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
         <div className="sticky top-0 z-50 bg-white border-b border-gray-200 p-4">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">

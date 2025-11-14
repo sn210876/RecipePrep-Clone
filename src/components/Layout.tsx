@@ -14,7 +14,6 @@ interface LayoutProps {
 
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(false);
   const { signOut } = useAuth();
 
   const handleLogout = async () => {
@@ -41,15 +40,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Desktop sidebar toggle button */}
-      <button
-        onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
-        className="hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-orange-600 text-white p-2 rounded-r-lg shadow-lg hover:bg-orange-700 transition-colors"
-      >
-        {isDesktopSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
-
-      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:${isDesktopSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 border-b border-gray-200 p-6">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
@@ -71,7 +62,6 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                   onClick={() => {
                     onNavigate(item.id);
                     setIsMobileMenuOpen(false);
-                    setIsDesktopSidebarOpen(false);
                   }}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-all ${
                     isActive
@@ -102,17 +92,43 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         </div>
       </aside>
 
-      {(isMobileMenuOpen || isDesktopSidebarOpen) && (
+      {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-50"
-          onClick={() => {
-            setIsMobileMenuOpen(false);
-            setIsDesktopSidebarOpen(false);
-          }}
+          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      <div>
+      <div className="lg:pl-64">
+        {/* Desktop top navigation icons */}
+        <div className="hidden lg:block fixed top-4 right-4 z-50">
+          <TooltipProvider>
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2">
+              {navItems.slice(0, 7).map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPage === item.id;
+                return (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`${isActive ? 'text-orange-600' : 'text-gray-600'} h-8 w-8`}
+                        onClick={() => onNavigate(item.id)}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </TooltipProvider>
+        </div>
+
         <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-sm lg:hidden">
           <div className="flex h-16 items-center justify-between px-6">
             <Button
