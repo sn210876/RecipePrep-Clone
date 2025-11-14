@@ -15,13 +15,15 @@ async function parseWithAI(text: string): Promise<{ ingredients: string[], instr
 
 CRITICAL RULES:
 1. If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
-2. Extract EVERY SINGLE ingredient listed in the recipe - do not skip any.
-3. Extract EVERY SINGLE instruction step - include all details and sub-steps.
-4. Preserve quantities, measurements, and cooking times exactly.
-5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include all of them.
-6. If there are detailed preparation steps, include them all.
-7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed).
-8. Extract yield/servings information.
+2. Extract EVERY SINGLE ingredient listed in the recipe - do not skip ANY ingredients, no matter how small.
+3. Extract EVERY SINGLE instruction step - include ALL details, sub-steps, temperatures, and cooking techniques.
+4. Preserve quantities, measurements, temperatures, and cooking times EXACTLY as written.
+5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include ALL of them.
+6. If there are detailed preparation steps, include EVERY SINGLE ONE with full details.
+7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed, e.g., 1 hour = 60 minutes).
+8. Extract yield/servings information exactly as stated.
+9. Include ALL cooking details: temperatures, baking times, resting times, checking for doneness, etc.
+10. DO NOT summarize or combine steps - each instruction should be complete and detailed.
 
 Return ONLY valid JSON in this exact format:
 {
@@ -34,7 +36,7 @@ Return ONLY valid JSON in this exact format:
 }
 
 Text to extract from:
-${text.slice(0, 20000)}`;
+${text.slice(0, 25000)}`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -47,7 +49,7 @@ ${text.slice(0, 20000)}`;
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.1,
-        max_tokens: 3000,
+        max_tokens: 4000,
       }),
     });
 
