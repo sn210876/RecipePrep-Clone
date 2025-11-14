@@ -206,48 +206,92 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   }, [messages]);
 
   const loadConversations = async (userId: string) => {
-    const { data: convos, error } = await supabase
+    const { data: directConvos } = await supabase
       .from('conversations')
       .select('*')
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+      .eq('is_group', false)
       .order('updated_at', { ascending: false });
 
-    if (error) {
-      console.error('Error loading conversations:', error);
-      return;
+    const { data: groupParticipations } = await supabase
+      .from('conversation_participants')
+      .select('conversation_id')
+      .eq('user_id', userId);
+
+    const groupConvoIds = (groupParticipations || []).map(p => p.conversation_id);
+
+    let groupConvos: any[] = [];
+    if (groupConvoIds.length > 0) {
+      const { data } = await supabase
+        .from('conversations')
+        .select('*')
+        .in('id', groupConvoIds)
+        .eq('is_group', true)
+        .order('updated_at', { ascending: false });
+      groupConvos = data || [];
     }
 
+    const allConvos = [...(directConvos || []), ...groupConvos];
+
     const conversationsWithUsers = await Promise.all(
-      (convos || []).map(async (convo) => {
-        const otherUserId = convo.user1_id === userId ? convo.user2_id : convo.user1_id;
+      allConvos.map(async (convo) => {
+        if (convo.is_group) {
+          const { data: lastMsg } = await supabase
+            .from('messages')
+            .select('content, created_at')
+            .eq('conversation_id', convo.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .eq('id', otherUserId)
-          .maybeSingle();
+          const { count: unreadCount } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', convo.id)
+            .eq('read', false)
+            .neq('sender_id', userId);
 
-        const { data: lastMsg } = await supabase
-          .from('messages')
-          .select('content, created_at')
-          .eq('conversation_id', convo.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          return {
+            ...convo,
+            other_user: {
+              id: convo.id,
+              username: convo.group_name || 'Group Chat',
+              avatar_url: null
+            },
+            last_message: lastMsg,
+            unread_count: unreadCount || 0,
+          };
+        } else {
+          const otherUserId = convo.user1_id === userId ? convo.user2_id : convo.user1_id;
 
-        const { count: unreadCount } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('conversation_id', convo.id)
-          .eq('read', false)
-          .neq('sender_id', userId);
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .eq('id', otherUserId)
+            .maybeSingle();
 
-        return {
-          ...convo,
-          other_user: profile || { id: otherUserId, username: 'Unknown', avatar_url: null },
-          last_message: lastMsg,
-          unread_count: unreadCount || 0,
-        };
+          const { data: lastMsg } = await supabase
+            .from('messages')
+            .select('content, created_at')
+            .eq('conversation_id', convo.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const { count: unreadCount } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', convo.id)
+            .eq('read', false)
+            .neq('sender_id', userId);
+
+          return {
+            ...convo,
+            other_user: profile || { id: otherUserId, username: 'Unknown', avatar_url: null },
+            last_message: lastMsg,
+            unread_count: unreadCount || 0,
+          };
+        }
       })
     );
 

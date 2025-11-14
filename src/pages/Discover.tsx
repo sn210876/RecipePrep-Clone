@@ -655,7 +655,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 
-    const shareUrl = `${window.location.origin}/#post/${postId}`;
+    const shareUrl = `https://joyful-pasca-d4e8da.netlify.app/#post/${postId}`;
     const shareData = {
       title: post.title || 'Check out this recipe!',
       text: post.caption || 'Found this amazing recipe on RecipePrep!',
@@ -678,7 +678,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
   };
 
   const handleCopyLink = (postId: string) => {
-    const shareUrl = `${window.location.origin}/#post/${postId}`;
+    const shareUrl = `https://joyful-pasca-d4e8da.netlify.app/#post/${postId}`;
     navigator.clipboard.writeText(shareUrl);
     setCopiedLink(true);
     toast.success('Link copied to clipboard!');
@@ -691,7 +691,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
     const post = posts.find(p => p.id === sharePostId);
     if (!post) return;
 
-    const shareUrl = `${window.location.origin}/#post/${sharePostId}`;
+    const shareUrl = `https://joyful-pasca-d4e8da.netlify.app/#post/${sharePostId}`;
     const messageContent = `Check out this recipe: ${post.title || 'Shared post'}\n${shareUrl}`;
 
     try {
