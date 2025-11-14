@@ -279,16 +279,17 @@ export function Profile() {
       </div>
 
       <div className="max-w-lg mx-auto">
-        <div className="bg-white border-b border-gray-200 overflow-hidden">
-          <div className="relative pb-24">
+        <div className="bg-white border-b border-gray-200">
+          {/* Banner with camera button */}
+          <div className="relative h-32">
             {profile?.banner_url ? (
               <img
                 src={profile.banner_url}
                 alt="Banner"
-                className="w-full h-40 object-cover"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-40 bg-gradient-to-br from-orange-100 to-amber-100" />
+              <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100" />
             )}
             <label className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
               <input
@@ -300,101 +301,85 @@ export function Profile() {
               />
               <Camera className="w-4 h-4 text-gray-600" />
             </label>
-
-            {/* Avatar on the left, under banner */}
-<div className="absolute -bottom-10 left-6">
-  <div className="relative">
-    {profile?.avatar_url ? (
-      <img
-        src={profile.avatar_url}
-        alt={profile.username}
-        className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-2xl"
-      />
-    ) : (
-      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-2xl">
-        {profile?.username?.[0]?.toUpperCase()}
-      </div>
-    )}
-    <label className="absolute bottom-1 right-1 bg-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors">
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleAvatarUpload}
-        disabled={uploading}
-        className="hidden"
-      />
-      <Camera className="w-5 h-5 text-gray-700" />
-    </label>
-  </div>
-</div>
-
-{/* Username + Edit button centered below banner */}
-<div className="pt-16 pb-4 text-center">
-  <div className="flex items-center justify-center gap-2">
-    <h2 className="text-2xl font-bold text-gray-900">{profile?.username}</h2>
-    {isUserAdmin && (
-      <Crown className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-    )}
-  </div>
-  <button
-    onClick={() => {
-      setNewUsername(profile?.username || '');
-      setNewBio(profile?.bio || '');
-      setEditingProfile(true);
-    }}
-    className="mt-3 inline-flex items-center gap-2 px-6 py-2.5 bg-orange-600 text-white font-medium rounded-full hover:bg-orange-700 transition-colors shadow-md"
-  >
-    <Edit2 className="w-4 h-4" />
-    Edit Profile
-  </button>
-</div>
           </div>
 
-          <div className="p-6">
-            {/* Bio in center below banner */}
-            <div className="text-center mb-6">
-              {profile?.bio ? (
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {profile.bio.split(' ').map((word, i) => {
-                    if (word.startsWith('http://') || word.startsWith('https://')) {
-                      return (
-                        <a
-                          key={i}
-                          href={word}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {word}{' '}
-                        </a>
-                      );
-                    }
-                    return word + ' ';
-                  })}
-                </p>
-              ) : (
-                <p className="text-sm text-gray-400 italic">Add your bio here (hyperlinks supported)</p>
-              )}
-            </div>
+          {/* Avatar + Username + Bio section - Instagram style left-aligned */}
+          <div className="relative px-4 pb-3">
+            <div className="flex items-start gap-3 -mt-10">
+              {/* Avatar overlapping banner */}
+              <div className="relative flex-shrink-0">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.username}
+                    className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
+                    {profile?.username?.[0]?.toUpperCase()}
+                  </div>
+                )}
+                <label className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  <Camera className="w-4 h-4 text-gray-700" />
+                </label>
+              </div>
 
-            <div>
-              <div className="flex items-center justify-around border-t border-gray-200 pt-4">
-                <div className="text-center">
-                  <div className="text-xl font-bold">{posts.length}</div>
-                  <div className="text-sm text-gray-500">posts</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold">{profile?.followers_count || 0}</div>
-                  <div className="text-sm text-gray-500">supporters</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold">{profile?.following_count || 0}</div>
-                  <div className="text-sm text-gray-500">supporting</div>
-                </div>
+              {/* Bio aligned to right of avatar, vertically centered */}
+              <div className="flex-1 pt-10 min-w-0">
+                {profile?.bio ? (
+                  <p className="text-sm text-gray-700 line-clamp-1 overflow-hidden text-ellipsis">
+                    {profile.bio}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">Add your bio</p>
+                )}
               </div>
             </div>
 
-            <div className="hidden">
+            {/* Username directly under avatar with minimal gap */}
+            <div className="mt-2 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-gray-900">{profile?.username}</h2>
+              {isUserAdmin && (
+                <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+              )}
+            </div>
+
+            {/* Edit Profile button */}
+            <button
+              onClick={() => {
+                setNewUsername(profile?.username || '');
+                setNewBio(profile?.bio || '');
+                setEditingProfile(true);
+              }}
+              className="mt-3 inline-flex items-center gap-2 px-5 py-2 bg-orange-600 text-white text-sm font-medium rounded-full hover:bg-orange-700 transition-colors shadow-md"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit Profile
+            </button>
+          </div>
+
+          {/* Stats section - centered with reduced gaps */}
+          <div className="px-4 py-3 border-t border-gray-200">
+            <div className="flex items-center justify-center gap-8">
+              <div className="text-center">
+                <div className="text-lg font-bold">{posts.length}</div>
+                <div className="text-xs text-gray-500">posts</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold">{profile?.followers_count || 0}</div>
+                <div className="text-xs text-gray-500">supporters</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold">{profile?.following_count || 0}</div>
+                <div className="text-xs text-gray-500">supporting</div>
+              </div>
             </div>
           </div>
         </div>
