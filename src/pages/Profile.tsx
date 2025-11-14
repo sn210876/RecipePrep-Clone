@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2 } from 'lucide-react';
+import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
@@ -44,10 +44,17 @@ export function Profile() {
   const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
     loadProfile();
+    checkAdmin();
   }, []);
+
+  const checkAdmin = async () => {
+    const admin = await isAdmin();
+    setIsUserAdmin(admin);
+  };
 
   const loadProfile = async () => {
     try {
@@ -323,7 +330,12 @@ export function Profile() {
 
 {/* Username + Edit button centered below banner */}
 <div className="pt-16 pb-4 text-center">
-  <h2 className="text-2xl font-bold text-gray-900">{profile?.username}</h2>
+  <div className="flex items-center justify-center gap-2">
+    <h2 className="text-2xl font-bold text-gray-900">{profile?.username}</h2>
+    {isUserAdmin && (
+      <Crown className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+    )}
+  </div>
   <button
     onClick={() => {
       setNewUsername(profile?.username || '');

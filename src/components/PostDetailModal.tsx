@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { Edit2, Trash2, Heart, MessageCircle } from 'lucide-react';
+import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
 import { supabase, isAdmin } from '@/lib/supabase'; // ← Added isAdmin
 import { toast } from 'sonner';
 
@@ -351,6 +351,9 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                     <div key={review.id} className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-sm">{review.username || 'User'}</span>
+                        {review.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                          <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        )}
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}>
@@ -371,7 +374,12 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                   {comments.map((comment) => (
                     <div key={comment.id} className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <span className="font-medium text-sm">{comment.username || 'User'}</span>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium text-sm">{comment.username || 'User'}</span>
+                          {comment.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                            <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                          )}
+                        </div>
                         <p className="text-sm text-gray-700 mt-0.5">{comment.text}</p>
                       </div>
                       {canDeleteComment(comment.user_id) && (
