@@ -106,10 +106,10 @@ async function scrapeRecipeSite(url: string) {
                     if (typeof i === 'string') return i;
                     if (i.text) return i.text;
                     if (i.itemListElement) {
-                      return i.itemListElement.map((e: any) => e.text || '').join(' ');
+                      return i.itemListElement.map((e: any) => e.text || '').filter(Boolean);
                     }
                     return '';
-                  }).filter(Boolean)
+                  }).flat().filter(Boolean)
                 : typeof recipe.recipeInstructions === 'string'
                   ? recipe.recipeInstructions.split('\n').filter(Boolean)
                   : [];
@@ -125,12 +125,35 @@ async function scrapeRecipeSite(url: string) {
                 return 0;
               };
 
+              const extractImage = (img: any): string => {
+                if (typeof img === 'string') return img;
+                if (img?.url) return img.url;
+                if (Array.isArray(img) && img.length > 0) {
+                  return typeof img[0] === 'string' ? img[0] : img[0]?.url || '';
+                }
+                return '';
+              };
+
+              const extractYield = (yld: any): string => {
+                if (typeof yld === 'string') return yld;
+                if (typeof yld === 'number') return String(yld);
+                if (Array.isArray(yld) && yld.length > 0) return String(yld[0]);
+                return '';
+              };
+
+              console.log('Structured data found:', {
+                title: recipe.name || title,
+                ingredientsCount: recipe.recipeIngredient?.length,
+                instructionsCount: instructions.length,
+                image: extractImage(recipe.image),
+              });
+
               return {
                 title: recipe.name || title,
                 ingredients: recipe.recipeIngredient || [],
                 instructions,
-                image: recipe.image?.url || (Array.isArray(recipe.image) ? recipe.image[0] : recipe.image) || '',
-                yield: recipe.recipeYield || '',
+                image: extractImage(recipe.image),
+                yield: extractYield(recipe.recipeYield),
                 prep_time: parseTime(recipe.prepTime),
                 cook_time: parseTime(recipe.cookTime),
                 time: parseTime(recipe.totalTime) || (parseTime(recipe.prepTime) + parseTime(recipe.cookTime)),

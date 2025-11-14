@@ -51,6 +51,13 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const data = await response.json();
   console.log('[RecipeExtractor] Success:', data);
+  console.log('[RecipeExtractor] Data details:', {
+    ingredients: data.ingredients,
+    ingredientsLength: data.ingredients?.length,
+    instructions: data.instructions,
+    instructionsLength: data.instructions?.length,
+    image: data.image,
+  });
 
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
