@@ -194,7 +194,7 @@ export function UserProfileView({
             </div>
             <div className="flex items-center justify-center gap-2 mb-2">
               <h2 className="text-2xl font-bold">{userProfile?.username || 'Loading...'}</h2>
-              {userId === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+              {userId === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                 <Crown className="w-6 h-6 text-yellow-500 fill-yellow-500" />
               )}
             </div>

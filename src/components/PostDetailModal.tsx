@@ -351,7 +351,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                     <div key={review.id} className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-sm">{review.username || 'User'}</span>
-                        {review.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                        {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                           <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         )}
                         <div className="flex">
@@ -376,7 +376,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                       <div className="flex-1">
                         <div className="flex items-center gap-1">
                           <span className="font-medium text-sm">{comment.username || 'User'}</span>
-                          {comment.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                          {comment.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                             <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                           )}
                         </div>

@@ -440,6 +440,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
           caption: editingPost.caption.trim() || null,
           recipe_url: editingPost.recipeUrl.trim() || null,
           photo_url: editingPost.photoUrl.trim() || null,
+          image_url: editingPost.photoUrl.trim() || null,
         })
         .eq('id', editingPost.id);
 
@@ -451,6 +452,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
             ? {
                 ...p,
                 caption: editingPost.caption.trim() || null,
+                image_url: editingPost.photoUrl.trim() || null,
                 recipe_url: editingPost.recipeUrl.trim() || null,
                 photo_url: editingPost.photoUrl.trim() || null
               }
@@ -702,7 +704,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                         <p className="text-sm">
                           <span className="font-semibold">{notification.actor?.username || 'Someone'}</span>
                           {notification.type === 'follow' && ' started following you'}
-                          {notification.type === 'like' && ' liked your post'}
+                          {notification.type === 'like' && ' loved your post'}
                           {notification.type === 'comment' && ' commented on your post'}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
@@ -787,7 +789,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                         >
                           {post.profiles?.username}
                         </button>
-                        {post.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                        {post.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                           <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         )}
                       </div>
@@ -884,7 +886,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                       <div className="text-sm">
                         <span className="inline-flex items-center gap-1">
                           <span className="font-semibold">{post.profiles?.username}</span>
-                          {post.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                          {post.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                             <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                           )}
                         </span>{' '}
@@ -910,7 +912,7 @@ export function Discover({ onNavigateToMessages }: DiscoverProps = {}) {
                       <div key={comment.id} className="text-sm">
                         <span className="inline-flex items-center gap-1">
                           <span className="font-semibold">{comment.profiles?.username}</span>
-                          {comment.user_id === 'd298f0c2-8748-4a0a-bb0c-9c8605595c58' && (
+                          {comment.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                             <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                           )}
                         </span>{' '}
