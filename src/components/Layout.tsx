@@ -14,6 +14,7 @@ interface LayoutProps {
 
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(false);
   const { signOut } = useAuth();
 
   const handleLogout = async () => {
@@ -40,7 +41,15 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {/* Desktop sidebar toggle button */}
+      <button
+        onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
+        className="hidden lg:block fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-orange-600 text-white p-2 rounded-r-lg shadow-lg hover:bg-orange-700 transition-colors"
+      >
+        {isDesktopSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:${isDesktopSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 border-b border-gray-200 p-6">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
@@ -62,6 +71,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                   onClick={() => {
                     onNavigate(item.id);
                     setIsMobileMenuOpen(false);
+                    setIsDesktopSidebarOpen(false);
                   }}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-all ${
                     isActive
@@ -92,14 +102,17 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         </div>
       </aside>
 
-      {isMobileMenuOpen && (
+      {(isMobileMenuOpen || isDesktopSidebarOpen) && (
         <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
+          className="fixed inset-0 z-30 bg-black bg-opacity-50"
+          onClick={() => {
+            setIsMobileMenuOpen(false);
+            setIsDesktopSidebarOpen(false);
+          }}
         />
       )}
 
-      <div className="lg:pl-64">
+      <div>
         <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-sm lg:hidden">
           <div className="flex h-16 items-center justify-between px-6">
             <Button
