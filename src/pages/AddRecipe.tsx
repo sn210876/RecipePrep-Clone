@@ -757,7 +757,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       </DialogTitle>
       <DialogDescription>
         <p className="text-orange-600 font-medium">
-          Double-check and edit as needed. Social video recipes may have altered instructions.
+          Double-check and edit as needed. Social Media recipes may have altered instructions.
         </p>
       </DialogDescription>
     </DialogHeader>
