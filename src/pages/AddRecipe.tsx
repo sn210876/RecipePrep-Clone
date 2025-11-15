@@ -10,7 +10,7 @@ import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2 } from 'lucide
 import { useRecipes } from '@/context/RecipeContext';
 import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
-import { extractRecipeFromUrl, isValidUrl, getPlatformFromUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
+import { extractRecipeFromUrl, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
