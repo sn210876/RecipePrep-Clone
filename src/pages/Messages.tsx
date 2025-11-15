@@ -88,7 +88,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
+          table: 'direct_messages',
           filter: `conversation_id=eq.${selectedConversation.id}`,
         },
         async (payload) => {
@@ -97,7 +97,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
           if (newMsg.sender_id !== currentUserId) {
             await supabase
-              .from('messages')
+              .from('direct_messages')
               .update({ read: true })
               .eq('id', newMsg.id);
           }
@@ -147,7 +147,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           .maybeSingle();
 
         const { data: lastMsg } = await supabase
-          .from('messages')
+          .from('direct_messages')
           .select('content, created_at')
           .eq('conversation_id', convo.id)
           .order('created_at', { ascending: false })
@@ -155,7 +155,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           .maybeSingle();
 
         const { count: unreadCount } = await supabase
-          .from('messages')
+          .from('direct_messages')
           .select('*', { count: 'exact', head: true })
           .eq('conversation_id', convo.id)
           .eq('read', false)
@@ -223,7 +223,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
   const loadMessages = async (conversationId: string) => {
     const { data, error } = await supabase
-      .from('messages')
+      .from('direct_messages')
       .select('*')
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true });
@@ -240,7 +240,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     if (!currentUserId) return;
 
     await supabase
-      .from('messages')
+      .from('direct_messages')
       .update({ read: true })
       .eq('conversation_id', conversationId)
       .neq('sender_id', currentUserId)
@@ -250,7 +250,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !currentUserId) return;
 
-    const { error } = await supabase.from('messages').insert({
+    const { error } = await supabase.from('direct_messages').insert({
       conversation_id: selectedConversation.id,
       sender_id: currentUserId,
       content: newMessage.trim(),
