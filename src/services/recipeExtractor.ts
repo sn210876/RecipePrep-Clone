@@ -23,35 +23,31 @@ export interface ExtractedRecipeData {
   sourceUrl: string;
 }
 
+// BEST INGREDIENT PARSER — handles everything
 const parseIngredients = (ings: string[]): Ingredient[] => {
-  return (ings || []).map(ing => {
-    const trimmed = ing.trim();
-    if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
+  return (ings || []).map(raw => {
+    const ing = raw.trim();
+    if (!ing) return { quantity: '', unit: 'cup', name: '' };
 
-    // MUCH BETTER REGEX — handles 1 cup, 2 tsp, 1/2 lb, 3-4 cloves, etc.
-    const quantityMatch = trimmed.match(/^([\d⅛⅙¼⅓½⅔¾⅞⅕⅖⅗⅘⅙⅚⅐⅑⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\.\/\-\s⅟½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅐⅛⅜⅝⅞⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)\s*/);
-    const quantity = quantityMatch ? quantityMatch[1].trim() : '';
+    // Match quantity: 1, 1/2, 1½, 2-3, 10.5, etc.
+    const qtyMatch = ing.match(/^([\d⅛¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅐⅛⅜⅝⅞\.\/\-\s⅟½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅐⅛⅜⅝⅞⅑⅒]+)\s*/);
+    const quantity = qtyMatch ? qtyMatch[1].trim() : '';
 
-    let rest = trimmed;
-    if (quantityMatch) rest = trimmed.slice(quantityMatch[0].length).trim();
+    let rest = qtyMatch ? ing.slice(qtyMatch[0].length).trim() : ing;
 
-    // Common units
-    const unitMatch = rest.match(/^(teaspoons?|tsp\.?|tablespoons?|tbsp\.?|cups?|c\.?|ounces?|oz\.?|pounds?|lbs?\.?|grams?|g\.?|kilograms?|kg\.?|ml|milliliters?|liters?|l\.?|pinch|dash|cloves?|slices?|cans?|packages?|bunches?|heads?|sprigs?)\s+/i);
+    // Match unit: cup, tsp, tbsp, oz, lb, g, kg, ml, pinch, etc.
+    const unitMatch = rest.match(/^(teaspoons?|tsps?\.?|tablespoons?|tbsps?\.?|cups?|c\.?|ounces?|oz\.?|pounds?|lbs?\.?|grams?|g\.?|kilograms?|kgs?\.?|ml|milliliters?|liters?|l\.?|pinch|dash|cloves?|slices?|cans?|packages?|bunches?|heads?|sprigs?)\s+/i);
     const unit = unitMatch ? unitMatch[1].toLowerCase().replace(/\.$/, '') : 'cup';
 
     if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-    const name = rest || trimmed;
+    const name = rest || ing;
 
     return { quantity, unit, name };
   });
 };
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
-  if (!url.trim() || !isValidUrl(url)) {
-    throw new Error('Please enter a valid URL');
-  }
-
-  console.log('[RecipeExtractor] Extracting from:', url);
+  if (!url.trim() || !isValidUrl(url)) throw new Error('Please enter a valid URL');
 
   const response = await fetch(API_URL, {
     method: 'POST',
@@ -64,38 +60,33 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[RecipeExtractor] Error:', errorText);
-    throw new Error('Failed to extract recipe. Try a different URL.');
+    const err = await response.text();
+    throw new Error('Failed to extract recipe: ' + err);
   }
 
   const data = await response.json();
-  console.log('[RecipeExtractor] Raw data:', data);
 
-  const ingredients = parseIngredients(data.ingredients || []);
-  const instructions = Array.isArray(data.instructions)
-    ? data.instructions
-    : typeof data.instructions === 'string'
-      ? data.instructions.split('\n').map(s => s.trim()).filter(Boolean)
-      : [];
-
-  const isSocialMedia = /tiktok\.com|instagram\.com|youtube\.com|youtu\.be/i.test(url);
+  const isSocial = /instagram\.com|tiktok\.com|youtube\.com|youtu\.be/i.test(url);
 
   return {
     title: data.title || 'Untitled Recipe',
     description: 'Extracted recipe',
-    creator: data.author || 'Unknown',
-    ingredients,
-    instructions,
-    prepTime: String(data.prep_time || data.time || 30),
-    cookTime: String(data.cook_time || data.time || 45),
-    servings: String(data.yield || '4'),
+    creator: data.author || data.creator || 'Unknown',
+    ingredients: parseIngredients(data.ingredients || []),
+    instructions: Array.isArray(data.instructions)
+      ? data.instructions
+      : typeof data.instructions === 'string'
+        ? data.instructions.split('\n').map(s => s.trim()).filter(Boolean)
+        : [],
+    prepTime: String(data.prep_time || 30),
+    cookTime: String(data.cook_time || 45),
+    servings: String(data.yield || data.servings || '4'),
     cuisineType: 'Global',
     difficulty: 'Medium',
     mealTypes: ['Dinner'],
     dietaryTags: [],
     imageUrl: data.image || data.thumbnail || '',
-    videoUrl: isSocialMedia ? url : undefined,
+    videoUrl: isSocial ? url : undefined,
     notes: data.notes || '',
     sourceUrl: url,
   };
@@ -103,11 +94,4 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
 export function isValidUrl(url: string): boolean {
   try { new URL(url); return true; } catch { return false; }
-}
-
-export function getPlatformFromUrl(url: string): string {
-  if (/tiktok\.com/i.test(url)) return 'TikTok';
-  if (/instagram\.com/i.test(url)) return 'Instagram';
-  if (/youtube\.com|youtu\.be/i.test(url)) return 'YouTube';
-  return 'Website';
 }
