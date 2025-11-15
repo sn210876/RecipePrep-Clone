@@ -9,24 +9,30 @@ const corsHeaders = {
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 
 async function parseWithAI(text: string): Promise<{ ingredients: string[], instructions: string[], notes: string, prep_time: number, cook_time: number, yield: string }> {
-  if (!text.trim() || !OPENAI_API_KEY) return { ingredients: [], instructions: [], notes: "", prep_time: 0, cook_time: 0, yield: "" };
+  if (!text.trim() || !OPENAI_API_KEY) {
+    console.log("[recipe-proxy] AI parsing skipped:", !text.trim() ? "No text" : "No API key");
+    return { ingredients: [], instructions: [], notes: "", prep_time: 0, cook_time: 0, yield: "" };
+  }
 
+  console.log("[recipe-proxy] Calling OpenAI for extraction...");
   const prompt = `You are a recipe extraction expert. Extract ALL ingredients, ALL instructions, prep time, cook time, and yield from the recipe text. TRANSLATE EVERYTHING TO ENGLISH.
 
 CRITICAL RULES:
 1. If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
-2. Extract EVERY SINGLE ingredient listed in the recipe - do not skip any.
-3. Extract EVERY SINGLE instruction step - include all details and sub-steps.
-4. Preserve quantities, measurements, and cooking times exactly.
-5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include all of them.
-6. If there are detailed preparation steps, include them all.
-7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed).
-8. Extract yield/servings information.
+2. Extract EVERY SINGLE ingredient listed in the recipe - do not skip ANY ingredients, no matter how small.
+3. Extract EVERY SINGLE instruction step - include ALL details, sub-steps, temperatures, and cooking techniques.
+4. Preserve quantities, measurements, temperatures, and cooking times EXACTLY as written.
+5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include ALL of them.
+6. If there are detailed preparation steps, include EVERY SINGLE ONE with full details.
+7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed, e.g., 1 hour = 60 minutes).
+8. Extract yield/servings information exactly as stated.
+9. Include ALL cooking details: temperatures, baking times, resting times, checking for doneness, etc.
+10. DO NOT summarize or combine steps - each instruction should be complete and detailed.
 
 Return ONLY valid JSON in this exact format:
 {
   "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt", ...],
-  "instructions": ["Step 1 with full details", "Step 2 with full details", ...],
+  "instructions": ["Step 1 with full details including temperatures and times", "Step 2 with full details", ...],
   "prep_time": 15,
   "cook_time": 120,
   "yield": "4-5 servings",
@@ -34,7 +40,7 @@ Return ONLY valid JSON in this exact format:
 }
 
 Text to extract from:
-${text.slice(0, 20000)}`;
+${text.slice(0, 25000)}`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -47,16 +53,18 @@ ${text.slice(0, 20000)}`;
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.1,
-        max_tokens: 3000,
+        max_tokens: 4000,
       }),
     });
 
     const data = await response.json();
+    console.log("[recipe-proxy] OpenAI response received");
     const content = data.choices[0].message.content;
     const jsonMatch = content.match(/\{.*\}/s);
 
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
+      console.log("[recipe-proxy] AI extracted:", parsed.ingredients?.length, "ingredients",parsed.instructions?.length, "instructions");
       return {
         ingredients: parsed.ingredients || [],
         instructions: parsed.instructions || [],
@@ -67,7 +75,7 @@ ${text.slice(0, 20000)}`;
       };
     }
   } catch (e) {
-    console.error("AI parse error:", e);
+    console.error("[recipe-proxy] AI parse error:", e);
   }
 
   return { ingredients: [], instructions: [], notes: "", prep_time: 0, cook_time: 0, yield: "" };
@@ -77,22 +85,31 @@ async function scrapeRecipeSite(url: string) {
   try {
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.5',
+      'Referer': 'https://www.google.com/'
     };
 
     const response = await fetch(url, { headers });
     const html = await response.text();
 
-    const ogTitleMatch = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i);
-    const twitterTitleMatch = html.match(/<meta\s+name="twitter:title"\s+content="([^"]+)"/i);
+    console.log("[recipe-proxy] HTML fetched, length:", html.length);
+
+    const ogTitleMatch = html.match(/<meta\s+property=\"og:title\"\s+content=\"([^\"]+)\"/i);
+    const twitterTitleMatch = html.match(/<meta\s+name=\"twitter:title\"\s+content=\"([^\"]+)\"/i);
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
     const rawTitle = ogTitleMatch?.[1] || twitterTitleMatch?.[1] || (titleMatch ? titleMatch[1] : 'Recipe');
     const title = rawTitle.split('|')[0].split('-')[0].split('•')[0].split(':')[0].trim();
 
-    const recipeMatches = html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/gi);
+    const recipeMatches = html.matchAll(/<script[^>]*type=\"application\/ld\+json\"[^>]*>([\s\S]*?)<\/script>/gi);
+    let foundCount = 0;
     for (const match of recipeMatches) {
+      foundCount++;
+      console.log(`[recipe-proxy] Found JSON-LD block #${foundCount}`);
       try {
         const json = JSON.parse(match[1]);
         const recipes = Array.isArray(json) ? json : [json];
+        console.log(`[recipe-proxy] Parsed JSON-LD, checking for Recipe type...`);
 
         for (const item of recipes) {
           if (item['@type'] === 'Recipe' || (Array.isArray(item['@graph']) && item['@graph'].some((g: any) => g['@type'] === 'Recipe'))) {
@@ -104,10 +121,10 @@ async function scrapeRecipeSite(url: string) {
                     if (typeof i === 'string') return i;
                     if (i.text) return i.text;
                     if (i.itemListElement) {
-                      return i.itemListElement.map((e: any) => e.text || '').join(' ');
+                      return i.itemListElement.map((e: any) => e.text || '').filter(Boolean);
                     }
                     return '';
-                  }).filter(Boolean)
+                  }).flat().filter(Boolean)
                 : typeof recipe.recipeInstructions === 'string'
                   ? recipe.recipeInstructions.split('\n').filter(Boolean)
                   : [];
@@ -123,12 +140,33 @@ async function scrapeRecipeSite(url: string) {
                 return 0;
               };
 
+              const extractImage = (img: any): string => {
+                if (typeof img === 'string') return img;
+                if (img?.url) return img.url;
+                if (Array.isArray(img) && img.length > 0) {
+                  return typeof img[0] === 'string' ? img[0] : img[0]?.url || '';
+                }
+                return '';
+              };
+
+              const extractYield = (yld: any): string => {
+                if (typeof yld === 'string') return yld;
+                if (typeof yld === 'number') return String(yld);
+                if (Array.isArray(yld) && yld.length > 0) return String(yld[0]);
+                return '';
+              };
+
+              console.log('[recipe-proxy] ✓ Structured data found');
+              console.log('[recipe-proxy] Recipe name:', recipe.name);
+              console.log('[recipe-proxy] Ingredients count:', recipe.recipeIngredient?.length);
+              console.log('[recipe-proxy] Instructions count:', instructions.length);
+
               return {
                 title: recipe.name || title,
                 ingredients: recipe.recipeIngredient || [],
                 instructions,
-                image: recipe.image?.url || (Array.isArray(recipe.image) ? recipe.image[0] : recipe.image) || '',
-                yield: recipe.recipeYield || '',
+                image: extractImage(recipe.image),
+                yield: extractYield(recipe.recipeYield),
                 prep_time: parseTime(recipe.prepTime),
                 cook_time: parseTime(recipe.cookTime),
                 time: parseTime(recipe.totalTime) || (parseTime(recipe.prepTime) + parseTime(recipe.cookTime)),
@@ -138,18 +176,23 @@ async function scrapeRecipeSite(url: string) {
           }
         }
       } catch (e) {
-        console.error("JSON parse error:", e);
+        console.error("[recipe-proxy] JSON parse error:", e);
         continue;
       }
     }
 
-    const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
-    const twitterImageMatch = html.match(/<meta\s+name="twitter:image"\s+content="([^"]+)"/i);
-    const firstImgMatch = html.match(/<img[^>]+src="([^"]+)"/i);
+    console.log(`[recipe-proxy] Total JSON-LD blocks found: ${foundCount}`);
+    console.log("[recipe-proxy] No Recipe schema found in structured data");
+
+    const ogImageMatch = html.match(/<meta\s+property=\"og:image\"\s+content=\"([^\"]+)\"/i);
+    const twitterImageMatch = html.match(/<meta\s+name=\"twitter:image\"\s+content=\"([^\"]+)\"/i);
+    const firstImgMatch = html.match(/<img[^>]+src=\"([^\"]+)\"/i);
     const imageUrl = ogImageMatch?.[1] || twitterImageMatch?.[1] || firstImgMatch?.[1] || '';
 
+    console.log("[recipe-proxy] Falling back to AI extraction");
     const aiResult = await parseWithAI(html);
     if (aiResult.ingredients.length > 0) {
+      console.log("[recipe-proxy] AI extraction successful");
       return {
         title,
         ingredients: aiResult.ingredients,
@@ -163,9 +206,10 @@ async function scrapeRecipeSite(url: string) {
       };
     }
 
+    console.log("[recipe-proxy] AI extraction failed - no ingredients found");
     return null;
   } catch (e) {
-    console.error("Scrape error:", e);
+    console.error("[recipe-proxy] Scrape error:", e);
     return null;
   }
 }
@@ -194,11 +238,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("Extracting from:", url);
+    console.log("[recipe-proxy] Extracting from:", url);
 
     const result = await scrapeRecipeSite(url);
 
     if (result) {
+      console.log("[recipe-proxy] Returning result:", {
+        title: result.title,
+        ingredientsCount: result.ingredients?.length,
+        instructionsCount: result.instructions?.length,
+      });
+
       return new Response(
         JSON.stringify(result),
         {
@@ -211,20 +261,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const renderResponse = await fetch("https://recipe-backend-nodejs-1.onrender.com/extract", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url }),
-    });
-
-    const renderData = await renderResponse.json();
-
     return new Response(
-      JSON.stringify(renderData),
+      JSON.stringify({ error: "Failed to extract recipe data" }),
       {
-        status: renderResponse.ok ? 200 : renderResponse.status,
+        status: 500,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
@@ -232,6 +272,7 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error) {
+    console.error("[recipe-proxy] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message || "Failed to extract recipe" }),
       {
