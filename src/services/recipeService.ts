@@ -4,8 +4,6 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://vohvdarghgqsk
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const RECIPE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
-
-// YOUR OLD WORKING RENDER SERVER (still alive and perfect)
 const RENDER_VIDEO_EXTRACTOR = 'https://recipe-backend-nodejs-1.onrender.com/extract';
 
 export interface ExtractedRecipeData {
@@ -27,20 +25,36 @@ export interface ExtractedRecipeData {
   sourceUrl: string;
 }
 
+// MOVED OUTSIDE — NOW ACCESSIBLE TO BOTH PATHS
+const parseIngredients = (ings: string[]): Ingredient[] => {
+  return ings.map(ing => {
+    const trimmed = ing.trim();
+    if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
+    const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
+    const quantity = quantityMatch ? quantityMatch[1].trim() : '';
+    let rest = trimmed.slice(quantity.length).trim();
+    const unitMatch = rest.match(/^(cups?|tbsps?|tsps?|tablespoons?|teaspoons?|ozs?|ounces?|lbs?|pounds?|grams?|kgs?|kilograms?|mls?|milliliters?|liters?|pinch|dash|cloves?|stalks?|pieces?|slices?|packages?)\s+/i);
+    const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : 'cup';
+    if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
+    const name = rest || trimmed;
+    return { quantity, unit, name };
+  });
+};
+
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   if (!url.trim() || !isValidUrl(url)) {
     throw new Error('Please enter a valid URL');
   }
 
-  const isSocialMedia = 
-    url.includes('tiktok.com') || 
-    url.includes('instagram.com') || 
-    url.includes('youtube.com') || 
+  const isSocialMedia =
+    url.includes('instagram.com') ||
+    url.includes('tiktok.com') ||
+    url.includes('youtube.com') ||
     url.includes('youtu.be');
 
-  // SOCIAL MEDIA → USE YOUR OLD WORKING RENDER SERVER (yt-dlp + Whisper)
+  // SOCIAL MEDIA → RENDER.COM (your perfect video extractor)
   if (isSocialMedia) {
-    console.log('[RecipeExtractor] Social media detected → using Render.com extractor');
+    console.log('[RecipeExtractor] Social media → Render.com');
     try {
       const response = await fetch(RENDER_VIDEO_EXTRACTOR, {
         method: 'POST',
@@ -50,15 +64,17 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
       if (!response.ok) {
         const err = await response.text();
-        console.error('Render extractor failed:', err);
-        throw new Error('Failed to extract from video. Try a different link.');
+        console.error('Render failed:', err);
+        throw new Error('Video extraction failed');
       }
 
       const data = await response.json();
-      console.log('[RecipeExtractor] Render.com success:', data);
+      console.log('[RecipeExtractor] Render success:', data);
 
       const ingredients = parseIngredients(data.ingredients || []);
-      const proxiedImage = data.thumbnail ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}` : '';
+      const proxiedImage = data.thumbnail
+        ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}`
+        : '';
 
       return {
         title: data.title || 'Video Recipe',
@@ -75,17 +91,17 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         dietaryTags: [],
         imageUrl: proxiedImage,
         videoUrl: url,
-        notes: data.notes || 'Extracted from video audio',
+        notes: data.notes || 'From video audio',
         sourceUrl: url,
       };
     } catch (e) {
       console.error('Render extractor error:', e);
-      throw new Error('Video extraction failed. Try a different link.');
+      throw new Error('Failed to extract from video');
     }
   }
 
-  // NORMAL WEBSITES → SUPABASE (AllRecipes, BBC, etc.)
-  console.log('[RecipeExtractor] Regular website → using Supabase');
+  // NORMAL WEBSITES → SUPABASE
+  console.log('[RecipeExtractor] Regular site → Supabase');
   const response = await fetch(RECIPE_FUNCTION_URL, {
     method: 'POST',
     headers: {
@@ -96,18 +112,16 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     body: JSON.stringify({ url: url.trim() }),
   });
 
-  console.log('[RecipeExtractor] Supabase response status:', response.status);
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('[RecipeExtractor] Supabase error:', errorText);
-    throw new Error('Failed to extract recipe. Try a different URL.');
+    console.error('Supabase error:', errorText);
+    throw new Error('Failed to extract recipe');
   }
 
   const data = await response.json();
-  console.log('[RecipeExtractor] Supabase raw response:', data);
 
   if (!data.title || !data.ingredients || !data.instructions) {
-    throw new Error('Invalid recipe data received from server');
+    throw new Error('Invalid recipe data');
   }
 
   const ingredients = parseIngredients(data.ingredients);
@@ -115,7 +129,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.image)}&apikey=${SUPABASE_ANON_KEY}`
     : '';
 
-  const result: ExtractedRecipeData = {
+  return {
     title: data.title,
     description: 'Extracted recipe',
     creator: 'Unknown',
@@ -133,26 +147,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     notes: data.notes || '',
     sourceUrl: url,
   };
-
-  console.log('[RecipeExtractor] FINAL RESULT:', result);
-  return result;
 }
-
-// YOUR ORIGINAL INGREDIENT PARSER — UNTOUCHED
-const parseIngredients = (ings: string[]): Ingredient[] => {
-  return ings.map(ing => {
-    const trimmed = ing.trim();
-    if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
-    const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
-    const quantity = quantityMatch ? quantityMatch[1].trim() : '';
-    let rest = trimmed.slice(quantity.length).trim();
-    const unitMatch = rest.match(/^(cups?|tbsps?|tsps?|tablespoons?|teaspoons?|ozs?|ounces?|lbs?|pounds?|grams?|kgs?|kilograms?|mls?|milliliters?|liters?|pinch|dash|cloves?|stalks?|pieces?|slices?|packages?)\s+/i);
-    const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : 'cup';
-    if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-    const name = rest || trimmed;
-    return { quantity, unit, name };
-  });
-};
 
 export function isValidUrl(url: string): boolean {
   try {
