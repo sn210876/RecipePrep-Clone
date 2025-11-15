@@ -16,18 +16,37 @@ interface ExtractedRecipeData {
 }
 
 const RECIPE_PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/recipe-proxy`;
+const LOCAL_VIDEO_EXTRACT_URL = 'http://localhost:3000/api/extract-recipe-from-video';
+
+function isSocialMediaUrl(url: string): boolean {
+  return url.includes('instagram.com') ||
+         url.includes('tiktok.com') ||
+         url.includes('youtube.com') ||
+         url.includes('youtu.be') ||
+         url.includes('facebook.com') ||
+         url.includes('fb.watch');
+}
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   try {
-    console.log('[RecipeExtractor] Fetching from:', RECIPE_PROXY_URL);
-    console.log('[RecipeExtractor] URL to extract:', url);
+    const useLocalServer = isSocialMediaUrl(url);
+    const endpoint = useLocalServer ? LOCAL_VIDEO_EXTRACT_URL : RECIPE_PROXY_URL;
 
-    const response = await fetch(RECIPE_PROXY_URL, {
+    console.log('[RecipeExtractor] Fetching from:', endpoint);
+    console.log('[RecipeExtractor] URL to extract:', url);
+    console.log('[RecipeExtractor] Using local server:', useLocalServer);
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (!useLocalServer) {
+      headers['Authorization'] = `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`;
+    }
+
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
+      headers,
       body: JSON.stringify({ url }),
     });
 
@@ -42,11 +61,13 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     const data = await response.json();
     console.log('[RecipeExtractor] Raw response:', data);
 
-    if (!data.title || !data.ingredients || !data.instructions) {
+    const recipeData = useLocalServer && data.recipe ? data.recipe : data;
+
+    if (!recipeData.title || !recipeData.ingredients || !recipeData.instructions) {
       throw new Error('Invalid recipe data received from server');
     }
 
-    const ingredients: Ingredient[] = data.ingredients.map((ing: string) => {
+    const ingredients: Ingredient[] = recipeData.ingredients.map((ing: string) => {
       const match = ing.match(/^([\d\/\.]+)\s*(\w+)?\s+(.+)$/);
       if (match) {
         return {
@@ -63,18 +84,18 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     });
 
     return {
-      title: data.title,
+      title: recipeData.title,
       ingredients,
-      instructions: data.instructions,
-      prepTime: data.prep_time ? String(data.prep_time) : '0',
-      cookTime: data.cook_time ? String(data.cook_time) : '0',
-      servings: data.yield || '4',
+      instructions: recipeData.instructions,
+      prepTime: recipeData.prep_time ? String(recipeData.prep_time) : '0',
+      cookTime: recipeData.cook_time ? String(recipeData.cook_time) : '0',
+      servings: recipeData.yield || '4',
       cuisineType: 'International',
       difficulty: 'Medium',
       mealTypes: ['Dinner'],
       dietaryTags: [],
-      imageUrl: data.image || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
-      notes: data.notes || 'Extracted from recipe URL',
+      imageUrl: recipeData.image || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+      notes: recipeData.notes || 'Extracted from recipe URL',
     };
 
   } catch (error) {
