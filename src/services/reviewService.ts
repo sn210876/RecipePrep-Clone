@@ -147,35 +147,23 @@ export async function createReview(
   }
 
   try {
-    const { data: recipe } = await supabase
-      .from('public_recipes')
-      .select('video_url')
-      .eq('id', recipeId)
-      .maybeSingle();
+    const { data: posts } = await supabase
+      .from('posts')
+      .select('id')
+      .eq('recipe_id', recipeId);
 
-    if (recipe?.video_url) {
-      const { data: post } = await supabase
-        .from('posts')
-        .select('id')
-        .eq('recipe_url', recipe.video_url)
-        .maybeSingle();
+    if (posts && posts.length > 0) {
+      const postId = posts[0].id;
 
-      if (post) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', user.id)
-          .maybeSingle();
+      const ratingText = '🔥'.repeat(rating);
+      const commentText = comment ? ` ${comment}` : '';
 
-        const ratingText = '🔥'.repeat(rating);
-        const commentText = comment ? `: ${comment}` : '';
-
-        await supabase.from('comments').insert({
-          post_id: post.id,
-          user_id: user.id,
-          text: `${profile?.username || 'User'} rated this ${ratingText}${commentText}`,
-        });
-      }
+      await supabase.from('comments').insert({
+        post_id: postId,
+        user_id: user.id,
+        text: `${ratingText}${commentText}`,
+        rating: rating,
+      });
     }
   } catch (error) {
     console.error('Failed to add review as comment to social post:', error);

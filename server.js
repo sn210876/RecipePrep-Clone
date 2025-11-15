@@ -112,34 +112,37 @@ async function convertImageToBase64(imagePath) {
 }
 
 async function extractRecipeFromTranscript(transcript, thumbnailBase64, videoMetadata) {
-  const prompt = `You are a recipe extraction expert. Based on the following video information, extract a complete recipe and return it as valid JSON with no additional text or markdown.
+  const prompt = `You are a recipe extraction expert. Your PRIMARY SOURCE is the video transcript - this is the most important source of information.
 
-Video Transcript:
+===== VIDEO TRANSCRIPT (PRIMARY SOURCE - USE THIS FIRST) =====
 ${transcript}
 
-${videoMetadata.description ? `Video Description:\n${videoMetadata.description}\n` : ''}
+${videoMetadata.description ? `===== VIDEO DESCRIPTION (SECONDARY SOURCE) =====\n${videoMetadata.description}\n` : ''}
 
-IMPORTANT INSTRUCTIONS:
-1. Extract ingredients EXACTLY as mentioned in the transcript or description
-2. Extract cooking instructions EXACTLY as described in the transcript, in the order they appear
-3. Use the actual words and measurements from the transcript/description
-4. If the creator says "a pinch" or "to taste", use those exact phrases
-5. Break down the instructions into clear steps matching what was said
+CRITICAL EXTRACTION RULES:
+1. THE TRANSCRIPT IS YOUR PRIMARY SOURCE - extract ALL ingredients and instructions from it first
+2. Only use the description if the transcript is incomplete or unclear
+3. Extract ingredients WORD-FOR-WORD from the transcript - do not paraphrase
+4. Extract cooking steps EXACTLY as spoken in the transcript, in the exact order
+5. If measurements are mentioned in the transcript (cups, tablespoons, pinches), use those EXACT terms
+6. If the creator says "some", "a bit", "to taste", preserve those exact phrases
+7. Each sentence or instruction in the transcript should typically become one step
+8. Do NOT make up or infer information - only use what was actually said
 
 Extract and return ONLY a valid JSON object with this exact structure (no markdown, no code blocks, just raw JSON):
 {
   "title": "string - recipe name from video",
-  "description": "string - brief description from video or create one",
+  "description": "string - brief description from video",
   "ingredients": [
     {
-      "quantity": "string - exact amount mentioned",
-      "unit": "string - exact unit mentioned (cup, tbsp, pinch, to taste, etc)",
-      "name": "string - ingredient name"
+      "quantity": "string - EXACT amount from transcript",
+      "unit": "string - EXACT unit from transcript (cup, tbsp, pinch, to taste, etc)",
+      "name": "string - EXACT ingredient name from transcript"
     }
   ],
   "instructions": [
-    "string - step 1 EXACTLY as mentioned",
-    "string - step 2 EXACTLY as mentioned"
+    "string - step 1 EXACTLY as said in transcript",
+    "string - step 2 EXACTLY as said in transcript"
   ],
   "prepTime": number - minutes (estimate if not mentioned),
   "cookTime": number - minutes (estimate if not mentioned),
@@ -149,7 +152,7 @@ Extract and return ONLY a valid JSON object with this exact structure (no markdo
   "dietaryTags": ["string - tags like Vegetarian, Vegan, etc"]
 }
 
-Make sure all fields are present. Extract information from both transcript AND description if available.`;
+Remember: The transcript is the truth - extract from it verbatim. Do not create, invent, or modify ingredients or steps.`;
 
   try {
     const response = await openai.chat.completions.create({

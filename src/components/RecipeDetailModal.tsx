@@ -127,13 +127,13 @@ export function RecipeDetailModal({
               <X className="w-5 h-5" />
             </Button>
 
-            <div className="relative h-80 overflow-hidden">
+            <div className="relative flex items-center justify-center bg-gray-100">
               <img
                 src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
                   ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
                   : recipe.imageUrl}
                 alt={recipe.title}
-                className="w-full h-full object-cover"
+                className="w-48 h-48 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
