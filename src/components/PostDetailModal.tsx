@@ -3,7 +3,8 @@ import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
-import { supabase, isAdmin } from '@/lib/supabase'; // ← Added isAdmin
+import { supabase, isAdmin } from '@/lib/supabase';
+import { RatingDisplay } from './RatingDisplay';
 import { toast } from 'sonner';
 
 interface Post {
@@ -51,6 +52,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [reviews, setReviews] = useState<Review[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [newRating, setNewRating] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -198,22 +200,31 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   };
 
   const handleAddComment = async () => {
-    if (!post || !newComment.trim()) return;
+    if (!post) return;
+    if (!newComment.trim() && newRating === 0) return;
+
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
+
+      const ratingText = newRating > 0 ? '🔥'.repeat(newRating) : '';
+      const commentText = newComment.trim() ? (newRating > 0 ? ` - ${newComment.trim()}` : newComment.trim()) : '';
+      const finalText = ratingText + commentText;
+
       const { error } = await supabase
         .from('comments')
         .insert({
           post_id: post.id,
           user_id: user.id,
-          text: newComment.trim()
+          text: finalText,
+          rating: newRating > 0 ? newRating : null
         });
       if (error) throw error;
       setNewComment('');
+      setNewRating(0);
       await loadReviewsAndComments();
-      toast.success('Comment added!');
+      toast.success(newRating > 0 ? 'Rating added!' : 'Comment added!');
     } catch (error) {
       console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
@@ -354,13 +365,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                         {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                           <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         )}
-                        <div className="flex">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}>
-                              Star
-                            </span>
-                          ))}
-                        </div>
+                        <RatingDisplay rating={review.rating} size="sm" />
                       </div>
                       <p className="text-sm text-gray-700">{review.comment}</p>
                     </div>
@@ -404,22 +409,36 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                 <MessageCircle className="w-6 h-6 text-gray-700" />
               </div>
 
-              <div className="flex gap-2">
-                <Textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  rows={2}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleAddComment();
-                    }
-                  }}
-                />
-                <Button onClick={handleAddComment} disabled={loading || !newComment.trim()} size="sm">
-                  Post
-                </Button>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Rate this recipe:</span>
+                  <RatingDisplay rating={newRating} interactive onRate={setNewRating} size="sm" />
+                  {newRating > 0 && (
+                    <button
+                      onClick={() => setNewRating(0)}
+                      className="text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder={newRating > 0 ? "Add a comment about your rating (optional)..." : "Add a comment..."}
+                    rows={2}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleAddComment();
+                      }
+                    }}
+                  />
+                  <Button onClick={handleAddComment} disabled={loading || (!newComment.trim() && newRating === 0)} size="sm">
+                    Post
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
