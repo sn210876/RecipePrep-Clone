@@ -292,7 +292,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           if (user) {
             const postImageUrl = imageUrl.trim()
               ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')
-                ? `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
+                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
                 : imageUrl.trim())
               : null;
 
@@ -440,7 +440,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 <div className="space-y-2">
                   <div className="relative w-full rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
                     <img
-                      src={`https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
+                      src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
                       alt={title || 'Recipe'}
                       className="w-full h-64 object-cover"
                       onError={(e) => {
@@ -765,7 +765,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                   {extractedData.imageUrl && (
                     <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
                       <img
-                        src={`https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(extractedData.imageUrl.replace(/&amp;/g, '&'))}`}
+                        src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl.replace(/&amp;/g, '&'))}`}
                         alt={extractedData.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {

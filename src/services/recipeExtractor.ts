@@ -1,7 +1,7 @@
 import { Ingredient } from '@/types/recipe';
 
-const SUPABASE_URL = 'https://vohvdarghgqskzqjclux.supabase.co';
-const API_URL = `${SUPABASE_URL}/functions/v1/smart-handler`;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 export interface ExtractedRecipeData {
   title: string;
