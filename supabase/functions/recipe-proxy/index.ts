@@ -237,44 +237,49 @@ async function scrapeRecipeSite(url: string) {
 
 async function extractInstagramVideo(url: string) {
   try {
-    console.log("[recipe-proxy] Extracting Instagram video with yt-dlp");
+    console.log("[recipe-proxy] Extracting Instagram content");
 
-    const process = new Deno.Command("yt-dlp", {
-      args: [
-        "--dump-json",
-        "--no-playlist",
-        url
-      ],
-      stdout: "piped",
-      stderr: "piped",
-    });
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.5',
+      'Referer': 'https://www.instagram.com/'
+    };
 
-    const { stdout, stderr, success } = await process.output();
+    const response = await fetch(url, { headers });
 
-    if (!success) {
-      const errorText = new TextDecoder().decode(stderr);
-      console.error("[recipe-proxy] yt-dlp error:", errorText);
-      throw new Error("Failed to extract video metadata");
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Instagram page: ${response.status}`);
     }
 
-    const output = new TextDecoder().decode(stdout);
-    const metadata = JSON.parse(output);
+    const html = await response.text();
 
-    const description = metadata.description || "";
-    const title = metadata.title || metadata.uploader || "Instagram Recipe";
-    const thumbnail = metadata.thumbnail || "";
+    const descriptionMatch = html.match(/\"caption\":\"([^\"]+)\"/);    const description = descriptionMatch ? descriptionMatch[1]
+      .replace(/\\n/g, '\n')
+      .replace(/\\u([0-9a-fA-F]{4})/g, (match, code) => String.fromCharCode(parseInt(code, 16)))
+      : "";
 
-    console.log("[recipe-proxy] Instagram metadata extracted, analyzing with AI");
+    const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+    const title = titleMatch ? titleMatch[1].split('•')[0].trim() : "Instagram Recipe";
+
+    const imageMatch = html.match(/\"display_url\":\"([^\"]+)\"/);    const thumbnail = imageMatch ? imageMatch[1].replace(/\\u0026/g, '&') : "";
+
+    console.log("[recipe-proxy] Instagram content extracted, analyzing with AI");
+    console.log("[recipe-proxy] Description length:", description.length);
 
     if (!OPENAI_API_KEY) {
       throw new Error("OpenAI API key not configured");
+    }
+
+    if (!description || description.length < 20) {
+      throw new Error("No description found in Instagram post");
     }
 
     const aiResult = await parseWithAI(description);
 
     if (aiResult.ingredients.length > 0) {
       return {
-        title,
+        title: title.includes('Instagram') ? aiResult.instructions[0]?.substring(0, 50) || title : title,
         ingredients: aiResult.ingredients,
         instructions: aiResult.instructions,
         image: thumbnail,
@@ -282,14 +287,14 @@ async function extractInstagramVideo(url: string) {
         prep_time: aiResult.prep_time || 0,
         cook_time: aiResult.cook_time || 0,
         time: aiResult.prep_time + aiResult.cook_time || 0,
-        notes: `Extracted from Instagram video`,
+        notes: `Extracted from Instagram post`,
       };
     }
 
-    return null;
+    throw new Error("Could not extract recipe from Instagram description");
   } catch (error) {
     console.error("[recipe-proxy] Instagram extraction error:", error);
-    return null;
+    throw error;
   }
 }
 
