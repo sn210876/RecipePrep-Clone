@@ -272,8 +272,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg">{post.title || 'Post'}</h3>
-              <div className="flex gap-2">
+              <h3 className="font-semibold text-lg flex-1 pr-4">{post.title || 'Post'}</h3>
+              <div className="flex gap-1 mr-8">
                 {(post.user_id === currentUserId) && (
                   <Button
                     variant="ghost"
