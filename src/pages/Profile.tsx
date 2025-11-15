@@ -130,21 +130,39 @@ export function Profile() {
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${userId}/avatar.${fileExt}`;
 
+      console.log('[Avatar] Uploading to:', fileName);
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('[Avatar] Upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
-      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId);
+      console.log('[Avatar] Public URL:', publicUrl);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('[Avatar] DB update error:', updateError);
+        throw updateError;
+      }
+
+      console.log('[Avatar] Successfully saved to DB');
 
       setProfile(prev => prev ? { ...prev, avatar_url: publicUrl + '?t=' + Date.now() } : null);
       toast.success('Avatar updated!');
     } catch (err: any) {
+      console.error('[Avatar] Error:', err);
       toast.error('Upload failed: ' + err.message);
     } finally {
       setUploading(false);
@@ -170,21 +188,39 @@ export function Profile() {
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${userId}/banner.${fileExt}`;
 
+      console.log('[Banner] Uploading to:', fileName);
+
       const { error: uploadError } = await supabase.storage
         .from('banners')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('[Banner] Upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('banners')
         .getPublicUrl(fileName);
 
-      await supabase.from('profiles').update({ banner_url: publicUrl }).eq('id', userId);
+      console.log('[Banner] Public URL:', publicUrl);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ banner_url: publicUrl })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('[Banner] DB update error:', updateError);
+        throw updateError;
+      }
+
+      console.log('[Banner] Successfully saved to DB');
 
       setProfile(prev => prev ? { ...prev, banner_url: publicUrl + '?t=' + Date.now() } : null);
       toast.success('Banner updated!');
     } catch (err: any) {
+      console.error('[Banner] Error:', err);
       toast.error('Upload failed: ' + err.message);
     } finally {
       setUploading(false);
