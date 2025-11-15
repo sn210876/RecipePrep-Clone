@@ -130,7 +130,7 @@ export function RecipeDetailModal({
             <div className="relative h-80 overflow-hidden">
               <img
                 src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                  ? `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
                   : recipe.imageUrl}
                 alt={recipe.title}
                 className="w-full h-full object-cover"
