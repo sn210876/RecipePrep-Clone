@@ -756,7 +756,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         Review Extracted Recipe
       </DialogTitle>
       <DialogDescription>
-        <p className="text-orange-600 font-medium">
+        <p className="text-blue-600 font-medium">
           Double-check and edit as needed. Social Media recipes may have altered instructions.
         </p>
       </DialogDescription>
