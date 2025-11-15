@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import { Send, Star } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 interface Comment {
   id: string;
@@ -229,15 +229,15 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-2">
               <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-5 h-5 ${
-                      star <= averageRating
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
+                {[1, 2, 3, 4, 5].map((fire) => (
+                  <span
+                    key={fire}
+                    className={`text-xl ${
+                      fire <= averageRating
+                        ? 'opacity-100'
+                        : 'opacity-20 grayscale'
                     }`}
-                  />
+                  >🔥</span>
                 ))}
               </div>
               <span className="text-sm text-gray-600">
@@ -249,22 +249,22 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700 font-medium">Your rating:</span>
               <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
+                {[1, 2, 3, 4, 5].map((fire) => (
                   <button
-                    key={star}
+                    key={fire}
                     type="button"
-                    onClick={() => handleRatingClick(star)}
-                    onMouseEnter={() => setHoverRating(star)}
+                    onClick={() => handleRatingClick(fire)}
+                    onMouseEnter={() => setHoverRating(fire)}
                     onMouseLeave={() => setHoverRating(0)}
                     className="transition-transform hover:scale-110"
                   >
-                    <Star
-                      className={`w-6 h-6 ${
-                        star <= (hoverRating || userRating)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
+                    <span
+                      className={`text-2xl ${
+                        fire <= (hoverRating || userRating)
+                          ? 'opacity-100'
+                          : 'opacity-20 grayscale'
                       }`}
-                    />
+                    >🔥</span>
                   </button>
                 ))}
               </div>

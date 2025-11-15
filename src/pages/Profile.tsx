@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown } from 'lucide-react';
+import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
@@ -208,6 +208,50 @@ export function Profile() {
     } catch (error: any) {
       console.error('Error uploading banner:', error);
       toast.error('Failed to upload banner');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (!userId) return;
+
+    setUploading(true);
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: null })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
+      toast.success('Avatar removed successfully!');
+    } catch (error: any) {
+      console.error('Error removing avatar:', error);
+      toast.error('Failed to remove avatar');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteBanner = async () => {
+    if (!userId) return;
+
+    setUploading(true);
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ banner_url: null })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, banner_url: null } : null);
+      toast.success('Banner removed successfully!');
+    } catch (error: any) {
+      console.error('Error removing banner:', error);
+      toast.error('Failed to remove banner');
     } finally {
       setUploading(false);
     }
@@ -457,6 +501,30 @@ export function Profile() {
                 placeholder="Tell us about yourself..."
                 className="min-h-[100px]"
               />
+            </div>
+            <div className="flex gap-2">
+              {profile?.avatar_url && (
+                <Button
+                  variant="outline"
+                  onClick={handleDeleteAvatar}
+                  disabled={uploading}
+                  className="flex-1 text-red-600 hover:text-red-700 hover:border-red-300"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Remove Avatar
+                </Button>
+              )}
+              {profile?.banner_url && (
+                <Button
+                  variant="outline"
+                  onClick={handleDeleteBanner}
+                  disabled={uploading}
+                  className="flex-1 text-red-600 hover:text-red-700 hover:border-red-300"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Remove Banner
+                </Button>
+              )}
             </div>
           </div>
           <DialogFooter>

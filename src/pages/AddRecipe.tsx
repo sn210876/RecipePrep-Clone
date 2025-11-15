@@ -284,40 +284,41 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
       dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
 
-      if (videoUrl.trim()) {
-        try {
-          const { supabase } = await import('@/lib/supabase');
-          const { data: { user } } = await supabase.auth.getUser();
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { user } } = await supabase.auth.getUser();
 
-          if (user) {
-            const postImageUrl = imageUrl.trim()
-              ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')
-                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
-                : imageUrl.trim())
-              : null;
+        if (user) {
+          const postImageUrl = imageUrl.trim()
+            ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')
+              ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
+              : imageUrl.trim())
+            : null;
 
-            const { error: postError } = await supabase.from('posts').insert({
-              user_id: user.id,
-              title: title.trim(),
-              image_url: postImageUrl,
-              video_url: videoUrl.trim(),
-              caption: notes.trim() || 'Check out my recipe!',
-              recipe_url: videoUrl.trim(),
-              recipe_id: createdRecipe.id,
-            });
+          const { error: postError } = await supabase.from('posts').insert({
+            user_id: user.id,
+            title: title.trim(),
+            image_url: postImageUrl,
+            video_url: videoUrl.trim() || null,
+            caption: notes.trim() || 'Check out my recipe!',
+            recipe_url: videoUrl.trim() || urlInput.trim() || null,
+            recipe_id: createdRecipe.id,
+          });
 
-            if (postError) {
-              console.error('[AddRecipe] Failed to create social post:', postError);
-            } else {
-              console.log('[AddRecipe] Social post created successfully');
-            }
+          if (postError) {
+            console.error('[AddRecipe] Failed to create social post:', postError);
+            toast.success('Recipe created successfully!');
+          } else {
+            console.log('[AddRecipe] Social post created successfully');
+            toast.success('Recipe created and posted to your profile!');
           }
-        } catch (postError) {
-          console.error('[AddRecipe] Failed to create social post:', postError);
+        } else {
+          toast.success('Recipe created successfully!');
         }
+      } catch (postError) {
+        console.error('[AddRecipe] Failed to create social post:', postError);
+        toast.success('Recipe created successfully!');
       }
-
-      toast.success('Recipe created and published successfully!');
 
       if (onNavigate) {
         onNavigate('my-recipes');

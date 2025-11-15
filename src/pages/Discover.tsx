@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown, Send, Copy, Check } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -768,13 +768,13 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                       setShowSearchResults(false);
                       setSearchQuery('');
                     }}
-                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                    className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 overflow-hidden flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-400 overflow-hidden flex items-center justify-center">
                       {user.avatar_url ? (
                         <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-white font-semibold text-lg">
+                        <span className="text-white font-semibold text-sm">
                           {user.username.charAt(0).toUpperCase()}
                         </span>
                       )}
@@ -982,7 +982,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                           <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
                           {postRatings[post.id] && postRatings[post.id].count > 0 && (
                             <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-lg">🔥</span>
                               <span className="text-white text-xs font-semibold">
                                 {postRatings[post.id].average.toFixed(1)}
                               </span>
