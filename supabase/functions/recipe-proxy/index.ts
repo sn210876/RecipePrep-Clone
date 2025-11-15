@@ -15,32 +15,42 @@ async function parseWithAI(text: string): Promise<{ ingredients: string[], instr
   }
 
   console.log("[recipe-proxy] Calling OpenAI for extraction...");
-  const prompt = `You are a recipe extraction expert. Extract ALL ingredients, ALL instructions, prep time, cook time, and yield from the recipe text. TRANSLATE EVERYTHING TO ENGLISH.
+
+  const cleanText = text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const prompt = `You are a recipe extraction expert. Extract ALL ingredients and instructions EXACTLY as they appear in the text.
 
 CRITICAL RULES:
-1. If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
-2. Extract EVERY SINGLE ingredient listed in the recipe - do not skip ANY ingredients, no matter how small.
-3. Extract EVERY SINGLE instruction step - include ALL details, sub-steps, temperatures, and cooking techniques.
-4. Preserve quantities, measurements, temperatures, and cooking times EXACTLY as written.
-5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include ALL of them.
-6. If there are detailed preparation steps, include EVERY SINGLE ONE with full details.
-7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed, e.g., 1 hour = 60 minutes).
-8. Extract yield/servings information exactly as stated.
-9. Include ALL cooking details: temperatures, baking times, resting times, checking for doneness, etc.
-10. DO NOT summarize or combine steps - each instruction should be complete and detailed.
+1. Extract EVERY ingredient with its EXACT quantity and measurement as written
+2. Extract EVERY instruction step EXACTLY as written - do not modify, summarize, or combine
+3. If prep time is listed (e.g., "Prep Time: 45 mins"), extract the number in MINUTES
+4. If cook time is listed (e.g., "Cook Time: 1 hr"), convert to MINUTES (1 hr = 60 minutes)
+5. Extract servings/yield EXACTLY as stated (e.g., "Servings: 6" → "6 servings")
+6. Preserve ALL temperatures, times, and measurements EXACTLY
+7. Keep instructions in order and complete - include every detail
 
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON:
 {
-  "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt", ...],
-  "instructions": ["Step 1 with full details including temperatures and times", "Step 2 with full details", ...],
-  "prep_time": 15,
-  "cook_time": 120,
-  "yield": "4-5 servings",
-  "notes": "Any cooking tips or notes"
+  "ingredients": ["exact ingredient 1", "exact ingredient 2", ...],
+  "instructions": ["exact instruction 1", "exact instruction 2", ...],
+  "prep_time": 45,
+  "cook_time": 60,
+  "yield": "6 servings",
+  "notes": ""
 }
 
-Text to extract from:
-${text.slice(0, 25000)}`;
+Text:
+${cleanText.slice(0, 20000)}`;
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
