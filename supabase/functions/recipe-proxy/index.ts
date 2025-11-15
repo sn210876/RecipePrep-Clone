@@ -235,6 +235,64 @@ async function scrapeRecipeSite(url: string) {
   }
 }
 
+async function extractInstagramVideo(url: string) {
+  try {
+    console.log("[recipe-proxy] Extracting Instagram video with yt-dlp");
+
+    const process = new Deno.Command("yt-dlp", {
+      args: [
+        "--dump-json",
+        "--no-playlist",
+        url
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { stdout, stderr, success } = await process.output();
+
+    if (!success) {
+      const errorText = new TextDecoder().decode(stderr);
+      console.error("[recipe-proxy] yt-dlp error:", errorText);
+      throw new Error("Failed to extract video metadata");
+    }
+
+    const output = new TextDecoder().decode(stdout);
+    const metadata = JSON.parse(output);
+
+    const description = metadata.description || "";
+    const title = metadata.title || metadata.uploader || "Instagram Recipe";
+    const thumbnail = metadata.thumbnail || "";
+
+    console.log("[recipe-proxy] Instagram metadata extracted, analyzing with AI");
+
+    if (!OPENAI_API_KEY) {
+      throw new Error("OpenAI API key not configured");
+    }
+
+    const aiResult = await parseWithAI(description);
+
+    if (aiResult.ingredients.length > 0) {
+      return {
+        title,
+        ingredients: aiResult.ingredients,
+        instructions: aiResult.instructions,
+        image: thumbnail,
+        yield: aiResult.yield || '',
+        prep_time: aiResult.prep_time || 0,
+        cook_time: aiResult.cook_time || 0,
+        time: aiResult.prep_time + aiResult.cook_time || 0,
+        notes: `Extracted from Instagram video`,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error("[recipe-proxy] Instagram extraction error:", error);
+    return null;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -260,6 +318,33 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log("[recipe-proxy] Extracting from:", url);
+
+    if (url.includes('instagram.com')) {
+      console.log("[recipe-proxy] Detected Instagram URL");
+      const instagramResult = await extractInstagramVideo(url);
+      if (instagramResult) {
+        return new Response(
+          JSON.stringify(instagramResult),
+          {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: "Failed to extract from Instagram. Please check the URL." }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
 
     const result = await scrapeRecipeSite(url);
 
