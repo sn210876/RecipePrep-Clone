@@ -283,8 +283,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg">{post.title || 'Post'}</h3>
-              <div className="flex gap-2">
+              <h3 className="font-semibold text-lg flex-1 mr-2">{post.title || 'Post'}</h3>
+              <div className="flex gap-2 mr-8">
                 {(post.user_id === currentUserId) && (
                   <Button
                     variant="ghost"
@@ -354,6 +354,21 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                   </p>
                 )}
               </div>
+
+              {post.recipe_id && (
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      window.open(`/#recipe/${post.recipe_id}`, '_blank');
+                    }}
+                    className="w-full text-orange-600 border-orange-600 hover:bg-orange-50"
+                  >
+                    View Full Recipe
+                  </Button>
+                </div>
+              )}
 
               {reviews.length > 0 && (
                 <div className="space-y-2">

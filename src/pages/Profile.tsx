@@ -229,26 +229,28 @@ export function Profile() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      return;
-    }
-
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}/banner.${fileExt}`;
+      let uploadFile = file;
+
+      if (file.size > 500 * 1024) {
+        toast.info('Compressing image...');
+        uploadFile = await compressImage(file, 1000);
+      }
+
+      const fileExt = 'jpg';
+      const fileName = `banners/${userId}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, {
+        .from('recipe-images')
+        .upload(fileName, uploadFile, {
           cacheControl: '3600',
           upsert: true,
         });
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage.from('recipe-images').getPublicUrl(fileName);
 
       const { error: updateError } = await supabase
         .from('profiles')
