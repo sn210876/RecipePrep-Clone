@@ -756,7 +756,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 Review Extracted Recipe
               </DialogTitle>
               <DialogDescription>
-                Review and edit the extracted recipe details before adding to your collection
+                Review and edit the extracted recipe details before adding to your Saves Recipes. NOTE: recipes instructions may have been altered if it is a social media video, therefore please review the recipe
               </DialogDescription>
             </DialogHeader>
 
