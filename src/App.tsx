@@ -21,22 +21,6 @@ import { AuthForm } from './components/AuthForm';
 
 function AppContent() {
   const hash = window.location.hash;
-  const pathname = window.location.pathname;
-
-  // Check for password reset FIRST before anything else
-  const isPasswordReset =
-    (hash && (
-      hash.includes('type=recovery') ||
-      hash.includes('access_token') ||
-      hash.includes('#reset-password') ||
-      hash.startsWith('#reset-password')
-    )) ||
-    pathname === '/reset-password' ||
-    pathname.includes('reset-password');
-
-  console.log('App loaded - Hash:', hash);
-  console.log('App loaded - Pathname:', pathname);
-  console.log('Is password reset?', isPasswordReset);
 
   const getInitialPage = () => {
     if (hash === '#settings') return 'settings';
@@ -52,6 +36,8 @@ function AppContent() {
     hash.startsWith('#post/') ? hash.replace('#post/', '') : null
   );
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
+
+  const isPasswordReset = hash && (hash.includes('type=recovery') || window.location.pathname === '/reset-password');
 
   const handleNavigate = (page: string) => {
     if (page === 'discover') {
@@ -104,8 +90,6 @@ function AppContent() {
     }
   };
 
-  // CRITICAL: Check password reset BEFORE checking auth status
-  // Password reset links work without being logged in
   if (isPasswordReset) {
     return <ResetPassword />;
   }
