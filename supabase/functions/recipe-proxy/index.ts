@@ -90,9 +90,15 @@ async function scrapeRecipeSite(url: string) {
       'Referer': 'https://www.google.com/'
     };
 
+    console.log("[recipe-proxy] Fetching URL:", url);
     const response = await fetch(url, { headers });
-    const html = await response.text();
 
+    if (!response.ok) {
+      console.error("[recipe-proxy] Fetch failed:", response.status, response.statusText);
+      throw new Error(`Failed to fetch: ${response.status}`);
+    }
+
+    const html = await response.text();
     console.log("[recipe-proxy] HTML fetched, length:", html.length);
 
     const ogTitleMatch = html.match(/<meta\s+property=\"og:title\"\s+content=\"([^\"]+)\"/i);
@@ -188,6 +194,11 @@ async function scrapeRecipeSite(url: string) {
     const twitterImageMatch = html.match(/<meta\s+name=\"twitter:image\"\s+content=\"([^\"]+)\"/i);
     const firstImgMatch = html.match(/<img[^>]+src=\"([^\"]+)\"/i);
     const imageUrl = ogImageMatch?.[1] || twitterImageMatch?.[1] || firstImgMatch?.[1] || '';
+
+    if (!OPENAI_API_KEY) {
+      console.error("[recipe-proxy] OPENAI_API_KEY not configured!");
+      throw new Error("OpenAI API key is not configured in Supabase Edge Function secrets. Please configure it in your Supabase dashboard.");
+    }
 
     console.log("[recipe-proxy] Falling back to AI extraction");
     const aiResult = await parseWithAI(html);
