@@ -121,7 +121,10 @@ export function Profile() {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !userId) return;
+    if (!file || !userId) {
+      console.log('No file or userId', { file, userId });
+      return;
+    }
 
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file');
@@ -138,6 +141,8 @@ export function Profile() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${userId}/avatar.${fileExt}`;
 
+      console.log('Uploading avatar to:', fileName);
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
@@ -145,22 +150,31 @@ export function Profile() {
           upsert: true,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      console.log('Public URL:', urlData.publicUrl);
 
-      const { error: updateError } = await supabase
+      const { error: updateError, data: updateData } = await supabase
         .from('profiles')
         .update({ avatar_url: urlData.publicUrl })
-        .eq('id', userId);
+        .eq('id', userId)
+        .select();
+
+      console.log('Update result:', { updateError, updateData });
 
       if (updateError) throw updateError;
 
       setProfile(prev => prev ? { ...prev, avatar_url: `${urlData.publicUrl}?t=${Date.now()}` } : null);
       toast.success('Avatar updated successfully!');
+
+      await loadProfile();
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar');
+      toast.error('Failed to upload avatar: ' + error.message);
     } finally {
       setUploading(false);
     }
@@ -195,16 +209,22 @@ export function Profile() {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      console.log('Banner Public URL:', urlData.publicUrl);
 
-      const { error: updateError } = await supabase
+      const { error: updateError, data: updateData } = await supabase
         .from('profiles')
         .update({ banner_url: urlData.publicUrl })
-        .eq('id', userId);
+        .eq('id', userId)
+        .select();
+
+      console.log('Banner update result:', { updateError, updateData });
 
       if (updateError) throw updateError;
 
       setProfile(prev => prev ? { ...prev, banner_url: `${urlData.publicUrl}?t=${Date.now()}` } : null);
       toast.success('Banner updated successfully!');
+
+      await loadProfile();
     } catch (error: any) {
       console.error('Error uploading banner:', error);
       toast.error('Failed to upload banner');

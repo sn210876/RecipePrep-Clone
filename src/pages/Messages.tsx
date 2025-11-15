@@ -250,11 +250,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !currentUserId) return;
 
-    const { error } = await supabase.from('direct_messages').insert({
+    const { error, data } = await supabase.from('direct_messages').insert({
       conversation_id: selectedConversation.id,
       sender_id: currentUserId,
       content: newMessage.trim(),
-    });
+    }).select();
 
     if (error) {
       console.error('Error sending message:', error);
@@ -264,8 +264,12 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
     await supabase
       .from('conversations')
-      .update({ updated_at: new Date().toISOString() })
+      .update({ last_message_at: new Date().toISOString() })
       .eq('id', selectedConversation.id);
+
+    if (data && data.length > 0) {
+      setMessages(prev => [...prev, data[0]]);
+    }
 
     setNewMessage('');
   };

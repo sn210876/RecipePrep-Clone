@@ -211,20 +211,22 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const renderResponse = await fetch("https://recipe-backend-nodejs-1.onrender.com/extract", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ url }),
-    });
-
-    const renderData = await renderResponse.json();
+    // For social media (Instagram, TikTok, YouTube), we need transcript extraction
+    // This requires yt-dlp + Whisper which can't run in Edge Functions
+    // The user needs to run the local server: npm run server
+    // Or deploy the server.js to a service that supports Node.js
 
     return new Response(
-      JSON.stringify(renderData),
+      JSON.stringify({
+        error: "Video transcript extraction requires running the local server (npm run server) or deploying server.js to a Node.js hosting service",
+        title: "Unable to extract recipe",
+        ingredients: [],
+        instructions: ["Please run 'npm run server' locally to extract recipes from Instagram/TikTok/YouTube videos"],
+        image: "",
+        notes: "Video extraction requires the Node.js server with yt-dlp and OpenAI Whisper support"
+      }),
       {
-        status: renderResponse.ok ? 200 : renderResponse.status,
+        status: 503,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
