@@ -8,13 +8,16 @@ const corsHeaders = {
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 
-// Your excellent AI parser (keep it exactly as-is)
-async function parseWithAI(text: string) {
-  if (!text.trim() || !OPENAI_API_KEY) {
-    console.log("[recipe-proxy] AI parsing skipped:", !text.trim() ? "No text" : "No API key");
+// Smart text-based recipe parser with AI fallback
+async function parseRecipeText(text: string) {
+  if (!text.trim()) {
+    console.log("[recipe-proxy] No text to parse");
     return { ingredients: [], instructions: [], notes: "", prep_time: 0, cook_time: 0, yield: "" };
   }
-  const cleanText = text.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+
+  // Clean the text
+  const cleanText = text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
@@ -25,62 +28,133 @@ async function parseWithAI(text: string) {
     .replace(/\s+/g, ' ')
     .trim();
 
-  const prompt = `You are a recipe extraction expert. Extract ALL ingredients and instructions EXACTLY as they appear in the text.
+  console.log("[recipe-proxy] Parsing text length:", cleanText.length);
 
-CRITICAL RULES:
-1. Extract EVERY ingredient with its EXACT quantity and measurement as written
-2. Extract EVERY instruction step EXACTLY as written - do not modify, summarize, or combine
-3. If prep time is listed (e.g., "Prep Time: 45 mins"), extract the number in MINUTES
-4. If cook time is listed (e.g., "Cook Time: 1 hr"), convert to MINUTES (1 hr = 60 minutes)
-5. Extract servings/yield EXACTLY as stated (e.g., "Servings: 6" → "6 servings")
-6. Preserve ALL temperatures, times, and measurements EXACTLY
-7. Keep instructions in order and complete - include every detail
+  // Try AI parsing with OpenAI
+  if (OPENAI_API_KEY) {
+    try {
+      const prompt = `You are a recipe extraction expert. Extract the recipe from this social media post/description.
 
-Return ONLY valid JSON:
+RULES:
+1. Extract ALL ingredients with quantities and measurements (e.g., "2 cups flour", "1 tsp salt")
+2. Extract ALL instruction steps as separate items
+3. Extract prep/cook times if mentioned (return as MINUTES only)
+4. Extract servings/yield if mentioned
+5. If text mentions "link in bio" or "full recipe on website", still extract whatever ingredients/steps ARE provided
+6. Be thorough - extract EVERYTHING recipe-related from the text
+
+Return ONLY valid JSON (no markdown, no extra text):
 {
-  "ingredients": ["exact ingredient 1", "exact ingredient 2", ...],
-  "instructions": ["exact instruction 1", "exact instruction 2", ...],
-  "prep_time": 45,
-  "cook_time": 60,
-  "yield": "6 servings",
+  "ingredients": ["ingredient 1 with quantity", "ingredient 2 with quantity", ...],
+  "instructions": ["step 1", "step 2", ...],
+  "prep_time": 15,
+  "cook_time": 30,
+  "yield": "4 servings",
   "notes": ""
 }
 
-Text:
-${cleanText.slice(0, 20000)}`;
+Text to parse:
+${cleanText.slice(0, 15000)}`;
 
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.1,
-        max_tokens: 4000
-      })
-    });
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-    const jsonMatch = content.match(/\{.*\}/s);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        ingredients: parsed.ingredients || [],
-        instructions: parsed.instructions || [],
-        notes: parsed.notes || "",
-        prep_time: parsed.prep_time || 0,
-        cook_time: parsed.cook_time || 0,
-        yield: parsed.yield || ""
-      };
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.1,
+          max_tokens: 3000
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[recipe-proxy] OpenAI API error:", response.status, errorText);
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("[recipe-proxy] OpenAI response received");
+
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) {
+        console.error("[recipe-proxy] No content in OpenAI response");
+        throw new Error("No content in AI response");
+      }
+
+      // Try to extract JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        console.log("[recipe-proxy] Successfully parsed AI response");
+        console.log("[recipe-proxy] Ingredients found:", parsed.ingredients?.length || 0);
+        console.log("[recipe-proxy] Instructions found:", parsed.instructions?.length || 0);
+
+        return {
+          ingredients: parsed.ingredients || [],
+          instructions: parsed.instructions || [],
+          notes: parsed.notes || "",
+          prep_time: parsed.prep_time || 0,
+          cook_time: parsed.cook_time || 0,
+          yield: parsed.yield || ""
+        };
+      } else {
+        console.error("[recipe-proxy] Could not find JSON in AI response");
+      }
+    } catch (e) {
+      console.error("[recipe-proxy] AI parsing error:", e);
     }
-  } catch (e) {
-    console.error("[recipe-proxy] AI parse error:", e);
+  } else {
+    console.log("[recipe-proxy] No OpenAI API key, using basic parsing");
   }
-  return { ingredients: [], instructions: [], notes: "", prep_time: 0, cook_time: 0, yield: "" };
+
+  // Fallback: Basic manual parsing
+  console.log("[recipe-proxy] Using fallback manual parsing");
+  const lines = cleanText.split(/\n+/).filter(line => line.trim().length > 0);
+
+  const ingredients: string[] = [];
+  const instructions: string[] = [];
+  let inIngredientsSection = false;
+  let inInstructionsSection = false;
+
+  for (const line of lines) {
+    const lowerLine = line.toLowerCase();
+
+    // Detect section headers
+    if (lowerLine.includes('ingredient')) {
+      inIngredientsSection = true;
+      inInstructionsSection = false;
+      continue;
+    } else if (lowerLine.includes('instruction') || lowerLine.includes('direction') || lowerLine.includes('step')) {
+      inIngredientsSection = false;
+      inInstructionsSection = true;
+      continue;
+    }
+
+    // Try to detect ingredients by pattern (starts with number or has measurement words)
+    const hasQuantity = /^[\d\/\-\s]+/.test(line) || /\b(cup|tsp|tbsp|oz|lb|g|kg|ml|l|piece|clove|slice)\b/i.test(line);
+
+    if (inIngredientsSection || (!inInstructionsSection && hasQuantity)) {
+      ingredients.push(line.trim());
+    } else if (inInstructionsSection || line.length > 30) {
+      // Longer lines are more likely instructions
+      instructions.push(line.trim());
+    }
+  }
+
+  console.log("[recipe-proxy] Manual parse - Ingredients:", ingredients.length, "Instructions:", instructions.length);
+
+  return {
+    ingredients: ingredients.length > 0 ? ingredients : ["Check original post for full ingredient list"],
+    instructions: instructions.length > 0 ? instructions : ["Check original post for full instructions"],
+    notes: "Extracted from social media. Some details may be incomplete.",
+    prep_time: 0,
+    cook_time: 0,
+    yield: ""
+  };
 }
 
 // Extract from TikTok video
@@ -107,21 +181,23 @@ async function extractTikTokVideo(url: string) {
         const thumbnail = videoDetail.video?.cover || "";
         const author = videoDetail.author?.nickname || "";
 
-        if (description.length > 20) {
-          const aiResult = await parseWithAI(description);
-          if (aiResult.ingredients.length > 0 || aiResult.instructions.length > 0) {
-            return {
-              title: description.substring(0, 60) + (description.length > 60 ? "..." : ""),
-              author,
-              ingredients: aiResult.ingredients,
-              instructions: aiResult.instructions,
-              image: thumbnail,
-              yield: aiResult.yield || '',
-              prep_time: aiResult.prep_time || 0,
-              cook_time: aiResult.cook_time || 0,
-              notes: "Extracted from TikTok description"
-            };
-          }
+        console.log("[recipe-proxy] TikTok description length:", description.length);
+
+        if (description.length > 10) {
+          const recipeData = await parseRecipeText(description);
+
+          // Always return something, even if parsing was limited
+          return {
+            title: description.substring(0, 60) + (description.length > 60 ? "..." : ""),
+            author,
+            ingredients: recipeData.ingredients,
+            instructions: recipeData.instructions,
+            image: thumbnail,
+            yield: recipeData.yield || '',
+            prep_time: recipeData.prep_time || 0,
+            cook_time: recipeData.cook_time || 0,
+            notes: recipeData.notes || "Extracted from TikTok"
+          };
         }
       }
     }
@@ -162,9 +238,18 @@ async function extractYouTubeVideo(url: string) {
     const titleMatch = html.match(/"title":"([^"]+)"/);
     const title = titleMatch ? titleMatch[1].replace(/\\"/g, '"') : "YouTube Recipe";
 
-    // Extract description
-    const descMatch = html.match(/"description":{"simpleText":"([^"]+)"}/);
-    const description = descMatch ? descMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"') : "";
+    // Extract description - try multiple patterns
+    let description = "";
+    const descMatch1 = html.match(/"description":{"simpleText":"([^"]+)"\}/);
+    if (descMatch1) {
+      description = descMatch1[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+    } else {
+      // Try alternative pattern for longer descriptions
+      const descMatch2 = html.match(/"description":\{"simpleText":"((?:[^"\\]|\\.)*)"\}/);
+      if (descMatch2) {
+        description = descMatch2[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      }
+    }
 
     // Extract thumbnail
     const thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
@@ -173,21 +258,23 @@ async function extractYouTubeVideo(url: string) {
     const channelMatch = html.match(/"author":"([^"]+)"/);
     const author = channelMatch ? channelMatch[1] : "";
 
-    if (description.length > 50) {
-      const aiResult = await parseWithAI(description);
-      if (aiResult.ingredients.length > 0 || aiResult.instructions.length > 0) {
-        return {
-          title,
-          author,
-          ingredients: aiResult.ingredients,
-          instructions: aiResult.instructions,
-          image: thumbnail,
-          yield: aiResult.yield || '',
-          prep_time: aiResult.prep_time || 0,
-          cook_time: aiResult.cook_time || 0,
-          notes: "Extracted from YouTube description"
-        };
-      }
+    console.log("[recipe-proxy] YouTube description length:", description.length);
+
+    if (description.length > 20) {
+      const recipeData = await parseRecipeText(description);
+
+      // Always return something
+      return {
+        title,
+        author,
+        ingredients: recipeData.ingredients,
+        instructions: recipeData.instructions,
+        image: thumbnail,
+        yield: recipeData.yield || '',
+        prep_time: recipeData.prep_time || 0,
+        cook_time: recipeData.cook_time || 0,
+        notes: recipeData.notes || "Extracted from YouTube"
+      };
     }
     return null;
   } catch (error) {
@@ -217,25 +304,26 @@ async function extractInstagramVideo(url: string) {
     const imageMatch = html.match(/\"display_url\":\"([^\"]+)\"/);
     const thumbnail = imageMatch ? imageMatch[1].replace(/\\u0026/g, '&') : "";
 
-    if (!description || description.length < 20) {
+    console.log("[recipe-proxy] Instagram caption length:", description.length);
+
+    if (!description || description.length < 10) {
       console.log("[recipe-proxy] No caption found");
       return null;
     }
 
-    const aiResult = await parseWithAI(description);
-    if (aiResult.ingredients.length > 0 || aiResult.instructions.length > 0) {
-      return {
-        title: title.includes('Instagram') ? aiResult.instructions[0]?.substring(0, 50) || title : title,
-        ingredients: aiResult.ingredients,
-        instructions: aiResult.instructions,
-        image: thumbnail,
-        yield: aiResult.yield || '',
-        prep_time: aiResult.prep_time || 0,
-        cook_time: aiResult.cook_time || 0,
-        notes: "Extracted from Instagram caption"
-      };
-    }
-    return null;
+    const recipeData = await parseRecipeText(description);
+
+    // Always return something
+    return {
+      title: title.includes('Instagram') ? (description.substring(0, 50) + (description.length > 50 ? "..." : "")) : title,
+      ingredients: recipeData.ingredients,
+      instructions: recipeData.instructions,
+      image: thumbnail,
+      yield: recipeData.yield || '',
+      prep_time: recipeData.prep_time || 0,
+      cook_time: recipeData.cook_time || 0,
+      notes: recipeData.notes || "Extracted from Instagram"
+    };
   } catch (error) {
     console.error("[recipe-proxy] Instagram extraction failed:", error);
     return null;
@@ -341,9 +429,9 @@ async function scrapeRecipeSite(url: string) {
 
     // Fallback: Try to parse HTML with AI
     console.log("[recipe-proxy] No JSON-LD found, trying AI extraction from HTML");
-    const aiResult = await parseWithAI(html);
+    const recipeData = await parseRecipeText(html);
 
-    if (aiResult.ingredients.length > 0 || aiResult.instructions.length > 0) {
+    if (recipeData.ingredients.length > 0 || recipeData.instructions.length > 0) {
       // Try to get title from page
       const titleMatch = html.match(/<title>([^<]+)<\/title>/);
       const title = titleMatch ? titleMatch[1].split('|')[0].split('-')[0].trim() : "Extracted Recipe";
@@ -355,13 +443,13 @@ async function scrapeRecipeSite(url: string) {
       return {
         title,
         author: "",
-        ingredients: aiResult.ingredients,
-        instructions: aiResult.instructions,
+        ingredients: recipeData.ingredients,
+        instructions: recipeData.instructions,
         image,
-        yield: aiResult.yield || "",
-        prep_time: aiResult.prep_time || 0,
-        cook_time: aiResult.cook_time || 0,
-        notes: aiResult.notes || "Extracted with AI"
+        yield: recipeData.yield || "",
+        prep_time: recipeData.prep_time || 0,
+        cook_time: recipeData.cook_time || 0,
+        notes: recipeData.notes || "Extracted with AI"
       };
     }
 
