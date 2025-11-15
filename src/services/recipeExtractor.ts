@@ -54,201 +54,55 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const data = await response.json();
   console.log('[RecipeExtractor] Raw response:', data);
 
-  // Parse HTML for JSON-LD structured data
-  let recipeData: any = {};
-
-  if (data.html) {
-    console.log('[RecipeExtractor] HTML length:', data.html.length);
-    console.log('[RecipeExtractor] Parsing HTML for JSON-LD...');
-
-    // Find all script tags with type="application/ld+json"
-    const scriptMatches = data.html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
-
-    for (const match of scriptMatches) {
-      try {
-        const jsonContent = match[1].trim();
-        console.log('[RecipeExtractor] Found JSON-LD block, length:', jsonContent.length);
-
-        const parsed = JSON.parse(jsonContent);
-        console.log('[RecipeExtractor] Parsed @type:', parsed['@type']);
-
-        // Check for direct Recipe type
-        if (parsed['@type'] === 'Recipe') {
-          recipeData = parsed;
-          console.log('[RecipeExtractor] ✓ Found Recipe schema (direct)!');
-          console.log('[RecipeExtractor] Recipe name:', recipeData.name);
-          console.log('[RecipeExtractor] Ingredients:', recipeData.recipeIngredient?.length || 0);
-          break;
-        }
-
-        // Check for Recipe in @graph
-        if (parsed['@graph'] && Array.isArray(parsed['@graph'])) {
-          const recipe = parsed['@graph'].find((item: any) => item['@type'] === 'Recipe');
-          if (recipe) {
-            recipeData = recipe;
-            console.log('[RecipeExtractor] ✓ Found Recipe schema (in @graph)!');
-            console.log('[RecipeExtractor] Recipe name:', recipeData.name);
-            console.log('[RecipeExtractor] Ingredients:', recipeData.recipeIngredient?.length || 0);
-            break;
-          }
-        }
-
-        // Check if it's an array
-        if (Array.isArray(parsed)) {
-          const recipe = parsed.find((item: any) => item['@type'] === 'Recipe');
-          if (recipe) {
-            recipeData = recipe;
-            console.log('[RecipeExtractor] ✓ Found Recipe schema (in array)!');
-            break;
-          }
-        }
-      } catch (e: any) {
-        console.log('[RecipeExtractor] Failed to parse JSON-LD:', e.message);
-      }
-    }
-
-    if (!recipeData || !recipeData['@type']) {
-      console.error('[RecipeExtractor] ✗ No Recipe schema found in HTML');
-      throw new Error('Could not extract recipe - site may not be supported. Please try a different recipe URL.');
-    }
-  } else {
-    throw new Error('No HTML data received from server');
+  if (!data.title || !data.ingredients || !data.instructions) {
+    throw new Error('Invalid recipe data received from server');
   }
 
-  // Extract ingredients from structured data
-  const extractIngredients = (): string[] => {
-    if (recipeData.recipeIngredient && Array.isArray(recipeData.recipeIngredient)) {
-      console.log('[RecipeExtractor] Found', recipeData.recipeIngredient.length, 'ingredients');
-      return recipeData.recipeIngredient;
-    }
-    return [];
-  };
-
-  // Extract instructions from structured data
-  const extractInstructions = (): string[] => {
-    if (recipeData.recipeInstructions) {
-      const instructions = recipeData.recipeInstructions;
-      
-      // Handle array of objects with text property
-      if (Array.isArray(instructions)) {
-        const parsed = instructions.map((step: any) => {
-          if (typeof step === 'string') return step;
-          if (step.text) return step.text;
-          if (step['@type'] === 'HowToStep' && step.text) return step.text;
-          return '';
-        }).filter(Boolean);
-        
-        console.log('[RecipeExtractor] Found', parsed.length, 'instructions');
-        return parsed;
-      }
-      
-      // Handle single string
-      if (typeof instructions === 'string') {
-        return instructions.split('\n').filter(s => s.trim());
-      }
-    }
-    return [];
-  };
-
-  // Extract image from structured data
-  const extractImage = (): string => {
-    if (recipeData.image) {
-      const img = recipeData.image;
-      // Handle array of images
-      if (Array.isArray(img)) {
-        return typeof img[0] === 'string' ? img[0] : img[0]?.url || '';
-      }
-      // Handle object with url property
-      if (typeof img === 'object' && img.url) {
-        return img.url;
-      }
-      // Handle direct string
-      if (typeof img === 'string') {
-        return img;
-      }
-    }
-    return '';
-  };
-
-  // Extract servings/yield
-  const extractYield = (): string => {
-    if (recipeData.recipeYield) {
-      const y = recipeData.recipeYield;
-      if (typeof y === 'string') return y.replace(/[^\d]/g, '') || '4';
-      if (typeof y === 'number') return String(y);
-      if (Array.isArray(y) && y[0]) return String(y[0]).replace(/[^\d]/g, '') || '4';
-    }
-    return '4';
-  };
-
-  // Extract times (in ISO 8601 duration format like PT30M)
-  const parseISO8601Duration = (duration: string): string => {
-    if (!duration) return '0';
-    const match = duration.match(/PT(\d+H)?(\d+M)?/);
-    if (!match) return '0';
-    const hours = match[1] ? parseInt(match[1]) * 60 : 0;
-    const minutes = match[2] ? parseInt(match[2]) : 0;
-    return String(hours + minutes);
-  };
-
-  const rawIngredients = extractIngredients();
-  const rawInstructions = extractInstructions();
-  const rawImageUrl = extractImage();
-
-  console.log('[RecipeExtractor] Extracted:', {
-    ingredients: rawIngredients.length,
-    instructions: rawInstructions.length,
-    image: rawImageUrl ? 'found' : 'missing'
-  });
-
-  // Parse ingredients into structured format
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
       const trimmed = ing.trim();
       if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
-      
+
       const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
       const quantity = quantityMatch ? quantityMatch[1].trim() : '';
       let rest = trimmed.slice(quantity.length).trim();
-      
+
       const unitMatch = rest.match(/^(cups?|tbsps?|tsps?|tablespoons?|teaspoons?|ozs?|ounces?|lbs?|pounds?|grams?|kgs?|kilograms?|mls?|milliliters?|liters?|pinch|dash|cloves?|stalks?|pieces?|slices?|packages?)\s+/i);
       const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : 'cup';
       if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-      
+
       const name = rest || trimmed;
       return { quantity, unit, name };
     });
   };
 
-  const ingredients = parseIngredients(rawIngredients);
-  const instructions = rawInstructions;
+  const ingredients = parseIngredients(data.ingredients);
+  const instructions = data.instructions;
 
   const isSocialMedia = url.includes('tiktok.com') || url.includes('instagram.com') ||
                          url.includes('youtube.com') || url.includes('youtu.be');
-  const isTikTokOrInstagram = url.includes('tiktok.com') || url.includes('instagram.com');
   const videoUrl = isSocialMedia ? url : '';
 
-  // Proxy the image through image-proxy function
-  const proxiedImageUrl = rawImageUrl 
-    ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(rawImageUrl)}&apikey=${SUPABASE_ANON_KEY}`
+  const proxiedImageUrl = data.image
+    ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.image)}&apikey=${SUPABASE_ANON_KEY}`
     : '';
 
   const result: ExtractedRecipeData = {
-    title: isTikTokOrInstagram ? '' : (recipeData.name || 'Untitled Recipe'),
-    description: recipeData.description || 'Extracted recipe',
-    creator: recipeData.author?.name || recipeData.author || 'Unknown',
+    title: data.title,
+    description: 'Extracted recipe',
+    creator: 'Unknown',
     ingredients,
     instructions,
-    prepTime: parseISO8601Duration(recipeData.prepTime) || '30',
-    cookTime: parseISO8601Duration(recipeData.cookTime) || '45',
-    servings: extractYield(),
-    cuisineType: recipeData.recipeCuisine || 'Global',
+    prepTime: data.prep_time ? String(data.prep_time) : '30',
+    cookTime: data.cook_time ? String(data.cook_time) : '45',
+    servings: data.yield || '4',
+    cuisineType: 'Global',
     difficulty: 'Medium',
-    mealTypes: recipeData.recipeCategory ? [recipeData.recipeCategory] : ['Dinner'],
-    dietaryTags: recipeData.suitableForDiet || [],
+    mealTypes: ['Dinner'],
+    dietaryTags: [],
     imageUrl: proxiedImageUrl,
     videoUrl,
-    notes: '',
+    notes: data.notes || '',
     sourceUrl: url,
   };
 
