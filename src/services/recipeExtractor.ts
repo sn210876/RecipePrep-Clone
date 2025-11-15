@@ -30,12 +30,12 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   console.log('[RecipeExtractor] Supabase Edge Function:', API_URL);
   console.log('[RecipeExtractor] URL to extract:', url);
 
-  const response = await fetch(RECIPE_FUNCTION_URL, {
+  const response = await fetch(API_URL, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'apikey': SUPABASE_ANON_KEY,                    // ← ADD THIS LINE
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // ← AND THIS LINE
+    'apikey': SUPABASE_ANON_KEY,                    // ← ADD THIS
+    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // ← ADD THIS
   },
   body: JSON.stringify({ url: url.trim() }),
 });
