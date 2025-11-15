@@ -119,6 +119,58 @@ export function Profile() {
     }
   };
 
+  const compressImage = async (file: File, maxSizeKB: number = 500): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          const maxDimension = 800;
+          if (width > height && width > maxDimension) {
+            height = (height * maxDimension) / width;
+            width = maxDimension;
+          } else if (height > maxDimension) {
+            width = (width * maxDimension) / height;
+            height = maxDimension;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          let quality = 0.9;
+          const compress = () => {
+            canvas.toBlob(
+              (blob) => {
+                if (blob && (blob.size / 1024 <= maxSizeKB || quality <= 0.1)) {
+                  const compressedFile = new File([blob], file.name, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                  });
+                  resolve(compressedFile);
+                } else {
+                  quality -= 0.1;
+                  compress();
+                }
+              },
+              'image/jpeg',
+              quality
+            );
+          };
+          compress();
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
@@ -128,19 +180,21 @@ export function Profile() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size must be less than 2MB');
-      return;
-    }
-
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      let uploadFile = file;
+
+      if (file.size > 500 * 1024) {
+        toast.info('Compressing image...');
+        uploadFile = await compressImage(file);
+      }
+
+      const fileExt = 'jpg';
       const fileName = `${userId}/avatar.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, {
+        .upload(fileName, uploadFile, {
           cacheControl: '3600',
           upsert: true,
         });
