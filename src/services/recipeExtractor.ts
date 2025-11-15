@@ -84,7 +84,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const videoUrl = isSocialMedia ? url : '';
 
   const proxiedImageUrl = data.image
-    ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.image)}&apikey=${SUPABASE_ANON_KEY}`
+    ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.image)}`
     : '';
 
   const result: ExtractedRecipeData = {
