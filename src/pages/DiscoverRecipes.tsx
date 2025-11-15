@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { RecipeCard } from '../components/RecipeCard';
+import { mockRecipes } from '../data/mockRecipes';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Search, TrendingUp, Zap, Star, Leaf, Globe, Heart, Cake } from 'lucide-react';
@@ -21,7 +22,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
-  const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
+  const [allRecipes, setAllRecipes] = useState<Recipe[]>(mockRecipes);
 
   useEffect(() => {
     const loadRecipes = async () => {
@@ -29,10 +30,10 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
         console.log('[Discover] Loading recipes from database...');
         const dbRecipes = await getAllPublicRecipes();
         console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
-        setAllRecipes(dbRecipes);
+        setAllRecipes([...mockRecipes, ...dbRecipes]);
       } catch (error) {
         console.error('Failed to load recipes:', error);
-        setAllRecipes([]);
+        setAllRecipes(mockRecipes);
       }
     };
 
@@ -131,7 +132,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
     return showAllBakedGoods ? filtered : filtered.slice(0, 12);
   }, [allRecipes, showAllBakedGoods]);
 
-  const [recommendedRecipes, setRecommendedRecipes] = useState<Recipe[]>([]);
+  const [recommendedRecipes, setRecommendedRecipes] = useState<typeof mockRecipes>([]);
 
   useEffect(() => {
     const updateRecommendations = () => {
@@ -255,7 +256,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                   />
                 ))}
               </div>
-              {allRecipes.length > 12 && (
+              {mockRecipes.length > 12 && (
                 <div className="text-center mt-8">
                   <Button
                     onClick={() => setShowAllTrending(!showAllTrending)}
@@ -296,7 +297,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                   />
                 ))}
               </div>
-              {allRecipes.filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy').length > 12 && (
+              {mockRecipes.filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy').length > 12 && (
                 <div className="text-center mt-8">
                   <Button
                     onClick={() => setShowAllQuick(!showAllQuick)}
@@ -337,7 +338,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                   />
                 ))}
               </div>
-              {allRecipes.filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan')).length > 12 && (
+              {mockRecipes.filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan')).length > 12 && (
                 <div className="text-center mt-8">
                   <Button
                     onClick={() => setShowAllHealthy(!showAllHealthy)}
@@ -378,7 +379,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                   />
                 ))}
               </div>
-              {allRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'].includes(r.cuisineType)).length > 12 && (
+              {mockRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'].includes(r.cuisineType)).length > 12 && (
                 <div className="text-center mt-8">
                   <Button
                     onClick={() => setShowAllInternational(!showAllInternational)}
@@ -420,7 +421,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                     />
                   ))}
                 </div>
-                {allRecipes.filter((r) => r.cuisineType === 'Pet Meals').length > 12 && (
+                {mockRecipes.filter((r) => r.cuisineType === 'Pet Meals').length > 12 && (
                   <div className="text-center mt-8">
                     <Button
                       onClick={() => setShowAllPetMeals(!showAllPetMeals)}
@@ -463,7 +464,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                     />
                   ))}
                 </div>
-                {allRecipes.filter((r) => r.cuisineType === 'Culinary/Baked Goods').length > 12 && (
+                {mockRecipes.filter((r) => r.cuisineType === 'Culinary/Baked Goods').length > 12 && (
                   <div className="text-center mt-8">
                     <Button
                       onClick={() => setShowAllBakedGoods(!showAllBakedGoods)}
