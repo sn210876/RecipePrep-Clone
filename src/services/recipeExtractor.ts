@@ -76,7 +76,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     instructions: Array.isArray(data.instructions)
       ? data.instructions
       : typeof data.instructions === 'string'
-        ? data.instructions.split('\n').map(s => s.trim()).filter(Boolean)
+        ? data.instructions.split('\n').map((s: string) => s.trim()).filter(Boolean)
         : [],
     prepTime: String(data.prep_time || 30),
     cookTime: String(data.cook_time || 45),
@@ -94,4 +94,11 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
 export function isValidUrl(url: string): boolean {
   try { new URL(url); return true; } catch { return false; }
+}
+
+export function getPlatformFromUrl(url: string): string {
+  if (/tiktok\.com/i.test(url)) return 'TikTok';
+  if (/instagram\.com/i.test(url)) return 'Instagram';
+  if (/youtube\.com|youtu\.be/i.test(url)) return 'YouTube';
+  return 'Website';
 }
