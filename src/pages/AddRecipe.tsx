@@ -174,7 +174,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     console.log('[AddRecipe] Extracted ingredients:', extractedData.ingredients);
     console.log('[AddRecipe] Extracted instructions:', extractedData.instructions);
 
-    setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
+    setTitle('');
 
     // Ensure ingredients have proper structure
     const normalizedIngredients = extractedData.ingredients.map(ing => ({
