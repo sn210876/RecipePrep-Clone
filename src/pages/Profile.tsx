@@ -127,8 +127,8 @@ export function Profile() {
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}.${fileExt}`;
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${userId}/avatar.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -140,17 +140,12 @@ export function Profile() {
         .from('avatars')
         .getPublicUrl(fileName);
 
-      const { error: dbError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', userId);
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', userId);
 
-      if (dbError) throw dbError;
-
-      setProfile(prev => prev ? { ...prev, avatar_url: `${publicUrl}?t=${Date.now()}` } : null);
+      setProfile(prev => prev ? { ...prev, avatar_url: publicUrl + '?t=' + Date.now() } : null);
       toast.success('Avatar updated!');
-    } catch (error: any) {
-      toast.error('Failed to upload avatar: ' + error.message);
+    } catch (err: any) {
+      toast.error('Upload failed: ' + err.message);
     } finally {
       setUploading(false);
     }
@@ -172,8 +167,8 @@ export function Profile() {
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}.${fileExt}`;
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${userId}/banner.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('banners')
@@ -185,17 +180,12 @@ export function Profile() {
         .from('banners')
         .getPublicUrl(fileName);
 
-      const { error: dbError } = await supabase
-        .from('profiles')
-        .update({ banner_url: publicUrl })
-        .eq('id', userId);
+      await supabase.from('profiles').update({ banner_url: publicUrl }).eq('id', userId);
 
-      if (dbError) throw dbError;
-
-      setProfile(prev => prev ? { ...prev, banner_url: `${publicUrl}?t=${Date.now()}` } : null);
+      setProfile(prev => prev ? { ...prev, banner_url: publicUrl + '?t=' + Date.now() } : null);
       toast.success('Banner updated!');
-    } catch (error: any) {
-      toast.error('Failed to upload banner: ' + error.message);
+    } catch (err: any) {
+      toast.error('Upload failed: ' + err.message);
     } finally {
       setUploading(false);
     }

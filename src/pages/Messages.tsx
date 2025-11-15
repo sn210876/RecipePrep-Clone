@@ -8,7 +8,7 @@ interface Conversation {
   id: string;
   user1_id: string;
   user2_id: string;
-  updated_at: string;
+  last_message_at: string;
   other_user: {
     id: string;
     username: string;
@@ -93,7 +93,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         },
         async (payload) => {
           const newMsg = payload.new as Message;
-          setMessages((prev) => [...prev, newMsg]);
+          setMessages((prev) => {
+            const exists = prev.find(m => m.id === newMsg.id);
+            if (exists) return prev;
+            return [...prev, newMsg];
+          });
 
           if (newMsg.sender_id !== currentUserId) {
             await supabase
@@ -127,7 +131,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       .from('conversations')
       .select('*')
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-      .order('updated_at', { ascending: false });
+      .order('last_message_at', { ascending: false });
 
     console.log('[Messages] Conversations query result:', { convos, error });
 
@@ -250,28 +254,34 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !currentUserId) return;
 
+    const messageContent = newMessage.trim();
+    setNewMessage('');
+
     const { error, data } = await supabase.from('direct_messages').insert({
       conversation_id: selectedConversation.id,
       sender_id: currentUserId,
-      content: newMessage.trim(),
+      content: messageContent,
     }).select();
 
     if (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
+      setNewMessage(messageContent);
       return;
+    }
+
+    if (data && data[0]) {
+      setMessages((prev) => {
+        const exists = prev.find(m => m.id === data[0].id);
+        if (exists) return prev;
+        return [...prev, data[0]];
+      });
     }
 
     await supabase
       .from('conversations')
       .update({ last_message_at: new Date().toISOString() })
       .eq('id', selectedConversation.id);
-
-    if (data && data.length > 0) {
-      setMessages(prev => [...prev, data[0]]);
-    }
-
-    setNewMessage('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
