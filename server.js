@@ -66,6 +66,26 @@ async function downloadThumbnail(videoUrl, videoId) {
   }
 }
 
+async function getVideoMetadata(videoUrl, videoId) {
+  const infoPath = path.join(tempDir, `${videoId}.info.json`);
+  const command = `yt-dlp --skip-download --write-info-json -o "${path.join(tempDir, videoId)}" "${videoUrl}"`;
+
+  try {
+    await execPromise(command);
+    const infoContent = await fs.readFile(infoPath, 'utf-8');
+    const metadata = JSON.parse(infoContent);
+
+    return {
+      description: metadata.description || '',
+      title: metadata.title || '',
+      uploader: metadata.uploader || '',
+    };
+  } catch (error) {
+    console.error('Failed to get video metadata:', error);
+    return { description: '', title: '', uploader: '' };
+  }
+}
+
 async function transcribeAudio(audioPath) {
   try {
     const audioBuffer = await fs.readFile(audioPath);
@@ -91,41 +111,50 @@ async function convertImageToBase64(imagePath) {
   }
 }
 
-async function extractRecipeFromTranscript(transcript, thumbnailBase64) {
-  const prompt = `You are a recipe extraction expert. Based on the following video transcript, extract a complete recipe and return it as valid JSON with no additional text or markdown.
+async function extractRecipeFromTranscript(transcript, thumbnailBase64, videoMetadata) {
+  const prompt = `You are a recipe extraction expert. Based on the following video information, extract a complete recipe and return it as valid JSON with no additional text or markdown.
 
-Transcript:
+Video Transcript:
 ${transcript}
+
+${videoMetadata.description ? `Video Description:\n${videoMetadata.description}\n` : ''}
+
+IMPORTANT INSTRUCTIONS:
+1. Extract ingredients EXACTLY as mentioned in the transcript or description
+2. Extract cooking instructions EXACTLY as described in the transcript, in the order they appear
+3. Use the actual words and measurements from the transcript/description
+4. If the creator says "a pinch" or "to taste", use those exact phrases
+5. Break down the instructions into clear steps matching what was said
 
 Extract and return ONLY a valid JSON object with this exact structure (no markdown, no code blocks, just raw JSON):
 {
-  "title": "string - recipe name",
-  "description": "string - brief description of the dish",
+  "title": "string - recipe name from video",
+  "description": "string - brief description from video or create one",
   "ingredients": [
     {
-      "quantity": "string - amount",
-      "unit": "string - measurement unit (cups, tbsp, etc)",
+      "quantity": "string - exact amount mentioned",
+      "unit": "string - exact unit mentioned (cup, tbsp, pinch, to taste, etc)",
       "name": "string - ingredient name"
     }
   ],
   "instructions": [
-    "string - step 1",
-    "string - step 2"
+    "string - step 1 EXACTLY as mentioned",
+    "string - step 2 EXACTLY as mentioned"
   ],
-  "prepTime": number - minutes,
-  "cookTime": number - minutes,
-  "servings": number,
+  "prepTime": number - minutes (estimate if not mentioned),
+  "cookTime": number - minutes (estimate if not mentioned),
+  "servings": number - servings mentioned or estimate,
   "cuisine": "string - cuisine type",
   "difficulty": "Easy|Medium|Hard",
   "dietaryTags": ["string - tags like Vegetarian, Vegan, etc"]
 }
 
-Make sure all fields are present. If information is not mentioned, use reasonable defaults.`;
+Make sure all fields are present. Extract information from both transcript AND description if available.`;
 
   try {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
-      max_tokens: 2000,
+      max_tokens: 3000,
       messages: [
         {
           role: 'user',
@@ -186,18 +215,23 @@ app.post('/api/extract-recipe-from-video', async (req, res) => {
 
     const audioPath = await downloadAudio(url, videoId);
     const thumbnailPath = await downloadThumbnail(url, videoId);
+    const videoMetadata = await getVideoMetadata(url, videoId);
 
     const transcript = await transcribeAudio(audioPath);
 
     const thumbnailBase64 = await convertImageToBase64(thumbnailPath);
 
-    const recipe = await extractRecipeFromTranscript(transcript, thumbnailBase64);
+    const recipe = await extractRecipeFromTranscript(transcript, thumbnailBase64, videoMetadata);
 
     await cleanupFiles(videoId);
 
     res.json({
       success: true,
       recipe: recipe,
+      metadata: {
+        transcript: transcript,
+        description: videoMetadata.description,
+      },
     });
   } catch (error) {
     console.error('Error processing video:', error);
