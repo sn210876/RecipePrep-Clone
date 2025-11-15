@@ -1,6 +1,7 @@
 import { Ingredient } from '@/types/recipe';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;   // ← ADD THIS
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 export interface ExtractedRecipeData {
