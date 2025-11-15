@@ -333,7 +333,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                             <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
                               <img
                                 src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                                  ? `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                                  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
                                   : recipe.imageUrl}
                                 alt={recipe.title}
                                 className="w-full h-full object-cover"
@@ -528,7 +528,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                                     <div className="w-full h-16 rounded-md overflow-hidden mb-2 bg-slate-100">
                                       <img
                                         src={meal.recipe.imageUrl?.includes('instagram.com') || meal.recipe.imageUrl?.includes('cdninstagram.com')
-                                          ? `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(meal.recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                                          ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(meal.recipe.imageUrl.replace(/&amp;/g, '&'))}`
                                           : meal.recipe.imageUrl}
                                         alt={meal.recipe.title}
                                         className="w-full h-full object-cover"
@@ -684,7 +684,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                                   <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
                                     <img
                                       src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                                        ? `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                                        ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
                                         : recipe.imageUrl}
                                       alt={recipe.title}
                                       className="w-full h-full object-cover"
