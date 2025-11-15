@@ -1,7 +1,7 @@
 import { Ingredient } from '@/types/recipe';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;   // ← ADD THIS
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 export interface ExtractedRecipeData {
@@ -23,25 +23,45 @@ export interface ExtractedRecipeData {
   sourceUrl: string;
 }
 
+const parseIngredients = (ings: string[]): Ingredient[] => {
+  return (ings || []).map(ing => {
+    const trimmed = ing.trim();
+    if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
+
+    // MUCH BETTER REGEX — handles 1 cup, 2 tsp, 1/2 lb, 3-4 cloves, etc.
+    const quantityMatch = trimmed.match(/^([\d⅛⅙¼⅓½⅔¾⅞⅕⅖⅗⅘⅙⅚⅐⅑⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\.\/\-\s⅟½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅐⅛⅜⅝⅞⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)\s*/);
+    const quantity = quantityMatch ? quantityMatch[1].trim() : '';
+
+    let rest = trimmed;
+    if (quantityMatch) rest = trimmed.slice(quantityMatch[0].length).trim();
+
+    // Common units
+    const unitMatch = rest.match(/^(teaspoons?|tsp\.?|tablespoons?|tbsp\.?|cups?|c\.?|ounces?|oz\.?|pounds?|lbs?\.?|grams?|g\.?|kilograms?|kg\.?|ml|milliliters?|liters?|l\.?|pinch|dash|cloves?|slices?|cans?|packages?|bunches?|heads?|sprigs?)\s+/i);
+    const unit = unitMatch ? unitMatch[1].toLowerCase().replace(/\.$/, '') : 'cup';
+
+    if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
+    const name = rest || trimmed;
+
+    return { quantity, unit, name };
+  });
+};
+
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   if (!url.trim() || !isValidUrl(url)) {
     throw new Error('Please enter a valid URL');
   }
 
-  console.log('[RecipeExtractor] Supabase Edge Function:', API_URL);
-  console.log('[RecipeExtractor] URL to extract:', url);
+  console.log('[RecipeExtractor] Extracting from:', url);
 
   const response = await fetch(API_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'apikey': SUPABASE_ANON_KEY,                    // ← ADD THIS
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // ← ADD THIS
-  },
-  body: JSON.stringify({ url: url.trim() }),
-});
-
-  console.log('[RecipeExtractor] Response status:', response.status);
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ url: url.trim() }),
+  });
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -50,36 +70,19 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   }
 
   const data = await response.json();
-  console.log('[RecipeExtractor] Success:', data);
-
-  const parseIngredients = (ings: string[]): Ingredient[] => {
-    return ings.map(ing => {
-      const trimmed = ing.trim();
-      if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
-      const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
-      const quantity = quantityMatch ? quantityMatch[1].trim() : '';
-      let rest = trimmed.slice(quantity.length).trim();
-      const unitMatch = rest.match(/^([a-zA-Z]+\.?\s*[a-zA-Z]*)\s+/);
-      const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : 'cup';
-      if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-      const name = rest || trimmed;
-      return { quantity, unit, name };
-    });
-  };
+  console.log('[RecipeExtractor] Raw data:', data);
 
   const ingredients = parseIngredients(data.ingredients || []);
-  let instructions = data.instructions || [];
-  if (typeof instructions === 'string') {
-    instructions = instructions.split('\n').map((s: string) => s.trim()).filter((s: string) => s);
-  }
+  const instructions = Array.isArray(data.instructions)
+    ? data.instructions
+    : typeof data.instructions === 'string'
+      ? data.instructions.split('\n').map(s => s.trim()).filter(Boolean)
+      : [];
 
-  const isSocialMedia = url.includes('tiktok.com') || url.includes('instagram.com') ||
-                         url.includes('youtube.com') || url.includes('youtu.be');
-  const isTikTokOrInstagram = url.includes('tiktok.com') || url.includes('instagram.com');
-  const videoUrl = isSocialMedia ? url : '';
+  const isSocialMedia = /tiktok\.com|instagram\.com|youtube\.com|youtu\.be/i.test(url);
 
-  const result: ExtractedRecipeData = {
-    title: isTikTokOrInstagram ? '' : (data.title || 'Untitled Recipe'),
+  return {
+    title: data.title || 'Untitled Recipe',
     description: 'Extracted recipe',
     creator: data.author || 'Unknown',
     ingredients,
@@ -91,28 +94,20 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     difficulty: 'Medium',
     mealTypes: ['Dinner'],
     dietaryTags: [],
-    imageUrl: data.image || '',
-    videoUrl,
+    imageUrl: data.image || data.thumbnail || '',
+    videoUrl: isSocialMedia ? url : undefined,
     notes: data.notes || '',
     sourceUrl: url,
   };
-
-  console.log('[RecipeExtractor] FINAL RESULT:', result);
-  return result;
 }
 
 export function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
+  try { new URL(url); return true; } catch { return false; }
 }
 
 export function getPlatformFromUrl(url: string): string {
-  if (url.includes('tiktok.com')) return 'TikTok';
-  if (url.includes('instagram.com')) return 'Instagram';
-  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+  if (/tiktok\.com/i.test(url)) return 'TikTok';
+  if (/instagram\.com/i.test(url)) return 'Instagram';
+  if (/youtube\.com|youtu\.be/i.test(url)) return 'YouTube';
   return 'Website';
 }
