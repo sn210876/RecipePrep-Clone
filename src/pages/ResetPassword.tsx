@@ -17,10 +17,16 @@ export function ResetPassword() {
     const initPasswordReset = async () => {
       try {
         const hash = window.location.hash;
-        if (hash && hash.includes('access_token')) {
+        console.log('Reset password page loaded. Hash:', hash);
+
+        if (hash && (hash.includes('access_token') || hash.includes('type=recovery'))) {
           const params = new URLSearchParams(hash.substring(1));
           const accessToken = params.get('access_token');
           const refreshToken = params.get('refresh_token');
+          const type = params.get('type');
+
+          console.log('Recovery type:', type);
+          console.log('Has access token:', !!accessToken);
 
           if (accessToken && refreshToken) {
             const { error: sessionError } = await supabase.auth.setSession({
@@ -32,13 +38,16 @@ export function ResetPassword() {
               console.error('Session error:', sessionError);
               setError('Session expired. Please request a new reset link.');
             } else {
+              console.log('Session set successfully');
               await new Promise(resolve => setTimeout(resolve, 500));
               setHasToken(true);
             }
           } else {
+            console.error('Missing tokens in URL');
             setError('Invalid reset link. Please request a new one.');
           }
         } else {
+          console.error('No hash or invalid hash format');
           setError('Invalid or expired reset link. Please request a new one.');
         }
       } catch (err) {
