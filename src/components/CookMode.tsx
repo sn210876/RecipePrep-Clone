@@ -18,7 +18,6 @@ import {
   Circle,
   Volume2,
   VolumeX,
-  Star,
   Users,
   Plus,
   Minus,
@@ -521,7 +520,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               <div className="relative w-full h-48 sm:h-64 rounded-xl overflow-hidden shadow-lg">
                 <img
                   src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                    ? `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
                     : recipe.imageUrl}
                   alt={recipe.title}
                   className="w-full h-full object-cover"
@@ -779,7 +778,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                   onClick={() => setShowReviewForm(true)}
                   className="bg-accent hover:bg-accent/90 gap-2"
                 >
-                  <Star className="w-4 h-4" />
+                  <span className="text-base">🔥</span>
                   <span>Review Recipe</span>
                 </Button>
               </div>

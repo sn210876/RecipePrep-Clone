@@ -32,14 +32,13 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("=== Image Proxy Request ===");
-    console.log("Requested URL:", imageUrl);
+    console.log("[image-proxy] Fetching:", imageUrl);
 
     const headers = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "Accept": "image/webp,image/apng,image/*,*/*;q=0.8",
       "Accept-Language": "en-US,en;q=0.9",
-      "Referer": "https://www.instagram.com/",
+      "Referer": "https://www.allrecipes.com/",
       "Sec-Fetch-Dest": "image",
       "Sec-Fetch-Mode": "no-cors",
       "Sec-Fetch-Site": "cross-site",
@@ -47,13 +46,13 @@ Deno.serve(async (req: Request) => {
 
     const response = await fetch(imageUrl, { headers });
 
-    console.log("Response status:", response.status);
-    console.log("Response content-type:", response.headers.get("content-type"));
+    console.log("[image-proxy] Response status:", response.status);
+    console.log("[image-proxy] Content-Type:", response.headers.get("content-type"));
 
     if (!response.ok) {
-      console.error("Image fetch failed with status:", response.status);
+      console.error("[image-proxy] Fetch failed:", response.status);
       const errorText = await response.text();
-      console.error("Error response:", errorText);
+      console.error("[image-proxy] Error:", errorText.substring(0, 200));
       return new Response(
         JSON.stringify({
           error: "Failed to fetch image",
@@ -73,7 +72,7 @@ Deno.serve(async (req: Request) => {
     const imageBuffer = await response.arrayBuffer();
     const contentType = response.headers.get("content-type") || "image/jpeg";
 
-    console.log("Successfully proxied image, size:", imageBuffer.byteLength, "bytes");
+    console.log("[image-proxy] Success! Size:", imageBuffer.byteLength, "bytes");
 
     return new Response(imageBuffer, {
       headers: {
@@ -83,8 +82,8 @@ Deno.serve(async (req: Request) => {
       },
     });
   } catch (error) {
-    console.error("Proxy error:", error);
-    console.error("Error stack:", error.stack);
+    console.error("[image-proxy] Error:", error);
+    console.error("[image-proxy] Stack:", error.stack);
     return new Response(
       JSON.stringify({
         error: error.message || "Failed to proxy image",

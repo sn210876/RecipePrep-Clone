@@ -8,7 +8,7 @@ interface Conversation {
   id: string;
   user1_id: string;
   user2_id: string;
-  updated_at: string;
+  last_message_at: string;
   other_user: {
     id: string;
     username: string;
@@ -79,6 +79,56 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   };
 
   useEffect(() => {
+    if (!currentUserId) return;
+
+    const conversationsChannel = supabase
+      .channel('conversations-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversations',
+          filter: `user1_id=eq.${currentUserId}`,
+        },
+        () => {
+          console.log('[Messages] New conversation created, reloading...');
+          loadConversations(currentUserId);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversations',
+          filter: `user2_id=eq.${currentUserId}`,
+        },
+        () => {
+          console.log('[Messages] New conversation created, reloading...');
+          loadConversations(currentUserId);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations',
+        },
+        () => {
+          console.log('[Messages] Conversation updated, reloading...');
+          loadConversations(currentUserId);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(conversationsChannel);
+    };
+  }, [currentUserId]);
+
+  useEffect(() => {
     if (!selectedConversation || !currentUserId) return;
 
     const channel = supabase
@@ -88,16 +138,21 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
+          table: 'direct_messages',
           filter: `conversation_id=eq.${selectedConversation.id}`,
         },
         async (payload) => {
           const newMsg = payload.new as Message;
-          setMessages((prev) => [...prev, newMsg]);
+          setMessages((prev) => {
+            if (prev.some(m => m.id === newMsg.id)) {
+              return prev;
+            }
+            return [...prev, newMsg];
+          });
 
           if (newMsg.sender_id !== currentUserId) {
             await supabase
-              .from('messages')
+              .from('direct_messages')
               .update({ read: true })
               .eq('id', newMsg.id);
           }
@@ -127,7 +182,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       .from('conversations')
       .select('*')
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-      .order('updated_at', { ascending: false });
+      .order('last_message_at', { ascending: false });
 
     console.log('[Messages] Conversations query result:', { convos, error });
 
@@ -147,7 +202,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           .maybeSingle();
 
         const { data: lastMsg } = await supabase
-          .from('messages')
+          .from('direct_messages')
           .select('content, created_at')
           .eq('conversation_id', convo.id)
           .order('created_at', { ascending: false })
@@ -155,7 +210,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           .maybeSingle();
 
         const { count: unreadCount } = await supabase
-          .from('messages')
+          .from('direct_messages')
           .select('*', { count: 'exact', head: true })
           .eq('conversation_id', convo.id)
           .eq('read', false)
@@ -223,7 +278,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
   const loadMessages = async (conversationId: string) => {
     const { data, error } = await supabase
-      .from('messages')
+      .from('direct_messages')
       .select('*')
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true });
@@ -240,7 +295,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     if (!currentUserId) return;
 
     await supabase
-      .from('messages')
+      .from('direct_messages')
       .update({ read: true })
       .eq('conversation_id', conversationId)
       .neq('sender_id', currentUserId)
@@ -250,24 +305,57 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !currentUserId) return;
 
-    const { error } = await supabase.from('messages').insert({
+    const messageContent = newMessage.trim();
+    const tempId = `temp-${Date.now()}`;
+    const tempMessage: Message = {
+      id: tempId,
       conversation_id: selectedConversation.id,
       sender_id: currentUserId,
-      content: newMessage.trim(),
-    });
+      content: messageContent,
+      read: false,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages(prev => [...prev, tempMessage]);
+    setNewMessage('');
+
+    const { data, error } = await supabase.from('direct_messages').insert({
+      conversation_id: selectedConversation.id,
+      sender_id: currentUserId,
+      content: messageContent,
+    }).select().single();
 
     if (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setNewMessage(messageContent);
       return;
     }
 
+    setMessages(prev => {
+      const withoutTemp = prev.filter(m => m.id !== tempId);
+      if (withoutTemp.some(m => m.id === data.id)) {
+        return withoutTemp;
+      }
+      return [...withoutTemp, data];
+    });
+
     await supabase
       .from('conversations')
-      .update({ updated_at: new Date().toISOString() })
+      .update({ last_message_at: new Date().toISOString() })
       .eq('id', selectedConversation.id);
 
-    setNewMessage('');
+    const recipientId = selectedConversation.user1_id === currentUserId
+      ? selectedConversation.user2_id
+      : selectedConversation.user1_id;
+
+    await supabase.from('notifications').insert({
+      user_id: recipientId,
+      actor_id: currentUserId,
+      type: 'message',
+      message_id: data.id,
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

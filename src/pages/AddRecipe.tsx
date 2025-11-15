@@ -174,7 +174,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     console.log('[AddRecipe] Extracted ingredients:', extractedData.ingredients);
     console.log('[AddRecipe] Extracted instructions:', extractedData.instructions);
 
-    setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
+    setTitle('');
 
     // Ensure ingredients have proper structure
     const normalizedIngredients = extractedData.ingredients.map(ing => ({
@@ -284,37 +284,36 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
       dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
 
-      if (videoUrl.trim()) {
-        try {
-          const { supabase } = await import('@/lib/supabase');
-          const { data: { user } } = await supabase.auth.getUser();
+      // Auto-post to profile when recipe is created
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { user } } = await supabase.auth.getUser();
 
-          if (user) {
-            const postImageUrl = imageUrl.trim()
-              ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')
-                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
-                : imageUrl.trim())
-              : null;
+        if (user) {
+          const postImageUrl = imageUrl.trim()
+            ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com') || imageUrl.includes('allrecipes.com')
+              ? `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
+              : imageUrl.trim())
+            : null;
 
-            const { error: postError } = await supabase.from('posts').insert({
-              user_id: user.id,
-              title: title.trim(),
-              image_url: postImageUrl,
-              video_url: videoUrl.trim(),
-              caption: notes.trim() || 'Check out my recipe!',
-              recipe_url: videoUrl.trim(),
-              recipe_id: createdRecipe.id,
-            });
+          const { error: postError } = await supabase.from('posts').insert({
+            user_id: user.id,
+            title: title.trim(),
+            image_url: postImageUrl,
+            video_url: videoUrl.trim() || null,
+            caption: notes.trim() || 'Check out my recipe!',
+            recipe_url: videoUrl.trim() || urlInput.trim() || null,
+            recipe_id: createdRecipe.id,
+          });
 
-            if (postError) {
-              console.error('[AddRecipe] Failed to create social post:', postError);
-            } else {
-              console.log('[AddRecipe] Social post created successfully');
-            }
+          if (postError) {
+            console.error('[AddRecipe] Failed to create social post:', postError);
+          } else {
+            console.log('[AddRecipe] Social post created successfully');
           }
-        } catch (postError) {
-          console.error('[AddRecipe] Failed to create social post:', postError);
         }
+      } catch (postError) {
+        console.error('[AddRecipe] Failed to create social post:', postError);
       }
 
       toast.success('Recipe created and published successfully!');
@@ -440,7 +439,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 <div className="space-y-2">
                   <div className="relative w-full rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
                     <img
-                      src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
+                      src={`https://vohvdarghgqskzqjclux.supabase.co/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
                       alt={title || 'Recipe'}
                       className="w-full h-64 object-cover"
                       onError={(e) => {
@@ -763,9 +762,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
                 <div className="space-y-6 py-4">
                   {extractedData.imageUrl && (
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
+                    <div className="relative w-48 h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
                       <img
-                        src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl.replace(/&amp;/g, '&'))}`}
+                        src={`https://vohvdarghgqskzqjclux.supabase.co/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl.replace(/&amp;/g, '&'))}`}
                         alt={extractedData.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {

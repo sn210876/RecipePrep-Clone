@@ -131,7 +131,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
       <div className="relative overflow-hidden aspect-[4/3]">
         <img
           src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-            ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+            ? `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/clever-worker?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
             : recipe.imageUrl}
           alt={recipe.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

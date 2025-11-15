@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown, Send, Copy, Check } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -415,7 +415,27 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
     if (!deletePostId) return;
 
     try {
-      const { error } = await supabase.from('posts').delete().eq('id', deletePostId);
+      const post = posts.find(p => p.id === deletePostId);
+
+      if (post) {
+        if (post.image_url && post.image_url.includes('recipe-images')) {
+          const urlParts = post.image_url.split('/recipe-images/');
+          if (urlParts[1]) {
+            const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
+            await supabase.storage.from('recipe-images').remove([filePath]);
+          }
+        }
+
+        if (post.photo_url && post.photo_url.includes('recipe-images')) {
+          const urlParts = post.photo_url.split('/recipe-images/');
+          if (urlParts[1]) {
+            const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
+            await supabase.storage.from('recipe-images').remove([filePath]);
+          }
+        }
+      }
+
+      const { error } = await supabase.from('posts').delete().eq('id', deletePostId).eq('user_id', currentUserId);
 
       if (error) throw error;
 
@@ -744,9 +764,9 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-white border-b border-gray-200 p-4 w-64">
+          <div className="flex items-center justify-center gap-2">
+            <div className="relative w-1/2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -757,7 +777,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               {showSearchResults && (
-                <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-60 overflow-y-auto shadow-lg z-50">
+                <div className="absolute left-0 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-60 overflow-y-auto shadow-lg z-50 w-[200%] max-w-md">
               {searchResults.length > 0 ? (
                 searchResults.map((user) => (
                   <button
@@ -982,7 +1002,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                           <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
                           {postRatings[post.id] && postRatings[post.id].count > 0 && (
                             <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-base">🔥</span>
                               <span className="text-white text-xs font-semibold">
                                 {postRatings[post.id].average.toFixed(1)}
                               </span>
