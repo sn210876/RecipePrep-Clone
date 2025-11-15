@@ -147,10 +147,23 @@ ${cleanText.slice(0, 15000)}`;
 
   console.log("[recipe-proxy] Manual parse - Ingredients:", ingredients.length, "Instructions:", instructions.length);
 
+  // If we couldn't parse anything structured, return the full text as a single instruction
+  if (ingredients.length === 0 && instructions.length === 0 && cleanText.length > 20) {
+    console.log("[recipe-proxy] No structured data found, returning full text");
+    return {
+      ingredients: ["See recipe description below"],
+      instructions: [cleanText],
+      notes: "⚠️ AI parsing unavailable. Full description provided - please extract recipe details manually.",
+      prep_time: 0,
+      cook_time: 0,
+      yield: ""
+    };
+  }
+
   return {
     ingredients: ingredients.length > 0 ? ingredients : ["Check original post for full ingredient list"],
     instructions: instructions.length > 0 ? instructions : ["Check original post for full instructions"],
-    notes: "Extracted from social media. Some details may be incomplete.",
+    notes: "⚠️ AI parsing unavailable. Basic extraction attempted - some details may be missing.",
     prep_time: 0,
     cook_time: 0,
     yield: ""
