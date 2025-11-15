@@ -18,7 +18,6 @@ import {
   Circle,
   Volume2,
   VolumeX,
-  Star,
   Users,
   Plus,
   Minus,
@@ -779,7 +778,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                   onClick={() => setShowReviewForm(true)}
                   className="bg-accent hover:bg-accent/90 gap-2"
                 >
-                  <Star className="w-4 h-4" />
+                  <span className="text-base">🔥</span>
                   <span>Review Recipe</span>
                 </Button>
               </div>

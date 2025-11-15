@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { RecipeCard } from '../components/RecipeCard';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
-import { Search, TrendingUp, Zap, Star, Leaf, Globe, Heart, Cake } from 'lucide-react';
+import { Search, TrendingUp, Zap, Leaf, Globe, Heart, Cake } from 'lucide-react';
 import { useRecipes } from '../context/RecipeContext';
 import { getRecommendedRecipes, getRecommendationInsights } from '../services/recommendationService';
 import { CookMode } from '../components/CookMode';
@@ -481,7 +481,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
             <section>
               <div className="flex items-center gap-3 mb-6">
                 <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-lg">
-                  <Star className="w-6 h-6 text-white" />
+                  <span className="text-2xl">🔥</span>
                 </div>
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900">

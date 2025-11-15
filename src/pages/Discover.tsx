@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Star, Crown, Send, Copy, Check } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -415,7 +415,27 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
     if (!deletePostId) return;
 
     try {
-      const { error } = await supabase.from('posts').delete().eq('id', deletePostId);
+      const post = posts.find(p => p.id === deletePostId);
+
+      if (post) {
+        if (post.image_url && post.image_url.includes('recipe-images')) {
+          const urlParts = post.image_url.split('/recipe-images/');
+          if (urlParts[1]) {
+            const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
+            await supabase.storage.from('recipe-images').remove([filePath]);
+          }
+        }
+
+        if (post.photo_url && post.photo_url.includes('recipe-images')) {
+          const urlParts = post.photo_url.split('/recipe-images/');
+          if (urlParts[1]) {
+            const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
+            await supabase.storage.from('recipe-images').remove([filePath]);
+          }
+        }
+      }
+
+      const { error } = await supabase.from('posts').delete().eq('id', deletePostId).eq('user_id', currentUserId);
 
       if (error) throw error;
 
@@ -982,7 +1002,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                           <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
                           {postRatings[post.id] && postRatings[post.id].count > 0 && (
                             <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-base">🔥</span>
                               <span className="text-white text-xs font-semibold">
                                 {postRatings[post.id].average.toFixed(1)}
                               </span>

@@ -11,6 +11,7 @@ interface Post {
   id: string;
   user_id: string;
   image_url: string | null;
+  photo_url?: string | null;
   video_url: string | null;
   title: string | null;
   caption: string | null;
@@ -168,10 +169,27 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     if (!confirm('Are you sure you want to delete this post?')) return;
     setLoading(true);
     try {
+      if (post.image_url && post.image_url.includes('recipe-images')) {
+        const urlParts = post.image_url.split('/recipe-images/');
+        if (urlParts[1]) {
+          const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
+          await supabase.storage.from('recipe-images').remove([filePath]);
+        }
+      }
+
+      if (post.photo_url && post.photo_url.includes('recipe-images')) {
+        const urlParts = post.photo_url.split('/recipe-images/');
+        if (urlParts[1]) {
+          const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
+          await supabase.storage.from('recipe-images').remove([filePath]);
+        }
+      }
+
       const { error } = await supabase
         .from('posts')
         .delete()
-        .eq('id', post.id);
+        .eq('id', post.id)
+        .eq('user_id', currentUserId);
       if (error) throw error;
       toast.success('Post deleted!');
       onDelete(post.id);
