@@ -1,166 +1,165 @@
-import { Ingredient } from '@/types/recipe';
+import { createClient } from '@supabase/supabase-js';
+import { Recipe } from '@/types/recipe';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://vohvdarghgqskzqjclux.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const RECIPE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
-const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
-const RENDER_VIDEO_EXTRACTOR = 'https://recipe-backend-nodejs-1.onrender.com/extract';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export interface ExtractedRecipeData {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export interface DBRecipe {
+  id: string;
+  user_id?: string;
   title: string;
-  description: string;
-  creator: string;
-  ingredients: Ingredient[];
-  instructions: string[];
-  prepTime: string;
-  cookTime: string;
-  servings: string;
-  cuisineType: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  mealTypes: string[];
-  dietaryTags: string[];
-  imageUrl: string;
-  videoUrl?: string;
-  notes: string;
-  sourceUrl: string;
+  ingredients: any;
+  instructions: any;
+  prep_time: number;
+  cook_time: number;
+  servings: number;
+  tags: any;
+  cuisine_type: string;
+  difficulty: string;
+  dietary_tags: any;
+  meal_type: any;
+  image_url?: string;
+  video_url?: string;
+  source_url?: string;
+  notes?: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-// MOVED OUTSIDE — NOW ACCESSIBLE TO BOTH PATHS
-const parseIngredients = (ings: string[]): Ingredient[] => {
-  return ings.map(ing => {
-    const trimmed = ing.trim();
-    if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
-    const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
-    const quantity = quantityMatch ? quantityMatch[1].trim() : '';
-    let rest = trimmed.slice(quantity.length).trim();
-    const unitMatch = rest.match(/^(cups?|tbsps?|tsps?|tablespoons?|teaspoons?|ozs?|ounces?|lbs?|pounds?|grams?|kgs?|kilograms?|mls?|milliliters?|liters?|pinch|dash|cloves?|stalks?|pieces?|slices?|packages?)\s+/i);
-    const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : 'cup';
-    if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-    const name = rest || trimmed;
-    return { quantity, unit, name };
-  });
-};
-
-export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
-  if (!url.trim() || !isValidUrl(url)) {
-    throw new Error('Please enter a valid URL');
-  }
-
-  const isSocialMedia =
-    url.includes('instagram.com') ||
-    url.includes('tiktok.com') ||
-    url.includes('youtube.com') ||
-    url.includes('youtu.be');
-
-  // SOCIAL MEDIA → RENDER.COM (your perfect video extractor)
-  if (isSocialMedia) {
-    console.log('[RecipeExtractor] Social media → Render.com');
-    try {
-      const response = await fetch(RENDER_VIDEO_EXTRACTOR, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim() })
-      });
-
-      if (!response.ok) {
-        const err = await response.text();
-        console.error('Render failed:', err);
-        throw new Error('Video extraction failed');
-      }
-
-      const data = await response.json();
-      console.log('[RecipeExtractor] Render success:', data);
-
-      const ingredients = parseIngredients(data.ingredients || []);
-      const proxiedImage = data.thumbnail
-        ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}`
-        : '';
-
-      return {
-        title: data.title || 'Video Recipe',
-        description: 'Extracted from video',
-        creator: data.creator || 'Unknown',
-        ingredients,
-        instructions: data.instructions || [],
-        prepTime: String(data.prep_time || 15),
-        cookTime: String(data.cook_time || 30),
-        servings: data.yield || '4',
-        cuisineType: 'Global',
-        difficulty: 'Medium',
-        mealTypes: ['Dinner'],
-        dietaryTags: [],
-        imageUrl: proxiedImage,
-        videoUrl: url,
-        notes: data.notes || 'From video audio',
-        sourceUrl: url,
-      };
-    } catch (e) {
-      console.error('Render extractor error:', e);
-      throw new Error('Failed to extract from video');
-    }
-  }
-
-  // NORMAL WEBSITES → SUPABASE
-  console.log('[RecipeExtractor] Regular site → Supabase');
-  const response = await fetch(RECIPE_FUNCTION_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      'apikey': SUPABASE_ANON_KEY,
-    },
-    body: JSON.stringify({ url: url.trim() }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Supabase error:', errorText);
-    throw new Error('Failed to extract recipe');
-  }
-
-  const data = await response.json();
-
-  if (!data.title || !data.ingredients || !data.instructions) {
-    throw new Error('Invalid recipe data');
-  }
-
-  const ingredients = parseIngredients(data.ingredients);
-  const proxiedImageUrl = data.image
-    ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.image)}&apikey=${SUPABASE_ANON_KEY}`
-    : '';
-
+function dbRecipeToRecipe(dbRecipe: DBRecipe): Recipe {
   return {
-    title: data.title,
-    description: 'Extracted recipe',
-    creator: 'Unknown',
-    ingredients,
-    instructions: data.instructions,
-    prepTime: data.prep_time ? String(data.prep_time) : '30',
-    cookTime: data.cook_time ? String(data.cook_time) : '45',
-    servings: data.yield || '4',
-    cuisineType: 'Global',
-    difficulty: 'Medium',
-    mealTypes: ['Dinner'],
-    dietaryTags: [],
-    imageUrl: proxiedImageUrl,
-    videoUrl: '',
-    notes: data.notes || '',
-    sourceUrl: url,
+    id: dbRecipe.id,
+    title: dbRecipe.title,
+    ingredients: dbRecipe.ingredients,
+    instructions: dbRecipe.instructions,
+    prepTime: dbRecipe.prep_time,
+    cookTime: dbRecipe.cook_time,
+    servings: dbRecipe.servings,
+    tags: dbRecipe.tags || [],
+    cuisineType: dbRecipe.cuisine_type,
+    difficulty: dbRecipe.difficulty as 'Easy' | 'Medium' | 'Hard',
+    dietaryTags: dbRecipe.dietary_tags || [],
+    mealType: dbRecipe.meal_type || [],
+    imageUrl: dbRecipe.image_url,
+    videoUrl: dbRecipe.video_url,
+    sourceUrl: dbRecipe.source_url,
+    notes: dbRecipe.notes,
+    isSaved: false,
   };
 }
 
-export function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
+function recipeToDBRecipe(recipe: Omit<Recipe, 'id'>): Omit<DBRecipe, 'id' | 'created_at' | 'updated_at'> {
+  return {
+    title: recipe.title,
+    ingredients: recipe.ingredients,
+    instructions: recipe.instructions,
+    prep_time: recipe.prepTime,
+    cook_time: recipe.cookTime,
+    servings: recipe.servings,
+    tags: recipe.tags || [],
+    cuisine_type: recipe.cuisineType,
+    difficulty: recipe.difficulty,
+    dietary_tags: recipe.dietaryTags || [],
+    meal_type: recipe.mealType || [],
+    image_url: recipe.imageUrl,
+    video_url: recipe.videoUrl,
+    source_url: recipe.sourceUrl,
+    notes: recipe.notes,
+    is_public: true,
+  };
 }
 
-export function getPlatformFromUrl(url: string): string {
-  if (url.includes('tiktok.com')) return 'TikTok';
-  if (url.includes('instagram.com')) return 'Instagram';
-  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
-  return 'Website';
+export async function createRecipe(recipe: Omit<Recipe, 'id'>): Promise<Recipe> {
+  const dbRecipe = recipeToDBRecipe(recipe);
+
+  console.log('[createRecipe] Attempting to insert:', dbRecipe);
+
+  const { data, error } = await supabase
+    .from('public_recipes')
+    .insert(dbRecipe)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating recipe:', error);
+    console.error('Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    });
+    console.error('Supabase request failed', error);
+    throw new Error(error.message || 'Failed to create recipe');
+  }
+
+  return dbRecipeToRecipe(data);
+}
+
+export async function getAllPublicRecipes(): Promise<Recipe[]> {
+  const { data, error } = await supabase
+    .from('public_recipes')
+    .select('*')
+    .eq('is_public', true)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching recipes:', error);
+    throw new Error('Failed to fetch recipes');
+  }
+
+  return (data || []).map(dbRecipeToRecipe);
+}
+
+export async function getRecipeById(id: string): Promise<Recipe | null> {
+  const { data, error } = await supabase
+    .from('public_recipes')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching recipe:', error);
+    return null;
+  }
+
+  return data ? dbRecipeToRecipe(data) : null;
+}
+
+export async function updateRecipe(id: string, updates: Partial<Recipe>): Promise<Recipe> {
+  const dbUpdates = recipeToDBRecipe(updates as Recipe);
+
+  const { data, error } = await supabase
+    .from('public_recipes')
+    .update({ ...dbUpdates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating recipe:', error);
+    throw new Error('Failed to update recipe');
+  }
+
+  return dbRecipeToRecipe(data);
+}
+
+export async function deleteRecipe(id: string): Promise<void> {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (!uuidRegex.test(id)) {
+    throw new Error('Cannot delete mock recipes - only database recipes can be deleted');
+  }
+
+  const { error } = await supabase
+    .from('public_recipes')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting recipe:', error);
+    throw new Error('Failed to delete recipe');
+  }
 }

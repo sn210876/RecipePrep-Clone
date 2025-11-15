@@ -15,92 +15,52 @@ interface ExtractedRecipeData {
   notes: string;
 }
 
-const RECIPE_PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/recipe-proxy`;
-const LOCAL_VIDEO_EXTRACT_URL = 'http://localhost:3000/api/extract-recipe-from-video';
-
-function isSocialMediaUrl(url: string): boolean {
-  return url.includes('instagram.com') ||
-         url.includes('tiktok.com') ||
-         url.includes('youtube.com') ||
-         url.includes('youtu.be') ||
-         url.includes('facebook.com') ||
-         url.includes('fb.watch');
-}
+// ✅ Your backend API URL (update this to your actual Render URL)
+const API_BASE_URL = 'https://recipeprep-clone.onrender.com';
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   try {
-    const useLocalServer = isSocialMediaUrl(url);
-    const endpoint = useLocalServer ? LOCAL_VIDEO_EXTRACT_URL : RECIPE_PROXY_URL;
-
-    console.log('[RecipeExtractor] Fetching from:', endpoint);
-    console.log('[RecipeExtractor] URL to extract:', url);
-    console.log('[RecipeExtractor] Using local server:', useLocalServer);
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (!useLocalServer) {
-      headers['Authorization'] = `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`;
-    }
-
-    const response = await fetch(endpoint, {
+    console.log('Extracting recipe from:', url);
+    
+    // Call your Python backend
+    const response = await fetch(`${API_BASE_URL}/extract`, {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ url }),
     });
 
-    console.log('[RecipeExtractor] Response status:', response.status);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[RecipeExtractor] Error response:', errorData);
-      throw new Error(errorData.error || `Failed to extract recipe: ${response.status}`);
+      throw new Error(errorData.detail || `API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('[RecipeExtractor] Raw response:', data);
+    console.log('Backend response:', data);
 
-    const recipeData = useLocalServer && data.recipe ? data.recipe : data;
-
-    if (!recipeData.title || !recipeData.ingredients || !recipeData.instructions) {
-      throw new Error('Invalid recipe data received from server');
-    }
-
-    const ingredients: Ingredient[] = recipeData.ingredients.map((ing: string) => {
-      const match = ing.match(/^([\d\/\.]+)\s*(\w+)?\s+(.+)$/);
-      if (match) {
-        return {
-          quantity: match[1],
-          unit: match[2] || 'piece',
-          name: match[3]
-        };
-      }
-      return {
-        quantity: '1',
-        unit: 'piece',
-        name: ing
-      };
-    });
-
+    // Transform backend response to match your frontend format
+    const recipe = data.recipe;
+    
     return {
-      title: recipeData.title,
-      ingredients,
-      instructions: recipeData.instructions,
-      prepTime: recipeData.prep_time ? String(recipeData.prep_time) : '0',
-      cookTime: recipeData.cook_time ? String(recipeData.cook_time) : '0',
-      servings: recipeData.yield || '4',
-      cuisineType: 'International',
-      difficulty: 'Medium',
-      mealTypes: ['Dinner'],
-      dietaryTags: [],
-      imageUrl: recipeData.image || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
-      notes: recipeData.notes || 'Extracted from recipe URL',
+      title: recipe.title || 'Untitled Recipe',
+      ingredients: recipe.ingredients || [],
+      instructions: recipe.instructions || [],
+      prepTime: recipe.prepTime || '0',
+      cookTime: recipe.cookTime || '0',
+      servings: recipe.servings || '1',
+      cuisineType: recipe.cuisineType || 'International',
+      difficulty: recipe.difficulty || 'Medium',
+      mealTypes: recipe.mealTypes || ['Dinner'],
+      dietaryTags: recipe.dietaryTags || [],
+      imageUrl: data.imageUrl || 'https://via.placeholder.com/400x300?text=Recipe',
+      notes: recipe.notes || '',
     };
-
+    
   } catch (error) {
-    console.error('[RecipeExtractor] Error:', error);
-
+    console.error('Error extracting recipe:', error);
+    
+    // If backend fails, throw a helpful error
     if (error instanceof Error) {
       throw new Error(`Failed to extract recipe: ${error.message}`);
     }

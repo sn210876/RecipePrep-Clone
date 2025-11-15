@@ -3,15 +3,13 @@ import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
-import { supabase, isAdmin } from '@/lib/supabase';
-import { RatingDisplay } from './RatingDisplay';
+import { supabase, isAdmin } from '@/lib/supabase'; // ← Added isAdmin
 import { toast } from 'sonner';
 
 interface Post {
   id: string;
   user_id: string;
   image_url: string | null;
-  photo_url?: string | null;
   video_url: string | null;
   title: string | null;
   caption: string | null;
@@ -53,7 +51,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [reviews, setReviews] = useState<Review[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [newRating, setNewRating] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -169,27 +166,10 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     if (!confirm('Are you sure you want to delete this post?')) return;
     setLoading(true);
     try {
-      if (post.image_url && post.image_url.includes('recipe-images')) {
-        const urlParts = post.image_url.split('/recipe-images/');
-        if (urlParts[1]) {
-          const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
-          await supabase.storage.from('recipe-images').remove([filePath]);
-        }
-      }
-
-      if (post.photo_url && post.photo_url.includes('recipe-images')) {
-        const urlParts = post.photo_url.split('/recipe-images/');
-        if (urlParts[1]) {
-          const filePath = decodeURIComponent(urlParts[1].split('?')[0]);
-          await supabase.storage.from('recipe-images').remove([filePath]);
-        }
-      }
-
       const { error } = await supabase
         .from('posts')
         .delete()
-        .eq('id', post.id)
-        .eq('user_id', currentUserId);
+        .eq('id', post.id);
       if (error) throw error;
       toast.success('Post deleted!');
       onDelete(post.id);
@@ -218,31 +198,22 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   };
 
   const handleAddComment = async () => {
-    if (!post) return;
-    if (!newComment.trim() && newRating === 0) return;
-
+    if (!post || !newComment.trim()) return;
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-
-      const ratingText = newRating > 0 ? '🔥'.repeat(newRating) : '';
-      const commentText = newComment.trim() ? (newRating > 0 ? ` - ${newComment.trim()}` : newComment.trim()) : '';
-      const finalText = ratingText + commentText;
-
       const { error } = await supabase
         .from('comments')
         .insert({
           post_id: post.id,
           user_id: user.id,
-          text: finalText,
-          rating: newRating > 0 ? newRating : null
+          text: newComment.trim()
         });
       if (error) throw error;
       setNewComment('');
-      setNewRating(0);
       await loadReviewsAndComments();
-      toast.success(newRating > 0 ? 'Rating added!' : 'Comment added!');
+      toast.success('Comment added!');
     } catch (error) {
       console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
@@ -301,8 +272,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg flex-1 mr-2">{post.title || 'Post'}</h3>
-              <div className="flex gap-2 mr-8">
+              <h3 className="font-semibold text-lg">{post.title || 'Post'}</h3>
+              <div className="flex gap-2">
                 {(post.user_id === currentUserId) && (
                   <Button
                     variant="ghost"
@@ -373,21 +344,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                 )}
               </div>
 
-              {post.recipe_id && (
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      window.open(`/#recipe/${post.recipe_id}`, '_blank');
-                    }}
-                    className="w-full text-orange-600 border-orange-600 hover:bg-orange-50"
-                  >
-                    View Full Recipe
-                  </Button>
-                </div>
-              )}
-
               {reviews.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-semibold text-sm">Reviews</h4>
@@ -398,7 +354,13 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                         {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                           <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         )}
-                        <RatingDisplay rating={review.rating} size="sm" />
+                        <div className="flex">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}>
+                              Star
+                            </span>
+                          ))}
+                        </div>
                       </div>
                       <p className="text-sm text-gray-700">{review.comment}</p>
                     </div>
@@ -442,36 +404,22 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                 <MessageCircle className="w-6 h-6 text-gray-700" />
               </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Rate this recipe:</span>
-                  <RatingDisplay rating={newRating} interactive onRate={setNewRating} size="sm" />
-                  {newRating > 0 && (
-                    <button
-                      onClick={() => setNewRating(0)}
-                      className="text-xs text-gray-500 hover:text-gray-700"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder={newRating > 0 ? "Add a comment about your rating (optional)..." : "Add a comment..."}
-                    rows={2}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleAddComment();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleAddComment} disabled={loading || (!newComment.trim() && newRating === 0)} size="sm">
-                    Post
-                  </Button>
-                </div>
+              <div className="flex gap-2">
+                <Textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Add a comment..."
+                  rows={2}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddComment();
+                    }
+                  }}
+                />
+                <Button onClick={handleAddComment} disabled={loading || !newComment.trim()} size="sm">
+                  Post
+                </Button>
               </div>
             </div>
           </div>
