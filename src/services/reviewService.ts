@@ -35,48 +35,54 @@ export interface ReviewWithImages extends ReviewData {
 export async function getRecipeReviews(recipeId: string) {
   if (!supabase) return [];
 
-  const { data: post } = await supabase
-    .from('posts')
-    .select('id')
+  const { data: reviews, error } = await supabase
+    .from('reviews')
+    .select('*')
     .eq('recipe_id', recipeId)
-    .maybeSingle();
-
-  if (!post) return [];
-
-  const { data: comments, error } = await supabase
-    .from('comments')
-    .select('*, profiles:user_id(username, avatar_url)')
-    .eq('post_id', post.id)
-    .not('rating', 'is', null)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
 
-  return comments || [];
+  const reviewsWithImages = await Promise.all(
+    (reviews || []).map(async (review) => {
+      const { data: images } = await supabase!
+        .from('review_images')
+        .select('id, image_url')
+        .eq('review_id', review.id);
+
+      return {
+        ...review,
+        images: images || [],
+      };
+    })
+  );
+
+  return reviewsWithImages;
 }
 
 export async function getUserReview(recipeId: string, userId: string) {
   if (!supabase) return null;
 
-  const { data: post } = await supabase
-    .from('posts')
-    .select('id')
-    .eq('recipe_id', recipeId)
-    .maybeSingle();
-
-  if (!post) return null;
-
   const { data, error } = await supabase
-    .from('comments')
+    .from('reviews')
     .select('*')
-    .eq('post_id', post.id)
+    .eq('recipe_id', recipeId)
     .eq('user_id', userId)
-    .not('rating', 'is', null)
     .maybeSingle();
 
   if (error) throw error;
 
-  return data ? { ...data, comment: data.text, images: [] } : null;
+  if (!data) return null;
+
+  const { data: images } = await supabase
+    .from('review_images')
+    .select('id, image_url')
+    .eq('review_id', data.id);
+
+  return {
+    ...data,
+    images: images || [],
+  };
 }
 
 export async function uploadReviewImage(file: File): Promise<string> {
@@ -102,7 +108,7 @@ export async function createReview(
   recipeId: string,
   rating: number,
   comment: string,
-  _images: File[]
+  images: File[]
 ) {
   if (!supabase) throw new Error('Supabase not configured');
 
@@ -112,55 +118,105 @@ export async function createReview(
 
   if (!user) throw new Error('User not authenticated');
 
-  const { data: post } = await supabase
-    .from('posts')
-    .select('id')
-    .eq('recipe_id', recipeId)
-    .maybeSingle();
-
-  if (!post) {
-    throw new Error('No post found for this recipe');
-  }
-
-  const ratingText = '🔥'.repeat(rating);
-  const commentText = comment ? ` - ${comment}` : '';
-
-  const { data: commentData, error: commentError } = await supabase
-    .from('comments')
+  const { data: review, error: reviewError } = await supabase
+    .from('reviews')
     .insert({
-      post_id: post.id,
+      recipe_id: recipeId,
       user_id: user.id,
-      text: `${ratingText}${commentText}`,
-      rating: rating,
+      rating,
+      comment,
     })
     .select()
     .single();
 
-  if (commentError) throw commentError;
+  if (reviewError) throw reviewError;
 
-  return commentData;
+  if (images.length > 0) {
+    const imageUrls = await Promise.all(images.map(uploadReviewImage));
+
+    const { error: imagesError } = await supabase
+      .from('review_images')
+      .insert(
+        imageUrls.map((url) => ({
+          review_id: review.id,
+          image_url: url,
+        }))
+      );
+
+    if (imagesError) throw imagesError;
+  }
+
+  try {
+    const { data: recipe } = await supabase
+      .from('public_recipes')
+      .select('video_url')
+      .eq('id', recipeId)
+      .maybeSingle();
+
+    if (recipe?.video_url) {
+      const { data: post } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('recipe_url', recipe.video_url)
+        .maybeSingle();
+
+      if (post) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const ratingText = '🔥'.repeat(rating);
+        const commentText = comment ? `: ${comment}` : '';
+
+        await supabase.from('comments').insert({
+          post_id: post.id,
+          user_id: user.id,
+          text: `${profile?.username || 'User'} rated this ${ratingText}${commentText}`,
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Failed to add review as comment to social post:', error);
+  }
+
+  return review;
 }
 
 export async function updateReview(
   reviewId: string,
   rating: number,
   comment: string,
-  _newImages: File[]
+  newImages: File[]
 ) {
   if (!supabase) throw new Error('Supabase not configured');
 
-  const ratingText = '🔥'.repeat(rating);
-  const commentText = comment ? ` - ${comment}` : '';
-
   const { error: updateError } = await supabase
-    .from('comments')
+    .from('reviews')
     .update({
       rating,
-      text: `${ratingText}${commentText}`,
+      comment,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', reviewId);
 
   if (updateError) throw updateError;
+
+  if (newImages.length > 0) {
+    const imageUrls = await Promise.all(newImages.map(uploadReviewImage));
+
+    const { error: imagesError } = await supabase
+      .from('review_images')
+      .insert(
+        imageUrls.map((url) => ({
+          review_id: reviewId,
+          image_url: url,
+        }))
+      );
+
+    if (imagesError) throw imagesError;
+  }
 
   return { id: reviewId, rating, comment };
 }
@@ -169,7 +225,7 @@ export async function deleteReview(reviewId: string) {
   if (!supabase) throw new Error('Supabase not configured');
 
   const { error } = await supabase
-    .from('comments')
+    .from('reviews')
     .delete()
     .eq('id', reviewId);
 
@@ -179,19 +235,10 @@ export async function deleteReview(reviewId: string) {
 export async function getAverageRating(recipeId: string): Promise<number> {
   if (!supabase) return 0;
 
-  const { data: post } = await supabase
-    .from('posts')
-    .select('id')
-    .eq('recipe_id', recipeId)
-    .maybeSingle();
-
-  if (!post) return 0;
-
   const { data, error } = await supabase
-    .from('comments')
+    .from('reviews')
     .select('rating')
-    .eq('post_id', post.id)
-    .not('rating', 'is', null);
+    .eq('recipe_id', recipeId);
 
   if (error) throw error;
   if (!data || data.length === 0) return 0;

@@ -17,52 +17,29 @@ export function ResetPassword() {
     const initPasswordReset = async () => {
       try {
         const hash = window.location.hash;
-        const search = window.location.search;
+        if (hash && hash.includes('access_token')) {
+          const params = new URLSearchParams(hash.substring(1));
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
 
-        console.log('Reset password page loaded. Hash:', hash);
-        console.log('Reset password page loaded. Search:', search);
+          if (accessToken && refreshToken) {
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
 
-        // Try to get params from hash first, then from search query
-        let params: URLSearchParams;
-
-        if (hash && hash.length > 1) {
-          // Hash format: #access_token=...&refresh_token=...
-          params = new URLSearchParams(hash.substring(1));
-        } else if (search && search.length > 1) {
-          // Query format: ?access_token=...&refresh_token=...
-          params = new URLSearchParams(search.substring(1));
-        } else {
-          console.error('No tokens found in URL');
-          setError('Invalid or expired reset link. Please request a new one.');
-          setIsInitializing(false);
-          return;
-        }
-
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
-
-        console.log('Recovery type:', type);
-        console.log('Has access token:', !!accessToken);
-        console.log('Has refresh token:', !!refreshToken);
-
-        if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
-
-          if (sessionError) {
-            console.error('Session error:', sessionError);
-            setError('Session expired. Please request a new reset link.');
+            if (sessionError) {
+              console.error('Session error:', sessionError);
+              setError('Session expired. Please request a new reset link.');
+            } else {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              setHasToken(true);
+            }
           } else {
-            console.log('Session set successfully');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            setHasToken(true);
+            setError('Invalid reset link. Please request a new one.');
           }
         } else {
-          console.error('Missing tokens in URL. Access:', !!accessToken, 'Refresh:', !!refreshToken);
-          setError('Invalid reset link. Please request a new one.');
+          setError('Invalid or expired reset link. Please request a new one.');
         }
       } catch (err) {
         console.error('Error setting session:', err);

@@ -21,8 +21,8 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
 
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
-      });
+  redirectTo: 'https://sn210876-recipeprep-jzt5.bolt.host/reset-password'
+});
 
       if (resetError) throw resetError;
 

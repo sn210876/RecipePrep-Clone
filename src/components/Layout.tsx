@@ -101,10 +101,10 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
       <div className="lg:pl-64">
         {/* Desktop top navigation icons */}
-        <div className="hidden lg:block fixed top-2 right-2 z-[100]">
+        <div className="hidden lg:block fixed top-4 right-4 z-[100]">
           <TooltipProvider>
-            <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-2 py-1.5">
-              {navItems.slice(0, 8).map((item) => {
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2">
+              {navItems.filter(item => item.id !== 'discover').slice(0, 7).map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPage === item.id;
                 return (

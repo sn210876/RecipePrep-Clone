@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []); // ← FIXED: remove dynamic dependency
+  }, [user?.email_confirmed_at]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -99,17 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        loading,
-        isEmailVerified,
-        showVerifying,
-        isAdmin,
-        signOut,
-      }}
-    >
+    <AuthContext.Provider value={{ user, session, loading, isEmailVerified, showVerifying, isAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );

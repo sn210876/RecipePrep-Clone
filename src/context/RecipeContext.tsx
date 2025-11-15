@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { Recipe, MealPlanEntry, GroceryListItem, UserPreferences } from '../types/recipe';
+import { mockRecipes } from '../data/mockRecipes';
 import { buildUserProfile, UserProfile, trackRecipeInteraction, updateUserPreferenceAnalytics } from '../services/recommendationService';
 
 interface RecipeState {
@@ -46,7 +47,7 @@ const initialState: RecipeState = {
     avgCookTime: 0,
     totalRecipesSaved: 0
   },
-  discoveryRecipes: [],
+  discoveryRecipes: mockRecipes,
   hasSeenOnboarding: true
 };
 
@@ -159,7 +160,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState);
-        dispatch({ type: 'LOAD_STATE', payload: { ...parsedState, discoveryRecipes: [] } });
+        dispatch({ type: 'LOAD_STATE', payload: { ...parsedState, discoveryRecipes: mockRecipes } });
       } catch (e) {
         console.error('Failed to load state from localStorage', e);
       }

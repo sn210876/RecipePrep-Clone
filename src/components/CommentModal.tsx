@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import { Send } from 'lucide-react';
+import { Send, Star } from 'lucide-react';
 
 interface Comment {
   id: string;
@@ -229,17 +229,15 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
           <div className="mt-3 space-y-2">
             <div className="flex items-center gap-2">
               <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((rating) => (
-                  <span
-                    key={rating}
-                    className={`text-xl ${
-                      rating <= averageRating
-                        ? 'opacity-100'
-                        : 'opacity-30 grayscale'
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-5 h-5 ${
+                      star <= averageRating
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-300'
                     }`}
-                  >
-                    🔥
-                  </span>
+                  />
                 ))}
               </div>
               <span className="text-sm text-gray-600">
@@ -251,24 +249,22 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700 font-medium">Your rating:</span>
               <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((rating) => (
+                {[1, 2, 3, 4, 5].map((star) => (
                   <button
-                    key={rating}
+                    key={star}
                     type="button"
-                    onClick={() => handleRatingClick(rating)}
-                    onMouseEnter={() => setHoverRating(rating)}
+                    onClick={() => handleRatingClick(star)}
+                    onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
-                    className="transition-transform hover:scale-110 text-xl"
+                    className="transition-transform hover:scale-110"
                   >
-                    <span
-                      className={`${
-                        rating <= (hoverRating || userRating)
-                          ? 'opacity-100'
-                          : 'opacity-30 grayscale'
+                    <Star
+                      className={`w-6 h-6 ${
+                        star <= (hoverRating || userRating)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
                       }`}
-                    >
-                      🔥
-                    </span>
+                    />
                   </button>
                 ))}
               </div>
