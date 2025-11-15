@@ -15,52 +15,71 @@ interface ExtractedRecipeData {
   notes: string;
 }
 
-// ✅ Your backend API URL (update this to your actual Render URL)
-const API_BASE_URL = 'https://recipeprep-clone.onrender.com';
+const RECIPE_PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   try {
-    console.log('Extracting recipe from:', url);
-    
-    // Call your Python backend
-    const response = await fetch(`${API_BASE_URL}/extract`, {
+    console.log('[RecipeExtractor] Fetching from:', RECIPE_PROXY_URL);
+    console.log('[RecipeExtractor] URL to extract:', url);
+
+    const response = await fetch(RECIPE_PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({ url }),
     });
 
+    console.log('[RecipeExtractor] Response status:', response.status);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `API error: ${response.status}`);
+      console.error('[RecipeExtractor] Error response:', errorData);
+      throw new Error(errorData.error || `Failed to extract recipe: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Backend response:', data);
+    console.log('[RecipeExtractor] Raw response:', data);
 
-    // Transform backend response to match your frontend format
-    const recipe = data.recipe;
-    
+    if (!data.title || !data.ingredients || !data.instructions) {
+      throw new Error('Invalid recipe data received from server');
+    }
+
+    const ingredients: Ingredient[] = data.ingredients.map((ing: string) => {
+      const match = ing.match(/^([\d\/\.]+)\s*(\w+)?\s+(.+)$/);
+      if (match) {
+        return {
+          quantity: match[1],
+          unit: match[2] || 'piece',
+          name: match[3]
+        };
+      }
+      return {
+        quantity: '1',
+        unit: 'piece',
+        name: ing
+      };
+    });
+
     return {
-      title: recipe.title || 'Untitled Recipe',
-      ingredients: recipe.ingredients || [],
-      instructions: recipe.instructions || [],
-      prepTime: recipe.prepTime || '0',
-      cookTime: recipe.cookTime || '0',
-      servings: recipe.servings || '1',
-      cuisineType: recipe.cuisineType || 'International',
-      difficulty: recipe.difficulty || 'Medium',
-      mealTypes: recipe.mealTypes || ['Dinner'],
-      dietaryTags: recipe.dietaryTags || [],
-      imageUrl: data.imageUrl || 'https://via.placeholder.com/400x300?text=Recipe',
-      notes: recipe.notes || '',
+      title: data.title,
+      ingredients,
+      instructions: data.instructions,
+      prepTime: data.prep_time ? String(data.prep_time) : '0',
+      cookTime: data.cook_time ? String(data.cook_time) : '0',
+      servings: data.yield || '4',
+      cuisineType: 'International',
+      difficulty: 'Medium',
+      mealTypes: ['Dinner'],
+      dietaryTags: [],
+      imageUrl: data.image || 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+      notes: data.notes || 'Extracted from recipe URL',
     };
-    
+
   } catch (error) {
-    console.error('Error extracting recipe:', error);
-    
-    // If backend fails, throw a helpful error
+    console.error('[RecipeExtractor] Error:', error);
+
     if (error instanceof Error) {
       throw new Error(`Failed to extract recipe: ${error.message}`);
     }
