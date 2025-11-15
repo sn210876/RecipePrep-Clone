@@ -79,6 +79,56 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   };
 
   useEffect(() => {
+    if (!currentUserId) return;
+
+    const conversationsChannel = supabase
+      .channel('conversations-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversations',
+          filter: `user1_id=eq.${currentUserId}`,
+        },
+        () => {
+          console.log('[Messages] New conversation created, reloading...');
+          loadConversations(currentUserId);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversations',
+          filter: `user2_id=eq.${currentUserId}`,
+        },
+        () => {
+          console.log('[Messages] New conversation created, reloading...');
+          loadConversations(currentUserId);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations',
+        },
+        () => {
+          console.log('[Messages] Conversation updated, reloading...');
+          loadConversations(currentUserId);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(conversationsChannel);
+    };
+  }, [currentUserId]);
+
+  useEffect(() => {
     if (!selectedConversation || !currentUserId) return;
 
     const channel = supabase
@@ -93,7 +143,12 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         },
         async (payload) => {
           const newMsg = payload.new as Message;
-          setMessages((prev) => [...prev, newMsg]);
+          setMessages((prev) => {
+            if (prev.some(m => m.id === newMsg.id)) {
+              return prev;
+            }
+            return [...prev, newMsg];
+          });
 
           if (newMsg.sender_id !== currentUserId) {
             await supabase
@@ -278,7 +333,13 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       return;
     }
 
-    setMessages(prev => prev.map(m => m.id === tempId ? data : m));
+    setMessages(prev => {
+      const withoutTemp = prev.filter(m => m.id !== tempId);
+      if (withoutTemp.some(m => m.id === data.id)) {
+        return withoutTemp;
+      }
+      return [...withoutTemp, data];
+    });
 
     await supabase
       .from('conversations')
