@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown, Trash2 } from 'lucide-react';
+import { Camera, Grid3x3, LogOut, Upload as UploadIcon, CreditCard as Edit2, Crown, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
