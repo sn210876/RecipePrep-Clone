@@ -148,18 +148,16 @@ export function Profile() {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-      const avatarUrlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`;
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: avatarUrlWithTimestamp })
+        .update({ avatar_url: urlData.publicUrl })
         .eq('id', userId);
 
       if (updateError) throw updateError;
 
-      setProfile(prev => prev ? { ...prev, avatar_url: avatarUrlWithTimestamp } : null);
+      setProfile(prev => prev ? { ...prev, avatar_url: `${urlData.publicUrl}?t=${Date.now()}` } : null);
       toast.success('Avatar updated successfully!');
-      window.location.reload();
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
       toast.error('Failed to upload avatar');
@@ -197,18 +195,16 @@ export function Profile() {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-      const bannerUrlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`;
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ banner_url: bannerUrlWithTimestamp })
+        .update({ banner_url: urlData.publicUrl })
         .eq('id', userId);
 
       if (updateError) throw updateError;
 
-      setProfile(prev => prev ? { ...prev, banner_url: bannerUrlWithTimestamp } : null);
+      setProfile(prev => prev ? { ...prev, banner_url: `${urlData.publicUrl}?t=${Date.now()}` } : null);
       toast.success('Banner updated successfully!');
-      window.location.reload();
     } catch (error: any) {
       console.error('Error uploading banner:', error);
       toast.error('Failed to upload banner');
