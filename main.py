@@ -1,4 +1,4 @@
-# SHAWN NUCLEAR CACHE BUSTER 9003 NOV 9 2025 - YOUR COOKIES + YT-DLP UPDATE + CORS + IG + ALLRECIPES WORKING
+# SHAWN NUCLEAR CACHE BUSTER 9004 - FIXED CORS + ERROR HANDLING
 import os
 import re
 import json
@@ -6,26 +6,7 @@ import requests
 import subprocess
 import sys
 import tempfile
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI()
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods (POST, OPTIONS, etc.)
-    allow_headers=["*"],  # Allow all headers
-)
-
-@app.post("/extract")
-async def extract_recipe(request: dict):
-    # Your extraction logic
-    pass
-
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -34,20 +15,19 @@ import yt_dlp
 from openai import OpenAI
 import ytmusicapi
 
-# Initialize YTMusic (no auth needed)
+# Initialize YTMusic
 ytm = ytmusicapi.YTMusic()
 
-# Function to search songs
 def search_ytmusic(query: str, limit: int = 5):
     try:
         results = ytm.search(query, filter='songs', limit=limit)
         return [
             {
-              'id': track['videoId'],
-              'title': track['title'],
-              'artist': track['artists'][0]['name'] if track.get('artists') else 'Unknown',
-              'duration': track.get('duration'),
-              'thumbnail': track['thumbnails'][0]['url'] if track.get('thumbnails') else None
+                'id': track['videoId'],
+                'title': track['title'],
+                'artist': track['artists'][0]['name'] if track.get('artists') else 'Unknown',
+                'duration': track.get('duration'),
+                'thumbnail': track['thumbnails'][0]['url'] if track.get('thumbnails') else None
             }
             for track in results
         ]
@@ -55,14 +35,16 @@ def search_ytmusic(query: str, limit: int = 5):
         print(f"YTMusic error: {e}")
         return []
 
-# NUCLEAR YT-DLP UPDATE — NO CACHE
+# Update yt-dlp
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
-    print("NUCLEAR YT-DLP UPDATED NOV 9 2025")
-except: pass
+    print("✓ YT-DLP UPDATED")
+except:
+    print("⚠ YT-DLP update failed")
 
 app = FastAPI()
-# === NUCLEAR CORS — APPLIES TO ALL ENDPOINTS ===
+
+# SINGLE CORS MIDDLEWARE (REMOVED DUPLICATE)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -72,25 +54,9 @@ app.add_middleware(
     expose_headers=["*"],
     max_age=600,
 )
-# NUCLEAR CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=600,
-)
-
-# NUCLEAR OPTIONS HANDLER
-@app.options("/extract")
-async def nuclear_options():
-    return JSONResponse(content={}, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"})
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# YOUR MAC COOKIES - YT-DLP FAQ PERFECT
 INSTAGRAM_COOKIES = """
 # Netscape HTTP Cookie File
 .instagram.com TRUE / FALSE 1733875200 csrftoken abxvXW3Nl1NZES5GKhSebmYt7chBhJcK
@@ -107,85 +73,204 @@ INSTAGRAM_COOKIES = """
 class ExtractRequest(BaseModel):
     url: str
 
-def parse_with_ai(text: str):
-    if not text.strip(): return [], [], ""
-    prompt = f"Extract recipe JSON {{ingredients: [], instructions: [], notes: \"\"}} from: {text[:14000]}"
-    try:
-        resp = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "system", "content": prompt}], temperature=0.1, max_tokens=800)
-        m = re.search(r'\{.*\}', resp.choices[0].message.content, re.DOTALL)
-        if m: data = json.loads(m.group()); return data.get("ingredients", []), data.get("instructions", []), data.get("notes", "")
-    except: pass
-    return [], [], ""
-
-@app.post("/extract")
-async def extract_recipe(request: ExtractRequest):
-    url = request.url.strip()
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    # WEBSITES
-    try:
-        scraper = scrape_me(url, headers=headers)
-        data = scraper.to_json()
-        return {"title": data.get("title"), "ingredients": data.get("ingredients", []), "instructions": data.get("instructions", "").split("\n"), "image": data.get("image", ""), "notes": "Scraped"}
-    except: pass
-    # AI HTML
-    try:
-        html = requests.get(url, headers=headers, timeout=20).text
-        ings, inst, notes = parse_with_ai(html)
-        if ings or inst: return {"title": "AI HTML", "ingredients": ings, "instructions": inst, "notes": notes}
-    except: pass
-    # VIDEOS WITH YOUR COOKIES
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'geo_bypass': True,
-        'http_headers': {'User-Agent': 'Instagram 219.0.0.12.117 Android', 'x-ig-app-id': '936619743392459'},
-    }
-    cookie_file = None
-    if INSTAGRAM_COOKIES.strip():
-        temp = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
-        temp.write(INSTAGRAM_COOKIES)
-        temp.close()
-        cookie_file = temp.name
-        ydl_opts['cookiefile'] = cookie_file
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            text = f"{info.get('description', '')}\n{info.get('title', '')}"
-            ings, inst, notes = parse_with_ai(text)
-            return {"title": info.get('title', 'Reel'), "ingredients": ings or [], "instructions": inst or [], "image": info.get('thumbnail', ''), "notes": f"NUCLEAR CACHE BUSTER 9003 WIN NOV 9 • {notes}"}
-    except Exception as e:
-        raise HTTPException(400, f"Video failed: {str(e)}")
-    finally:
-        if cookie_file and os.path.exists(cookie_file): os.unlink(cookie_file)
-
-# === YOUTUBE MUSIC SEARCH ENDPOINT (CORRECTLY PLACED) ===
 class YTMusicRequest(BaseModel):
     query: str
     limit: int = 5
 
-@app.post("/ytmusic-search")
-async def ytmusic_search_endpoint(request: YTMusicRequest):
-    results = search_ytmusic(request.query, request.limit)
-    return JSONResponse(
-        content={"songs": results},
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-        }
-    )
+def parse_with_ai(text: str):
+    if not text.strip():
+        return [], [], ""
+    
+    prompt = f"Extract recipe JSON {{ingredients: [], instructions: [], notes: \"\"}} from: {text[:14000]}"
+    
+    try:
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": prompt}],
+            temperature=0.1,
+            max_tokens=800
+        )
+        m = re.search(r'\{.*\}', resp.choices[0].message.content, re.DOTALL)
+        if m:
+            data = json.loads(m.group())
+            return (
+                data.get("ingredients", []),
+                data.get("instructions", []),
+                data.get("notes", "")
+            )
+    except Exception as e:
+        print(f"AI parsing error: {e}")
+    
+    return [], [], ""
 
-async def ytmusic_search_options():
+@app.options("/extract")
+async def extract_options():
+    """Handle CORS preflight for /extract"""
     return JSONResponse(
         content={},
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "*",
-            "Access-Control-Max-Age": "600",
         }
+    )
+
+@app.post("/extract")
+async def extract_recipe(request: ExtractRequest):
+    """Main recipe extraction endpoint"""
+    url = request.url.strip()
+    
+    if not url:
+        raise HTTPException(status_code=400, detail="URL is required")
+    
+    print(f"[EXTRACT] Processing: {url}")
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+    
+    # Try recipe-scrapers for regular websites
+    try:
+        print("[EXTRACT] Trying recipe-scrapers...")
+        scraper = scrape_me(url, headers=headers)
+        data = scraper.to_json()
+        
+        print(f"[EXTRACT] ✓ Scraped: {data.get('title')}")
+        
+        return JSONResponse(
+            content={
+                "title": data.get("title"),
+                "ingredients": data.get("ingredients", []),
+                "instructions": data.get("instructions", "").split("\n") if data.get("instructions") else [],
+                "image": data.get("image", ""),
+                "thumbnail": data.get("image", ""),
+                "author": data.get("author", "Unknown"),
+                "prep_time": data.get("prep_time", 15),
+                "cook_time": data.get("cook_time", 30),
+                "yield": data.get("yields", "4"),
+                "notes": "Extracted via recipe-scrapers"
+            },
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+    except Exception as e:
+        print(f"[EXTRACT] recipe-scrapers failed: {e}")
+    
+    # Try AI HTML parsing
+    try:
+        print("[EXTRACT] Trying AI HTML parsing...")
+        response = requests.get(url, headers=headers, timeout=20)
+        html = response.text
+        
+        ings, inst, notes = parse_with_ai(html)
+        
+        if ings or inst:
+            print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
+            
+            return JSONResponse(
+                content={
+                    "title": "AI Extracted Recipe",
+                    "ingredients": ings,
+                    "instructions": inst,
+                    "thumbnail": "",
+                    "notes": f"AI parsed • {notes}"
+                },
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+    except Exception as e:
+        print(f"[EXTRACT] AI HTML parsing failed: {e}")
+    
+    # Try yt-dlp for videos (TikTok, Instagram, YouTube)
+    print("[EXTRACT] Trying yt-dlp for video...")
+    
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'geo_bypass': True,
+        'http_headers': {
+            'User-Agent': 'Instagram 219.0.0.12.117 Android',
+            'x-ig-app-id': '936619743392459'
+        },
+    }
+    
+    cookie_file = None
+    
+    if INSTAGRAM_COOKIES.strip():
+        temp = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
+        temp.write(INSTAGRAM_COOKIES)
+        temp.close()
+        cookie_file = temp.name
+        ydl_opts['cookiefile'] = cookie_file
+    
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            
+            text = f"{info.get('description', '')}\n{info.get('title', '')}"
+            ings, inst, notes = parse_with_ai(text)
+            
+            print(f"[EXTRACT] ✓ Video extracted: {info.get('title')}")
+            
+            return JSONResponse(
+                content={
+                    "title": info.get('title', 'Video Recipe'),
+                    "ingredients": ings or [],
+                    "instructions": inst or [],
+                    "thumbnail": info.get('thumbnail', ''),
+                    "author": info.get('uploader', 'Unknown'),
+                    "notes": f"Video extraction • {notes}"
+                },
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+    
+    except Exception as e:
+        print(f"[EXTRACT] yt-dlp failed: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not extract recipe: {str(e)}"
+        )
+    
+    finally:
+        if cookie_file and os.path.exists(cookie_file):
+            os.unlink(cookie_file)
+
+@app.options("/ytmusic-search")
+async def ytmusic_options():
+    """Handle CORS preflight for /ytmusic-search"""
+    return JSONResponse(
+        content={},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+@app.post("/ytmusic-search")
+async def ytmusic_search_endpoint(request: YTMusicRequest):
+    """YouTube Music search endpoint"""
+    results = search_ytmusic(request.query, request.limit)
+    
+    return JSONResponse(
+        content={"songs": results},
+        headers={"Access-Control-Allow-Origin": "*"}
     )
 
 @app.get("/")
 async def root():
-    return {"message": "SHAWN NUCLEAR CACHE BUSTER 9003 NOV 9 2025 - MAC COOKIES + YT-DLP + CORS + IG + ALLRECIPES + YTMUSIC WORKING"}
+    """Health check endpoint"""
+    return JSONResponse(
+        content={
+            "message": "Recipe Extraction Server v9004",
+            "status": "healthy",
+            "endpoints": ["/extract", "/ytmusic-search"]
+        },
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
+@app.get("/health")
+async def health():
+    """Health check for monitoring"""
+    return JSONResponse(
+        content={"status": "ok"},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
