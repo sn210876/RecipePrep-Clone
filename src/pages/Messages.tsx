@@ -50,9 +50,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
         setCurrentUserId(userData.user.id);
-
         await markMessageNotificationsAsRead(userData.user.id);
-
         if (recipientUserId && recipientUsername) {
           await startConversation(recipientUserId, recipientUsername, userData.user.id);
         } else {
@@ -61,7 +59,6 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       }
       setLoading(false);
     };
-
     init();
   }, [recipientUserId]);
 
@@ -98,7 +95,6 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             if (exists) return prev;
             return [...prev, newMsg];
           });
-
           if (newMsg.sender_id !== currentUserId) {
             await supabase
               .from('direct_messages')
@@ -126,14 +122,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   }, [messages]);
 
   const loadConversations = async (userId: string) => {
-    console.log('[Messages] Loading conversations for user:', userId);
     const { data: convos, error } = await supabase
       .from('conversations')
       .select('*')
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
       .order('last_message_at', { ascending: false });
-
-    console.log('[Messages] Conversations query result:', { convos, error });
 
     if (error) {
       console.error('Error loading conversations:', error);
@@ -143,7 +136,6 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     const conversationsWithUsers = await Promise.all(
       (convos || []).map(async (convo) => {
         const otherUserId = convo.user1_id === userId ? convo.user2_id : convo.user1_id;
-
         const { data: profile } = await supabase
           .from('profiles')
           .select('id, username, avatar_url')
@@ -174,7 +166,6 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       })
     );
 
-    console.log('[Messages] Final conversations with users:', conversationsWithUsers);
     setConversations(conversationsWithUsers);
   };
 
@@ -182,9 +173,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     const activeUserId = userId || currentUserId;
     if (!activeUserId) return;
 
-    const [smaller, larger] = activeUserId < otherUserId
-      ? [activeUserId, otherUserId]
-      : [otherUserId, activeUserId];
+    const [smaller, larger] = activeUserId < otherUserId ? [activeUserId, otherUserId] : [otherUserId, activeUserId];
 
     let { data: existingConvo } = await supabase
       .from('conversations')
@@ -196,10 +185,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     if (!existingConvo) {
       const { data: newConvo, error } = await supabase
         .from('conversations')
-        .insert({
-          user1_id: smaller,
-          user2_id: larger,
-        })
+        .insert({ user1_id: smaller, user2_id: larger })
         .select()
         .single();
 
@@ -208,7 +194,6 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         toast.error('Failed to start conversation');
         return;
       }
-
       existingConvo = newConvo;
     }
 
@@ -236,13 +221,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       console.error('Error loading messages:', error);
       return;
     }
-
     setMessages(data || []);
   };
 
   const markAsRead = async (conversationId: string) => {
     if (!currentUserId) return;
-
     await supabase
       .from('direct_messages')
       .update({ read: true })
@@ -257,11 +240,14 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     const messageContent = newMessage.trim();
     setNewMessage('');
 
-    const { error, data } = await supabase.from('direct_messages').insert({
-      conversation_id: selectedConversation.id,
-      sender_id: currentUserId,
-      content: messageContent,
-    }).select();
+    const { error, data } = await supabase
+      .from('direct_messages')
+      .insert({
+        conversation_id: selectedConversation.id,
+        sender_id: currentUserId,
+        content: messageContent,
+      })
+      .select();
 
     if (error) {
       console.error('Error sending message:', error);
@@ -302,6 +288,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   if (selectedConversation) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
+        {/* Chat Header */}
         <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center gap-3">
             <button
@@ -314,7 +301,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                   loadConversations(currentUserId);
                 }
               }}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -335,6 +322,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           </div>
         </div>
 
+        {/* Messages List */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {messages.map((message) => (
             <div
@@ -361,6 +349,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Input */}
         <div className="sticky bottom-20 bg-white border-t border-gray-200 px-4 py-3">
           <div className="flex gap-2">
             <input
@@ -384,6 +373,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     );
   }
 
+  // CONVERSATION LIST — THIS IS WHERE "Social Feed" SHOWS UP
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
@@ -391,12 +381,14 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           {onBack && (
             <button
               onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          <h1 className="text-xl font-bold">Messages</h1>
+          <h1 className="text-xl font-bold">
+            {onBack ? 'Social Feed' : 'Messages'}
+          </h1>
         </div>
       </div>
 
