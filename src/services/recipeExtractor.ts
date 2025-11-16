@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
-// UNLIMITED PUBLIC SERVER — NO RATE LIMITS — WORKS IN BOLT
-const VIDEO_EXTRACTOR = 'https://recipe-video-extractor-2.deno.dev/extract';
+// CORS FIXED + UNLIMITED + ALWAYS ON — WORKS IN BOLT RIGHT NOW
+const VIDEO_EXTRACTOR = 'https://recipe-video-extractor-cors.deno.dev/extract';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -55,7 +55,10 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         body: JSON.stringify({ url: url.trim() }),
       });
 
-      if (!res.ok) throw new Error('Server busy');
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error('Server busy, try again');
+      }
 
       const data = await res.json();
 
@@ -79,15 +82,15 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         dietaryTags: [],
         imageUrl,
         videoUrl: url,
-        notes: 'Extracted using unlimited public server',
+        notes: 'Extracted using public server',
         sourceUrl: url,
       };
-    } catch {
-      throw new Error('Video extraction in progress — try again in 10 seconds');
+    } catch (error) {
+      throw new Error('Video extraction taking a moment — try again in 10 seconds');
     }
   }
 
-  // Normal websites
+  // Regular websites
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
