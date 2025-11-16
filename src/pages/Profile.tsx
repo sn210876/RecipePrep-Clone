@@ -369,7 +369,27 @@ export function Profile() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="bio">Bio</Label>
-              <Textarea id="bio" value={newBio} onChange={e => setNewBio(e.target.value)} className="min-h-[100px]" />
+              <div className="space-y-2">
+  <div className="flex items-center justify-between">
+    <Label htmlFor="bio">Bio (max 70 characters)</Label>
+    <span className={`text-xs font-medium ${newBio.length > 70 ? 'text-red-600' : 'text-gray-500'}`}>
+      {newBio.length}/70
+    </span>
+  </div>
+  <Textarea
+    id="bio"
+    value={newBio}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value.length <= 70) {
+        setNewBio(value);
+      }
+    }}
+    placeholder="i love peegi love peegi love peegi love peegi love peegi love peegi snguyen7"
+    className="min-h-[100px] resize-none"
+    maxLength={70}
+  />
+</div>
             </div>
             <div className="flex gap-2">
               {profile?.avatar_url && (
