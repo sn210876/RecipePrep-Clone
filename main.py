@@ -1,4 +1,4 @@
-# SHAWN RECIPE EXTRACTOR v9007 - WITH AUDIO TRANSCRIPTION
+# SHAWN RECIPE EXTRACTOR v9008 - Enhanced Caption Extraction
 import os
 import re
 import json
@@ -65,22 +65,6 @@ class ExtractRequest(BaseModel):
 class YTMusicRequest(BaseModel):
     query: str
     limit: int = 5
-
-def transcribe_audio(audio_path: str) -> str:
-    """Transcribe audio using OpenAI Whisper"""
-    try:
-        print(f"[TRANSCRIBE] Transcribing audio from {audio_path}")
-        with open(audio_path, 'rb') as audio_file:
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio_file,
-                language="en"
-            )
-        print(f"[TRANSCRIBE] ✓ Transcription complete: {len(transcript.text)} chars")
-        return transcript.text
-    except Exception as e:
-        print(f"[TRANSCRIBE] Error: {e}")
-        return ""
 
 def parse_with_ai(text: str, model: str = "gpt-4o-mini"):
     """Extract recipe from text using GPT-4 with enhanced accuracy"""
@@ -197,39 +181,36 @@ async def extract_recipe(request: ExtractRequest):
         html = response.text
         ings, inst, notes = parse_with_ai(html)
         
-        if ings or inst:
-            print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
-            return JSONResponse(
-                content={
-                    "title": "AI Extracted Recipe",
-                    "ingredients": ings,
-                    "instructions": inst,
-                    "thumbnail": "",
-                    "notes": f"AI parsed • {notes}"
-                },
-                headers={"Access-Control-Allow-Origin": "*"}
-            )
+        # Always return a response even if extraction failed - let user fill it in
+        print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
+        
+        return JSONResponse(
+            content={
+                "title": "",  # Empty title for user to fill in
+                "ingredients": ings if ings else [],
+                "instructions": inst if inst else [],
+                "thumbnail": "",
+                "notes": f"AI parsed • {notes}" if (ings or inst) else "No recipe found - please fill in manually"
+            },
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
     except Exception as e:
         print(f"[EXTRACT] AI HTML parsing failed: {e}")
     
-    print("[EXTRACT] Trying yt-dlp for video with audio transcription...")
+    print("[EXTRACT] Trying yt-dlp for video...")
     
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'geo_bypass': True,
-        'format': 'bestaudio/best',
         'extractor_args': {'instagram': {'api_key': '936619743392459'}},
         'http_headers': {
             'User-Agent': 'Instagram 219.0.0.12.117 Android',
             'x-ig-app-id': '936619743392459'
         },
-        'outtmpl': '/tmp/%(id)s.%(ext)s',
-        'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
     }
     
     cookie_file = None
-    audio_file = None
     
     if INSTAGRAM_COOKIES.strip():
         temp = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
@@ -240,37 +221,38 @@ async def extract_recipe(request: ExtractRequest):
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            video_id = info.get('id', 'unknown')
-            audio_file = f"/tmp/{video_id}.mp3"
+            info = ydl.extract_info(url, download=False)
             
-            transcript = ""
-            if os.path.exists(audio_file):
-                transcript = transcribe_audio(audio_file)
-            
+            # Get description and title for better context
             description = info.get('description', '')
-            combined_text = f"""VIDEO DESCRIPTION:
+            title = info.get('title', '')
+            
+            # Enhanced text extraction - look in multiple places
+            combined_text = f"""VIDEO TITLE: {title}
+
+VIDEO DESCRIPTION/CAPTION:
 {description}
 
-AUDIO TRANSCRIPT (spoken in video):
-{transcript}
-
-INSTRUCTIONS: Extract ALL ingredients and ALL steps from both the description and the spoken audio. Be extremely thorough - don't miss any ingredient or step mentioned anywhere.""" if transcript else description
+INSTRUCTIONS: This is from a social media cooking video. Extract ALL ingredients and ALL cooking steps mentioned in the title and description. Be extremely thorough:
+- Look for ingredients in quantities (cups, tbsp, oz, etc.)
+- Find all cooking steps and techniques
+- Include temperatures and cooking times
+- Don't miss any details even if briefly mentioned"""
             
-            model_to_use = "gpt-4o" if transcript else "gpt-4o-mini"
-            ings, inst, notes = parse_with_ai(combined_text, model=model_to_use)
+            # Always use GPT-4 for social media videos for maximum accuracy
+            ings, inst, notes = parse_with_ai(combined_text, model="gpt-4o")
             
             print(f"[EXTRACT] ✓ Video extracted: {info.get('title')}")
             print(f"[EXTRACT] Found {len(ings)} ingredients, {len(inst)} instructions")
             
             return JSONResponse(
                 content={
-                    "title": info.get('title', 'Video Recipe'),
+                    "title": "",  # Empty title for user to fill in
                     "ingredients": ings or [],
                     "instructions": inst or [],
-                    "thumbnail": info.get('thumbnail', ''),
+                    "thumbnail": info.get('thumbnail', ''),  # Photo extraction!
                     "author": info.get('uploader', 'Unknown'),
-                    "notes": f"Video + audio extraction • {notes}" if transcript else f"Video extraction • {notes}"
+                    "notes": f"Extracted from video caption with GPT-4 • {notes}"
                 },
                 headers={"Access-Control-Allow-Origin": "*"}
             )
@@ -280,8 +262,6 @@ INSTRUCTIONS: Extract ALL ingredients and ALL steps from both the description an
     finally:
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
-        if audio_file and os.path.exists(audio_file):
-            os.unlink(audio_file)
 
 @app.options("/ytmusic-search")
 async def ytmusic_options():
@@ -294,7 +274,7 @@ async def ytmusic_search_endpoint(request: YTMusicRequest):
 
 @app.get("/")
 async def root():
-    return JSONResponse(content={"message": "Recipe Extraction Server v9007 - With Audio Transcription", "status": "healthy", "endpoints": ["/extract", "/ytmusic-search"]}, headers={"Access-Control-Allow-Origin": "*"})
+    return JSONResponse(content={"message": "Recipe Extraction Server v9008 - Enhanced Caption Extraction", "status": "healthy", "endpoints": ["/extract", "/ytmusic-search"]}, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/health")
 async def health():
