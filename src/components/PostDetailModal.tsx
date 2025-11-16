@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+do you see it here import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
 import { supabase, isAdmin } from '@/lib/supabase';
 import { toast } from 'sonner';
-
 interface Post {
   id: string;
   user_id: string;
@@ -19,7 +18,6 @@ interface Post {
   likes_count?: number;
   comments_count?: number;
 }
-
 interface Review {
   id: string;
   rating: number;
@@ -28,7 +26,6 @@ interface Review {
   user_id: string;
   username?: string;
 }
-
 interface Comment {
   id: string;
   text: string;
@@ -36,7 +33,6 @@ interface Comment {
   user_id: string;
   username?: string;
 }
-
 interface PostDetailModalProps {
   post: Post | null;
   open: boolean;
@@ -44,7 +40,6 @@ interface PostDetailModalProps {
   onDelete: (postId: string) => void;
   onUpdate: () => void;
 }
-
 export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: PostDetailModalProps) {
   const [editingCaption, setEditingCaption] = useState(false);
   const [caption, setCaption] = useState('');
@@ -59,7 +54,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [averageRating, setAverageRating] = useState<number>(0);
   const [totalRatings, setTotalRatings] = useState<number>(0);
-
   useEffect(() => {
     if (post) {
       setCaption(post.caption || '');
@@ -67,15 +61,16 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       checkLikeStatus();
       loadCurrentUserAndAdminStatus();
       loadRatings();
+      if (currentUserId) {
+        loadUserRating(currentUserId);
+      }
     }
   }, [post]);
-
   useEffect(() => {
     if (post && currentUserId) {
       loadUserRating(currentUserId);
     }
   }, [post, currentUserId]);
-
   const loadCurrentUserAndAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -84,7 +79,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setIsUserAdmin(admin);
     }
   };
-
   const loadReviewsAndComments = async () => {
     if (!post?.recipe_url) return;
     try {
@@ -93,7 +87,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
         .select('id')
         .eq('video_url', post.recipe_url)
         .maybeSingle();
-
       if (recipeData) {
         const { data: reviewsData } = await supabase
           .from('reviews')
@@ -107,7 +100,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
           `)
           .eq('recipe_id', recipeData.id)
           .order('created_at', { ascending: false });
-
         if (reviewsData) {
           setReviews(reviewsData.map((r: any) => ({
             ...r,
@@ -115,7 +107,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
           })));
         }
       }
-
       const { data: commentsData } = await supabase
         .from('comments')
         .select(`
@@ -127,7 +118,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
         `)
         .eq('post_id', post.id)
         .order('created_at', { ascending: false });
-
       if (commentsData) {
         setComments(commentsData.map((c: any) => ({
           ...c,
@@ -138,7 +128,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       console.error('Error loading reviews and comments:', error);
     }
   };
-
   const checkLikeStatus = async () => {
     if (!post) return;
     const { data: { user } } = await supabase.auth.getUser();
@@ -151,7 +140,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       .maybeSingle();
     setIsLiked(!!data);
   };
-
   const handleUpdateCaption = async () => {
     if (!post) return;
     setLoading(true);
@@ -171,7 +159,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setLoading(false);
     }
   };
-
   const handleDeletePost = async () => {
     if (!post) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
@@ -192,7 +179,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setLoading(false);
     }
   };
-
   const handleDeleteComment = async (commentId: string) => {
     if (!confirm('Delete this comment?')) return;
     try {
@@ -207,7 +193,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       toast.error('Failed to delete comment');
     }
   };
-
   const handleAddComment = async () => {
     if (!post || !newComment.trim()) return;
     setLoading(true);
@@ -232,7 +217,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setLoading(false);
     }
   };
-
   const handleToggleLike = async () => {
     if (!post) return;
     const { data: { user } } = await supabase.auth.getUser();
@@ -255,7 +239,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       console.error('Error toggling like:', error);
     }
   };
-
   const loadRatings = async () => {
     if (!post) return;
     try {
@@ -276,7 +259,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       console.error('Error loading ratings:', error);
     }
   };
-
   const loadUserRating = async (userId: string) => {
     if (!post) return;
     try {
@@ -292,7 +274,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       console.error('Error loading user rating:', error);
     }
   };
-
   const handleRatingClick = async (rating: number) => {
     if (!currentUserId || !post) {
       toast.error('Please log in to rate');
@@ -318,18 +299,9 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       toast.error('Failed to submit rating');
     }
   };
-
-  // NAVIGATE TO USER PROFILE
-  const goToUserProfile = (username: string) => {
-    if (username) {
-      window.location.href = `/${username}`;
-    }
-  };
-
   if (!post) return null;
   const canDeletePost = post.user_id === currentUserId || isUserAdmin;
   const canDeleteComment = (commentUserId: string) => commentUserId === currentUserId || isUserAdmin;
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden">
@@ -349,7 +321,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
               />
             ) : null}
           </div>
-
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold text-lg flex-1 pr-4">{post.title || 'Post'}</h3>
@@ -375,9 +346,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                 )}
               </div>
             </div>
-
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Rating Section */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center">
@@ -389,7 +358,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                             ? 'opacity-100'
                             : 'opacity-20 grayscale'
                         }`}
-                      >Fire</span>
+                      >🔥</span>
                     ))}
                   </div>
                   <span className="text-sm text-gray-700 font-medium">
@@ -415,14 +384,12 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                               ? 'opacity-100'
                               : 'opacity-20 grayscale'
                           }`}
-                        >Fire</span>
+                        >🔥</span>
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
-
-              {/* Caption */}
               <div>
                 {editingCaption ? (
                   <div className="space-y-2">
@@ -469,27 +436,20 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                   </p>
                 )}
               </div>
-
-              {/* Reviews — CLICKABLE USERNAMES */}
               {reviews.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-semibold text-sm">Reviews</h4>
                   {reviews.map((review) => (
                     <div key={review.id} className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
-                        <button
-                          onClick={() => goToUserProfile(review.username || '')}
-                          className="font-medium text-sm text-orange-600 hover:underline flex items-center gap-1 focus:outline-none"
-                        >
-                          {review.username || 'User'}
-                          {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
-                            <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                          )}
-                        </button>
+                        <span className="font-medium text-sm">{review.username || 'User'}</span>
+                        {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
+                          <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        )}
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <span key={i} className="text-base">
-                              {i < review.rating ? 'Star' : 'Empty Star'}
+                              {i < review.rating ? '⭐' : '☆'}
                             </span>
                           ))}
                         </div>
@@ -499,23 +459,18 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                   ))}
                 </div>
               )}
-
-              {/* Comments — CLICKABLE USERNAMES */}
               {comments.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm">Comments</h4>
                   {comments.map((comment) => (
                     <div key={comment.id} className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <button
-                          onClick={() => goToUserProfile(comment.username || '')}
-                          className="flex items-center gap-1 font-medium text-sm text-orange-600 hover:underline focus:outline-none"
-                        >
-                          {comment.username || 'User'}
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium text-sm">{comment.username || 'User'}</span>
                           {comment.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                             <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                           )}
-                        </button>
+                        </div>
                         <p className="text-sm text-gray-700 mt-0.5">{comment.text}</p>
                       </div>
                       {canDeleteComment(comment.user_id) && (
@@ -531,8 +486,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                 </div>
               )}
             </div>
-
-            {/* Like + Comment Input */}
             <div className="border-t p-4 space-y-3">
               <div className="flex items-center gap-4">
                 <button onClick={handleToggleLike} className="transition-transform hover:scale-110">
