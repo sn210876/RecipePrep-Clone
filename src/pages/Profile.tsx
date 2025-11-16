@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown, Trash2 } from 'lucide-react';
+import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown, Trash2, Bell, BellRing } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
@@ -9,8 +9,9 @@ import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { PostDetailModal } from '../components/PostDetailModal';
+import { useRouter } from 'next/navigation';
 
-// AUTO-RESIZE IMAGE FUNCTION — WORKS EVERYWHERE (PHONE + COMPUTER)
+// AUTO-RESIZE IMAGE FUNCTION — WORKS EVERYWHERE
 const resizeImage = (
   file: File,
   maxWidth: number,
@@ -21,12 +22,9 @@ const resizeImage = (
     const img = new Image();
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
-
     img.onload = () => {
       let width = img.width;
       let height = img.height;
-
-      // Maintain aspect ratio
       if (width > height) {
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
@@ -38,11 +36,9 @@ const resizeImage = (
           height = maxHeight;
         }
       }
-
       canvas.width = width;
       canvas.height = height;
       ctx.drawImage(img, 0, 0, width, height);
-
       canvas.toBlob(
         (blob) => {
           if (!blob) return resolve(file);
@@ -56,7 +52,6 @@ const resizeImage = (
         quality
       );
     };
-
     img.onerror = () => resolve(file);
     img.src = URL.createObjectURL(file);
   });
@@ -72,7 +67,7 @@ interface Post {
   recipe_url: string | null;
   recipe_id: string | null;
   created_at: string;
-  likes_count?: number;
+  ratings_count?: number;
   comments_count?: number;
 }
 
@@ -87,6 +82,7 @@ interface Profile {
 
 export function Profile() {
   const { signOut } = useAuth();
+  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,15 +93,43 @@ export function Profile() {
   const [newBio, setNewBio] = useState('');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     loadProfile();
     checkAdmin();
+    setupRealtimeNotifications();
   }, []);
 
   const checkAdmin = async () => {
     const admin = await isAdmin();
     setIsUserAdmin(admin);
+  };
+
+  const setupRealtimeNotifications = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+
+    setUnreadNotifications(count || 0);
+
+    supabase
+      .channel('notifications')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`
+      }, (payload) => {
+        setUnreadNotifications(prev => prev + 1);
+        toast(`New: ${payload.new.message}`);
+      })
+      .subscribe();
   };
 
   const loadProfile = async () => {
@@ -147,7 +171,7 @@ export function Profile() {
 
       const { data: postsData } = await supabase
         .from('posts')
-        .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
+        .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at, ratings_count')
         .eq('user_id', userData.user.id)
         .order('created_at', { ascending: false });
 
@@ -159,39 +183,29 @@ export function Profile() {
     }
   };
 
-  // AUTO-RESIZED AVATAR UPLOAD — WORKS WITH 100MB+ PHOTOS
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
-
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image');
       return;
     }
-
     setUploading(true);
     toast.loading('Resizing & uploading avatar...', { duration: 0 });
-
     try {
       const resizedFile = await resizeImage(file, 1080, 1080, 0.9);
       const fileExt = resizedFile.name.split('.').pop() || 'jpg';
       const fileName = `${userId}/avatar.${fileExt}`;
-
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, resizedFile, { upsert: true });
-
       if (uploadError) throw uploadError;
-
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl + '?t=' + Date.now() })
         .eq('id', userId);
-
       if (updateError) throw updateError;
-
       setProfile(prev => prev ? { ...prev, avatar_url: publicUrl + '?t=' + Date.now() } : null);
       toast.dismiss();
       toast.success('Avatar updated instantly!');
@@ -203,39 +217,29 @@ export function Profile() {
     }
   };
 
-  // AUTO-RESIZED BANNER UPLOAD
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
-
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image');
       return;
     }
-
     setUploading(true);
     toast.loading('Resizing & uploading banner...', { duration: 0 });
-
     try {
       const resizedFile = await resizeImage(file, 1920, 600, 0.9);
       const fileExt = resizedFile.name.split('.').pop() || 'jpg';
       const fileName = `${userId}/banner.${fileExt}`;
-
       const { error: uploadError } = await supabase.storage
         .from('banners')
         .upload(fileName, resizedFile, { upsert: true });
-
       if (uploadError) throw uploadError;
-
       const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(fileName);
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ banner_url: publicUrl + '?t=' + Date.now() })
         .eq('id', userId);
-
       if (updateError) throw updateError;
-
       setProfile(prev => prev ? { ...prev, banner_url: publicUrl + '?t=' + Date.now() } : null);
       toast.dismiss();
       toast.success('Banner updated instantly!');
@@ -254,7 +258,7 @@ export function Profile() {
     toast.success('Avatar removed');
   };
 
-  const handleDeleteBanner = async () => {
+  const handleDeleteDeleteBanner = async () => {
     if (!userId) return;
     await supabase.from('profiles').update({ banner_url: null }).eq('id', userId);
     setProfile(prev => prev ? { ...prev, banner_url: null } : null);
@@ -263,7 +267,6 @@ export function Profile() {
 
   const handleEditProfile = async () => {
     if (!userId) return;
-
     const lines = newBio.trim().split('\n');
     if (lines.length > 3) {
       toast.error('Maximum 3 lines allowed');
@@ -273,11 +276,9 @@ export function Profile() {
       toast.error('Maximum 40 characters per line');
       return;
     }
-
     const updates: any = {};
     if (newUsername.trim() && newUsername.trim() !== profile?.username) updates.username = newUsername.trim();
     if (newBio.trim() !== (profile?.bio || '').trim()) updates.bio = newBio.trim() || null;
-
     if (Object.keys(updates).length > 0) {
       const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
       if (error) {
@@ -292,6 +293,15 @@ export function Profile() {
 
   const handleLogout = async () => { await signOut(); };
 
+  const goToNotifications = () => {
+    router.push('/notifications');
+    setUnreadNotifications(0);
+  };
+
+  const goToUserProfile = (username: string) => {
+    router.push(`/${username}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-20">
@@ -305,19 +315,33 @@ export function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
+      {/* HEADER WITH NOTIFICATION BELL */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 z-50">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className="text-lg font-semibold">Profile</h1>
-          <button onClick={handleLogout} className="text-gray-600 hover:text-gray-900 p-2">
-            <LogOut className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-4">
+            <button onClick={goToNotifications} className="relative">
+              {unreadNotifications > 0 ? (
+                <BellRing className="w-6 h-6 text-orange-600 animate-pulse" />
+              ) : (
+                <Bell className="w-6 h-6 text-gray-700" />
+              )}
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center font-bold">
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </span>
+              )}
+            </button>
+            <button onClick={handleLogout} className="text-gray-600 hover:text-gray-900 p-2">
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto">
         <div className="bg-white border-b border-gray-200">
-          {/* Banner */}
+          {/* BANNER */}
           <div className="relative h-32">
             {profile?.banner_url ? (
               <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover" />
@@ -330,7 +354,7 @@ export function Profile() {
             </label>
           </div>
 
-          {/* Avatar + Bio */}
+          {/* AVATAR + BIO */}
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
               <div className="relative flex-shrink-0">
@@ -347,7 +371,7 @@ export function Profile() {
                 </label>
               </div>
 
-              {/* CENTERED 3-LINE BIO */}
+              {/* CENTERED 3-LINE BIO — PERFECT SPACING */}
               <div className="flex-1 pt-11 text-center min-w-0">
                 {profile?.bio ? (
                   <div className="space-y-2 mt-2">
@@ -390,7 +414,7 @@ export function Profile() {
             </div>
           </div>
 
-          {/* Stats */}
+          {/* STATS */}
           <div className="px-4 py-4 border-t border-gray-200">
             <div className="flex justify-center gap-10">
               <div className="text-center">
@@ -409,7 +433,7 @@ export function Profile() {
           </div>
         </div>
 
-        {/* Posts Grid */}
+        {/* POSTS GRID WITH SINGLE FLAME */}
         <div className="border-b border-gray-200 bg-white">
           <div className="flex items-center justify-center gap-2 py-3">
             <Grid3x3 className="w-5 h-5 text-gray-900" />
@@ -428,7 +452,11 @@ export function Profile() {
         ) : (
           <div className="grid grid-cols-3 gap-1">
             {posts.map(post => (
-              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
+              <div
+                key={post.id}
+                onClick={() => setSelectedPost(post)}
+                className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative"
+              >
                 {post.image_url ? (
                   <img src={post.image_url} alt={post.title || 'Post'} className="w-full h-full object-cover" />
                 ) : post.video_url ? (
@@ -437,6 +465,12 @@ export function Profile() {
                 {post.title && (
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                     <p className="text-white text-xs font-semibold truncate">{post.title}</p>
+                  </div>
+                )}
+                {/* SINGLE FLAME COUNTER — DUPLICATE GONE */}
+                {post.ratings_count !== undefined && post.ratings_count > 0 && (
+                  <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    Fire {post.ratings_count}
                   </div>
                 )}
               </div>
