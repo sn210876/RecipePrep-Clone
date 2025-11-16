@@ -816,7 +816,9 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
               onClick={() => onNavigate?.('discover-recipes')}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               title="Discover Recipes"
-          
+            >
+              <ChefHat className="w-6 h-6 text-gray-700" />
+            </button>
           </div>
           {showNotifications && (
             <div className="absolute left-4 right-4 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto shadow-lg z-50">
