@@ -1,4 +1,4 @@
-# SHAWN RECIPE EXTRACTOR v9005 - STABLE YT-DLP
+# SHAWN RECIPE EXTRACTOR v9006 - FIXED
 import os
 import re
 import json
@@ -99,10 +99,12 @@ async def extract_options():
     """Handle CORS preflight for /extract"""
     return JSONResponse(
         content={},
+        status_code=200,
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "600",
         }
     )
 
@@ -116,14 +118,10 @@ async def extract_recipe(request: ExtractRequest):
     
     print(f"[EXTRACT] Processing: {url}")
     
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-    
-    # Try recipe-scrapers for regular websites
+    # Try recipe-scrapers for regular websites (FIXED: removed headers param)
     try:
         print("[EXTRACT] Trying recipe-scrapers...")
-        scraper = scrape_me(url, headers=headers)
+        scraper = scrape_me(url)  # REMOVED headers parameter
         data = scraper.to_json()
         
         print(f"[EXTRACT] ✓ Scraped: {data.get('title')}")
@@ -147,6 +145,10 @@ async def extract_recipe(request: ExtractRequest):
         print(f"[EXTRACT] recipe-scrapers failed: {e}")
     
     # Try AI HTML parsing
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+    
     try:
         print("[EXTRACT] Trying AI HTML parsing...")
         response = requests.get(url, headers=headers, timeout=20)
@@ -177,6 +179,11 @@ async def extract_recipe(request: ExtractRequest):
         'quiet': True,
         'no_warnings': True,
         'geo_bypass': True,
+        'extractor_args': {
+            'instagram': {
+                'api_key': '936619743392459'
+            }
+        },
         'http_headers': {
             'User-Agent': 'Instagram 219.0.0.12.117 Android',
             'x-ig-app-id': '936619743392459'
@@ -229,10 +236,12 @@ async def ytmusic_options():
     """Handle CORS preflight for /ytmusic-search"""
     return JSONResponse(
         content={},
+        status_code=200,
         headers={
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "600",
         }
     )
 
@@ -251,7 +260,7 @@ async def root():
     """Health check endpoint"""
     return JSONResponse(
         content={
-            "message": "Recipe Extraction Server v9005 - Stable",
+            "message": "Recipe Extraction Server v9006 - Fixed",
             "status": "healthy",
             "endpoints": ["/extract", "/ytmusic-search"]
         },
