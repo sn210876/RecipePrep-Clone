@@ -53,7 +53,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         if (response.status >= 500 || response.status === 429) {
           throw new Error('Server waking up — try again in 20 seconds');
         }
-        const errorText = await response.text();
+        await response.text();
         throw new Error('Video extraction failed');
       }
 
@@ -122,7 +122,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    await response.text();
     throw new Error('Failed to extract from website');
   }
 
