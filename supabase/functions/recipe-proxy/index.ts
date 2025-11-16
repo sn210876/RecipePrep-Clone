@@ -73,8 +73,57 @@ ${text.slice(0, 20000)}`;
   return { ingredients: [], instructions: [], notes: "", prep_time: 0, cook_time: 0, yield: "" };
 }
 
+async function extractYouTubeDescription(url: string) {
+  try {
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    };
+
+    const response = await fetch(url, { headers });
+    const html = await response.text();
+
+    const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].replace(' - YouTube', '').trim() : 'YouTube Recipe';
+
+    const descriptionMatch = html.match(/"description":\{"simpleText":"([^"]+)"\}/);
+    let description = '';
+    if (descriptionMatch) {
+      description = descriptionMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+    }
+
+    const thumbnailMatch = html.match(/"thumbnails":\[{"url":"([^"]+)"/);
+    const thumbnail = thumbnailMatch ? thumbnailMatch[1] : '';
+
+    if (description) {
+      const aiResult = await parseWithAI(`Title: ${title}\n\nDescription:\n${description}`);
+      if (aiResult.ingredients.length > 0) {
+        return {
+          title,
+          ingredients: aiResult.ingredients,
+          instructions: aiResult.instructions,
+          image: thumbnail,
+          yield: aiResult.yield || '',
+          prep_time: aiResult.prep_time || 0,
+          cook_time: aiResult.cook_time || 0,
+          time: aiResult.prep_time + aiResult.cook_time || 0,
+          notes: aiResult.notes || 'Extracted from YouTube description',
+        };
+      }
+    }
+
+    return null;
+  } catch (e) {
+    console.error("YouTube extraction error:", e);
+    return null;
+  }
+}
+
 async function scrapeRecipeSite(url: string) {
   try {
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      return await extractYouTubeDescription(url);
+    }
+
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
     };
@@ -238,22 +287,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // For social media (Instagram, TikTok, YouTube), we need transcript extraction
-    // This requires yt-dlp + Whisper which can't run in Edge Functions
-    // The user needs to run the local server: npm run server
-    // Or deploy the server.js to a service that supports Node.js
-
     return new Response(
       JSON.stringify({
-        error: "Video transcript extraction requires running the local server (npm run server) or deploying server.js to a Node.js hosting service",
+        error: "Could not extract recipe from this URL",
         title: "Unable to extract recipe",
         ingredients: [],
-        instructions: ["Please run 'npm run server' locally to extract recipes from Instagram/TikTok/YouTube videos"],
+        instructions: ["Unable to find recipe data in the provided URL"],
         image: "",
-        notes: "Video extraction requires the Node.js server with yt-dlp and OpenAI Whisper support"
+        notes: "Try a different recipe URL or enter the recipe manually"
       }),
       {
-        status: 503,
+        status: 404,
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
