@@ -387,9 +387,6 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   <p className="text-xs text-red-600 font-bold">
     YouTube → Currently unstable (working on fix)
   </p>
-  <p className="text-xs text-emerald-600 font-medium">
-    AllRecipes, BBC Good Food, etc. (full structured extraction)
-  </p>
  <p className="text-xs text-red-600 font-bold">
     Videos include transcript — ingredients may need manual grouping
   </p>
