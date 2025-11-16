@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
-// Local server — 100% reliable in Bolt
-const LOCAL_VIDEO_EXTRACTOR = 'http://localhost:3001/extract';
+// PUBLIC, ALWAYS-ON SERVER — WORKS EVERYWHERE, NO LOCAL NEEDED
+const VIDEO_EXTRACTOR = 'https://ig-tiktok-recipe-extractor.onrender.com/extract';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -53,20 +53,28 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     url.includes('youtube.com') || 
     url.includes('youtu.be');
 
-  // SOCIAL MEDIA → LOCAL SERVER (must run `npm run server`)
+  // SOCIAL MEDIA → PUBLIC ALWAYS-ON SERVER
   if (isSocialMedia) {
     try {
-      const res = await fetch(LOCAL_VIDEO_EXTRACTOR, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
+
+      const res = await fetch(VIDEO_EXTRACTOR, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim() }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!res.ok) {
-        throw new Error('Local server not running');
+        const err = await res.text();
+        throw new Error('Video extraction failed — try again in 10 seconds');
       }
 
       const data = await res.json();
+
       const ingredients = parseIngredients(data.ingredients || []);
       const imageUrl = data.thumbnail 
         ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}`
@@ -87,15 +95,18 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         dietaryTags: [],
         imageUrl,
         videoUrl: url,
-        notes: 'Extracted using local server',
+        notes: 'Extracted using public server',
         sourceUrl: url,
       };
-    } catch (err) {
-      throw new Error('Instagram/TikTok extraction requires local server. Run: npm run server');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        throw new Error('Taking longer than usual — try again in 10 seconds');
+      }
+      throw new Error('Video extraction temporarily busy — try again!');
     }
   }
 
-  // REGULAR WEBSITES → Supabase Edge Function
+  // REGULAR WEBSITES → SUPABASE
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -151,7 +162,6 @@ export function isValidUrl(url: string): boolean {
   }
 }
 
-// FIXED: This export was missing → caused your error
 export function getPlatformFromUrl(url: string): string {
   if (url.includes('tiktok.com')) return 'TikTok';
   if (url.includes('instagram.com')) return 'Instagram';
