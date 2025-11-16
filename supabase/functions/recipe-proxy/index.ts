@@ -82,35 +82,64 @@ async function extractYouTubeDescription(url: string) {
     const response = await fetch(url, { headers });
     const html = await response.text();
 
+    console.log('[YouTube] Fetched HTML, length:', html.length);
+
     const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
     const title = titleMatch ? titleMatch[1].replace(' - YouTube', '').trim() : 'YouTube Recipe';
+    console.log('[YouTube] Title:', title);
 
-    const descriptionMatch = html.match(/"description":\{"simpleText":"([^"]+)"\}/);
+    // Try multiple patterns for description
     let description = '';
-    if (descriptionMatch) {
-      description = descriptionMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+
+    // Pattern 1: simpleText
+    const simpleTextMatch = html.match(/"description":\{"simpleText":"([^"]+)"\}/);
+    if (simpleTextMatch) {
+      description = simpleTextMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+      console.log('[YouTube] Found description (simpleText):', description.substring(0, 100));
+    }
+
+    // Pattern 2: attributedDescriptionBodyText
+    if (!description) {
+      const attrDescMatch = html.match(/"attributedDescriptionBodyText":\{"content":"([^"]+)"\}/);
+      if (attrDescMatch) {
+        description = attrDescMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        console.log('[YouTube] Found description (attributedDescriptionBodyText):', description.substring(0, 100));
+      }
+    }
+
+    // Pattern 3: Find any description field
+    if (!description) {
+      const anyDescMatch = html.match(/"description":"([^"]+)"/);
+      if (anyDescMatch) {
+        description = anyDescMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        console.log('[YouTube] Found description (generic):', description.substring(0, 100));
+      }
     }
 
     const thumbnailMatch = html.match(/"thumbnails":\[{"url":"([^"]+)"/);
     const thumbnail = thumbnailMatch ? thumbnailMatch[1] : '';
 
-    if (description) {
+    if (description && description.length > 50) {
+      console.log('[YouTube] Sending to AI for parsing...');
       const aiResult = await parseWithAI(`Title: ${title}\n\nDescription:\n${description}`);
+      console.log('[YouTube] AI result:', aiResult);
+
       if (aiResult.ingredients.length > 0) {
         return {
           title,
           ingredients: aiResult.ingredients,
           instructions: aiResult.instructions,
           image: thumbnail,
-          yield: aiResult.yield || '',
-          prep_time: aiResult.prep_time || 0,
-          cook_time: aiResult.cook_time || 0,
-          time: aiResult.prep_time + aiResult.cook_time || 0,
+          yield: aiResult.yield || '4',
+          prep_time: aiResult.prep_time || 15,
+          cook_time: aiResult.cook_time || 30,
+          time: aiResult.prep_time + aiResult.cook_time || 45,
           notes: aiResult.notes || 'Extracted from YouTube description',
         };
       }
     }
 
+    console.log('[YouTube] No valid recipe found in description');
     return null;
   } catch (e) {
     console.error("YouTube extraction error:", e);
