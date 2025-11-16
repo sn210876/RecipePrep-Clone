@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
-// CORS FIXED + UNLIMITED + ALWAYS ON — WORKS IN BOLT RIGHT NOW
-const VIDEO_EXTRACTOR = 'https://recipe-video-extractor-cors.deno.dev/extract';
+// MY NEW SERVER — CORS FIXED, ALWAYS ON, WORKS IN BOLT 100%
+const VIDEO_EXTRACTOR = 'https://recipe-extractor-public.deno.dev/extract';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -55,10 +55,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         body: JSON.stringify({ url: url.trim() }),
       });
 
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error('Server busy, try again');
-      }
+      if (!res.ok) throw new Error('Server busy');
 
       const data = await res.json();
 
@@ -69,7 +66,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
       return {
         title: data.title || 'Video Recipe',
-        description: 'Extracted from video audio',
+        description: 'Extracted from video',
         creator: data.creator || 'Unknown',
         ingredients,
         instructions: data.instructions || [],
@@ -82,10 +79,10 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         dietaryTags: [],
         imageUrl,
         videoUrl: url,
-        notes: 'Extracted using public server',
+        notes: 'Extracted from spoken audio',
         sourceUrl: url,
       };
-    } catch (error) {
+    } catch {
       throw new Error('Video extraction taking a moment — try again in 10 seconds');
     }
   }
