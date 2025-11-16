@@ -98,5 +98,3 @@ export function getPlatformFromUrl(url: string): string {
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
   return 'Website';
 }
- 
-then give me copy and paste
