@@ -791,6 +791,7 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
               )}
             </div>
             <button
+                          <button
               onClick={async (e) => {
                 e.stopPropagation();
                 setShowNotifications(!showNotifications);
@@ -811,13 +812,6 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                   {unreadNotifications > 9 ? '9+' : unreadNotifications}
                 </span>
               )}
-            </button>
-            <button
-              onClick={() => onNavigate?.('discover-recipes')}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Discover Recipes"
-            >
-              <ChefHat className="w-6 h-6 text-gray-700" />
             </button>
           </div>
           {showNotifications && (
