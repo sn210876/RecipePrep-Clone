@@ -201,9 +201,10 @@ export function Profile() {
               </div>
 
               {/* CENTERED 3-LINE BIO */}
-              <div className="flex-1 pt-8 text-center min-w-0">
+                            {/* CENTERED 3-LINE BIO — NOW PERFECTLY POSITIONED */}
+              <div className="flex-1 pt-11 text-center min-w-0">
                 {profile?.bio ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2 mt-2">
                     {profile.bio
                       .split('\n')
                       .slice(0, 3)
@@ -218,12 +219,11 @@ export function Profile() {
                       ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400 italic font-light">
+                  <p className="text-sm text-gray-400 italic font-light mt-3">
                     Tap Edit Profile to add a bio
                   </p>
                 )}
               </div>
-            </div>
 
             <div className="mt-3 text-center">
               <div className="flex items-center justify-center gap-2">
