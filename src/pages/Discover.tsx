@@ -744,7 +744,7 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
+                <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
           <div className="flex items-center gap-2">
             <div className="relative" style={{ width: '70%' }}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -758,38 +758,37 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
               />
               {showSearchResults && (
                 <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-60 overflow-y-auto shadow-lg z-50">
-              {searchResults.length > 0 ? (
-                searchResults.map((user) => (
-                  <button
-                    key={user.id}
-                    onClick={() => {
-                      console.log('[Search] User selected:', user.username);
-                      setViewingUserId(user.id);
-                      setShowSearchResults(false);
-                      setSearchQuery('');
-                    }}
-                    className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-400 overflow-hidden flex items-center justify-center">
-                      {user.avatar_url ? (
-                        <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-white font-semibold text-sm">
-                          {user.username.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-medium text-gray-900">{user.username}</span>
-                  </button>
-                ))
-              ) : (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  No users found
-                </div>
-              )}
+                  {searchResults.length > 0 ? (
+                    searchResults.map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => {
+                          setViewingUserId(user.id);
+                          setShowSearchResults(false);
+                          setSearchQuery('');
+                        }}
+                        className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-400 overflow-hidden flex items-center justify-center">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white font-semibold text-sm">
+                              {user.username.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-medium text-gray-900">{user.username}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 text-sm">No users found</div>
+                  )}
                 </div>
               )}
             </div>
+
+            {/* ONLY BELL — CHEFHAT GONE */}
             <button
               onClick={async (e) => {
                 e.stopPropagation();
@@ -812,20 +811,12 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                 </span>
               )}
             </button>
-            <button
-              onClick={() => onNavigate?.('discover-recipes')}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Discover Recipes"
-            >
-              <ChefHat className="w-6 h-6 text-gray-700" />
-            </button>
           </div>
+
           {showNotifications && (
             <div className="absolute left-4 right-4 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto shadow-lg z-50">
               {notifications.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  No notifications yet
-                </div>
+                <div className="p-4 text-center text-gray-500 text-sm">No notifications yet</div>
               ) : (
                 notifications.map((notification) => (
                   <div
@@ -836,9 +827,7 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                       }
                       setShowNotifications(false);
                     }}
-                    className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                      !notification.read ? 'bg-blue-50' : ''
-                    }`}
+                    className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
@@ -854,9 +843,7 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                           {new Date(notification.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                      {!notification.read && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
-                      )}
+                      {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />}
                     </div>
                   </div>
                 ))
