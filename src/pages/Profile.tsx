@@ -1,4 +1,4 @@
-it deleted alot of things, make sure it didnt delete as this is my existing import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
 import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown, Trash2, Bell, BellRing } from 'lucide-react';
