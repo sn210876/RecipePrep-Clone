@@ -1,3 +1,4 @@
+import { RatingDisplay } from "./RatingDisplay";
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
