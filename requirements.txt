@@ -7,3 +7,4 @@ openai==1.55.3
 ytmusicapi==1.8.1
 requests==2.31.0
 python-multipart==0.0.20
+ffmpeg-python==0.2.0
