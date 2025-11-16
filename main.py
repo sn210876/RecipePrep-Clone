@@ -82,55 +82,33 @@ def transcribe_audio(audio_path: str) -> str:
         print(f"[TRANSCRIBE] Error: {e}")
         return ""
 
-def parse_with_ai(text: str, model: str = "gpt-4o-mini"):
-    """Extract recipe from text using GPT-4 with enhanced accuracy"""
+def parse_with_ai(text: str):
+    """Extract recipe from text using GPT-4"""
     if not text.strip():
         return [], [], ""
     
-    prompt = f"""You are an expert recipe extraction assistant. Carefully analyze ALL the text below and extract EVERY ingredient and EVERY instruction step mentioned.
-
-CRITICAL INSTRUCTIONS:
-1. Include ALL ingredients - even if just mentioned in passing (salt, pepper, oil, water, etc.)
-2. Include EVERY step - break down complex instructions into individual steps
-3. Include quantities and measurements exactly as stated
-4. If ingredients are mentioned in instructions but not listed separately, add them to ingredients
-5. Number each instruction step clearly
-6. Don't skip ANY details - be thorough and complete
-7. If cooking times, temperatures, or techniques are mentioned, include them in instructions
-8. Look for ingredients in the video description, captions, comments, and transcript
-
-Return ONLY valid JSON with this exact structure:
+    prompt = f"""Extract the recipe from this text and return ONLY valid JSON with this exact structure:
 {{
-  "ingredients": [
-    "1 cup flour",
-    "2 eggs",
-    "1/4 tsp salt",
-    ...
-  ],
-  "instructions": [
-    "Preheat oven to 350°F",
-    "Mix flour and salt in a bowl",
-    "Beat eggs in separate bowl",
-    ...
-  ],
-  "notes": "cooking time, serving suggestions, or other helpful tips"
+  "ingredients": ["ingredient 1", "ingredient 2", ...],
+  "instructions": ["step 1", "step 2", ...],
+  "notes": "any additional notes"
 }}
 
-TEXT TO ANALYZE:
-{text[:20000]}"""
+Text: {text[:14000]}"""
     
     try:
         resp = client.chat.completions.create(
-            model=model,
+            model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional recipe extraction expert. Extract EVERY ingredient and EVERY step with complete accuracy. Be thorough and don't miss anything."},
+                {"role": "system", "content": "You are a recipe extraction expert. Always return valid JSON only."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.1,
-            max_tokens=2000
+            max_tokens=1000
         )
         
         content = resp.choices[0].message.content.strip()
+        # Remove markdown code blocks if present
         content = re.sub(r'^```json\s*|\s*```$', '', content, flags=re.MULTILINE)
         
         data = json.loads(content)
@@ -146,6 +124,7 @@ TEXT TO ANALYZE:
 
 @app.options("/extract")
 async def extract_options():
+    """Handle CORS preflight for /extract"""
     return JSONResponse(
         content={},
         status_code=200,
@@ -159,16 +138,20 @@ async def extract_options():
 
 @app.post("/extract")
 async def extract_recipe(request: ExtractRequest):
+    """Main recipe extraction endpoint"""
     url = request.url.strip()
+    
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
     
     print(f"[EXTRACT] Processing: {url}")
     
+    # Try recipe-scrapers for regular websites
     try:
         print("[EXTRACT] Trying recipe-scrapers...")
         scraper = scrape_me(url)
         data = scraper.to_json()
+        
         print(f"[EXTRACT] ✓ Scraped: {data.get('title')}")
         
         return JSONResponse(
@@ -189,16 +172,21 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"[EXTRACT] recipe-scrapers failed: {e}")
     
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    # Try AI HTML parsing for regular websites
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
     
     try:
         print("[EXTRACT] Trying AI HTML parsing...")
         response = requests.get(url, headers=headers, timeout=20)
         html = response.text
+        
         ings, inst, notes = parse_with_ai(html)
         
         if ings or inst:
             print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
+            
             return JSONResponse(
                 content={
                     "title": "AI Extracted Recipe",
@@ -212,6 +200,7 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"[EXTRACT] AI HTML parsing failed: {e}")
     
+    # Try yt-dlp for videos WITH AUDIO TRANSCRIPTION
     print("[EXTRACT] Trying yt-dlp for video with audio transcription...")
     
     ydl_opts = {
@@ -219,13 +208,21 @@ async def extract_recipe(request: ExtractRequest):
         'no_warnings': True,
         'geo_bypass': True,
         'format': 'bestaudio/best',
-        'extractor_args': {'instagram': {'api_key': '936619743392459'}},
+        'extractor_args': {
+            'instagram': {
+                'api_key': '936619743392459'
+            }
+        },
         'http_headers': {
             'User-Agent': 'Instagram 219.0.0.12.117 Android',
             'x-ig-app-id': '936619743392459'
         },
         'outtmpl': '/tmp/%(id)s.%(ext)s',
-        'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
     }
     
     cookie_file = None
@@ -241,24 +238,23 @@ async def extract_recipe(request: ExtractRequest):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
+            
+            # Try to find the downloaded audio file
             video_id = info.get('id', 'unknown')
             audio_file = f"/tmp/{video_id}.mp3"
             
             transcript = ""
+            
+            # Transcribe audio if file exists
             if os.path.exists(audio_file):
                 transcript = transcribe_audio(audio_file)
             
+            # Combine description and transcript
             description = info.get('description', '')
-            combined_text = f"""VIDEO DESCRIPTION:
-{description}
-
-AUDIO TRANSCRIPT (spoken in video):
-{transcript}
-
-INSTRUCTIONS: Extract ALL ingredients and ALL steps from both the description and the spoken audio. Be extremely thorough - don't miss any ingredient or step mentioned anywhere.""" if transcript else description
+            combined_text = f"{description}\n\nTranscript: {transcript}" if transcript else description
             
-            model_to_use = "gpt-4o" if transcript else "gpt-4o-mini"
-            ings, inst, notes = parse_with_ai(combined_text, model=model_to_use)
+            # Extract recipe from combined text
+            ings, inst, notes = parse_with_ai(combined_text)
             
             print(f"[EXTRACT] ✓ Video extracted: {info.get('title')}")
             print(f"[EXTRACT] Found {len(ings)} ingredients, {len(inst)} instructions")
@@ -274,9 +270,14 @@ INSTRUCTIONS: Extract ALL ingredients and ALL steps from both the description an
                 },
                 headers={"Access-Control-Allow-Origin": "*"}
             )
+    
     except Exception as e:
         print(f"[EXTRACT] yt-dlp failed: {e}")
-        raise HTTPException(status_code=400, detail=f"Could not extract recipe: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not extract recipe: {str(e)}"
+        )
+    
     finally:
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
@@ -285,17 +286,44 @@ INSTRUCTIONS: Extract ALL ingredients and ALL steps from both the description an
 
 @app.options("/ytmusic-search")
 async def ytmusic_options():
-    return JSONResponse(content={}, status_code=200, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "*", "Access-Control-Max-Age": "600"})
+    """Handle CORS preflight for /ytmusic-search"""
+    return JSONResponse(
+        content={},
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "600",
+        }
+    )
 
 @app.post("/ytmusic-search")
 async def ytmusic_search_endpoint(request: YTMusicRequest):
+    """YouTube Music search endpoint"""
     results = search_ytmusic(request.query, request.limit)
-    return JSONResponse(content={"songs": results}, headers={"Access-Control-Allow-Origin": "*"})
+    
+    return JSONResponse(
+        content={"songs": results},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
 
 @app.get("/")
 async def root():
-    return JSONResponse(content={"message": "Recipe Extraction Server v9007 - With Audio Transcription", "status": "healthy", "endpoints": ["/extract", "/ytmusic-search"]}, headers={"Access-Control-Allow-Origin": "*"})
+    """Health check endpoint"""
+    return JSONResponse(
+        content={
+            "message": "Recipe Extraction Server v9007 - With Audio Transcription",
+            "status": "healthy",
+            "endpoints": ["/extract", "/ytmusic-search"]
+        },
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
 
 @app.get("/health")
 async def health():
-    return JSONResponse(content={"status": "ok"}, headers={"Access-Control-Allow-Origin": "*"})
+    """Health check for monitoring"""
+    return JSONResponse(
+        content={"status": "ok"},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
