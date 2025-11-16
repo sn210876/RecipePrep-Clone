@@ -749,21 +749,20 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         </div>
 
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
-  <DialogContent className="max-w-4xl max-h-[90vh]">
-    <DialogHeader>
-      <DialogTitle className="text-2xl flex items-center gap-2">
-        <Sparkles className="w-6 h-6 text-blue-600" />
-        Review Extracted Recipe
-      </DialogTitle>
-      <DialogDescription>
-        <p className="text-blue-600 font-medium">
-          Double-check and edit as needed. Social Media recipes may have altered instructions.
-        </p>
-      </DialogDescription>
-    </DialogHeader>
-    {extractedData && (
-      <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
-        <div className="space-y-6 py-4">
+          <DialogContent className="max-w-4xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-blue-600" />
+                Review Extracted Recipe
+              </DialogTitle>
+              <DialogDescription>
+                Review and edit the extracted recipe details before adding to your collection
+              </DialogDescription>
+            </DialogHeader>
+
+            {extractedData && (
+              <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
+                <div className="space-y-6 py-4">
                   {extractedData.imageUrl && (
                     <div className="relative w-48 h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
                       <img
