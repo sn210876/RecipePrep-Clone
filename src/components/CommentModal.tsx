@@ -300,7 +300,12 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="bg-gray-100 rounded-2xl px-3 py-2">
-                    <p className="font-semibold text-sm">{comment.profiles?.username}</p>
+                    <button
+                      onClick={() => window.location.href = `/${comment.profiles?.username || 'user'}`}
+                      className="font-semibold text-sm hover:underline"
+                    >
+                      {comment.profiles?.username}
+                    </button>
                     <p className="text-sm text-gray-700 break-words">{comment.text}</p>
                   </div>
                   <p className="text-xs text-gray-400 mt-1 px-3">
