@@ -1,4 +1,4 @@
-where can i change the font for adding a bio import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
 import { Camera, Grid3x3, LogOut, Upload as UploadIcon, CreditCard as Edit2, Crown, Trash2 } from 'lucide-react';
