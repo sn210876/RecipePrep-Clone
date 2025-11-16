@@ -449,7 +449,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <span key={i} className="text-base">
-                              {i < review.rating ? '⭐' : '☆'}
+                              {i < review.rating ? '🔥 ' : '☆'}
                             </span>
                           ))}
                         </div>
