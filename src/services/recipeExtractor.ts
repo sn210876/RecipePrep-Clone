@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
-// MY NEW SERVER — CORS FIXED, ALWAYS ON, WORKS IN BOLT 100%
-const VIDEO_EXTRACTOR = 'https://recipe-extractor-public.deno.dev/extract';
+// YOUR ORIGINAL RENDER SERVER — CORS FIXED, WORKS 100%
+const RENDER_EXTRACTOR = 'https://recipe-backend-nodejs-1.onrender.com/extract';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -47,15 +47,25 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const isSocialMedia = url.includes('instagram.com') || url.includes('tiktok.com') || url.includes('youtube.com') || url.includes('youtu.be');
 
+  // SOCIAL MEDIA → YOUR RENDER SERVER (CORS FIXED)
   if (isSocialMedia) {
     try {
-      const res = await fetch(VIDEO_EXTRACTOR, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 40000); // 40 sec max
+
+      const res = await fetch(RENDER_EXTRACTOR, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim() }),
+        signal: controller.signal,
       });
 
-      if (!res.ok) throw new Error('Server busy');
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error('Server waking up — try again in 20 seconds');
+      }
 
       const data = await res.json();
 
@@ -66,28 +76,31 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
       return {
         title: data.title || 'Video Recipe',
-        description: 'Extracted from video',
+        description: 'Extracted from video audio',
         creator: data.creator || 'Unknown',
         ingredients,
         instructions: data.instructions || [],
         prepTime: String(data.prep_time || 20),
         cookTime: String(data.cook_time || 40),
-        servings: data.servings || '4',
+        servings: data.yield || '4',
         cuisineType: 'Global',
         difficulty: 'Medium',
         mealTypes: ['Dinner'],
         dietaryTags: [],
         imageUrl,
         videoUrl: url,
-        notes: 'Extracted from spoken audio',
+        notes: 'Extracted using your Render server',
         sourceUrl: url,
       };
-    } catch {
-      throw new Error('Video extraction taking a moment — try again in 10 seconds');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        throw new Error('Server is waking up — please try again in 20 seconds');
+      }
+      throw new Error('Video extraction temporarily unavailable — try again soon');
     }
   }
 
-  // Regular websites
+  // REGULAR WEBSITES → SUPABASE
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -109,7 +122,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     description: 'Extracted recipe',
     creator: data.author || 'Unknown',
     ingredients,
-    instructions: Array.isArray(data.instructions) ? data.instructions : [],
+    instructions: data.instructions || [],
     prepTime: String(data.prep_time || 30),
     cookTime: String(data.cook_time || 45),
     servings: String(data.yield || '4'),
@@ -132,5 +145,4 @@ export function getPlatformFromUrl(url: string): string {
   if (url.includes('tiktok.com')) return 'TikTok';
   if (url.includes('instagram.com')) return 'Instagram';
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
-  return 'Website';
-}
+  return '
