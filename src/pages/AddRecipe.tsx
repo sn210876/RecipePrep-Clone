@@ -382,7 +382,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </div>
             <div className="mt-3 space-y-1">
   <p className="text-xs text-emerald-600 font-bold">
-    NOW WORKS: All Recipes, Blogs, Instagram · TikTok (full audio transcript + thumbnail)
+    NOW WORKS: All Recipes, Blogs. For Instagram · TikTok, may need revising.
   </p>
   <p className="text-xs text-red-600 font-bold">
     YouTube → Currently unstable (working on fix)
@@ -390,7 +390,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   <p className="text-xs text-emerald-600 font-medium">
     AllRecipes, BBC Good Food, etc. (full structured extraction)
   </p>
-  <p className="text-xs text-slate-500 italic">
+ <p className="text-xs text-red-600 font-bold">
     Videos include transcript — ingredients may need manual grouping
   </p>
 </div>
