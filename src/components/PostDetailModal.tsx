@@ -222,27 +222,52 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     }
   };
   const handleToggleLike = async () => {
-    if (!post) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    try {
-      if (isLiked) {
+  if (!post) return;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const userId = user.id;
+  const postOwnerId = post.user_id;
+
+  try {
+    if (isLiked) {
+      // Remove like
+      await supabase
+        .from('likes')
+        .delete()
+        .eq('post_id', post.id)
+        .eq('user_id', userId);
+
+    } else {
+      // Add like
+      await supabase
+        .from('likes')
+        .insert({ post_id: post.id, user_id: userId });
+
+      // 🔔 SEND LIKE NOTIFICATION (don't notify yourself)
+      if (userId !== postOwnerId) {
         await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', user.id);
-      } else {
-        await supabase
-          .from('likes')
-          .insert({ post_id: post.id, user_id: user.id });
+          .from('notifications')
+          .insert({
+            user_id: postOwnerId,     // who receives the notification
+            actor_id: userId,         // who liked the post
+            type: 'like',
+            post_id: post.id,
+            read: false
+          });
       }
-      setIsLiked(!isLiked);
-      onUpdate();
-    } catch (error) {
-      console.error('Error toggling like:', error);
     }
-  };
+
+    setIsLiked(!isLiked);
+    onUpdate();
+
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    toast.error('Failed to toggle like');
+  }
+};
+
   const loadRatings = async () => {
     if (!post) return;
     try {
