@@ -281,7 +281,7 @@ export function Profile() {
   )}
 </p>
                 ) : (
-                  <p className="text-sm text-gray-400 italic">Add your bio</p>
+                  <p className="text-sm text-gray-400 italic font-light tracking-wider">Tap Edit Profile to add a bio</p>
                 )}
               </div>
             </div>
