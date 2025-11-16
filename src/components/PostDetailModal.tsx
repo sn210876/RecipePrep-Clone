@@ -349,7 +349,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-3">
                 <div className="flex items-center gap-2">
-                  <div classdName="flex items-center">
+                  <div className="flex items-center">
                     {[1, 2, 3, 4, 5].map((fire) => (
                       <span
                         key={fire}
