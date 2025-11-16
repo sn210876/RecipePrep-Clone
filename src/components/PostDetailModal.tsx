@@ -80,33 +80,37 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     }
   };
   const loadReviewsAndComments = async () => {
-    if (!post?.recipe_url) return;
+    if (!post) return;
     try {
-      const { data: recipeData } = await supabase
-        .from('public_recipes')
-        .select('id')
-        .eq('video_url', post.recipe_url)
-        .maybeSingle();
-      if (recipeData) {
-        const { data: reviewsData } = await supabase
-          .from('reviews')
-          .select(`
-            id,
-            rating,
-            comment,
-            created_at,
-            user_id,
-            profiles:user_id (username)
-          `)
-          .eq('recipe_id', recipeData.id)
-          .order('created_at', { ascending: false });
-        if (reviewsData) {
-          setReviews(reviewsData.map((r: any) => ({
-            ...r,
-            username: r.profiles?.username
-          })));
+      // Load reviews only if recipe_url exists
+      if (post.recipe_url) {
+        const { data: recipeData } = await supabase
+          .from('public_recipes')
+          .select('id')
+          .eq('video_url', post.recipe_url)
+          .maybeSingle();
+        if (recipeData) {
+          const { data: reviewsData } = await supabase
+            .from('reviews')
+            .select(`
+              id,
+              rating,
+              comment,
+              created_at,
+              user_id,
+              profiles:user_id (username)
+            `)
+            .eq('recipe_id', recipeData.id)
+            .order('created_at', { ascending: false });
+          if (reviewsData) {
+            setReviews(reviewsData.map((r: any) => ({
+              ...r,
+              username: r.profiles?.username
+            })));
+          }
         }
       }
+      // Always load comments for the post
       const { data: commentsData } = await supabase
         .from('comments')
         .select(`
@@ -442,7 +446,12 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                   {reviews.map((review) => (
                     <div key={review.id} className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm">{review.username || 'User'}</span>
+                        <button
+                          onClick={() => window.location.href = `/${review.username || 'user'}`}
+                          className="font-medium text-sm hover:underline"
+                        >
+                          {review.username || 'User'}
+                        </button>
                         {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                           <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         )}
@@ -466,7 +475,12 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                     <div key={comment.id} className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-1">
-                          <span className="font-medium text-sm">{comment.username || 'User'}</span>
+                          <button
+                            onClick={() => window.location.href = `/${comment.username || 'user'}`}
+                            className="font-medium text-sm hover:underline"
+                          >
+                            {comment.username || 'User'}
+                          </button>
                           {comment.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                             <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                           )}
