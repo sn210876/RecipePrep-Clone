@@ -75,14 +75,24 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const isTikTokOrInstagram = url.includes('tiktok.com') || url.includes('instagram.com');
   const videoUrl = isSocialMedia ? url : '';
 
+  // Format time in minutes to readable string (e.g., "45 mins", "1 hr 30 mins")
+  const formatTime = (minutes: number): string => {
+    if (!minutes || minutes === 0) return '30';
+    if (minutes < 60) return `${minutes} mins`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (mins === 0) return `${hours} hr`;
+    return `${hours} hr ${mins} mins`;
+  };
+
   const result: ExtractedRecipeData = {
     title: isTikTokOrInstagram ? '' : (data.title || 'Untitled Recipe'),
     description: 'Extracted recipe',
     creator: data.author || 'Unknown',
     ingredients,
     instructions,
-    prepTime: String(data.prep_time || data.time || 30),
-    cookTime: String(data.cook_time || data.time || 45),
+    prepTime: formatTime(data.prep_time) || '30',
+    cookTime: formatTime(data.cook_time) || '45',
     servings: String(data.yield || '4'),
     cuisineType: 'Global',
     difficulty: 'Medium',
