@@ -11,6 +11,7 @@ import { RatingDisplay } from './RatingDisplay';
 import { getRecipeReviews, getAverageRating } from '../services/reviewService';
 import { ReviewForm } from './ReviewForm';
 import { supabase } from '../lib/supabase';
+import { decodeHtmlEntities } from '@/lib/utils';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -169,7 +170,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           </Badge>
 
           <h3 className="text-xl font-bold text-gray-900 line-clamp-2 leading-tight">
-            {recipe.title}
+            {decodeHtmlEntities(recipe.title)}
           </h3>
         </div>
 

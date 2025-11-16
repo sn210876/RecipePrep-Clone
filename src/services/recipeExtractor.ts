@@ -1,4 +1,5 @@
 import { Ingredient } from '@/types/recipe';
+import { decodeHtmlEntities, normalizeQuantity } from '@/lib/utils';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
@@ -51,11 +52,12 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const parseIngredients = (ings: string[]): Ingredient[] => {
     return ings.map(ing => {
-      const trimmed = ing.trim();
+      const trimmed = decodeHtmlEntities(ing.trim());
       if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
       const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
-      const quantity = quantityMatch ? quantityMatch[1].trim() : '';
-      let rest = trimmed.slice(quantity.length).trim();
+      const rawQuantity = quantityMatch ? quantityMatch[1].trim() : '';
+      const quantity = normalizeQuantity(rawQuantity);
+      let rest = trimmed.slice(rawQuantity.length).trim();
       const unitMatch = rest.match(/^([a-zA-Z]+\.?\s*[a-zA-Z]*)\s+/);
       const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : 'cup';
       if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
@@ -69,6 +71,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   if (typeof instructions === 'string') {
     instructions = instructions.split('\n').map((s: string) => s.trim()).filter((s: string) => s);
   }
+  instructions = instructions.map((inst: string) => decodeHtmlEntities(inst));
 
   const isSocialMedia = url.includes('tiktok.com') || url.includes('instagram.com') ||
                          url.includes('youtube.com') || url.includes('youtu.be');
@@ -86,9 +89,9 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   };
 
   const result: ExtractedRecipeData = {
-    title: isTikTokOrInstagram ? '' : (data.title || 'Untitled Recipe'),
+    title: isTikTokOrInstagram ? '' : decodeHtmlEntities(data.title || 'Untitled Recipe'),
     description: 'Extracted recipe',
-    creator: data.author || 'Unknown',
+    creator: decodeHtmlEntities(data.author || 'Unknown'),
     ingredients,
     instructions,
     prepTime: formatTime(data.prep_time) || '30',
@@ -100,7 +103,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     dietaryTags: [],
     imageUrl: data.image || '',
     videoUrl,
-    notes: data.notes || '',
+    notes: decodeHtmlEntities(data.notes || ''),
     sourceUrl: url,
   };
 

@@ -23,6 +23,7 @@ import {
   ReviewWithImages,
 } from '../services/reviewService';
 import { toast } from 'sonner';
+import { decodeHtmlEntities } from '@/lib/utils';
 
 interface RecipeDetailViewProps {
   recipe: Recipe;
@@ -124,7 +125,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <h1 className="text-5xl font-bold mb-4">{recipe.title}</h1>
+          <h1 className="text-5xl font-bold mb-4">{decodeHtmlEntities(recipe.title)}</h1>
           {recipe.sourceUrl && (
             <a
               href={recipe.sourceUrl}
@@ -225,9 +226,9 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
                   <div className="w-2 h-2 rounded-full bg-primary mt-2" />
                   <span className="text-gray-700">
                     <span className="font-semibold">
-                      {ingredient.quantity} {ingredient.unit}
+                      {decodeHtmlEntities(ingredient.quantity)} {decodeHtmlEntities(ingredient.unit)}
                     </span>{' '}
-                    {ingredient.name}
+                    {decodeHtmlEntities(ingredient.name)}
                   </span>
                 </li>
               ))}
@@ -246,7 +247,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">
                     {index + 1}
                   </div>
-                  <p className="text-gray-700 pt-1">{instruction}</p>
+                  <p className="text-gray-700 pt-1">{decodeHtmlEntities(instruction)}</p>
                 </li>
               ))}
             </ol>

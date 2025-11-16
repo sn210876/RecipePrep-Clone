@@ -1,6 +1,7 @@
 import { RecipeStep } from '../types/recipe';
 import { Card } from './ui/card';
 import { Clock } from 'lucide-react';
+import { decodeHtmlEntities } from '@/lib/utils';
 
 interface StepVisualizerProps {
   step: RecipeStep;
@@ -70,7 +71,7 @@ export function StepVisualizer({ step }: StepVisualizerProps) {
           </div>
 
           <p className="text-xl font-semibold text-gray-900 leading-relaxed mb-4 px-4">
-            {step.instruction}
+            {decodeHtmlEntities(step.instruction)}
           </p>
 
           {step.duration && (

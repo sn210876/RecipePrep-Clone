@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import NoSleep from 'nosleep.js';
 import { ReviewForm } from './ReviewForm';
+import { decodeHtmlEntities } from '@/lib/utils';
 
 interface CookModeProps {
   recipe: Recipe;
@@ -310,7 +311,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
       window.speechSynthesis.cancel();
 
       const step = steps[stepIndex];
-      let text = `Step ${stepIndex + 1}. ${step.instruction}`;
+      let text = `Step ${stepIndex + 1}. ${decodeHtmlEntities(step.instruction)}`;
 
       if (step.duration) {
         text += `. This step takes ${step.duration}.`;
@@ -334,7 +335,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
 
       let text = 'Ingredients you need: ';
       recipe.ingredients.forEach((ingredient, index) => {
-        text += `${ingredient.quantity} ${ingredient.unit} ${ingredient.name}`;
+        text += `${decodeHtmlEntities(ingredient.quantity)} ${decodeHtmlEntities(ingredient.unit)} ${decodeHtmlEntities(ingredient.name)}`;
         if (index < recipe.ingredients.length - 1) {
           text += ', ';
         }
@@ -642,9 +643,9 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                       }`}
                     >
                       <span className="font-semibold">
-                        {ingredient.quantity} {ingredient.unit}
+                        {decodeHtmlEntities(ingredient.quantity)} {decodeHtmlEntities(ingredient.unit)}
                       </span>{' '}
-                      {ingredient.name}
+                      {decodeHtmlEntities(ingredient.name)}
                     </label>
                   </div>
                 ))}
