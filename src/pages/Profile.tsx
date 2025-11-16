@@ -224,6 +224,7 @@ export function Profile() {
                   </p>
                 )}
               </div>
+               </div>
 
             <div className="mt-3 text-center">
               <div className="flex items-center justify-center gap-2">
