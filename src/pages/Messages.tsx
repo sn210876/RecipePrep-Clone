@@ -257,11 +257,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     }
 
     if (data && data[0]) {
-      setMessages((prev) => {
-        const exists = prev.find(m => m.id === data[0].id);
-        if (exists) return prev;
-        return [...prev, data[0]];
-      });
+      setMessages((prev) => [...prev, data[0]]);
     }
 
     await supabase
@@ -287,9 +283,9 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
   if (selectedConversation) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
-        {/* Chat Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        {/* FIXED CHAT HEADER */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
@@ -322,35 +318,37 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           </div>
         </div>
 
-        {/* Messages List */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
-            >
+        {/* Messages Area - starts below fixed header */}
+        <div className="pt-16 flex-1 overflow-y-auto px-4 pb-24">
+          <div className="space-y-4 py-4">
+            {messages.map((message) => (
               <div
-                className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                  message.sender_id === currentUserId
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-200 text-gray-900'
-                }`}
+                key={message.id}
+                className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
               >
-                <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                <span className="text-xs opacity-70 mt-1 block">
-                  {new Date(message.created_at).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
+                <div
+                  className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                    message.sender_id === currentUserId
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-gray-200 text-gray-900'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                  <span className="text-xs opacity-70 mt-1 block">
+                    {new Date(message.created_at).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        {/* Input */}
-        <div className="sticky bottom-20 bg-white border-t border-gray-200 px-4 py-3">
+        {/* FIXED INPUT BAR */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
           <div className="flex gap-2">
             <input
               type="text"
@@ -373,10 +371,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     );
   }
 
-  // CONVERSATION LIST — THIS IS WHERE "Social Feed" SHOWS UP
+  // CONVERSATION LIST — FIXED HEADER WITH "Social Feed"
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+    <div className="min-h-screen bg-gray-50">
+      {/* FIXED TOP BAR */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
@@ -392,7 +391,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         </div>
       </div>
 
-      <div className="px-4 py-4">
+      {/* Scrollable Conversations List */}
+      <div className="pt-16 pb-20 px-4">
         {conversations.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">No conversations yet</p>
