@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check, ChefHat } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -61,11 +61,12 @@ interface Post {
 
 interface DiscoverProps {
   onNavigateToMessages?: (userId: string, username: string) => void;
+  onNavigate?: (page: string) => void;
   sharedPostId?: string | null;
   onPostViewed?: () => void;
 }
 
-export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: DiscoverProps = {}) {
+export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
   const { isAdmin } = useAuth();
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -745,7 +746,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
       <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
         <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
           <div className="flex items-center gap-2">
-            <div className="relative flex-1">
+            <div className="relative" style={{ width: '70%' }}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
@@ -811,6 +812,13 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                 </span>
               )}
             </button>
+            <button
+              onClick={() => onNavigate?.('discover-recipes')}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Discover Recipes"
+            >
+              <ChefHat className="w-6 h-6 text-gray-700" />
+            </button>
           </div>
           {showNotifications && (
             <div className="absolute left-4 right-4 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto shadow-lg z-50">
@@ -839,6 +847,7 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                           {notification.type === 'follow' && ' started following you'}
                           {notification.type === 'like' && ' loved your post'}
                           {notification.type === 'comment' && ' commented on your post'}
+                          {notification.type === 'message' && ' sent you a message'}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
                           {new Date(notification.created_at).toLocaleDateString()} at{' '}

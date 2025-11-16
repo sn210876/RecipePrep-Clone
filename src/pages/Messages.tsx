@@ -264,6 +264,19 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       .from('conversations')
       .update({ last_message_at: new Date().toISOString() })
       .eq('id', selectedConversation.id);
+
+    const recipientId = selectedConversation.user1_id === currentUserId
+      ? selectedConversation.user2_id
+      : selectedConversation.user1_id;
+
+    if (recipientId !== currentUserId) {
+      await supabase.from('notifications').insert({
+        user_id: recipientId,
+        actor_id: currentUserId,
+        type: 'message',
+        conversation_id: selectedConversation.id,
+      });
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

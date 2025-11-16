@@ -54,6 +54,7 @@ function AppContent() {
         return <Discover
           key={discoverKey}
           sharedPostId={sharedPostId}
+          onNavigate={handleNavigate}
           onNavigateToMessages={(userId, username) => {
             setMessageRecipient({ userId, username });
             setCurrentPage('messages');
