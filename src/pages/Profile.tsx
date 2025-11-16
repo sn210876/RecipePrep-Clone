@@ -10,6 +10,58 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { PostDetailModal } from '../components/PostDetailModal';
 
+// AUTO-RESIZE IMAGE FUNCTION — WORKS EVERYWHERE (PHONE + COMPUTER)
+const resizeImage = (
+  file: File,
+  maxWidth: number,
+  maxHeight: number,
+  quality: number = 0.85
+): Promise<File> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
+
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      // Maintain aspect ratio
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return resolve(file);
+          const resizedFile = new File([blob], file.name, {
+            type: file.type || 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          resolve(resizedFile);
+        },
+        file.type || 'image/jpeg',
+        quality
+      );
+    };
+
+    img.onerror = () => resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 interface Post {
   id: string;
   user_id: string;
@@ -107,12 +159,107 @@ export function Profile() {
     }
   };
 
-  // Avatar & Banner uploads unchanged (they were perfect)
+  // AUTO-RESIZED AVATAR UPLOAD — WORKS WITH 100MB+ PHOTOS
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => { /* ... your existing code ... */ };
-  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => { /* ... your existing code ... */ };
-  const handleDeleteAvatar = async () => { /* ... your existing code ... */ };
-  const handleDeleteBanner = async () => { /* ... your existing code ... */ };
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image');
+      return;
+    }
+
+    setUploading(true);
+    toast.loading('Resizing & uploading avatar...', { duration: 0 });
+
+    try {
+      const resizedFile = await resizeImage(file, 1080, 1080, 0.9);
+      const fileExt = resizedFile.name.split('.').pop() || 'jpg';
+      const fileName = `${userId}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, resizedFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl + '?t=' + Date.now() })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, avatar_url: publicUrl + '?t=' + Date.now() } : null);
+      toast.dismiss();
+      toast.success('Avatar updated instantly!');
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error('Upload failed: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // AUTO-RESIZED BANNER UPLOAD
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image');
+      return;
+    }
+
+    setUploading(true);
+    toast.loading('Resizing & uploading banner...', { duration: 0 });
+
+    try {
+      const resizedFile = await resizeImage(file, 1920, 600, 0.9);
+      const fileExt = resizedFile.name.split('.').pop() || 'jpg';
+      const fileName = `${userId}/banner.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('banners')
+        .upload(fileName, resizedFile, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ banner_url: publicUrl + '?t=' + Date.now() })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, banner_url: publicUrl + '?t=' + Date.now() } : null);
+      toast.dismiss();
+      toast.success('Banner updated instantly!');
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error('Upload failed: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (!userId) return;
+    await supabase.from('profiles').update({ avatar_url: null }).eq('id', userId);
+    setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
+    toast.success('Avatar removed');
+  };
+
+  const handleDeleteBanner = async () => {
+    if (!userId) return;
+    await supabase.from('profiles').update({ banner_url: null }).eq('id', userId);
+    setProfile(prev => prev ? { ...prev, banner_url: null } : null);
+    toast.success('Banner removed');
+  };
 
   const handleEditProfile = async () => {
     if (!userId) return;
@@ -201,7 +348,6 @@ export function Profile() {
               </div>
 
               {/* CENTERED 3-LINE BIO */}
-                            {/* CENTERED 3-LINE BIO — NOW PERFECTLY POSITIONED */}
               <div className="flex-1 pt-11 text-center min-w-0">
                 {profile?.bio ? (
                   <div className="space-y-2 mt-2">
@@ -209,11 +355,7 @@ export function Profile() {
                       .split('\n')
                       .slice(0, 3)
                       .map((line, i) => (
-                        <p
-                          key={i}
-                          className="text-sm font-medium text-gray-800 italic tracking-wide leading-snug"
-                          style={{ wordBreak: 'break-word' }}
-                        >
+                        <p key={i} className="text-sm font-medium text-gray-800 italic tracking-wide leading-snug" style={{ wordBreak: 'break-word' }}>
                           {line.slice(0, 40)}
                         </p>
                       ))}
@@ -224,7 +366,7 @@ export function Profile() {
                   </p>
                 )}
               </div>
-               </div>
+            </div>
 
             <div className="mt-3 text-center">
               <div className="flex items-center justify-center gap-2">
@@ -286,11 +428,7 @@ export function Profile() {
         ) : (
           <div className="grid grid-cols-3 gap-1">
             {posts.map(post => (
-              <div
-                key={post.id}
-                onClick={() => setSelectedPost(post)}
-                className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative"
-              >
+              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
                 {post.image_url ? (
                   <img src={post.image_url} alt={post.title || 'Post'} className="w-full h-full object-cover" />
                 ) : post.video_url ? (
@@ -307,7 +445,7 @@ export function Profile() {
         )}
       </div>
 
-      {/* EDIT DIALOG WITH 40 CHAR / 3 LINE ENFORCEMENT */}
+      {/* EDIT DIALOG */}
       <Dialog open={editingProfile} onOpenChange={setEditingProfile}>
         <DialogContent>
           <DialogHeader>
@@ -319,7 +457,6 @@ export function Profile() {
               <Label htmlFor="username">Username</Label>
               <Input id="username" value={newUsername} onChange={e => setNewUsername(e.target.value)} />
             </div>
-
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="bio">Bio</Label>
@@ -333,16 +470,8 @@ export function Profile() {
                 onChange={(e) => {
                   let value = e.target.value;
                   const lines = value.split('\n');
-
-                  if (lines.length > 3) {
-                    value = lines.slice(0, 3).join('\n');
-                  }
-
-                  value = value
-                    .split('\n')
-                    .map(line => line.slice(0, 40))
-                    .join('\n');
-
+                  if (lines.length > 3) value = lines.slice(0, 3).join('\n');
+                  value = value.split('\n').map(line => line.slice(0, 40)).join('\n');
                   setNewBio(value);
                 }}
                 placeholder="i love peegi love peegi love peegi\ni love peegi love peegi love peegi\ni love peegi love peegi snguyen7"
@@ -351,7 +480,6 @@ export function Profile() {
               />
               <p className="text-xs text-gray-500 text-center -mt-2">Press Enter for new line</p>
             </div>
-
             <div className="flex gap-2">
               {profile?.avatar_url && (
                 <Button variant="outline" onClick={handleDeleteAvatar} disabled={uploading} className="flex-1 text-red-600">
@@ -365,7 +493,6 @@ export function Profile() {
               )}
             </div>
           </div>
-
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingProfile(false)}>Cancel</Button>
             <Button onClick={handleEditProfile}>Save Changes</Button>
