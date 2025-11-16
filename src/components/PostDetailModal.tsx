@@ -351,7 +351,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            
+
               <div>
                 {editingCaption ? (
                   <div className="space-y-2">
