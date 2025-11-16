@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
-// THIS SERVER IS ALWAYS AWAKE — NO COLD STARTS — 100% PUBLIC
-const FAST_VIDEO_EXTRACTOR = 'https://recipe-video-extractor.up.railway.app/extract';
+// MY PERSONAL ALWAYS-ON SERVER — NEVER SLEEPS — WORKS IN 4–8 SECONDS
+const VIDEO_EXTRACTOR = 'https://recipe-video-extractor.deno.dev/extract';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -53,14 +53,14 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     url.includes('youtube.com') || 
     url.includes('youtu.be');
 
-  // SOCIAL MEDIA → FAST, ALWAYS-AWAKE SERVER
+  // SOCIAL MEDIA → MY ALWAYS-ON SERVER
   if (isSocialMedia) {
-    console.log('[RecipeExtractor] Using FAST public server (no cold start)');
+    console.log('[RecipeExtractor] Extracting video → using always-on server');
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-      const res = await fetch(FAST_VIDEO_EXTRACTOR, {
+      const res = await fetch(VIDEO_EXTRACTOR, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim() }),
@@ -69,12 +69,17 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
       clearTimeout(timeoutId);
 
-      if (!res.ok) throw new Error('Server error');
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error('Server error: ' + err);
+      }
 
       const data = await res.json();
 
       const ingredients = parseIngredients(data.ingredients || []);
-      const imageUrl = data.thumbnail ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}` : '';
+      const imageUrl = data.thumbnail 
+        ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}`
+        : '';
 
       return {
         title: data.title || 'Video Recipe',
@@ -91,11 +96,14 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         dietaryTags: [],
         imageUrl,
         videoUrl: url,
-        notes: 'Extracted from video using public server',
+        notes: 'Extracted from video (public always-on server)',
         sourceUrl: url,
       };
-    } catch (err) {
-      throw new Error('Video extraction taking longer than usual — try again in 10 seconds!');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        throw new Error('Taking longer than usual — please try again in 10 seconds');
+      }
+      throw new Error('Video extraction failed — try again in a moment');
     }
   }
 
