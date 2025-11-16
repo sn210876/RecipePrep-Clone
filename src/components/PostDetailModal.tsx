@@ -1,4 +1,3 @@
-import { RatingDisplay } from "./RatingDisplay";
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
@@ -414,8 +413,13 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                         {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                           <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         )}
-                        <RatingDisplay rating={review.rating} size="sm" />
-
+                        <div className="flex">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span key={i} className="text-base">
+                              {i < review.rating ? '🔥 ' : '☆'}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                       <p className="text-sm text-gray-700">{review.comment}</p>
                     </div>
