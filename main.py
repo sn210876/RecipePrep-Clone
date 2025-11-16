@@ -263,10 +263,19 @@ async def extract_recipe(request: ExtractRequest):
             
             # Combine description and transcript
             description = info.get('description', '')
-            combined_text = f"{description}\n\nTranscript: {transcript}" if transcript else description
+            combined_text = f"""VIDEO DESCRIPTION:
+{description}
+
+AUDIO TRANSCRIPT (spoken in video):
+{transcript}
+
+INSTRUCTIONS: Extract ALL ingredients and ALL steps from both the description and the spoken audio. Be extremely thorough - don't miss any ingredient or step mentioned anywhere.""" if transcript else description
+            
+            # Use GPT-4 for video transcripts for better accuracy
+            model_to_use = "gpt-4o" if transcript else "gpt-4o-mini"
             
             # Extract recipe from combined text
-            ings, inst, notes = parse_with_ai(combined_text)
+            ings, inst, notes = parse_with_ai(combined_text, model=model_to_use)
             
             print(f"[EXTRACT] ✓ Video extracted: {info.get('title')}")
             print(f"[EXTRACT] Found {len(ings)} ingredients, {len(inst)} instructions")
