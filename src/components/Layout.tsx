@@ -38,9 +38,50 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const socialPages = ['discover', 'upload', 'profile'];
 
+  // REUSABLE FLOATING ICON BAR — ALWAYS ON TOP
+  const FloatingNavIcons = () => (
+    <div className="pointer-events-none fixed inset-0 z-[9999]">
+      <div className="pointer-events-auto fixed top-4 right-4">
+        <TooltipProvider>
+          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-lg rounded-full shadow-2xl border border-white/30 px-4 py-3">
+            {navItems
+              .filter(item => item.id !== 'discover' && item.id !== 'discover-recipes')
+              .map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPage === item.id;
+                return (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-10 w-10 rounded-full transition-all ${
+                          isActive
+                            ? 'bg-orange-500 text-white shadow-lg'
+                            : 'text-gray-700 hover:bg-gray-100 hover:scale-110'
+                        }`}
+                        onClick={() => onNavigate(item.id)}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+          </div>
+        </TooltipProvider>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-white">
+      {/* LEFT SIDEBAR */}
       <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* ... your existing sidebar content ... */}
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 border-b border-gray-200 p-6">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
@@ -51,7 +92,6 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
               <p className="text-xs text-gray-500">Online Recipe Book & SocialCommunity</p>
             </div>
           </div>
-
           <nav className="flex-1 space-y-1 p-4">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -64,9 +104,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     setIsMobileMenuOpen(false);
                   }}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-all ${
-                    isActive
-                      ? 'bg-primary text-white shadow-md'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    isActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
                   <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
@@ -75,7 +113,6 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
               );
             })}
           </nav>
-
           <div className="border-t border-gray-200 p-4 space-y-3">
             <button
               onClick={handleLogout}
@@ -93,42 +130,14 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       </aside>
 
       {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
+        <div className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
       )}
 
       <div className="lg:pl-64">
-        {/* Desktop top navigation icons */}
-        <div className="hidden lg:block fixed top-4 right-4 z-[100]">
-          <TooltipProvider>
-            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2">
-              {navItems.filter(item => item.id !== 'discover').slice(0, 7).map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.id;
-                return (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`${isActive ? 'text-orange-600' : 'text-gray-600'} h-8 w-8`}
-                        onClick={() => onNavigate(item.id)}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{item.label}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
-          </TooltipProvider>
-        </div>
+        {/* FLOATING ICONS — ALWAYS VISIBLE ON DESKTOP & MOBILE */}
+        <FloatingNavIcons />
 
+        {/* MOBILE HEADER (only shows menu button + title) */}
         <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-sm lg:hidden">
           <div className="flex h-16 items-center justify-between px-6">
             <Button
@@ -139,38 +148,12 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
-
             {!socialPages.includes(currentPage) && (
               <h2 className="text-xl font-semibold text-gray-900 capitalize">
                 {navItems.find(item => item.id === currentPage)?.label || 'Recipe Prep'}
               </h2>
             )}
-
-            <TooltipProvider>
-              <div className="flex items-center gap-2">
-                {navItems.filter(item => item.id !== 'discover').slice(0, 7).map((item) => {
-                  const Icon = item.icon;
-                  const isActive = currentPage === item.id;
-                  return (
-                    <Tooltip key={item.id}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`${isActive ? 'text-orange-600' : 'text-gray-600'}`}
-                          onClick={() => onNavigate(item.id)}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{item.label}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            </TooltipProvider>
+            <div className="w-10" /> {/* spacer so title stays centered */}
           </div>
         </header>
 
