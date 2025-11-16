@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
-// MY PERSONAL SERVER — ALWAYS ON, NO RATE LIMIT, WORKS IN BOLT
-const VIDEO_EXTRACTOR = 'https://recipe-video-extractor.deno.dev/extract';
+// UNLIMITED PUBLIC SERVER — NO RATE LIMITS — WORKS IN BOLT
+const VIDEO_EXTRACTOR = 'https://recipe-video-extractor-2.deno.dev/extract';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -45,11 +45,7 @@ const parseIngredients = (ings: string[]): Ingredient[] => {
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   if (!url.trim() || !isValidUrl(url)) throw new Error('Please enter a valid URL');
 
-  const isSocialMedia = 
-    url.includes('instagram.com') || 
-    url.includes('tiktok.com') || 
-    url.includes('youtube.com') || 
-    url.includes('youtu.be');
+  const isSocialMedia = url.includes('instagram.com') || url.includes('tiktok.com') || url.includes('youtube.com') || url.includes('youtu.be');
 
   if (isSocialMedia) {
     try {
@@ -59,7 +55,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         body: JSON.stringify({ url: url.trim() }),
       });
 
-      if (!res.ok) throw new Error('Video extraction busy — try again');
+      if (!res.ok) throw new Error('Server busy');
 
       const data = await res.json();
 
@@ -70,7 +66,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
       return {
         title: data.title || 'Video Recipe',
-        description: 'Extracted from video',
+        description: 'Extracted from video audio',
         creator: data.creator || 'Unknown',
         ingredients,
         instructions: data.instructions || [],
@@ -83,15 +79,15 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
         dietaryTags: [],
         imageUrl,
         videoUrl: url,
-        notes: 'Extracted using public server',
+        notes: 'Extracted using unlimited public server',
         sourceUrl: url,
       };
     } catch {
-      throw new Error('Video extraction taking a moment — try again in 10s');
+      throw new Error('Video extraction in progress — try again in 10 seconds');
     }
   }
 
-  // REGULAR WEBSITES
+  // Normal websites
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -113,7 +109,7 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     description: 'Extracted recipe',
     creator: data.author || 'Unknown',
     ingredients,
-    instructions: (data.instructions || []).filter(Boolean),
+    instructions: Array.isArray(data.instructions) ? data.instructions : [],
     prepTime: String(data.prep_time || 30),
     cookTime: String(data.cook_time || 45),
     servings: String(data.yield || '4'),
