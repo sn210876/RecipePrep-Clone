@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
-import { supabase, isAdmin } from '@/lib/supabase'; // ← Added isAdmin
+import { supabase, isAdmin } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface Post {
@@ -55,6 +55,10 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [totalRatings, setTotalRatings] = useState<number>(0);
 
   useEffect(() => {
     if (post) {
@@ -62,8 +66,18 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       loadReviewsAndComments();
       checkLikeStatus();
       loadCurrentUserAndAdminStatus();
+      loadRatings();
+      if (currentUserId) {
+        loadUserRating(currentUserId);
+      }
     }
   }, [post]);
+
+  useEffect(() => {
+    if (post && currentUserId) {
+      loadUserRating(currentUserId);
+    }
+  }, [post, currentUserId]);
 
   const loadCurrentUserAndAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -245,6 +259,77 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     }
   };
 
+  const loadRatings = async () => {
+    if (!post) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', post.id);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+        setAverageRating(avg);
+        setTotalRatings(data.length);
+      } else {
+        setAverageRating(0);
+        setTotalRatings(0);
+      }
+    } catch (error) {
+      console.error('Error loading ratings:', error);
+    }
+  };
+
+  const loadUserRating = async (userId: string) => {
+    if (!post) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', post.id)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setUserRating(data?.rating || 0);
+    } catch (error) {
+      console.error('Error loading user rating:', error);
+    }
+  };
+
+  const handleRatingClick = async (rating: number) => {
+    if (!currentUserId || !post) {
+      toast.error('Please log in to rate');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('post_ratings')
+        .upsert({
+          post_id: post.id,
+          user_id: currentUserId,
+          rating: rating,
+        }, {
+          onConflict: 'post_id,user_id'
+        });
+
+      if (error) throw error;
+
+      setUserRating(rating);
+      await loadRatings();
+      onUpdate();
+      toast.success('Rating submitted!');
+    } catch (error: any) {
+      console.error('Error submitting rating:', error);
+      toast.error('Failed to submit rating');
+    }
+  };
+
   if (!post) return null;
 
   const canDeletePost = post.user_id === currentUserId || isUserAdmin;
@@ -297,6 +382,51 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((fire) => (
+                      <span
+                        key={fire}
+                        className={`text-xl ${
+                          fire <= averageRating
+                            ? 'opacity-100'
+                            : 'opacity-20 grayscale'
+                        }`}
+                      >🔥</span>
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-700 font-medium">
+                    {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
+                    {totalRatings > 0 && ` (${totalRatings})`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700 font-medium">Rate this post:</span>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((fire) => (
+                      <button
+                        key={fire}
+                        type="button"
+                        onClick={() => handleRatingClick(fire)}
+                        onMouseEnter={() => setHoverRating(fire)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <span
+                          className={`text-2xl ${
+                            fire <= (hoverRating || userRating)
+                              ? 'opacity-100'
+                              : 'opacity-20 grayscale'
+                          }`}
+                        >🔥</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <div>
                 {editingCaption ? (
                   <div className="space-y-2">
@@ -356,8 +486,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                         )}
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
-                            <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-300'}>
-                              Star
+                            <span key={i} className="text-base">
+                              {i < review.rating ? '⭐' : '☆'}
                             </span>
                           ))}
                         </div>

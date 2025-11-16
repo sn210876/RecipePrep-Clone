@@ -256,15 +256,14 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
             })
           );
 
-          const { data: allCommentsWithRatings } = await supabase
-            .from('comments')
+          const { data: postRatingsData } = await supabase
+            .from('post_ratings')
             .select('rating')
-            .eq('post_id', post.id)
-            .not('rating', 'is', null);
+            .eq('post_id', post.id);
 
-          const ratingsCount = allCommentsWithRatings?.length || 0;
+          const ratingsCount = postRatingsData?.length || 0;
           const averageRating = ratingsCount > 0
-            ? allCommentsWithRatings!.reduce((sum, c) => sum + (c.rating || 0), 0) / ratingsCount
+            ? postRatingsData!.reduce((sum, r) => sum + r.rating, 0) / ratingsCount
             : 0;
 
           setPostRatings(prev => ({
@@ -1007,9 +1006,14 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                       </button>
                       <button
                         onClick={() => setCommentModalPostId(post.id)}
-                        className="transition-transform hover:scale-110"
+                        className="transition-transform hover:scale-110 relative"
                       >
                         <MessageCircle className="w-7 h-7 text-gray-700" />
+                        {post._count?.comments && post._count.comments > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                            {post._count.comments}
+                          </span>
+                        )}
                       </button>
                       <button
                         onClick={() => handleSharePost(post.id)}
@@ -1017,6 +1021,12 @@ export function Discover({ onNavigateToMessages, sharedPostId, onPostViewed }: D
                       >
                         🥄
                       </button>
+                      <div className="ml-auto flex items-center gap-1">
+                        <span className="text-xl">🔥</span>
+                        <span className="text-sm font-semibold text-gray-700">
+                          {postRatings[post.id]?.count || 0}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="text-sm font-semibold">

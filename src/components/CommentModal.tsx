@@ -169,6 +169,9 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
       setUserRating(rating);
       await loadRatings();
+      if (onCommentPosted) {
+        onCommentPosted();
+      }
       toast.success('Rating submitted!');
     } catch (error: any) {
       console.error('Error submitting rating:', error);
