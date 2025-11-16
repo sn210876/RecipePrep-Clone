@@ -381,8 +381,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               </Button>
             </div>
             <div className="mt-3 space-y-1">
-              <p className="text-xs text-emerald-600 font-bold">✅ NOW WORKS: YouTube · Instagram · TikTok (transcript + thumbnail)</p>
-              <p className="text-xs text-emerald-600 font-medium">✓ AllRecipes, Food Network, BBC Good Food (full recipe extraction)</p>
+              <p className="text-xs text-emerald-600 font-bold">✅ NOW WORKS: Instagram · TikTok (transcript + thumbnail)</p>, Youtube is not ready.
+              <p className="text-xs text-emerald-600 font-medium">✓ AllRecipes,  (full recipe extraction)</p>
               <p className="text-xs text-slate-500 italic">💡 Videos provide transcripts - you may need to manually organize ingredients</p>
             </div>
           </CardContent>
