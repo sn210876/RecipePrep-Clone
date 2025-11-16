@@ -2,6 +2,7 @@ import { Ingredient } from '@/types/recipe';
 import { decodeHtmlEntities, normalizeQuantity } from '@/lib/utils';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY; // ← ADDED
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 export interface ExtractedRecipeData {
@@ -28,13 +29,15 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('Please enter a valid URL');
   }
 
-  console.log('[RecipeExtractor] Supabase Edge Function:', API_URL);
-  console.log('[RecipeExtractor] URL to extract:', url);
+  const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+  console.log('[RecipeExtractor] Extracting:', url, isYouTube ? '← YOUTUBE' : '');
 
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,           // ← ADDED (required!)
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // ← ADDED (required!)
     },
     body: JSON.stringify({ url: url.trim() }),
   });
@@ -78,7 +81,6 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
   const isTikTokOrInstagram = url.includes('tiktok.com') || url.includes('instagram.com');
   const videoUrl = isSocialMedia ? url : '';
 
-  // Format time in minutes to readable string (e.g., "45 mins", "1 hr 30 mins")
   const formatTime = (minutes: number): string => {
     if (!minutes || minutes === 0) return '30';
     if (minutes < 60) return `${minutes} mins`;
