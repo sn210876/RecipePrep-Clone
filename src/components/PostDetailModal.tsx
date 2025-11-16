@@ -251,7 +251,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     }
   };
 
-  const loadnvUserRating = async (userId: string) => {
+  // FIXED: Was typo "loadnvUserRating"
+  const loadUserRating = async (userId: string) => {
     if (!post) return;
     try {
       const { data } = await supabase
@@ -285,7 +286,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     }
   };
 
-  // CLICKABLE USERNAME FUNCTION
   const goToProfile = (username: string) => {
     if (username) {
       window.location.href = `/${username}`;
@@ -326,7 +326,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* FIRE RATING DISPLAY */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center">
@@ -361,7 +360,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                 </div>
               </div>
 
-              {/* Caption */}
               <div>
                 {editingCaption ? (
                   <div className="space-y-2">
@@ -386,7 +384,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                 )}
               </div>
 
-              {/* REVIEWS — CLICKABLE USERNAMES */}
               {reviews.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-semibold text-sm">Reviews</h4>
@@ -412,7 +409,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                 </div>
               )}
 
-              {/* COMMENTS — CLICKABLE USERNAMES */}
               {comments.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm">Comments</h4>
@@ -439,7 +435,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
               )}
             </div>
 
-            {/* Like + Comment Input */}
             <div className="border-t p-4 space-y-3">
               <div className="flex items-center gap-4">
                 <button onClick={handleToggleLike} className="transition-transform hover:scale-110">
