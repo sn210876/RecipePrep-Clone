@@ -229,7 +229,50 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
         <DialogHeader className="px-4 py-3 border-b">
           <DialogTitle>Comments & Ratings</DialogTitle>
 
-          
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((fire) => (
+                  <span
+                    key={fire}
+                    className={`text-xl ${
+                      fire <= averageRating
+                        ? 'opacity-100'
+                        : 'opacity-20 grayscale'
+                    }`}
+                  >🔥</span>
+                ))}
+              </div>
+              <span className="text-sm text-gray-600">
+                {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
+                {totalRatings > 0 && ` (${totalRatings} ${totalRatings === 1 ? 'rating' : 'ratings'})`}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 font-medium">Your rating:</span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((fire) => (
+                  <button
+                    key={fire}
+                    type="button"
+                    onClick={() => handleRatingClick(fire)}
+                    onMouseEnter={() => setHoverRating(fire)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-transform hover:scale-110"
+                  >
+                    <span
+                      className={`text-2xl ${
+                        fire <= (hoverRating || userRating)
+                          ? 'opacity-100'
+                          : 'opacity-20 grayscale'
+                      }`}
+                    >🔥</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
