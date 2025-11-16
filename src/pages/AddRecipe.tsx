@@ -355,7 +355,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 <Input
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Try: AllRecipes.com, FoodNetwork.com, or BBC Good Food"
+                  placeholder="Try: AllRecipes.com, NOW WORKS: Instagram · TikTok (full audio transcript + thumbnail)"
                   className="pl-10"
                   disabled={isExtracting}
                   onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
