@@ -271,17 +271,15 @@ export function Profile() {
                   <Camera className="w-4 h-4 text-gray-700" />
                 </label>
               </div>
-              <div className="flex-1 pt-10 min-w-0">
+                           <div className="flex-1 pt-10 min-w-0">
                 {profile?.bio ? (
-                  <p className="text-sm text-gray-800 font-serif italic tracking-wider leading-relaxed text-balance">
-  {profile?.bio ? (
-    profile.bio
-  ) : (
-    <span className="text-gray-400 italic">Tell the world who you are...</span>
-  )}
-</p>
+                  <p className="text-sm text-gray-800 font-medium italic tracking-wide leading-relaxed">
+                    {profile.bio}
+                  </p>
                 ) : (
-                  <p className="text-sm text-gray-400 italic font-light tracking-wider">Tap Edit Profile to add a bio</p>
+                  <p className="text-sm text-gray-400 italic font-light tracking-wider">
+                    Tap Edit Profile to add a bio
+                  </p>
                 )}
               </div>
             </div>
