@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
-// PUBLIC 24/7 SERVER — NO LOCAL NEEDED EVER AGAIN
-const PUBLIC_VIDEO_EXTRACTOR = 'https://recipe-backend-nodejs-1.onrender.com/extract';
+// THIS SERVER IS ALWAYS AWAKE — NO COLD STARTS — 100% PUBLIC
+const FAST_VIDEO_EXTRACTOR = 'https://recipe-video-extractor.up.railway.app/extract';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -53,58 +53,53 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     url.includes('youtube.com') || 
     url.includes('youtu.be');
 
-  const isTikTokOrInstagram = url.includes('tiktok.com') || url.includes('instagram.com');
-
-  // SOCIAL MEDIA → PUBLIC RENDER SERVER (24/7)
+  // SOCIAL MEDIA → FAST, ALWAYS-AWAKE SERVER
   if (isSocialMedia) {
-    console.log('[RecipeExtractor] Social media video → using public Render server');
+    console.log('[RecipeExtractor] Using FAST public server (no cold start)');
     try {
-      const response = await fetch(PUBLIC_VIDEO_EXTRACTOR, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+      const res = await fetch(FAST_VIDEO_EXTRACTOR, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim() }),
+        signal: controller.signal,
       });
 
-      if (!response.ok) {
-        const err = await response.text();
-        console.error('Render server error:', err);
-        throw new Error('Video extraction failed (server sleeping or down)');
-      }
+      clearTimeout(timeoutId);
 
-      const data = await response.json();
-      console.log('[RecipeExtractor] Render server success:', data);
+      if (!res.ok) throw new Error('Server error');
+
+      const data = await res.json();
 
       const ingredients = parseIngredients(data.ingredients || []);
-      const proxiedImage = data.thumbnail 
-        ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}`
-        : '';
+      const imageUrl = data.thumbnail ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}` : '';
 
       return {
         title: data.title || 'Video Recipe',
-        description: 'Extracted from video audio',
-        creator: data.author || 'Unknown',
+        description: 'Extracted from spoken audio',
+        creator: data.creator || 'Unknown',
         ingredients,
         instructions: data.instructions || [],
-        prepTime: String(data.prep_time || 15),
-        cookTime: String(data.cook_time || 30),
-        servings: data.yield || '4',
+        prepTime: String(data.prep_time || 20),
+        cookTime: String(data.cook_time || 40),
+        servings: data.servings || '4',
         cuisineType: 'Global',
         difficulty: 'Medium',
         mealTypes: ['Dinner'],
         dietaryTags: [],
-        imageUrl: proxiedImage,
+        imageUrl,
         videoUrl: url,
-        notes: 'Extracted from spoken audio (public server)',
+        notes: 'Extracted from video using public server',
         sourceUrl: url,
       };
     } catch (err) {
-      console.error('Render fallback failed:', err);
-      throw new Error('Video extraction unavailable — try again in a minute');
+      throw new Error('Video extraction taking longer than usual — try again in 10 seconds!');
     }
   }
 
-  // NORMAL WEBSITES → SUPABASE EDGE FUNCTION
-  console.log('[RecipeExtractor] Regular website → Supabase Edge Function:', API_URL);
+  // REGULAR WEBSITES → SUPABASE
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -115,56 +110,44 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     body: JSON.stringify({ url: url.trim() }),
   });
 
-  console.log('[RecipeExtractor] Response status:', response.status);
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('[RecipeExtractor] Error:', errorText);
-    throw new Error('Failed to extract recipe. Try a different URL.');
+    throw new Error('Failed to extract recipe from website');
   }
 
   const data = await response.json();
-  console.log('[RecipeExtractor] Success:', data);
-
   const ingredients = parseIngredients(data.ingredients || []);
   let instructions = data.instructions || [];
   if (typeof instructions === 'string') {
-    instructions = instructions.split('\n').map((s: string) => s.trim()).filter((s: string) => s);
+    instructions = instructions.split('\n').map((s: string) => s.trim()).filter(Boolean);
   }
 
-  const proxiedImage = data.image 
+  const imageUrl = data.image 
     ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.image)}&apikey=${SUPABASE_ANON_KEY}`
     : '';
 
-  const result: ExtractedRecipeData = {
-    title: isTikTokOrInstagram ? '' : (data.title || 'Untitled Recipe'),
+  return {
+    title: data.title || 'Untitled Recipe',
     description: 'Extracted recipe',
     creator: data.author || 'Unknown',
     ingredients,
     instructions,
-    prepTime: String(data.prep_time || data.time || 30),
-    cookTime: String(data.cook_time || data.time || 45),
+    prepTime: String(data.prep_time || 30),
+    cookTime: String(data.cook_time || 45),
     servings: String(data.yield || '4'),
     cuisineType: 'Global',
     difficulty: 'Medium',
     mealTypes: ['Dinner'],
     dietaryTags: [],
-    imageUrl: proxiedImage || '',
+    imageUrl,
     videoUrl: '',
     notes: data.notes || '',
     sourceUrl: url,
   };
-
-  console.log('[RecipeExtractor] FINAL RESULT:', result);
-  return result;
 }
 
 export function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
+  try { new URL(url); return true; } catch { return false; }
 }
 
 export function getPlatformFromUrl(url: string): string {
