@@ -6,6 +6,25 @@ import requests
 import subprocess
 import sys
 import tempfile
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (POST, OPTIONS, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
+@app.post("/extract")
+async def extract_recipe(request: dict):
+    # Your extraction logic
+    pass
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
