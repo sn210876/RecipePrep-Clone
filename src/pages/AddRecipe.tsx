@@ -380,15 +380,20 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 )}
               </Button>
             </div>
-            <<div className="mt-3 space-y-1">
+            <div className="mt-3 space-y-1">
   <p className="text-xs text-emerald-600 font-bold">
-    NOW WORKS: Instagram · TikTok (full audio transcript)
+    NOW WORKS: Instagram · TikTok (full audio transcript + thumbnail)
   </p>
-  <p className="text-xs text-amber-600 font-medium">
-    YouTube → extracting from description only (fast & reliable, no bot blocks)
+  <p className="text-xs text-red-600 font-bold">
+    YouTube → Currently unstable (working on fix)
   </p>
-              <p className="text-xs text-slate-500 italic">💡 Videos provide transcripts - you may need to manually organize ingredients</p>
-            </div>
+  <p className="text-xs text-emerald-600 font-medium">
+    AllRecipes, BBC Good Food, etc. (full structured extraction)
+  </p>
+  <p className="text-xs text-slate-500 italic">
+    Videos include transcript — ingredients may need manual grouping
+  </p>
+</div>
           </CardContent>
         </Card>
 
