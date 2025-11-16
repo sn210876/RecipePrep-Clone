@@ -88,15 +88,32 @@ async function scrapeRecipeSite(url: string) {
     const rawTitle = ogTitleMatch?.[1] || twitterTitleMatch?.[1] || (titleMatch ? titleMatch[1] : 'Recipe');
     const title = rawTitle.split('|')[0].split('-')[0].split('•')[0].split(':')[0].trim();
 
-    const recipeMatches = html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/gi);
+    // Extract JSON-LD structured data - use a more robust regex that handles multiline content
+    const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+    const recipeMatches = html.matchAll(scriptRegex);
+
     for (const match of recipeMatches) {
       try {
-        const json = JSON.parse(match[1]);
+        const jsonString = match[1].trim();
+        const json = JSON.parse(jsonString);
         const recipes = Array.isArray(json) ? json : [json];
 
         for (const item of recipes) {
-          if (item['@type'] === 'Recipe' || (Array.isArray(item['@graph']) && item['@graph'].some((g: any) => g['@type'] === 'Recipe'))) {
-            const recipe = item['@type'] === 'Recipe' ? item : item['@graph'].find((g: any) => g['@type'] === 'Recipe');
+          // Check if this item is a Recipe or contains Recipe in @type array
+          const isRecipe = item['@type'] === 'Recipe' ||
+                          (Array.isArray(item['@type']) && item['@type'].includes('Recipe'));
+
+          const hasGraphWithRecipe = item['@graph'] && Array.isArray(item['@graph']) &&
+                                     item['@graph'].some((g: any) =>
+                                       g['@type'] === 'Recipe' ||
+                                       (Array.isArray(g['@type']) && g['@type'].includes('Recipe'))
+                                     );
+
+          if (isRecipe || hasGraphWithRecipe) {
+            const recipe = isRecipe ? item : item['@graph'].find((g: any) =>
+              g['@type'] === 'Recipe' ||
+              (Array.isArray(g['@type']) && g['@type'].includes('Recipe'))
+            );
 
             if (recipe && recipe.recipeIngredient && recipe.recipeInstructions) {
               const instructions = Array.isArray(recipe.recipeInstructions)
@@ -123,12 +140,22 @@ async function scrapeRecipeSite(url: string) {
                 return 0;
               };
 
+              // Handle yield - can be string, number, or array
+              let yieldValue = '';
+              if (recipe.recipeYield) {
+                if (Array.isArray(recipe.recipeYield)) {
+                  yieldValue = recipe.recipeYield[0] || '';
+                } else {
+                  yieldValue = String(recipe.recipeYield);
+                }
+              }
+
               return {
                 title: recipe.name || title,
                 ingredients: recipe.recipeIngredient || [],
                 instructions,
                 image: recipe.image?.url || (Array.isArray(recipe.image) ? recipe.image[0] : recipe.image) || '',
-                yield: recipe.recipeYield || '',
+                yield: yieldValue,
                 prep_time: parseTime(recipe.prepTime),
                 cook_time: parseTime(recipe.cookTime),
                 time: parseTime(recipe.totalTime) || (parseTime(recipe.prepTime) + parseTime(recipe.cookTime)),
