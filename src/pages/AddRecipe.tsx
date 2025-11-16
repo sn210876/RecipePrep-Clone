@@ -382,7 +382,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </div>
             <div className="mt-3 space-y-1">
   <p className="text-xs text-emerald-600 font-bold">
-    NOW WORKS: Instagram · TikTok (full audio transcript + thumbnail)
+    NOW WORKS: All Recipes, Blogs, Instagram · TikTok (full audio transcript + thumbnail)
   </p>
   <p className="text-xs text-red-600 font-bold">
     YouTube → Currently unstable (working on fix)
