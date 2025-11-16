@@ -1,12 +1,10 @@
-# SHAWN NUCLEAR CACHE BUSTER 9004 - FIXED CORS + ERROR HANDLING
+# SHAWN RECIPE EXTRACTOR v9005 - STABLE YT-DLP
 import os
 import re
 import json
 import requests
-import subprocess
-import sys
 import tempfile
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -35,16 +33,9 @@ def search_ytmusic(query: str, limit: int = 5):
         print(f"YTMusic error: {e}")
         return []
 
-# Update yt-dlp
-try:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
-    print("✓ YT-DLP UPDATED")
-except:
-    print("⚠ YT-DLP update failed")
-
 app = FastAPI()
 
-# SINGLE CORS MIDDLEWARE (REMOVED DUPLICATE)
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -260,7 +251,7 @@ async def root():
     """Health check endpoint"""
     return JSONResponse(
         content={
-            "message": "Recipe Extraction Server v9004",
+            "message": "Recipe Extraction Server v9005 - Stable",
             "status": "healthy",
             "endpoints": ["/extract", "/ytmusic-search"]
         },
