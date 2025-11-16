@@ -385,7 +385,7 @@ export function Profile() {
         setNewBio(value);
       }
     }}
-    placeholder="i love peegi love peegi love peegi love peegi love peegi love peegi snguyen7"
+    placeholder="Edit Profile to update bio"
     className="min-h-[100px] resize-none"
     maxLength={70}
   />
