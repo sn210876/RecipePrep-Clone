@@ -263,7 +263,9 @@ export function Profile() {
       <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className="text-lg font-semibold">Profile</h1>
-          
+          <button onClick={handleLogout} className="text-gray-600 hover:text-gray-900 p-2">
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </div>
       <div className="max-w-lg mx-auto">
@@ -372,8 +374,7 @@ export function Profile() {
         ) : (
           <div className="grid grid-cols-3 gap-1">
             {posts.map(post => (
-              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative z-9999">
-
+              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
                 {post.image_url ? (
                   <img src={post.image_url} alt={post.title || 'Post'} className="w-full h-full object-cover" />
                 ) : post.video_url ? (
@@ -389,7 +390,6 @@ export function Profile() {
           </div>
         )}
       </div>
-      {/* EDIT DIALOG */}
       {/* EDIT DIALOG */}
       <Dialog open={editingProfile} onOpenChange={setEditingProfile}>
         <DialogContent>
@@ -424,16 +424,6 @@ export function Profile() {
                 rows={3}
               />
               <p className="text-xs text-gray-500 text-center -mt-2">Press Enter for new line</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="link">Link</Label>
-              <Input 
-                id="link" 
-                value={newLink} 
-                onChange={e => setNewLink(e.target.value)} 
-                placeholder="https://example.com"
-                type="url"
-              />
             </div>
             <div className="flex gap-2">
               {profile?.avatar_url && (
