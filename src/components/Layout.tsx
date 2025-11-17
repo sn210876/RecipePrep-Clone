@@ -43,7 +43,8 @@ const FloatingNavIcons = () => (
   <div className="pointer-events-none fixed z-[500]">
     <div className="pointer-events-auto fixed top-4 right-4 p-2">
       <TooltipProvider>
-        <div className="flex items-center gap-3 bg-white/90 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-4 py-3">
+        <div className="flex items-center gap-2 bg-transparent backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2">
+
           {navItems
             .filter(item => item.id !== 'discover' && item.id !== 'discover-recipes')
             .map((item) => {
