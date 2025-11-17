@@ -390,111 +390,70 @@ export function Profile() {
         )}
       </div>
       {/* EDIT DIALOG */}
-      // Add this to your Profile component state (around line 26-30)
-const [newLink, setNewLink] = useState('');
-
-// Update the useEffect or add this to handleEditProfile initialization
-// When opening the dialog:
-onClick={() => {
-  setNewUsername(profile?.username || '');
-  setNewBio(profile?.bio || '');
-  setNewLink(profile?.link || ''); // Add this line
-  setEditingProfile(true);
-}}
-
-// Update handleEditProfile function to include link (around line 179)
-const handleEditProfile = async () => {
-  if (!userId) return;
-  const lines = newBio.trim().split('\n');
-  if (lines.length > 3) {
-    toast.error('Maximum 3 lines allowed');
-    return;
-  }
-  if (lines.some(line => line.length > 40)) {
-    toast.error('Maximum 40 characters per line');
-    return;
-  }
-  const updates: any = {};
-  if (newUsername.trim() && newUsername.trim() !== profile?.username) updates.username = newUsername.trim();
-  if (newBio.trim() !== (profile?.bio || '').trim()) updates.bio = newBio.trim() || null;
-  if (newLink.trim() !== (profile?.link || '').trim()) updates.link = newLink.trim() || null; // Add this line
-  
-  if (Object.keys(updates).length > 0) {
-    const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
-    if (error) {
-      toast.error('Failed to update profile');
-      return;
-    }
-    setProfile(prev => prev ? { ...prev, ...updates } : null);
-    toast.success('Profile updated!');
-  }
-  setEditingProfile(false);
-};
-
-// Replace the EDIT DIALOG section (around line 348) with this:
-<Dialog open={editingProfile} onOpenChange={setEditingProfile}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Edit Profile</DialogTitle>
-      <DialogDescription>Max 40 characters per line • Max 3 lines</DialogDescription>
-    </DialogHeader>
-    <div className="space-y-5 py-4">
-      <div className="space-y-2">
-        <Label htmlFor="username">Username</Label>
-        <Input id="username" value={newUsername} onChange={e => setNewUsername(e.target.value)} />
-      </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="bio">Bio</Label>
-          <span className={`text-xs font-medium ${newBio.length > 120 || newBio.split('\n').length > 3 ? 'text-red-600' : 'text-gray-500'}`}>
-            {newBio.length}/120 • {newBio.split('\n').length}/3 lines
-          </span>
-        </div>
-        <Textarea
-          id="bio"
-          value={newBio}
-          onChange={(e) => {
-            let value = e.target.value;
-            const lines = value.split('\n');
-            if (lines.length > 3) value = lines.slice(0, 3).join('\n');
-            value = value.split('\n').map(line => line.slice(0, 40)).join('\n');
-            setNewBio(value);
-          }}
-          placeholder="i love peegi love peegi love peegi\ni love peegi love peegi love peegi\ni love peegi love peegi snguyen7"
-          className="min-h-[110px] resize-none text-center font-medium"
-          rows={3}
-        />
-        <p className="text-xs text-gray-500 text-center -mt-2">Press Enter for new line</p>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="link">Link</Label>
-        <Input 
-          id="link" 
-          value={newLink} 
-          onChange={e => setNewLink(e.target.value)} 
-          placeholder="https://example.com"
-          type="url"
-        />
-      </div>
-      <div className="flex gap-2">
-        {profile?.avatar_url && (
-          <Button variant="outline" onClick={handleDeleteAvatar} disabled={uploading} className="flex-1 text-red-600">
-            <Trash2 className="w-4 h-4 mr-2" /> Remove Avatar
-          </Button>
-        )}
-        {profile?.banner_url && (
-          <Button variant="outline" onClick={handleDeleteBanner} disabled={uploading} className="flex-1 text-red-600">
-            <Trash2 className="w-4 h-4 mr-2" /> Remove Banner
-          </Button>
-        )}
-      </div>
-    </div>
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setEditingProfile(false)}>Cancel</Button>
-      <Button onClick={handleEditProfile}>Save Changes</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+      {/* EDIT DIALOG */}
+      <Dialog open={editingProfile} onOpenChange={setEditingProfile}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>Max 40 characters per line • Max 3 lines</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" value={newUsername} onChange={e => setNewUsername(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bio">Bio</Label>
+                <span className={`text-xs font-medium ${newBio.length > 120 || newBio.split('\n').length > 3 ? 'text-red-600' : 'text-gray-500'}`}>
+                  {newBio.length}/120 • {newBio.split('\n').length}/3 lines
+                </span>
+              </div>
+              <Textarea
+                id="bio"
+                value={newBio}
+                onChange={(e) => {
+                  let value = e.target.value;
+                  const lines = value.split('\n');
+                  if (lines.length > 3) value = lines.slice(0, 3).join('\n');
+                  value = value.split('\n').map(line => line.slice(0, 40)).join('\n');
+                  setNewBio(value);
+                }}
+                placeholder="i love peegi love peegi love peegi\ni love peegi love peegi love peegi\ni love peegi love peegi snguyen7"
+                className="min-h-[110px] resize-none text-center font-medium"
+                rows={3}
+              />
+              <p className="text-xs text-gray-500 text-center -mt-2">Press Enter for new line</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="link">Link</Label>
+              <Input 
+                id="link" 
+                value={newLink} 
+                onChange={e => setNewLink(e.target.value)} 
+                placeholder="https://example.com"
+                type="url"
+              />
+            </div>
+            <div className="flex gap-2">
+              {profile?.avatar_url && (
+                <Button variant="outline" onClick={handleDeleteAvatar} disabled={uploading} className="flex-1 text-red-600">
+                  <Trash2 className="w-4 h-4 mr-2" /> Remove Avatar
+                </Button>
+              )}
+              {profile?.banner_url && (
+                <Button variant="outline" onClick={handleDeleteBanner} disabled={uploading} className="flex-1 text-red-600">
+                  <Trash2 className="w-4 h-4 mr-2" /> Remove Banner
+                </Button>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingProfile(false)}>Cancel</Button>
+            <Button onClick={handleEditProfile}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <PostDetailModal
         post={selectedPost}
         open={!!selectedPost}
