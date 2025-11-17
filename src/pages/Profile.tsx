@@ -333,7 +333,7 @@ export function Profile() {
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
               <div className="flex-shrink-0">
-                <div className="relative z-10">
+                <div className="relative z-10 w-20 h-20">
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt={profile.username} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
                   ) : (
@@ -341,7 +341,7 @@ export function Profile() {
                       {profile?.username?.[0]?.toUpperCase()}
                     </div>
                   )}
-                  <label className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50">
+                  <label className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50 z-20">
                     <input type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} className="hidden" />
                     <Camera className="w-4 h-4 text-gray-700" />
                   </label>
