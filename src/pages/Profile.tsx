@@ -394,6 +394,7 @@ export function Profile() {
         )}
       </div>
       {/* EDIT DIALOG */}
+      {/* EDIT DIALOG */}
       <Dialog open={editingProfile} onOpenChange={setEditingProfile}>
         <DialogContent>
           <DialogHeader>
@@ -427,6 +428,16 @@ export function Profile() {
                 rows={3}
               />
               <p className="text-xs text-gray-500 text-center -mt-2">Press Enter for new line</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="link">Link</Label>
+              <Input 
+                id="link" 
+                value={newLink} 
+                onChange={e => setNewLink(e.target.value)} 
+                placeholder="https://example.com"
+                type="url"
+              />
             </div>
             <div className="flex gap-2">
               {profile?.avatar_url && (
