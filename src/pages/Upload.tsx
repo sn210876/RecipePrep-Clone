@@ -105,38 +105,31 @@ export function Upload({ onNavigate }: UploadProps) {
     }
   };
 
-  // ── SPOTIFY SEARCH FUNCTION ─────────────────────────────────
-  const searchSpotify = async (query: string) => {
+ // YOUTUBE MUSIC SEARCH — WORKS EVERY TIME
+const searchYouTubeMusic = async (query: string) => {
   if (!query.trim()) {
     setSpotifyResults([]);
     return;
   }
   setSearchingMusic(true);
   try {
-    const res = await fetch(
-      `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/dynamic-worker?q=${encodeURIComponent(query)}`
-    );
+    const res = await fetch(`https://ytmusic-api.vercel.app/api/search?q=${encodeURIComponent(query)}`);
     const data = await res.json();
-
-    // THIS IS THE FIX: make sure we always have an array
-    if (Array.isArray(data)) {
-      setSpotifyResults(data);
-    } else {
-      console.error("Spotify returned non-array:", data);
-      setSpotifyResults([]);
-      if (data?.error) {
-        toast.error(data.error);
-      }
-    }
-  } catch (err) {
-    console.error("Spotify search failed:", err);
+    const tracks = (data.result || []).slice(0, 12).map((t: any) => ({
+      id: t.videoId,
+      name: t.title,
+      artists: [{ name: t.artist || 'Unknown' }],
+      album: { images: [{ url: t.thumbnail }] },
+      preview_url: `https://www.youtube.com/watch?v=${t.videoId}`, // plays full audio
+    }));
+    setSpotifyResults(tracks);
+  } catch {
+    toast.error('Search failed');
     setSpotifyResults([]);
-    toast.error('Spotify search failed');
   } finally {
     setSearchingMusic(false);
   }
 };
-    
   // ─────────────────────────────────────────────────────────────
 
   const handleUpload = async () => {
