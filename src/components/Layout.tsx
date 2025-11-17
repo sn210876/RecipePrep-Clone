@@ -136,7 +136,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         <FloatingNavIcons />
 
         {/* MOBILE HEADER (only shows menu button + title on mobile) */}
-        <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-sm lg:hidden">
+       <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+
           <div className="flex h-16 items-center justify-between px-6">
             <Button
               variant="ghost"
