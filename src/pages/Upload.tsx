@@ -106,7 +106,6 @@ export function Upload({ onNavigate }: UploadProps) {
   };
 
   // ── SPOTIFY SEARCH FUNCTION ─────────────────────────────────
-  const searchSpotify = async (query: string) => {
     // YOUTUBE MUSIC SEARCH — WORKING 100%
   const searchYouTubeMusic = async (query: string) => {
     if (!query.trim()) {
