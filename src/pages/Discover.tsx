@@ -1068,12 +1068,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                       >
                         🥄
                       </button>
-                      <div className="ml-auto flex items-center gap-1">
-                        <span className="text-xl">🔥</span>
-                        <span className="text-sm font-semibold text-gray-700">
-                          {postRatings[post.id]?.count || 0}
-                        </span>
-                      </div>
+                     
                     </div>
 
               
