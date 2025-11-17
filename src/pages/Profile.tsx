@@ -329,24 +329,33 @@ export function Profile() {
           </div>
 
           {/* Avatar + Bio */}
+         {/* Avatar + Bio */}
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
-              <div className="relative flex-shrink-0 z-10">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt={profile.username} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
-                    {profile?.username?.[0]?.toUpperCase()}
+              <div className="flex-shrink-0">
+                <div className="relative z-10">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt={profile.username} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
+                      {profile?.username?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <label className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50">
+                    <input type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} className="hidden" />
+                    <Camera className="w-4 h-4 text-gray-700" />
+                  </label>
+                </div>
+                <div className="mt-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
+                    {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
                   </div>
-                )}
-                <label className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50">
-                  <input type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} className="hidden" />
-                  <Camera className="w-4 h-4 text-gray-700" />
-                </label>
+                </div>
               </div>
 
               {/* CENTERED 3-LINE BIO */}
-              <div className="flex-1 pt-11 text-center min-w-0">
+              <div className="flex-1 pt-11 text-center min-w-0 max-w-[60%]">
                 {profile?.bio ? (
                   <div className="space-y-2 mt-2">
                     {profile.bio
@@ -363,24 +372,16 @@ export function Profile() {
                     Tap Edit Profile to add a bio
                   </p>
                 )}
-              {profile?.link && (
+                {profile?.link && (
                   <a 
                     href={profile.link} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline break-words px-2"
+                    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline break-all"
                   >
                     {profile.link}
                   </a>
                 )}
-              </div>
-            </div>
-
-
-            <div className="mt-1 text-left">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
-                {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
               </div>
             </div>
 
