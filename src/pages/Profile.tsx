@@ -374,7 +374,8 @@ export function Profile() {
         ) : (
           <div className="grid grid-cols-3 gap-1">
             {posts.map(post => (
-              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
+              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative z-50">
+
                 {post.image_url ? (
                   <img src={post.image_url} alt={post.title || 'Post'} className="w-full h-full object-cover" />
                 ) : post.video_url ? (
