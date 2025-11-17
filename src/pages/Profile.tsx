@@ -73,6 +73,7 @@ interface Profile {
   avatar_url: string | null;
   banner_url?: string | null;
   bio?: string | null;
+  link?: string | null;
   followers_count?: number;
   following_count?: number;
 }
