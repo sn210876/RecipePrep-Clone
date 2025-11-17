@@ -151,7 +151,7 @@ const searchYouTubeMusic = async (query: string) => {
     setSpotifyResults([]);
   } finally {
     setSearchingMusic(false);
-  }
+  
 };─────────────────────────────────────────────────
 
   const handleUpload = async () => {
