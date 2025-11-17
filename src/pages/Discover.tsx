@@ -1039,13 +1039,18 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
                   <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center gap-4">
-                      <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110">
-                        <Heart
-                          className={`w-7 h-7 ${
-                            isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'
-                          }`}
-                        />
-                      </button>
+                     <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110 relative">
+  <Heart
+    className={`w-7 h-7 ${
+      isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'
+    }`}
+  />
+  {post._count?.likes && post._count.likes > 0 && (
+    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+      {post._count.likes}
+    </span>
+  )}
+</button>
                       <button
                         onClick={() => setCommentModalPostId(post.id)}
                         className="transition-transform hover:scale-110 relative"
