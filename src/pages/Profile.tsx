@@ -327,7 +327,12 @@ export function Profile() {
               </div>
             </div>
             <div className="mt-4 flex justify-center">
-             
+              <button
+                onClick={() => {
+                  setNewUsername(profile?.username || '');
+                  setNewBio(profile?.bio || '');
+                  setEditingProfile(true);
+                }}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-600 text-white font-medium rounded-full hover:bg-orange-700 shadow-md"
               >
                 <Edit2 className="w-4 h-4" />
