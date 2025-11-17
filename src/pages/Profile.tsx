@@ -302,6 +302,7 @@ export function Profile() {
                 </label>
               </div>
               {/* CENTERED 3-LINE BIO */}
+              {/* CENTERED 3-LINE BIO */}
               <div className="flex-1 pt-11 text-center min-w-0">
                 {profile?.bio ? (
                   <div className="space-y-2 mt-2">
@@ -318,6 +319,16 @@ export function Profile() {
                   <p className="text-sm text-gray-400 italic font-light mt-3">
                     Tap Edit Profile to add a bio
                   </p>
+                )}
+                {profile?.link && (
+                  <a 
+                    href={profile.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline"
+                  >
+                    {profile.link}
+                  </a>
                 )}
               </div>
             </div>
