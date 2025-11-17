@@ -18,7 +18,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   }, []);
 
   // Real-time subscription for new messages
-    return () => {
+   return () => {
     supabase.removeChannel(channel);
   };
 }, [currentUserId]);
