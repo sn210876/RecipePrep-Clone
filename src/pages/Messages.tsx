@@ -351,8 +351,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         </div>
 
         {/* MESSAGES */}
-        {/* MESSAGES */}
-<div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
+        <div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
   <div className="space-y-1 py-4">
     {messages.map((message) => (
       <div
@@ -381,20 +380,6 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
               })}
             </span>
           </div>
-          {/* DELETE BUTTON (ONLY FOR YOUR MESSAGES) */}
-          {message.sender_id === currentUserId && (
-            <button
-              // You would add your delete handler here
-              className="absolute top-0 right-full mr-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              {/* Delete Icon or Text */}
-            </button>
-          )}
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
 
                   {/* DELETE BUTTON (ONLY FOR YOUR MESSAGES) */}
                   {message.sender_id === currentUserId && (
