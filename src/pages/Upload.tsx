@@ -107,6 +107,7 @@ export function Upload({ onNavigate }: UploadProps) {
 
  // YOUTUBE MUSIC SEARCH — WORKS EVERY TIME
 // YOUTUBE MUSIC SEARCH — PUBLIC, NO AUTH, ALWAYS WORKS
+// YOUTUBE MUSIC SEARCH — PUBLIC, NO AUTH, ALWAYS WORKS
 const searchYouTubeMusic = async (query: string) => {
   if (!query.trim()) {
     setSpotifyResults([]);
@@ -153,6 +154,27 @@ const searchYouTubeMusic = async (query: string) => {
     setSearchingMusic(false);
   }
 };
+
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast.error('Please select an image or video');
+      return;
+    }
+    if (postType === 'post' && !title.trim()) {
+      toast.error('Please enter a title');
+      return;
+    }
+    if (postType === 'daily' && fileType === 'video' && videoDuration > 30) {
+      toast.error('Daily videos must be 30 seconds or less');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('Not authenticated');
+
 
 
   const handleUpload = async () => {
