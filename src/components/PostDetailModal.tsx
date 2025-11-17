@@ -233,40 +233,51 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   try {
     if (isLiked) {
       // Remove like
-      await supabase
+      const { error } = await supabase
         .from('likes')
         .delete()
         .eq('post_id', post.id)
         .eq('user_id', userId);
 
+      if (error) throw error;
+
     } else {
       // Add like
-      await supabase
+      const { error } = await supabase
         .from('likes')
-        .insert({ post_id: post.id, user_id: userId });
+        .insert({
+          post_id: post.id,
+          user_id: userId
+        });
 
-      // 🔔 SEND LIKE NOTIFICATION (don't notify yourself)
+      if (error) throw error;
+
+      // 🔔 Send notification ONLY if liking someone else's post
       if (userId !== postOwnerId) {
-        await supabase
+        const { error: notifError } = await supabase
           .from('notifications')
           .insert({
-            user_id: postOwnerId,     // who receives the notification
-            actor_id: userId,         // who liked the post
+            user_id: postOwnerId,   // receiver
+            actor_id: userId,       // who performed the like
             type: 'like',
             post_id: post.id,
             read: false
           });
+
+        if (notifError) console.error("Notification error:", notifError);
       }
     }
 
+    // Update UI instantly
     setIsLiked(!isLiked);
     onUpdate();
 
-  } catch (error) {
-    console.error('Error toggling like:', error);
-    toast.error('Failed to toggle like');
+  } catch (error: any) {
+    console.error("Error toggling like:", error);
+    toast.error("Failed to toggle like");
   }
 };
+
 
   const loadRatings = async () => {
     if (!post) return;
