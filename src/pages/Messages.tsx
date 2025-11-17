@@ -372,7 +372,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       onChange={(e) => setNewMessage(e.target.value)}
       onKeyPress={handleKeyPress}
       placeholder="Type a message..."
-      className="w-[80%] px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+      <div className="flex gap-2 w-[80%] mx-auto"
+
 
     />
     <Button
