@@ -10,14 +10,84 @@ interface BottomNavProps {
 export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAvatar();
-    loadUnreadCount();
-
-    const interval = setInterval(loadUnreadCount, 10000);
-    return () => clearInterval(interval);
+    initializeMessaging();
   }, []);
+
+  // Real-time subscription for new messages
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel('message-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        async (payload) => {
+          console.log('New message received:', payload);
+          const newMessage = payload.new as any;
+
+          // Only count if it's for the current user and unread
+          if (newMessage.sender_id !== currentUserId && !newMessage.read) {
+            // Verify this message is in a conversation where current user is a participant
+            const { data: convo } = await supabase
+              .from('conversations')
+              .select('id')
+              .eq('id', newMessage.conversation_id)
+              .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
+              .maybeSingle();
+
+            if (convo) {
+              setUnreadCount((prev) => prev + 1);
+              console.log('Unread count increased');
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          console.log('Message updated:', payload);
+          const updatedMessage = payload.new as any;
+          const oldMessage = payload.old as any;
+
+          // If message was marked as read and it wasn't sent by current user
+          if (updatedMessage.read && !oldMessage.read && updatedMessage.sender_id !== currentUserId) {
+            setUnreadCount((prev) => Math.max(0, prev - 1));
+            console.log('Unread count decreased');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId]);
+
+  const initializeMessaging = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setCurrentUserId(user.id);
+      await loadUnreadCount(user.id);
+    } catch (error) {
+      console.error('Error initializing messaging:', error);
+    }
+  };
 
   const loadAvatar = async () => {
     try {
@@ -38,48 +108,42 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
     }
   };
 
-  const loadUnreadCount = async () => {
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      console.log('No user logged in');
-      return;
+  const loadUnreadCount = async (userId: string) => {
+    try {
+      console.log('Loading unread count for user:', userId);
+
+      const { data: conversations } = await supabase
+        .from('conversations')
+        .select('id, user1_id, user2_id, last_message_at')
+        .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+        .order('last_message_at', { ascending: false });
+
+      console.log('Conversations found:', conversations);
+
+      if (!conversations) {
+        setUnreadCount(0);
+        return;
+      }
+
+      let totalUnread = 0;
+      for (const convo of conversations) {
+        const { count } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('conversation_id', convo.id)
+          .eq('read', false)
+          .neq('sender_id', userId);
+
+        console.log(`Conversation ${convo.id}: ${count} unread`);
+        totalUnread += count || 0;
+      }
+
+      console.log('Total unread count:', totalUnread);
+      setUnreadCount(totalUnread);
+    } catch (error) {
+      console.error('Error loading unread count:', error);
     }
-
-    console.log('Loading unread count for user:', userData.user.id);
-
-    const { data: conversations } = await supabase
-      .from('conversations')
-      .select('id, user1_id, user2_id, last_message_at')
-      .or(`user1_id.eq.${userData.user.id},user2_id.eq.${userData.user.id}`)
-      .order('last_message_at', { ascending: false });
-
-    console.log('Conversations found:', conversations);
-
-    if (!conversations) {
-      setUnreadCount(0);
-      return;
-    }
-
-    let totalUnread = 0;
-    for (const convo of conversations) {
-      const { count } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('conversation_id', convo.id)
-        .eq('read', false)
-        .neq('sender_id', userData.user.id);
-
-      console.log(`Conversation ${convo.id}: ${count} unread`);
-      totalUnread += count || 0;
-    }
-
-    console.log('Total unread count:', totalUnread);
-    setUnreadCount(totalUnread);
-  } catch (error) {
-    console.error('Error loading unread count:', error);
-  }
-};
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
@@ -93,24 +157,24 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
           <UtensilsCrossed className="w-7 h-7" strokeWidth={currentPage === 'discover' ? 2.5 : 2} />
         </button>
 
-      <button
-  onClick={() => {
-    setUnreadCount(0);
-    onNavigate('messages');
-  }}
-  className={`flex flex-col items-center gap-1 transition-colors relative ${
-    currentPage === 'messages' ? 'text-cyan-500' : 'text-gray-600 hover:text-cyan-500'
-  }`}
->
-  <div className="relative">
-    <MessageCircle className="w-7 h-7" strokeWidth={currentPage === 'messages' ? 2.5 : 2} />
-    {unreadCount > 0 && (
-      <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-        {unreadCount > 9 ? '9+' : unreadCount}
-      </span>
-    )}
-  </div>
-</button>
+        <button
+          onClick={() => {
+            setUnreadCount(0);
+            onNavigate('messages');
+          }}
+          className={`flex flex-col items-center gap-1 transition-colors relative ${
+            currentPage === 'messages' ? 'text-cyan-500' : 'text-gray-600 hover:text-cyan-500'
+          }`}
+        >
+          <div className="relative">
+            <MessageCircle className="w-7 h-7" strokeWidth={currentPage === 'messages' ? 2.5 : 2} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </div>
+        </button>
 
         <button
           onClick={() => onNavigate('upload')}
