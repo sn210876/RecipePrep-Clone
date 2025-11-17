@@ -18,7 +18,13 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   }, []);
 
   // Real-time subscription for new messages
+  useEffect(() => {
+    if (!currentUserId) {
+      console.log('⚠️ No currentUserId, skipping message subscription');
+      return;
+    }
 
+    console.log('✅ Setting up message subscription for user:', currentUserId);
 
     const channel = supabase
       .channel('message-notifications')
@@ -30,12 +36,19 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
           table: 'messages',
         },
         async (payload) => {
-          console.log('New message received:', payload);
+          console.log('📨 New message received:', payload);
           const newMessage = payload.new as any;
 
-          // Only count if it's for the current user and unread
+          console.log('Message details:', {
+            sender: newMessage.sender_id,
+            currentUser: currentUserId,
+            read: newMessage.read,
+            conversationId: newMessage.conversation_id
+          });
+
           if (newMessage.sender_id !== currentUserId && !newMessage.read) {
-            // Verify this message is in a conversation where current user is a participant
+            console.log('✅ Message is unread and from another user');
+            
             const { data: convo } = await supabase
               .from('conversations')
               .select('id')
@@ -43,10 +56,19 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
               .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
               .maybeSingle();
 
+            console.log('Conversation check:', convo);
+
             if (convo) {
-              setUnreadCount((prev) => prev + 1);
-              console.log('Unread count increased');
+              setUnreadCount((prev) => {
+                const newCount = prev + 1;
+                console.log(`🔔 Unread count increased: ${prev} → ${newCount}`);
+                return newCount;
+              });
+            } else {
+              console.log('⚠️ Message not in user\'s conversations');
             }
+          } else {
+            console.log('⚠️ Message ignored - either from current user or already read');
           }
         }
       )
@@ -58,20 +80,25 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
           table: 'messages',
         },
         (payload) => {
-          console.log('Message updated:', payload);
+          console.log('📝 Message updated:', payload);
           const updatedMessage = payload.new as any;
           const oldMessage = payload.old as any;
 
-          // If message was marked as read and it wasn't sent by current user
           if (updatedMessage.read && !oldMessage.read && updatedMessage.sender_id !== currentUserId) {
-            setUnreadCount((prev) => Math.max(0, prev - 1));
-            console.log('Unread count decreased');
+            setUnreadCount((prev) => {
+              const newCount = Math.max(0, prev - 1);
+              console.log(`📉 Unread count decreased: ${prev} → ${newCount}`);
+              return newCount;
+            });
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Message subscription status:', status);
+      });
 
     return () => {
+      console.log('🔌 Cleaning up message subscription');
       supabase.removeChannel(channel);
     };
   }, [currentUserId]);
