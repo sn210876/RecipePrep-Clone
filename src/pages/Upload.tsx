@@ -107,32 +107,32 @@ export function Upload({ onNavigate }: UploadProps) {
 
       // FINAL — WORKS IN PREVIEW + PRODUCTION (CORS fixed)
   const searchYouTubeMusic = async (query: string) => {
-    if (!query.trim()) {
-      setSpotifyResults([]);
-      return;
-    }
-    setSearchingMusic(true);
-    try {
-     const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://youtube-music-api.vercel.app/search?q=' + query)}`);
-      const data = await res.json();
+  if (!query.trim()) {
+    setSpotifyResults([]);
+    return;
+  }
+  setSearchingMusic(true);
+  try {
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://youtube-music-api.vercel.app/search?q=' + query)}`);
+    const data = await res.json();
 
-      const tracks = (data?.result || []).map((t: any) => ({
-        id: t.videoId,
-        name: t.title || 'Unknown Song',
-        artists: [{ name: t.artist || 'Unknown Artist' }],
-        album: { images: [{ url: t.thumbnails?.[0]?.url || 'https://via.placeholder.com/300' }] },
-        preview_url: `https://www.youtube.com/watch?v=${t.videoId}`,
-      }));
+    const tracks = (data?.result || []).map((t: any) => ({
+      id: t.videoId,
+      name: t.title || 'Unknown Song',
+      artists: [{ name: t.artist || 'Unknown Artist' }],
+      album: { images: [{ url: t.thumbnails?.[0]?.url || 'https://via.placeholder.com/300' }] },
+      preview_url: `https://www.youtube.com/watch?v=${t.videoId}`,
+    }));
 
-      setSpotifyResults(tracks.slice(0, 12));
-    } catch (err) {
-      console.error('YouTube search failed:', err);
-      toast.error('Search failed — try again');
-      setSpotifyResults([]);
-    } finally {
-      setSearchingMusic(false);
-    }
-  };
+    setSpotifyResults(tracks.slice(0, 12));
+  } catch (err) {
+    console.error('YouTube search failed:', err);
+    toast.error('Search failed — try again');
+    setSpotifyResults([]);
+  } finally {
+    setSearchingMusic(false);
+  }
+};
 
   const handleUpload = async () => {
     if (!selectedFile) {
