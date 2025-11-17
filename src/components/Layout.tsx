@@ -40,8 +40,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   // REUSABLE FLOATING ICON BAR — ALWAYS ON TOP
   const FloatingNavIcons = () => (
-<div className="pointer-events-none fixed top-4 left-0 right-0 bottom-0 z-[500]">
-      <div className="pointer-events-auto fixed top-4 right-4">
+<div className="pointer-events-none fixed z-[500]">
+  <div className="pointer-events-auto fixed top-4 right-4 p-2">
         <TooltipProvider>
           <div className="flex items-center gap-2 bg-transparent backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2 scale-[0.8]">
 
