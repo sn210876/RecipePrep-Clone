@@ -233,9 +233,10 @@ export function Profile() {
       toast.error('Maximum 40 characters per line');
       return;
     }
-    const updates: any = {};
+   const updates: any = {};
     if (newUsername.trim() && newUsername.trim() !== profile?.username) updates.username = newUsername.trim();
     if (newBio.trim() !== (profile?.bio || '').trim()) updates.bio = newBio.trim() || null;
+    if (newLink.trim() !== (profile?.link || '').trim()) updates.link = newLink.trim() || null;
     if (Object.keys(updates).length > 0) {
       const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
       if (error) {
