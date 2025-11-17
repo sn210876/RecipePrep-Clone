@@ -236,7 +236,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg h-[80vh] flex flex-col p-0">
+<DialogContent className="max-w-lg h-[80vh] flex flex-col p-0 z-[9999]">
         <DialogHeader className="px-4 py-3 border-b">
           <DialogTitle>Comments & Ratings</DialogTitle>
 
