@@ -301,43 +301,74 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
         `}</style>
 
         <div className="flex flex-col md:flex-row h-full">
-          <div className="md:w-3/5 bg-black flex items-center justify-center relative">
-            {post.image_url ? (
-              <img
-                src={post.image_url}
-                alt={post.title || 'Post'}
-                className="max-w-full max-h-[90vh] object-contain"
-              />
-            ) : post.video_url ? (
-              <video
-                src={post.video_url}
-                controls
-                className="max-w-full max-h-[90vh] object-contain"
-              />
-            ) : null}
+         <div className="md:w-3/5 bg-black flex items-center justify-center relative overflow-hidden">
+  {post.image_url ? (
+    <img
+      src={post.image_url}
+      alt={post.title || 'Post'}
+      className="max-w-full max-h-[90vh] object-contain"
+    />
+  ) : post.video_url ? (
+    <video
+      src={post.video_url}
+      controls
+      className="max-w-full max-h-[90vh] object-contain"
+    />
+  ) : null}
 
-            {post.spotify_preview_url && (
-              <div className="absolute bottom-6 left-6 flex items-center gap-4 bg-black/70 backdrop-blur-md rounded-full px-5 py-4 text-white shadow-2xl">
-                <img
-                  src={post.spotify_album_art || '/placeholder-album.png'}
-                  alt="Album"
-                  className="w-12 h-12 rounded-full animate-spin-slow shadow-lg"
-                />
-                <div className="max-w-48">
-                  <p className="font-semibold text-sm truncate">
-                    {post.spotify_track_name}
-                  </p>
-                  <p className="text-xs opacity-90">
-                    {post.spotify_artist_name}
-                  </p>
-                </div>
-                <audio
-                  controls
-                  src={post.spotify_preview_url}
-                  className="h-10"
-                  controlsList="nodownload"
-                />
-              </div>
+  {/* ONLY SHOW MUSIC OVERLAY IF THERE IS A SONG */}
+  {post.spotify_preview_url && (
+    <>
+      {/* Invisible full-screen click area to play/pause */}
+      <button
+        className="absolute inset-0 z-10 cursor-pointer"
+        onClick={() => {
+          const audio = document.getElementById(`audio-${post.id}`) as HTMLAudioElement;
+          if (audio) {
+            audio.paused ? audio.play() : audio.pause();
+          }
+        }}
+        aria-label="Play/Pause music"
+      />
+
+      {/* Big center play button (shows only when paused) */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+        <div className="bg-white/20 backdrop-blur-md rounded-full p-8 animate-pulse">
+          <svg className="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7L8 5z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Beautiful bottom music bar — Instagram/TikTok style */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 z-30">
+        <div className="flex items-center gap-5 max-w-3xl mx-auto">
+          <img
+            src={post.spotify_album_art || '/placeholder-album.png'}
+            alt="Album"
+            className="w-16 h-16 rounded-full animate-spin-slow shadow-2xl border-2 border-white/30"
+          />
+
+          <div className="flex-1 text-white">
+            <p className="font-bold text-lg truncate">{post.spotify_track_name}</p>
+            <p className="text-sm opacity-90">{post.spotify_artist_name}</p>
+          </div>
+
+          {/* Audio player with volume control */}
+          <div className="flex items-center gap-3 bg-white/20 backdrop-blur-lg rounded-full px-4 py-3">
+            <audio
+              id={`audio-${post.id}`}
+              src={post.spotify_preview_url}
+              controls
+              controlsList="nodownload"
+              className="h-10 w-64 accent-white"
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  )}
+</div>
             )}
           </div>
 
