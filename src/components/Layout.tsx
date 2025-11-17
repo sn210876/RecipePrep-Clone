@@ -135,7 +135,7 @@ const FloatingNavIcons = () => (
         <div className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
       )}
 
-      <div className="lg:pl-64">
+      <div className="">
         {/* FLOATING ICONS — ALWAYS VISIBLE ON DESKTOP & MOBILE */}
         <FloatingNavIcons />
 
