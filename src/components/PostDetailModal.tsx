@@ -349,12 +349,12 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
       {/* Hidden YouTube player — full song, no controls shown */}
       <iframe
-        id={`ytplayer-${post.id}`}
-        src={`https://www.youtube.com/embed/${post.spotify_preview_url.split('v=')[1]}?autoplay=1&loop=1&playlist=${post.spotify_preview_url.split('v=')[1]}&controls=0&modestbranding=1&rel=0`}
-        className="absolute inset-0 w-0 h-0 opacity-0 pointer-events-none"
-        allow="autoplay; encrypted-media"
-        allowFullScreen
-      ></iframe>
+  id={`ytplayer-${post.id}`}
+  src={`https://www.youtube.com/embed/${post.spotify_preview_url.split('v=')[1]}?autoplay=1&loop=1&playlist=${post.spotify_preview_url.split('v=')[1]}&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${window.location.origin}`}
+  className="absolute inset-0 w-0 h-0 opacity-0 pointer-events-none"
+  allow="autoplay; encrypted-media; picture-in-picture"
+  allowFullScreen
+></iframe>
     </>
   )}
 </div>
