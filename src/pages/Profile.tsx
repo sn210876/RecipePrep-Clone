@@ -286,8 +286,7 @@ export function Profile() {
             </label>
           </div>
           {/* Avatar + Bio */}
-         {/* Avatar + Bio */}
-          {/* Avatar + Bio */}
+        {/* Avatar + Bio */}
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
               <div className="relative flex-shrink-0 z-10">
