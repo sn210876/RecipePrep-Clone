@@ -321,15 +321,18 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     <>
       {/* Click anywhere to play/pause */}
       <button
-        className="absolute inset-0 z-10"
-        onClick={() => {
-          const iframe = document.querySelector(`#ytplayer-${post.id}`) as HTMLIFrameElement;
-          if (iframe?.contentWindow) {
-            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-          }
-        }}
-        aria-label="Play music"
-      />
+  className="absolute inset-0 z-10 cursor-pointer"
+  onClick={() => {
+    const iframe = document.querySelector(`#ytplayer-${post.id}`) as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(
+        '{"event":"command","func":"togglePlayVideo","args":""}',
+        '*'
+      );
+    }
+  }}
+  aria-label="Play/Pause music"
+/>
 
       {/* Beautiful Instagram-style music bar */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
