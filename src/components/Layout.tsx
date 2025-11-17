@@ -43,7 +43,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 <div className="pointer-events-none fixed top-4 left-0 right-0 bottom-0 z-[500]">
       <div className="pointer-events-auto fixed top-4 right-4">
         <TooltipProvider>
-          <div className="flex items-center gap-2 bg-white/0 backdrop-blur-lg rounded-full shadow-2xl border border-white/30 px-4 py-3">
+          <div className="flex items-center gap-2 bg-transparent backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2 scale-[0.8]">
+
             {navItems
               .filter(item => item.id !== 'discover' && item.id !== 'discover-recipes')
               .map((item) => {
