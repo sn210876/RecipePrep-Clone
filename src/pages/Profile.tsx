@@ -87,6 +87,7 @@ export function Profile() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
+  const [newLink, setNewLink] = useState('');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   useEffect(() => {
@@ -233,7 +234,7 @@ export function Profile() {
       toast.error('Maximum 40 characters per line');
       return;
     }
-   const updates: any = {};
+    const updates: any = {};
     if (newUsername.trim() && newUsername.trim() !== profile?.username) updates.username = newUsername.trim();
     if (newBio.trim() !== (profile?.bio || '').trim()) updates.bio = newBio.trim() || null;
     if (newLink.trim() !== (profile?.link || '').trim()) updates.link = newLink.trim() || null;
@@ -331,6 +332,7 @@ export function Profile() {
                 onClick={() => {
                   setNewUsername(profile?.username || '');
                   setNewBio(profile?.bio || '');
+                  setNewLink(profile?.link || '');
                   setEditingProfile(true);
                 }}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-600 text-white font-medium rounded-full hover:bg-orange-700 shadow-md"
@@ -427,6 +429,16 @@ export function Profile() {
               />
               <p className="text-xs text-gray-500 text-center -mt-2">Press Enter for new line</p>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="link">Link</Label>
+              <Input 
+                id="link" 
+                value={newLink} 
+                onChange={e => setNewLink(e.target.value)} 
+                placeholder="https://example.com"
+                type="url"
+              />
+            </div>
             <div className="flex gap-2">
               {profile?.avatar_url && (
                 <Button variant="outline" onClick={handleDeleteAvatar} disabled={uploading} className="flex-1 text-red-600">
@@ -456,4 +468,4 @@ export function Profile() {
     </div>
   );
 }
- ;
+ ;
