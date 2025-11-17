@@ -361,7 +361,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         </div>
 
         {/* FIXED INPUT BAR */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-3 py-1.5">
+
           <div className="flex gap-2">
             <input
               type="text"
