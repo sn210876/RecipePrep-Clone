@@ -515,7 +515,7 @@ const searchYouTubeMusic = async (query: string) => {
   onChange={(e) => {
   setSpotifySearch(e.target.value);
   searchYouTubeMusic(e.target.value);
-}}
+}
                 placeholder="Search songs or artists..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 autoFocus
