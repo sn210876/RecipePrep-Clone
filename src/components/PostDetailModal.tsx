@@ -5,6 +5,7 @@ import { Textarea } from './ui/textarea';
 import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
 import { supabase, isAdmin } from '@/lib/supabase';
 import { toast } from 'sonner';
+
 interface Post {
   id: string;
   user_id: string;
@@ -17,7 +18,15 @@ interface Post {
   created_at: string;
   likes_count?: number;
   comments_count?: number;
+
+  // SPOTIFY FIELDS
+  spotify_track_id?: string | null;
+  spotify_track_name?: string | null;
+  spotify_artist_name?: string | null;
+  spotify_album_art?: string | null;
+  spotify_preview_url?: string | null;
 }
+
 interface Review {
   id: string;
   rating: number;
@@ -26,6 +35,7 @@ interface Review {
   user_id: string;
   username?: string;
 }
+
 interface Comment {
   id: string;
   text: string;
@@ -33,6 +43,7 @@ interface Comment {
   user_id: string;
   username?: string;
 }
+
 interface PostDetailModalProps {
   post: Post | null;
   open: boolean;
@@ -40,6 +51,7 @@ interface PostDetailModalProps {
   onDelete: (postId: string) => void;
   onUpdate: () => void;
 }
+
 export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: PostDetailModalProps) {
   const [editingCaption, setEditingCaption] = useState(false);
   const [caption, setCaption] = useState('');
@@ -50,7 +62,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
-  // Rating state removed - not displayed in this modal
+
   useEffect(() => {
     if (post) {
       setCaption(post.caption || '');
@@ -59,7 +71,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       loadCurrentUserAndAdminStatus();
     }
   }, [post]);
-  // Rating effect removed - not used in this modal
+
   const loadCurrentUserAndAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -68,10 +80,10 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setIsUserAdmin(admin);
     }
   };
+
   const loadReviewsAndComments = async () => {
     if (!post) return;
     try {
-      // Load reviews only if recipe_url exists
       if (post.recipe_url) {
         const { data: recipeData } = await supabase
           .from('public_recipes')
@@ -99,7 +111,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
           }
         }
       }
-      // Always load comments for the post
+
       const { data: commentsData } = await supabase
         .from('comments')
         .select(`
@@ -121,6 +133,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       console.error('Error loading reviews and comments:', error);
     }
   };
+
   const checkLikeStatus = async () => {
     if (!post) return;
     const { data: { user } } = await supabase.auth.getUser();
@@ -133,6 +146,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       .maybeSingle();
     setIsLiked(!!data);
   };
+
   const handleUpdateCaption = async () => {
     if (!post) return;
     setLoading(true);
@@ -152,6 +166,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setLoading(false);
     }
   };
+
   const handleDeletePost = async () => {
     if (!post) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
@@ -172,6 +187,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setLoading(false);
     }
   };
+
   const handleDeleteComment = async (commentId: string) => {
     if (!confirm('Delete this comment?')) return;
     try {
@@ -186,6 +202,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       toast.error('Failed to delete comment');
     }
   };
+
   const handleAddComment = async () => {
     if (!post || !newComment.trim()) return;
     setLoading(true);
@@ -199,17 +216,16 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
           user_id: user.id,
           text: newComment.trim()
         });
-      // 🔔 SEND COMMENT NOTIFICATION (don't notify yourself)
-if (user.id !== post.user_id) {
-  await supabase.from('notifications').insert({
-    user_id: post.user_id,
-    actor_id: user.id,
-    type: 'comment',
-    post_id: post.id,
-    read: false
-  });
-}
 
+      if (user.id !== post.user_id) {
+        await supabase.from('notifications').insert({
+          user_id: post.user_id,
+          actor_id: user.id,
+          type: 'comment',
+          post_id: post.id,
+          read: false
+        });
+      }
       if (error) throw error;
       setNewComment('');
       await loadReviewsAndComments();
@@ -221,73 +237,59 @@ if (user.id !== post.user_id) {
       setLoading(false);
     }
   };
+
   const handleToggleLike = async () => {
-  if (!post) return;
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const userId = user.id;
-  const postOwnerId = post.user_id;
-
-  try {
-    if (isLiked) {
-      // Remove like
-      const { error } = await supabase
-        .from('likes')
-        .delete()
-        .eq('post_id', post.id)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-    } else {
-      // Add like
-      const { error } = await supabase
-        .from('likes')
-        .insert({
-          post_id: post.id,
-          user_id: userId
-        });
-
-      if (error) throw error;
-
-      // 🔔 Send notification ONLY if liking someone else's post
-      if (userId !== postOwnerId) {
-        const { error: notifError } = await supabase
-          .from('notifications')
+    if (!post) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const userId = user.id;
+    const postOwnerId = post.user_id;
+    try {
+      if (isLiked) {
+        const { error } = await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', userId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('likes')
           .insert({
-            user_id: postOwnerId,   // receiver
-            actor_id: userId,       // who performed the like
-            type: 'like',
             post_id: post.id,
-            read: false
+            user_id: userId
           });
-
-        if (notifError) console.error("Notification error:", notifError);
+        if (error) throw error;
+        if (userId !== postOwnerId) {
+          const { error: notifError } = await supabase
+            .from('notifications')
+            .insert({
+              user_id: postOwnerId,
+              actor_id: userId,
+              type: 'like',
+              post_id: post.id,
+              read: false
+            });
+          if (notifError) console.error("Notification error:", notifError);
+        }
       }
+      setIsLiked(!isLiked);
+      onUpdate();
+    } catch (error: any) {
+      console.error("Error toggling like:", error);
+      toast.error("Failed to toggle like");
     }
+  };
 
-    // Update UI instantly
-    setIsLiked(!isLiked);
-    onUpdate();
-
-  } catch (error: any) {
-    console.error("Error toggling like:", error);
-    toast.error("Failed to toggle like");
-  }
-};
-
-
-  // Rating functions removed - not displayed in this modal
   if (!post) return null;
   const canDeletePost = post.user_id === currentUserId || isUserAdmin;
   const canDeleteComment = (commentUserId: string) => commentUserId === currentUserId || isUserAdmin;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-<DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden z-[9999]">
-  <div className="flex flex-col md:flex-row h-full">
-          <div className="md:w-3/5 bg-black flex items-center justify-center">
+      <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden z-[9999]">
+        <div className="flex flex-col md:flex-row h-full">
+          <div className="md:w-3/5 bg-black flex items-center justify-center relative">
             {post.image_url ? (
               <img
                 src={post.image_url}
@@ -301,7 +303,33 @@ if (user.id !== post.user_id) {
                 className="max-w-full max-h-[90vh] object-contain"
               />
             ) : null}
+
+            {/* SPOTIFY MUSIC PLAYER — Instagram Style */}
+            {post.spotify_preview_url && (
+              <div className="absolute bottom-6 left-6 flex items-center gap-4 bg-black/70 backdrop-blur-md rounded-full px-5 py-4 text-white shadow-2xl">
+                <img
+                  src={post.spotify_album_art || '/placeholder-album.png'}
+                  alt="Album"
+                  className="w-12 h-12 rounded-full animate-spin-slow shadow-lg"
+                />
+                <div className="max-w-48">
+                  <p className="font-semibold text-sm truncate">
+                    {post.spotify_track_name}
+                  </p>
+                  <p className="text-xs opacity-90">
+                    {post.spotify_artist_name}
+                  </p>
+                </div>
+                <audio
+                  controls
+                  src={post.spotify_preview_url}
+                  className="h-10"
+                  controlsList="nodownload"
+                />
+              </div>
+            )}
           </div>
+
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold text-lg flex-1 pr-4">{post.title || 'Post'}</h3>
@@ -327,8 +355,8 @@ if (user.id !== post.user_id) {
                 )}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
                 {editingCaption ? (
                   <div className="space-y-2">
@@ -375,6 +403,7 @@ if (user.id !== post.user_id) {
                   </p>
                 )}
               </div>
+
               {reviews.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-semibold text-sm">Reviews</h4>
@@ -403,6 +432,7 @@ if (user.id !== post.user_id) {
                   ))}
                 </div>
               )}
+
               {comments.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm">Comments</h4>
@@ -435,6 +465,7 @@ if (user.id !== post.user_id) {
                 </div>
               )}
             </div>
+
             <div className="border-t p-4 space-y-3">
               <div className="flex items-center gap-4">
                 <button onClick={handleToggleLike} className="transition-transform hover:scale-110">
