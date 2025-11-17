@@ -523,11 +523,7 @@ export function Upload({ onNavigate }: UploadProps) {
                       {track.artists.map((a: any) => a.name).join(', ')}
                     </p>
                   </div>
-                  {track.preview_url ? (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">30s</span>
-                  ) : (
-                    <span className="text-xs text-gray-400">No preview</span>
-                  )}
+                 <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Full Song</span>
                 </button>
               ))}
               {spotifySearch && spotifyResults.length === 0 && !searchingMusic && (
