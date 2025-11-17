@@ -285,7 +285,7 @@ if (user.id !== post.user_id) {
   const canDeleteComment = (commentUserId: string) => commentUserId === currentUserId || isUserAdmin;
   return (
     <Dialog open={open} onOpenChange={onClose}>
-<DialogContent className="max-w-4xl max-h-[72vh] p-0 overflow-hidden z-[9999] scale-[0.8]">
+<DialogContent className="max-w-4xl max-h-[72vh] p-0 overflow-hidden z-[9999] scale-[0.9]">
   <div className="flex flex-col md:flex-row h-full">
           <div className="md:w-3/5 bg-black flex items-center justify-center">
             {post.image_url ? (
