@@ -286,7 +286,7 @@ export function Profile() {
             </label>
           </div>
           {/* Avatar + Bio */}
-         {/* Avatar + Bio */}
+        {/* Avatar + Bio */}
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
               <div className="relative flex-shrink-0 z-10">
@@ -302,15 +302,8 @@ export function Profile() {
                   <Camera className="w-4 h-4 text-gray-700" />
                 </label>
               </div>
-              <div className="flex-1 flex flex-col min-w-0">
-                <div className="mt-1 text-left">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
-                    {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
-                  </div>
-                </div>
-                {/* CENTERED 3-LINE BIO */}
-                <div className="pt-2 text-center">
+              {/* CENTERED 3-LINE BIO */}
+              <div className="flex-1 pt-11 text-center min-w-0">
                   {profile?.bio ? (
                     <div className="space-y-2">
                       {profile.bio
