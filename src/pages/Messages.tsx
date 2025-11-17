@@ -360,8 +360,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   </div>
 </div>
 
-       {/* FIXED INPUT BAR */}
-<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50">
+     {/* CENTERED FULL-WIDTH INPUT BAR */}
+<div className="fixed top-1/2 left-0 right-0 transform -translate-y-1/2 bg-white border-t border-b border-gray-200 px-4 py-3 z-50">
   <div className="flex gap-2">
     <input
       type="text"
