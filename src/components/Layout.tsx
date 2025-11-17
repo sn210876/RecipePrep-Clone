@@ -36,31 +36,30 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
-  const socialPages = ['discover', 'upload', 'profile'];
+  const socialPages = ['discover', 'upload', 'profile', 'messages'];
 
   // REUSABLE FLOATING ICON BAR — ALWAYS ON TOP
-const FloatingNavIcons = () => (
-  <div className="pointer-events-none fixed z-[500]">
-    <div className="pointer-events-auto fixed top-4 right-4 p-2">
-      <TooltipProvider>
-        <div className="flex items-center gap-2 bg-transparent backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2">
-
-          {navItems
-.filter(item => item.id !== 'discover' && item.id !== 'settings')
-            .map((item) => {
-              const Icon = item.icon;
-              const isActive = currentPage === item.id;
-              return (
-                <Tooltip key={item.id}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-11 w-11 rounded-full transition-all ${
-                        isActive
-                          ? 'bg-orange-500 text-white shadow-lg'
-                          : 'text-gray-700 hover:bg-gray-100 hover:scale-110'
-                      }`}
+  const FloatingNavIcons = () => (
+    <div className="pointer-events-none fixed z-[500]">
+      <div className="pointer-events-auto fixed top-4 right-4 p-2">
+        <TooltipProvider>
+          <div className="flex items-center gap-2 bg-white/80 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2">
+            {navItems
+              .filter(item => item.id !== 'discover' && item.id !== 'settings')
+              .map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPage === item.id;
+                return (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-11 w-11 rounded-full transition-all ${
+                          isActive
+                            ? 'bg-orange-500 text-white shadow-lg'
+                            : 'text-gray-700 hover:bg-gray-100 hover:scale-110'
+                        }`}
                         onClick={() => onNavigate(item.id)}
                       >
                         <Icon className="h-5 w-5" />
@@ -80,10 +79,10 @@ const FloatingNavIcons = () => (
 
   return (
     <div className="min-h-screen bg-white">
-      {/* LEFT SIDEBAR */}
-      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-
-        {/* ... your existing sidebar content ... */}
+      {/* LEFT SIDEBAR - Only shows on desktop OR when menu button clicked on mobile */}
+      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 border-b border-gray-200 p-6">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
@@ -91,7 +90,7 @@ const FloatingNavIcons = () => (
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">Recipe Prep</h1>
-              <p className="text-xs text-gray-500">Online Recipe Book & SocialCommunity</p>
+              <p className="text-xs text-gray-500">Online Recipe Book & Social Community</p>
             </div>
           </div>
           <nav className="flex-1 space-y-1 p-4">
@@ -103,7 +102,7 @@ const FloatingNavIcons = () => (
                   key={item.id}
                   onClick={() => {
                     onNavigate(item.id);
-                    setIsMobileMenuOpen(false);
+                    setIsMobileMenuOpen(false); // Close sidebar after navigation on mobile
                   }}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-all ${
                     isActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100'
@@ -116,7 +115,6 @@ const FloatingNavIcons = () => (
             })}
           </nav>
           <div className="border-t border-gray-200 p-4 space-y-3">
-          
             <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-4">
               <p className="text-xs font-medium text-gray-900">Discover, Save, Plan, Shop</p>
               <p className="mt-1 text-xs text-gray-600">All in One Place</p>
@@ -125,21 +123,24 @@ const FloatingNavIcons = () => (
         </div>
       </aside>
 
+      {/* Mobile overlay - only appears when menu is open */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+        <div 
+          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)} 
+        />
       )}
 
-      <div className="">
+      <div className="lg:ml-64">
         {/* FLOATING ICONS — ALWAYS VISIBLE ON DESKTOP & MOBILE */}
         <FloatingNavIcons />
 
-        {/* MOBILE HEADER (only shows menu button + title) */}
+        {/* MOBILE HEADER (only shows menu button + title on mobile) */}
         <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/80 backdrop-blur-sm lg:hidden">
           <div className="flex h-16 items-center justify-between px-6">
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -149,7 +150,7 @@ const FloatingNavIcons = () => (
                 {navItems.find(item => item.id === currentPage)?.label || 'Recipe Prep'}
               </h2>
             )}
-            <div className="w-10" /> {/* spacer so title stays centered */}
+            <div className="w-10" />
           </div>
         </header>
 
