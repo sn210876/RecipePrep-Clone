@@ -116,13 +116,7 @@ const FloatingNavIcons = () => (
             })}
           </nav>
           <div className="border-t border-gray-200 p-4 space-y-3">
-            <button
-              onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-all text-red-700 hover:bg-red-50 border border-red-200"
-            >
-              <LogOut className="h-5 w-5 text-red-600" />
-              <span className="font-medium">Log Out</span>
-            </button>
+          
             <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-4">
               <p className="text-xs font-medium text-gray-900">Discover, Save, Plan, Shop</p>
               <p className="mt-1 text-xs text-gray-600">All in One Place</p>
