@@ -135,9 +135,7 @@ export function Upload({ onNavigate }: UploadProps) {
   } finally {
     setSearchingMusic(false);
   }
-};
-    }
-  };
+}
   // ─────────────────────────────────────────────────────────────
 
   const handleUpload = async () => {
