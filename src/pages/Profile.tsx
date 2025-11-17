@@ -103,9 +103,9 @@ export function Profile() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
       setUserId(userData.user.id);
-      const { data: profileData } = await supabase
+     const { data: profileData } = await supabase
         .from('profiles')
-        .select('username, avatar_url, banner_url, bio')
+        .select('username, avatar_url, banner_url, bio, link')
         .eq('id', userData.user.id)
         .maybeSingle();
       if (!profileData) {
