@@ -340,20 +340,20 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   className="flex justify-end"
 >
         <div
-          className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-            message.sender_id === currentUserId
-              ? 'bg-orange-500 text-white'
-              : 'bg-gray-200 text-gray-900'
-          }`}
-        >
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
-          <span className="text-xs opacity-70 mt-1 block">
-            {new Date(message.created_at).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
-        </div>
+  className={`w-48 rounded-2xl px-4 py-2 ${
+    message.sender_id === currentUserId
+      ? 'bg-orange-500 text-white'
+      : 'bg-gray-200 text-gray-900'
+  }`}
+>
+  <p className="whitespace-pre-wrap break-words text-sm leading-tight">{message.content}</p>
+  <span className="text-xs opacity-70 mt-1 block">
+    {new Date(message.created_at).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    })}
+  </span>
+</div>
       </div>
     ))}
     <div ref={messagesEndRef} />
