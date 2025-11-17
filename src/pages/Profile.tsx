@@ -333,7 +333,7 @@ export function Profile() {
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
               <div className="flex-shrink-0">
-                <div className="relative z-10 w-20 h-20">
+                <div className="relative z-10 w-36 h-36">
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt={profile.username} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
                   ) : (
