@@ -39,28 +39,27 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const socialPages = ['discover', 'upload', 'profile'];
 
   // REUSABLE FLOATING ICON BAR — ALWAYS ON TOP
-  const FloatingNavIcons = () => (
-<div className="pointer-events-none fixed z-[500]">
-  <div className="pointer-events-auto fixed top-4 right-4 p-2">
-        <TooltipProvider>
-          <div className="flex items-center gap-2 bg-transparent backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2 scale-[0.8]">
-
-            {navItems
-              .filter(item => item.id !== 'discover' && item.id !== 'discover-recipes')
-              .map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.id;
-                return (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`h-10 w-10 rounded-full transition-all ${
-                          isActive
-                            ? 'bg-orange-500 text-white shadow-lg'
-                            : 'text-gray-700 hover:bg-gray-100 hover:scale-110'
-                        }`}
+const FloatingNavIcons = () => (
+  <div className="pointer-events-none fixed z-[500]">
+    <div className="pointer-events-auto fixed top-4 right-4 p-2">
+      <TooltipProvider>
+        <div className="flex items-center gap-3 bg-white/90 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-4 py-3">
+          {navItems
+            .filter(item => item.id !== 'discover' && item.id !== 'discover-recipes')
+            .map((item) => {
+              const Icon = item.icon;
+              const isActive = currentPage === item.id;
+              return (
+                <Tooltip key={item.id}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-11 w-11 rounded-full transition-all ${
+                        isActive
+                          ? 'bg-orange-500 text-white shadow-lg'
+                          : 'text-gray-700 hover:bg-gray-100 hover:scale-110'
+                      }`}
                         onClick={() => onNavigate(item.id)}
                       >
                         <Icon className="h-5 w-5" />
