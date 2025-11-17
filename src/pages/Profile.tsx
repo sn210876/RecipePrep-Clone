@@ -84,8 +84,9 @@ export function Profile() {
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
-  const [newUsername, setNewUsername] = useState('');
+ const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
+  const [newLink, setNewLink] = useState('');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   useEffect(() => {
