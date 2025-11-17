@@ -354,14 +354,17 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         <div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
           <div className="space-y-1 py-4">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className="relative group">
-
-                  {/* BUBBLE */}
-                  <div
+             <div
+  key={message.id}
+  className="flex justify-end"
+>
+  <div
+    className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+      message.sender_id === currentUserId
+        ? 'bg-orange-500 text-white'
+        : 'bg-gray-200 text-gray-900'
+    }`}
+  >
                     className={`w-48 rounded-2xl px-4 py-2 ${
                       message.sender_id === currentUserId
                         ? 'bg-orange-500 text-white'
