@@ -1063,11 +1063,11 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                         )}
                       </button>
                       <button
-                        onClick={() => handleSharePost(post.id)}
-                        className="transition-transform hover:scale-110 text-2xl"
-                      >
-                        🥄
-                      </button>
+  onClick={() => handleSharePost(post.id)}
+  className="ml-auto transition-transform hover:scale-110 text-2xl"
+>
+  🥄
+</button>
                      
                     </div>
 
