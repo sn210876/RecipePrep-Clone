@@ -113,7 +113,7 @@ export function Upload({ onNavigate }: UploadProps) {
     }
     setSearchingMusic(true);
     try {
-      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent('https://youtube-music-api.vercel.app/search?q=' + query)}`);
+     const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://youtube-music-api.vercel.app/search?q=' + query)}`);
       const data = await res.json();
 
       const tracks = (data?.result || []).map((t: any) => ({
