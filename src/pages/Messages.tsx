@@ -352,7 +352,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
         {/* MESSAGES */}
         <div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
-  <div className="space-y-1 py-4">
+  <div className="space-y-2 py-4">
     {messages.map((message) => (
       <div
         key={message.id}
