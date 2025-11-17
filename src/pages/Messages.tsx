@@ -362,7 +362,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
      {/* CENTERED FULL-WIDTH INPUT BAR */}
 <div className="fixed bottom-20 left-0 right-0 bg-white border-t border-b border-gray-200 px-4 py-3 z-50">
-</div>
+
 
 
   <div className="flex gap-2">
