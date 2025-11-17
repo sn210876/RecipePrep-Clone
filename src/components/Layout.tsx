@@ -46,7 +46,7 @@ const FloatingNavIcons = () => (
         <div className="flex items-center gap-2 bg-transparent backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2">
 
           {navItems
-.filter(item => true)
+.filter(item => item.id !== 'discover')
             .map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
