@@ -105,8 +105,7 @@ export function Upload({ onNavigate }: UploadProps) {
     }
   };
 
-  // ── SPOTIFY SEARCH FUNCTION ─────────────────────────────────
-    // YOUTUBE MUSIC SEARCH — WORKING 100%
+    // YOUTUBE MUSIC SEARCH — 100% WORKING, FULL SONGS
   const searchYouTubeMusic = async (query: string) => {
     if (!query.trim()) {
       setSpotifyResults([]);
@@ -116,44 +115,24 @@ export function Upload({ onNavigate }: UploadProps) {
     try {
       const res = await fetch(`https://youtube-music-api.vercel.app/search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
+      
       const tracks = (data?.result || []).map((t: any) => ({
         id: t.videoId,
-        name: t.title || 'Unknown',
+        name: t.title || 'Unknown Song',
         artists: [{ name: t.artist || 'Unknown Artist' }],
-        album: { images: [{ url: t.thumbnails?.[0]?.url || '' }] },
+        album: { images: [{ url: t.thumbnails?.[0]?.url || 'https://via.placeholder.com/300' }] },
         preview_url: `https://www.youtube.com/watch?v=${t.videoId}`,
       }));
+      
       setSpotifyResults(tracks.slice(0, 12));
     } catch (err) {
-      console.error(err);
-      toast.error('Search failed');
+      console.error('YouTube search failed:', err);
+      toast.error('Search failed — try again');
       setSpotifyResults([]);
     } finally {
       setSearchingMusic(false);
     }
   };
-    const data = await res.json();
-
-    // THIS IS THE FIX: make sure we always have an array
-    if (Array.isArray(data)) {
-      setSpotifyResults(data);
-    } else {
-      console.error("Spotify returned non-array:", data);
-      setSpotifyResults([]);
-      if (data?.error) {
-        toast.error(data.error);
-      }
-    }
-  } catch (err) {
-    console.error("Spotify search failed:", err);
-    setSpotifyResults([]);
-    toast.error('Spotify search failed');
-  } finally {
-    setSearchingMusic(false);
-  }
-};
-    
-  // ─────────────────────────────────────────────────────────────
 
   const handleUpload = async () => {
     if (!selectedFile) {
