@@ -114,7 +114,7 @@ export function Upload({ onNavigate }: UploadProps) {
   setSearchingMusic(true);
   try {
     const res = await fetch(
-      `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/spotify-search?q=${encodeURIComponent(query)}`
+      `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/dynamic-worker?q=${encodeURIComponent(query)}`
     );
     const data = await res.json();
 
