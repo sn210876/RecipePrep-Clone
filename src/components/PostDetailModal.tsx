@@ -50,27 +50,16 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
-  const [userRating, setUserRating] = useState<number>(0);
-  const [hoverRating, setHoverRating] = useState<number>(0);
-  const [averageRating, setAverageRating] = useState<number>(0);
-  const [totalRatings, setTotalRatings] = useState<number>(0);
+  // Rating state removed - not displayed in this modal
   useEffect(() => {
     if (post) {
       setCaption(post.caption || '');
       loadReviewsAndComments();
       checkLikeStatus();
       loadCurrentUserAndAdminStatus();
-      loadRatings();
-      if (currentUserId) {
-        loadUserRating(currentUserId);
-      }
     }
   }, [post]);
-  useEffect(() => {
-    if (post && currentUserId) {
-      loadUserRating(currentUserId);
-    }
-  }, [post, currentUserId]);
+  // Rating effect removed - not used in this modal
   const loadCurrentUserAndAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -290,66 +279,7 @@ if (user.id !== post.user_id) {
 };
 
 
-  const loadRatings = async () => {
-    if (!post) return;
-    try {
-      const { data, error } = await supabase
-        .from('post_ratings')
-        .select('rating')
-        .eq('post_id', post.id);
-      if (error) throw error;
-      if (data && data.length > 0) {
-        const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
-        setAverageRating(avg);
-        setTotalRatings(data.length);
-      } else {
-        setAverageRating(0);
-        setTotalRatings(0);
-      }
-    } catch (error) {
-      console.error('Error loading ratings:', error);
-    }
-  };
-  const loadUserRating = async (userId: string) => {
-    if (!post) return;
-    try {
-      const { data, error } = await supabase
-        .from('post_ratings')
-        .select('rating')
-        .eq('post_id', post.id)
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (error) throw error;
-      setUserRating(data?.rating || 0);
-    } catch (error) {
-      console.error('Error loading user rating:', error);
-    }
-  };
-  const handleRatingClick = async (rating: number) => {
-    if (!currentUserId || !post) {
-      toast.error('Please log in to rate');
-      return;
-    }
-    try {
-      const { error } = await supabase
-        .from('post_ratings')
-        .upsert({
-          post_id: post.id,
-          user_id: currentUserId,
-          rating: rating,
-        }, {
-          onConflict: 'post_id,user_id'
-        });
-      if (error) throw error;
-      setUserRating(rating);
-      await loadRatings();
-      onUpdate();
-      toast.success('Rating submitted!');
-    } catch (error: any) {
-      console.error('Error submitting rating:', error);
-      toast.error('Failed to submit rating');
-    }
-  };
+  // Rating functions removed - not displayed in this modal
   if (!post) return null;
   const canDeletePost = post.user_id === currentUserId || isUserAdmin;
   const canDeleteComment = (commentUserId: string) => commentUserId === currentUserId || isUserAdmin;

@@ -200,12 +200,23 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       if (error) throw error;
 
       if (postData && postData.user_id !== currentUserId) {
-        await supabase.from('notifications').insert({
+        console.log('[Notifications] Sending comment notification:', {
           user_id: postData.user_id,
           actor_id: currentUserId,
           type: 'comment',
           post_id: postId,
         });
+        const { data, error } = await supabase.from('notifications').insert({
+          user_id: postData.user_id,
+          actor_id: currentUserId,
+          type: 'comment',
+          post_id: postId,
+        });
+        if (error) {
+          console.error('[Notifications] Error sending comment notification:', error);
+        } else {
+          console.log('[Notifications] Comment notification sent successfully:', data);
+        }
       }
 
       setNewComment('');

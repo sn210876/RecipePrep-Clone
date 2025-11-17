@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check, ChefHat } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -66,7 +66,7 @@ interface DiscoverProps {
   onPostViewed?: () => void;
 }
 
-export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
+export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
   const { isAdmin } = useAuth();
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -124,17 +124,42 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
     if (!currentUserId) return;
 
     const loadNotifications = async () => {
-      const { data } = await supabase
+      console.log('[Notifications] Loading notifications for user:', currentUserId);
+      const { data, error } = await supabase
         .from('notifications')
-        .select('*, actor:actor_id(username, avatar_url)')
+        .select('*')
         .eq('user_id', currentUserId)
         .neq('type', 'message')
         .order('created_at', { ascending: false })
         .limit(20);
 
+      if (error) {
+        console.error('[Notifications] Error loading notifications:', error);
+        return;
+      }
+
+      console.log('[Notifications] Loaded notifications:', data);
+
       if (data) {
-        setNotifications(data);
-        setUnreadNotifications(data.filter(n => !n.read).length);
+        // Manually fetch actor profiles for each notification
+        const actorIds = [...new Set(data.map(n => n.actor_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', actorIds);
+
+        console.log('[Notifications] Loaded actor profiles:', profiles);
+
+        // Map profiles to notifications
+        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const mappedData = data.map(n => ({
+          ...n,
+          actor: profilesMap.get(n.actor_id) || { username: 'Unknown', avatar_url: null }
+        }));
+
+        setNotifications(mappedData);
+        setUnreadNotifications(mappedData.filter(n => !n.read).length);
+        console.log('[Notifications] Unread count:', mappedData.filter(n => !n.read).length);
       }
     };
 
@@ -523,12 +548,23 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
 
         const post = posts.find(p => p.id === postId);
         if (post && post.user_id !== currentUserId) {
-          await supabase.from('notifications').insert({
+          console.log('[Notifications] Sending like notification:', {
             user_id: post.user_id,
             actor_id: currentUserId,
             type: 'like',
             post_id: postId,
           });
+          const { data, error } = await supabase.from('notifications').insert({
+            user_id: post.user_id,
+            actor_id: currentUserId,
+            type: 'like',
+            post_id: postId,
+          });
+          if (error) {
+            console.error('[Notifications] Error sending like notification:', error);
+          } else {
+            console.log('[Notifications] Like notification sent successfully:', data);
+          }
         }
 
         setPosts(prev =>
