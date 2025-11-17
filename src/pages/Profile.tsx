@@ -286,9 +286,10 @@ export function Profile() {
             </label>
           </div>
           {/* Avatar + Bio */}
+         {/* Avatar + Bio */}
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
-              <div className="relative flex-shrink-0">
+              <div className="relative flex-shrink-0 z-10">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt={profile.username} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
                 ) : (
@@ -301,41 +302,42 @@ export function Profile() {
                   <Camera className="w-4 h-4 text-gray-700" />
                 </label>
               </div>
-              {/* CENTERED 3-LINE BIO */}
-              {/* CENTERED 3-LINE BIO */}
-              <div className="flex-1 pt-11 text-center min-w-0">
-                {profile?.bio ? (
-                  <div className="space-y-2 mt-2">
-                    {profile.bio
-                      .split('\n')
-                      .slice(0, 3)
-                      .map((line, i) => (
-                        <p key={i} className="text-sm font-medium text-gray-800 italic tracking-wide leading-snug" style={{ wordBreak: 'break-word' }}>
-                          {line.slice(0, 40)}
-                        </p>
-                      ))}
+              <div className="flex-1 flex flex-col min-w-0">
+                <div className="mt-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
+                    {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
                   </div>
-                ) : (
-                  <p className="text-sm text-gray-400 italic font-light mt-3">
-                    Tap Edit Profile to add a bio
-                  </p>
-                )}
-                {profile?.link && (
-                  <a 
-                    href={profile.link} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline"
-                  >
-                    {profile.link}
-                  </a>
-                )}
-              </div>
-            </div>
-           <div className="mt-0 text-left pl-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
-                {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
+                </div>
+                {/* CENTERED 3-LINE BIO */}
+                <div className="pt-2 text-center">
+                  {profile?.bio ? (
+                    <div className="space-y-2">
+                      {profile.bio
+                        .split('\n')
+                        .slice(0, 3)
+                        .map((line, i) => (
+                          <p key={i} className="text-sm font-medium text-gray-800 italic tracking-wide leading-snug" style={{ wordBreak: 'break-word' }}>
+                            {line.slice(0, 40)}
+                          </p>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 italic font-light">
+                      Tap Edit Profile to add a bio
+                    </p>
+                  )}
+                  {profile?.link && (
+                    <a 
+                      href={profile.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline"
+                    >
+                      {profile.link}
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
             <div className="mt-4 flex justify-center">
