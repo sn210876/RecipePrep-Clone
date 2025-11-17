@@ -321,7 +321,7 @@ export function Profile() {
                 )}
               </div>
             </div>
-           <div className="mt-0 text-left pl-0">
+           <div className="mt-10 text-left pl-0">
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
                 {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
