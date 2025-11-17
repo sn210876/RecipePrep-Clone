@@ -107,25 +107,35 @@ export function Upload({ onNavigate }: UploadProps) {
 
   // ── SPOTIFY SEARCH FUNCTION ─────────────────────────────────
   const searchSpotify = async (query: string) => {
-    if (!query.trim()) {
+  if (!query.trim()) {
+    setSpotifyResults([]);
+    return;
+  }
+  setSearchingMusic(true);
+  try {
+    const res = await fetch(
+      `https://YOUR-PROJECT-REF.supabase.co/functions/v1/spotify-search?q=${encodeURIComponent(query)}`
+    );
+    const data = await res.json();
+
+    // THIS IS THE FIX: make sure we always have an array
+    if (Array.isArray(data)) {
+      setSpotifyResults(data);
+    } else {
+      console.error("Spotify returned non-array:", data);
       setSpotifyResults([]);
-      return;
+      if (data?.error) {
+        toast.error(data.error);
+      }
     }
-    setSearchingMusic(true);
-    try {
-      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-      // CHANGE THIS URL TO YOUR REAL ONE FROM SUPABASE
-      const res = await fetch(
-        `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/spotify-search?q=${encodeURIComponent(query)}`
-      );
-      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-      const tracks = await res.json();
-      setSpotifyResults(tracks || []);
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to search Spotify');
-    } finally {
-      setSearchingMusic(false);
+  } catch (err) {
+    console.error("Spotify search failed:", err);
+    setSpotifyResults([]);
+    toast.error('Spotify search failed');
+  } finally {
+    setSearchingMusic(false);
+  }
+};
     }
   };
   // ─────────────────────────────────────────────────────────────
