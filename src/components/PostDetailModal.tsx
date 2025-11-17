@@ -210,6 +210,17 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
           user_id: user.id,
           text: newComment.trim()
         });
+      // 🔔 SEND COMMENT NOTIFICATION (don't notify yourself)
+if (user.id !== post.user_id) {
+  await supabase.from('notifications').insert({
+    user_id: post.user_id,
+    actor_id: user.id,
+    type: 'comment',
+    post_id: post.id,
+    read: false
+  });
+}
+
       if (error) throw error;
       setNewComment('');
       await loadReviewsAndComments();
