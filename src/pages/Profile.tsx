@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2 } from 'lucide-react';
+import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
@@ -73,7 +73,6 @@ interface Profile {
   avatar_url: string | null;
   banner_url?: string | null;
   bio?: string | null;
-  link?: string | null;
   followers_count?: number;
   following_count?: number;
 }
@@ -87,7 +86,6 @@ export function Profile() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
-  const [newLink, setNewLink] = useState('');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   useEffect(() => {
@@ -105,7 +103,7 @@ export function Profile() {
       setUserId(userData.user.id);
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('username, avatar_url, banner_url, bio, link')
+        .select('username, avatar_url, banner_url, bio')
         .eq('id', userData.user.id)
         .maybeSingle();
       if (!profileData) {
@@ -237,7 +235,6 @@ export function Profile() {
     const updates: any = {};
     if (newUsername.trim() && newUsername.trim() !== profile?.username) updates.username = newUsername.trim();
     if (newBio.trim() !== (profile?.bio || '').trim()) updates.bio = newBio.trim() || null;
-    if (newLink.trim() !== (profile?.link || '').trim()) updates.link = newLink.trim() || null;
     if (Object.keys(updates).length > 0) {
       const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
       if (error) {
@@ -266,6 +263,9 @@ export function Profile() {
       <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className="text-lg font-semibold">Profile</h1>
+          <button onClick={handleLogout} className="text-gray-600 hover:text-gray-900 p-2">
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </div>
       <div className="max-w-lg mx-auto">
@@ -329,7 +329,6 @@ export function Profile() {
                 onClick={() => {
                   setNewUsername(profile?.username || '');
                   setNewBio(profile?.bio || '');
-                  setNewLink(profile?.link || '');
                   setEditingProfile(true);
                 }}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-600 text-white font-medium rounded-full hover:bg-orange-700 shadow-md"
@@ -375,8 +374,7 @@ export function Profile() {
         ) : (
           <div className="grid grid-cols-3 gap-1">
             {posts.map(post => (
-              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative z-9999">
-
+              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
                 {post.image_url ? (
                   <img src={post.image_url} alt={post.title || 'Post'} className="w-full h-full object-cover" />
                 ) : post.video_url ? (
@@ -427,16 +425,6 @@ export function Profile() {
               />
               <p className="text-xs text-gray-500 text-center -mt-2">Press Enter for new line</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="link">Link</Label>
-              <Input 
-                id="link" 
-                value={newLink} 
-                onChange={e => setNewLink(e.target.value)} 
-                placeholder="https://example.com"
-                type="url"
-              />
-            </div>
             <div className="flex gap-2">
               {profile?.avatar_url && (
                 <Button variant="outline" onClick={handleDeleteAvatar} disabled={uploading} className="flex-1 text-red-600">
@@ -466,4 +454,4 @@ export function Profile() {
     </div>
   );
 }
- ;
+ ;
