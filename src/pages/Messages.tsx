@@ -380,7 +380,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     </Button>
   </div>
 </div>
-      </div>
+    
     );
   }
 
