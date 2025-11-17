@@ -316,56 +316,45 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     />
   ) : null}
 
-  {/* ONLY SHOW MUSIC OVERLAY IF THERE IS A SONG */}
+   {/* YOUTUBE MUSIC PLAYER — FULL SONG, ALWAYS WORKS */}
   {post.spotify_preview_url && (
     <>
-      {/* Invisible full-screen click area to play/pause */}
+      {/* Click anywhere to play/pause */}
       <button
-        className="absolute inset-0 z-10 cursor-pointer"
+        className="absolute inset-0 z-10"
         onClick={() => {
-          const audio = document.getElementById(`audio-${post.id}`) as HTMLAudioElement;
-          if (audio) {
-            audio.paused ? audio.play() : audio.pause();
+          const iframe = document.querySelector(`#ytplayer-${post.id}`) as HTMLIFrameElement;
+          if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
           }
         }}
-        aria-label="Play/Pause music"
+        aria-label="Play music"
       />
 
-      {/* Big center play button (shows only when paused) */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-        <div className="bg-white/20 backdrop-blur-md rounded-full p-8 animate-pulse">
-          <svg className="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7L8 5z" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Beautiful bottom music bar — Instagram/TikTok style */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-6 z-30">
+      {/* Beautiful Instagram-style music bar */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
         <div className="flex items-center gap-5 max-w-3xl mx-auto">
           <img
             src={post.spotify_album_art || '/placeholder-album.png'}
             alt="Album"
-            className="w-16 h-16 rounded-full animate-spin-slow shadow-2xl border-2 border-white/30"
+            className="w-16 h-16 rounded-full animate-spin-slow shadow-2xl border-4 border-white/40"
           />
-
           <div className="flex-1 text-white">
-            <p className="font-bold text-lg truncate">{post.spotify_track_name}</p>
-            <p className="text-sm opacity-90">{post.spotify_artist_name}</p>
+            <p className="font-bold text-lg truncate">{post.spotify_track_name || 'Song'}</p>
+            <p className="text-sm opacity-90">{post.spotify_artist_name || 'Artist'}</p>
           </div>
-
-          {/* Audio player with volume control */}
-          <div className="flex items-center gap-3 bg-white/20 backdrop-blur-lg rounded-full px-4 py-3">
-            <audio
-              id={`audio-${post.id}`}
-              src={post.spotify_preview_url}
-              controls
-              controlsList="nodownload"
-              className="h-10 w-64 accent-white"
-            />
-          </div>
+          <div className="text-white text-3xl">♪</div>
         </div>
       </div>
+
+      {/* Hidden YouTube player — full song, no controls shown */}
+      <iframe
+        id={`ytplayer-${post.id}`}
+        src={`https://www.youtube.com/embed/${post.spotify_preview_url.split('v=')[1]}?autoplay=1&loop=1&playlist=${post.spotify_preview_url.split('v=')[1]}&controls=0&modestbranding=1&rel=0`}
+        className="absolute inset-0 w-0 h-0 opacity-0 pointer-events-none"
+        allow="autoplay; encrypted-media"
+        allowFullScreen
+      ></iframe>
     </>
   )}
 </div>
