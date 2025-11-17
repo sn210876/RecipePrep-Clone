@@ -39,38 +39,47 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   };
 
   const loadUnreadCount = async () => {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
-
-      const { data: conversations } = await supabase
-        .from('conversations')
-        .select('id, user1_id, user2_id, last_message_at')
-        .or(`user1_id.eq.${userData.user.id},user2_id.eq.${userData.user.id}`)
-        .order('last_message_at', { ascending: false });
-
-      if (!conversations) {
-        setUnreadCount(0);
-        return;
-      }
-
-      let totalUnread = 0;
-      for (const convo of conversations) {
-        const { count } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('conversation_id', convo.id)
-          .eq('read', false)
-          .neq('sender_id', userData.user.id);
-
-        totalUnread += count || 0;
-      }
-
-      setUnreadCount(totalUnread);
-    } catch (error) {
-      console.error('Error loading unread count:', error);
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      console.log('No user logged in');
+      return;
     }
-  };
+
+    console.log('Loading unread count for user:', userData.user.id);
+
+    const { data: conversations } = await supabase
+      .from('conversations')
+      .select('id, user1_id, user2_id, last_message_at')
+      .or(`user1_id.eq.${userData.user.id},user2_id.eq.${userData.user.id}`)
+      .order('last_message_at', { ascending: false });
+
+    console.log('Conversations found:', conversations);
+
+    if (!conversations) {
+      setUnreadCount(0);
+      return;
+    }
+
+    let totalUnread = 0;
+    for (const convo of conversations) {
+      const { count } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('conversation_id', convo.id)
+        .eq('read', false)
+        .neq('sender_id', userData.user.id);
+
+      console.log(`Conversation ${convo.id}: ${count} unread`);
+      totalUnread += count || 0;
+    }
+
+    console.log('Total unread count:', totalUnread);
+    setUnreadCount(totalUnread);
+  } catch (error) {
+    console.error('Error loading unread count:', error);
+  }
+};
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
