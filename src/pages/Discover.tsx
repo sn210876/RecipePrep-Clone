@@ -1071,7 +1071,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                       </div>
                     </div>
 
-                    <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110 relative">
+                  <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110 relative">
   <Heart
     className={`w-7 h-7 ${
       isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'
