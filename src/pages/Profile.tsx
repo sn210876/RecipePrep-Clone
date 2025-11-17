@@ -376,7 +376,6 @@ export function Profile() {
               </div>
             </div>
 
-          </div>
 
             <div className="mt-1 text-left">
               <div className="flex items-center gap-2">
