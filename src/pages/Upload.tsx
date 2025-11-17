@@ -114,7 +114,7 @@ export function Upload({ onNavigate }: UploadProps) {
   setSearchingMusic(true);
   try {
     const res = await fetch(
-      `https://YOUR-PROJECT-REF.supabase.co/functions/v1/spotify-search?q=${encodeURIComponent(query)}`
+      `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/spotify-search?q=${encodeURIComponent(query)}`
     );
     const data = await res.json();
 
@@ -135,7 +135,8 @@ export function Upload({ onNavigate }: UploadProps) {
   } finally {
     setSearchingMusic(false);
   }
-}
+};
+    
   // ─────────────────────────────────────────────────────────────
 
   const handleUpload = async () => {
