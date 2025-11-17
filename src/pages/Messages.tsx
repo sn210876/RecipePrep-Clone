@@ -360,26 +360,27 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   </div>
 </div>
 
-        {/* FIXED INPUT BAR */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={!newMessage.trim()}
-              className="rounded-full bg-orange-500 hover:bg-orange-600 text-white px-6"
-            >
-              <SendIcon className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
+       {/* FIXED INPUT BAR */}
+<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50">
+  <div className="flex gap-2">
+    <input
+      type="text"
+      value={newMessage}
+      onChange={(e) => setNewMessage(e.target.value)}
+      onKeyPress={handleKeyPress}
+      placeholder="Type a message..."
+      className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+    />
+    <Button
+      onClick={sendMessage}
+      disabled={!newMessage.trim()}
+      className="rounded-full bg-orange-500 hover:bg-orange-600 text-white px-6"
+    >
+      <SendIcon className="w-5 h-5" />
+    </Button>
+  </div>
+</div>
+
       </div>
     );
   }
