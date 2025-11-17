@@ -1076,9 +1076,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                       </div>
                     </div>
 
-                    <div className="text-sm font-semibold">
-                      {post._count?.likes || 0} {post._count?.likes === 1 ? 'like' : 'likes'}
-                    </div>
+              
 
                     {post.caption && (
                       <div className="text-sm">
