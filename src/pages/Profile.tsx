@@ -9,6 +9,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { PostDetailModal } from '../components/PostDetailModal';
+
 // AUTO-RESIZE IMAGE FUNCTION — WORKS EVERYWHERE (PHONE + COMPUTER)
 const resizeImage = (
   file: File,
@@ -55,6 +56,7 @@ const resizeImage = (
     img.src = URL.createObjectURL(file);
   });
 };
+
 interface Post {
   id: string;
   user_id: string;
@@ -68,6 +70,7 @@ interface Post {
   likes_count?: number;
   comments_count?: number;
 }
+
 interface Profile {
   username: string;
   avatar_url: string | null;
@@ -77,6 +80,7 @@ interface Profile {
   followers_count?: number;
   following_count?: number;
 }
+
 export function Profile() {
   const { signOut } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -90,24 +94,29 @@ export function Profile() {
   const [newLink, setNewLink] = useState('');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+
   useEffect(() => {
     loadProfile();
     checkAdmin();
   }, []);
+
   const checkAdmin = async () => {
     const admin = await isAdmin();
     setIsUserAdmin(admin);
   };
+
   const loadProfile = async () => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
       setUserId(userData.user.id);
+
       const { data: profileData } = await supabase
         .from('profiles')
         .select('username, avatar_url, banner_url, link, bio')
         .eq('id', userData.user.id)
         .maybeSingle();
+
       if (!profileData) {
         const defaultUsername = userData.user.email?.split('@')[0] || 'user';
         await supabase.from('profiles').insert({
@@ -121,21 +130,25 @@ export function Profile() {
           .from('follows')
           .select('*', { count: 'exact', head: true })
           .eq('following_id', userData.user.id);
+
         const { count: followingCount } = await supabase
           .from('follows')
           .select('*', { count: 'exact', head: true })
           .eq('follower_id', userData.user.id);
+
         setProfile({
           ...profileData,
           followers_count: followersCount || 0,
           following_count: followingCount || 0,
         });
       }
+
       const { data: postsData } = await supabase
         .from('posts')
         .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
         .eq('user_id', userData.user.id)
         .order('created_at', { ascending: false });
+
       setPosts(postsData || []);
     } catch (error: any) {
       toast.error('Failed to load profile');
@@ -143,30 +156,40 @@ export function Profile() {
       setLoading(false);
     }
   };
+
   // AUTO-RESIZED AVATAR UPLOAD — WORKS WITH 100MB+ PHOTOS
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
+
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image');
       return;
     }
+
     setUploading(true);
     toast.loading('Resizing & uploading avatar...', { duration: 0 });
+
     try {
       const resizedFile = await resizeImage(file, 1080, 1080, 0.9);
       const fileExt = resizedFile.name.split('.').pop() || 'jpg';
       const fileName = `${userId}/avatar.${fileExt}`;
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, resizedFile, { upsert: true });
+
       if (uploadError) throw uploadError;
+
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl + '?t=' + Date.now() })
         .eq('id', userId);
+
       if (updateError) throw updateError;
+
       setProfile(prev => prev ? { ...prev, avatar_url: publicUrl + '?t=' + Date.now() } : null);
       toast.dismiss();
       toast.success('Avatar updated instantly!');
@@ -177,30 +200,40 @@ export function Profile() {
       setUploading(false);
     }
   };
+
   // AUTO-RESIZED BANNER UPLOAD
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
+
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image');
       return;
     }
+
     setUploading(true);
     toast.loading('Resizing & uploading banner...', { duration: 0 });
+
     try {
       const resizedFile = await resizeImage(file, 1920, 600, 0.9);
       const fileExt = resizedFile.name.split('.').pop() || 'jpg';
       const fileName = `${userId}/banner.${fileExt}`;
+
       const { error: uploadError } = await supabase.storage
         .from('banners')
         .upload(fileName, resizedFile, { upsert: true });
+
       if (uploadError) throw uploadError;
+
       const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(fileName);
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ banner_url: publicUrl + '?t=' + Date.now() })
         .eq('id', userId);
+
       if (updateError) throw updateError;
+
       setProfile(prev => prev ? { ...prev, banner_url: publicUrl + '?t=' + Date.now() } : null);
       toast.dismiss();
       toast.success('Banner updated instantly!');
@@ -211,18 +244,21 @@ export function Profile() {
       setUploading(false);
     }
   };
+
   const handleDeleteAvatar = async () => {
     if (!userId) return;
     await supabase.from('profiles').update({ avatar_url: null }).eq('id', userId);
     setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
     toast.success('Avatar removed');
   };
+
   const handleDeleteBanner = async () => {
     if (!userId) return;
     await supabase.from('profiles').update({ banner_url: null }).eq('id', userId);
     setProfile(prev => prev ? { ...prev, banner_url: null } : null);
     toast.success('Banner removed');
   };
+
   const handleEditProfile = async () => {
     if (!userId) return;
     const lines = newBio.trim().split('\n');
@@ -234,10 +270,12 @@ export function Profile() {
       toast.error('Maximum 40 characters per line');
       return;
     }
+
     const updates: any = {};
     if (newUsername.trim() && newUsername.trim() !== profile?.username) updates.username = newUsername.trim();
     if (newBio.trim() !== (profile?.bio || '').trim()) updates.bio = newBio.trim() || null;
     if (newLink.trim() !== (profile?.link || '').trim()) updates.link = newLink.trim() || null;
+
     if (Object.keys(updates).length > 0) {
       const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
       if (error) {
@@ -249,7 +287,9 @@ export function Profile() {
     }
     setEditingProfile(false);
   };
+
   const handleLogout = async () => { await signOut(); };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-20">
@@ -260,6 +300,7 @@ export function Profile() {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
@@ -271,6 +312,7 @@ export function Profile() {
           </button>
         </div>
       </div>
+
       <div className="max-w-lg mx-auto">
         <div className="bg-white border-b border-gray-200">
           {/* Banner */}
@@ -285,8 +327,8 @@ export function Profile() {
               <Camera className="w-4 h-4 text-gray-600" />
             </label>
           </div>
+
           {/* Avatar + Bio */}
-         {/* Avatar + Bio */}
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
               <div className="relative flex-shrink-0 z-10">
@@ -302,44 +344,45 @@ export function Profile() {
                   <Camera className="w-4 h-4 text-gray-700" />
                 </label>
               </div>
-              <div className="flex-1 flex flex-col min-w-0">
-                <div className="mt-1 text-left">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
-                    {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
+
+              {/* CENTERED 3-LINE BIO */}
+              <div className="flex-1 pt-11 text-center min-w-0">
+                {profile?.bio ? (
+                  <div className="space-y-2 mt-2">
+                    {profile.bio
+                      .split('\n')
+                      .slice(0, 3)
+                      .map((line, i) => (
+                        <p key={i} className="text-sm font-medium text-gray-800 italic tracking-wide leading-snug" style={{ wordBreak: 'break-word' }}>
+                          {line.slice(0, 40)}
+                        </p>
+                      ))}
                   </div>
-                </div>
-                {/* CENTERED 3-LINE BIO */}
-                <div className="pt-2 text-center">
-                  {profile?.bio ? (
-                    <div className="space-y-2">
-                      {profile.bio
-                        .split('\n')
-                        .slice(0, 3)
-                        .map((line, i) => (
-                          <p key={i} className="text-sm font-medium text-gray-800 italic tracking-wide leading-snug" style={{ wordBreak: 'break-word' }}>
-                            {line.slice(0, 40)}
-                          </p>
-                        ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-400 italic font-light">
-                      Tap Edit Profile to add a bio
-                    </p>
-                  )}
-                  {profile?.link && (
-                    <a 
-                      href={profile.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline"
-                    >
-                      {profile.link}
-                    </a>
-                  )}
-                </div>
+                ) : (
+                  <p className="text-sm text-gray-400 italic font-light mt-3">
+                    Tap Edit Profile to add a bio
+                  </p>
+                )}
+                {profile?.link && (
+                  <a 
+                    href={profile.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline"
+                  >
+                    {profile.link}
+                  </a>
+                )}
               </div>
             </div>
+
+            <div className="mt-2 text-left">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
+                {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
+              </div>
+            </div>
+
             <div className="mt-4 flex justify-center">
               <button
                 onClick={() => {
@@ -355,6 +398,7 @@ export function Profile() {
               </button>
             </div>
           </div>
+
           {/* Stats */}
           <div className="px-4 py-4 border-t border-gray-200">
             <div className="flex justify-center gap-10">
@@ -373,6 +417,7 @@ export function Profile() {
             </div>
           </div>
         </div>
+
         {/* Posts Grid */}
         <div className="border-b border-gray-200 bg-white">
           <div className="flex items-center justify-center gap-2 py-3">
@@ -380,6 +425,7 @@ export function Profile() {
             <span className="text-sm font-semibold uppercase tracking-wider">Posts</span>
           </div>
         </div>
+
         {posts.length === 0 ? (
           <div className="text-center py-16 px-4">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg mb-4">
@@ -407,6 +453,7 @@ export function Profile() {
           </div>
         )}
       </div>
+
       {/* EDIT DIALOG */}
       <Dialog open={editingProfile} onOpenChange={setEditingProfile}>
         <DialogContent>
@@ -471,6 +518,7 @@ export function Profile() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       <PostDetailModal
         post={selectedPost}
         open={!!selectedPost}
@@ -481,4 +529,3 @@ export function Profile() {
     </div>
   );
 }
- ;
