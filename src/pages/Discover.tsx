@@ -1045,7 +1045,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'
     }`}
   />
-  {post._count?.likes && post._count.likes > 0 && (
+  {post._count?.likes > 0 && (
     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
       {post._count.likes}
     </span>
