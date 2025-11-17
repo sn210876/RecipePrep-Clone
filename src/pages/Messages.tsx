@@ -372,7 +372,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       onChange={(e) => setNewMessage(e.target.value)}
       onKeyPress={handleKeyPress}
       placeholder="Type a message..."
-      <div className="flex gap-2 w-[80%] mx-auto"
+      lassName="flex gap-2 w-[80%] mx-auto"
 
 
     />
