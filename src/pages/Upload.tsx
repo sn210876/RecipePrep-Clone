@@ -152,7 +152,6 @@ const searchYouTubeMusic = async (query: string) => {
   } finally {
     setSearchingMusic(false);
   }
-};
 };─────────────────────────────────────────────────
 
   const handleUpload = async () => {
