@@ -321,8 +321,8 @@ export function Profile() {
                 )}
               </div>
             </div>
-            <div className="mt-3 text-center">
-              <div className="flex items-center justify-center gap-2">
+           <div className="mt-3 text-left pl-0">
+              <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-gray-900">{profile?.username}</h2>
                 {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
               </div>
