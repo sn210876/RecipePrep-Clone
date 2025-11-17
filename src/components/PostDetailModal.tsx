@@ -369,8 +369,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     </>
   )}
 </div>
-            )}
-          </div>
 
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
