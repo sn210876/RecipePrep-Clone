@@ -340,8 +340,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         <div
   key={message.id}
   className="flex justify-end"
-}
-      >
+>
         <div
           className={`max-w-[70%] rounded-2xl px-4 py-2 ${
             message.sender_id === currentUserId
