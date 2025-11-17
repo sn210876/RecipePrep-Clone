@@ -10,7 +10,6 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { PostDetailModal } from '../components/PostDetailModal';
 
-// AUTO-RESIZE IMAGE FUNCTION — WORKS EVERYWHERE (PHONE + COMPUTER)
 const resizeImage = (
   file: File,
   maxWidth: number,
@@ -24,7 +23,6 @@ const resizeImage = (
     img.onload = () => {
       let width = img.width;
       let height = img.height;
-      // Maintain aspect ratio
       if (width > height) {
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
@@ -157,7 +155,6 @@ export function Profile() {
     }
   };
 
-  // AUTO-RESIZED AVATAR UPLOAD — WORKS WITH 100MB+ PHOTOS
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
@@ -201,7 +198,6 @@ export function Profile() {
     }
   };
 
-  // AUTO-RESIZED BANNER UPLOAD
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
@@ -303,7 +299,6 @@ export function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
       <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className="text-lg font-semibold">Profile</h1>
@@ -315,7 +310,6 @@ export function Profile() {
 
       <div className="max-w-lg mx-auto">
         <div className="bg-white border-b border-gray-200">
-          {/* Banner */}
           <div className="relative h-32">
             {profile?.banner_url ? (
               <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover" />
@@ -328,16 +322,14 @@ export function Profile() {
             </label>
           </div>
 
-          {/* Avatar + Bio */}
-         {/* Avatar + Bio */}
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
               <div className="flex-shrink-0">
-                <div className="relative z-10 w-20 h-20">
+                <div className="relative z-10 w-36 h-36">
                   {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt={profile.username} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
+                    <img src={profile.avatar_url} alt={profile.username} className="w-36 h-36 rounded-full object-cover border-4 border-white shadow-lg" />
                   ) : (
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
+                    <div className="w-36 h-36 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-4xl font-bold border-4 border-white shadow-lg">
                       {profile?.username?.[0]?.toUpperCase()}
                     </div>
                   )}
@@ -354,7 +346,6 @@ export function Profile() {
                 </div>
               </div>
 
-              {/* CENTERED 3-LINE BIO */}
               <div className="flex-1 pt-11 text-center min-w-0 max-w-[60%]">
                 {profile?.bio ? (
                   <div className="space-y-2 mt-2">
@@ -401,7 +392,6 @@ export function Profile() {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="px-4 py-4 border-t border-gray-200">
             <div className="flex justify-center gap-10">
               <div className="text-center">
@@ -420,7 +410,6 @@ export function Profile() {
           </div>
         </div>
 
-        {/* Posts Grid */}
         <div className="border-b border-gray-200 bg-white">
           <div className="flex items-center justify-center gap-2 py-3">
             <Grid3x3 className="w-5 h-5 text-gray-900" />
@@ -456,7 +445,6 @@ export function Profile() {
         )}
       </div>
 
-      {/* EDIT DIALOG */}
       <Dialog open={editingProfile} onOpenChange={setEditingProfile}>
         <DialogContent>
           <DialogHeader>
