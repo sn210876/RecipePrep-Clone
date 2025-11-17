@@ -105,7 +105,7 @@ export function Upload({ onNavigate }: UploadProps) {
     }
   };
 
- // YOUTUBE MUSIC SEARCH — WORKS EVERY TIME
+// YOUTUBE MUSIC SEARCH — PUBLIC, NO AUTH, ALWAYS WORKS
 const searchYouTubeMusic = async (query: string) => {
   if (!query.trim()) {
     setSpotifyResults([]);
@@ -113,24 +113,45 @@ const searchYouTubeMusic = async (query: string) => {
   }
   setSearchingMusic(true);
   try {
-    const res = await fetch(`https://ytmusic-api.vercel.app/api/search?q=${encodeURIComponent(query)}`);
+    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(
+      'https://music.youtube.com/youtubei/v1/search?key=AIzaSyC9XL3ZjWddXyaLeNCES6QG5tqg7_kqocY&prettyPrint=false'
+    )}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        context: { client: { clientName: "WEB", clientVersion: "2.20220918" } },
+        query: query
+      })
+    });
     const data = await res.json();
-    const tracks = (data.result || []).slice(0, 12).map((t: any) => ({
-      id: t.videoId,
-      name: t.title,
-      artists: [{ name: t.artist || 'Unknown' }],
-      album: { images: [{ url: t.thumbnail }] },
-      preview_url: `https://www.youtube.com/watch?v=${t.videoId}`, // plays full audio
-    }));
-    setSpotifyResults(tracks);
-  } catch {
-    toast.error('Search failed');
+
+    const tracks = data.contents.tabbedSearchResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.musicShelfRenderer?.contents || [];
+
+    const results = tracks.map((item: any) => {
+      const t = item.musicResponsiveListItemFlexColumnRenderer || item.musicResponsiveListItemRenderer?.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer;
+      const title = t?.text?.runs?.[0]?.text || 'Unknown';
+      const artist = item.musicResponsiveListItemRenderer?.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text || 'Unknown';
+      const videoId = item.musicResponsiveListItemRenderer?.playlistItemData?.videoId || item.musicResponsiveListItemRenderer?.overlay?.musicItemThumbnailOverlayRenderer?.videoId;
+      const thumbnail = item.musicResponsiveListItemRenderer?.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.[0]?.url || '';
+
+      return {
+        id: videoId,
+        name: title,
+        artists: [{ name: artist }],
+        album: { images: [{ url: thumbnail || 'https://via.placeholder.com/300' }] },
+        preview_url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : null,
+      };
+    }).filter(t => t.preview_url);
+
+    setSpotifyResults(results.slice(0, 12));
+  } catch (err) {
+    console.error(err);
+    toast.error('Search failed — try again');
     setSpotifyResults([]);
   } finally {
     setSearchingMusic(false);
   }
-};
-  // ─────────────────────────────────────────────────────────────
+};─────────────────────────────────────────────────
 
   const handleUpload = async () => {
     if (!selectedFile) {
