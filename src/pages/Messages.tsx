@@ -382,12 +382,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                   {/* DELETE BUTTON (ONLY FOR YOUR MESSAGES) */}
                   {message.sender_id === currentUserId && (
                     <button
-  onClick={() => deleteMessage(message.id)}
-  className="text-xs mt-1 text-red-500"
->
-  🗑️
-</button>
-
+                      onClick={() => handleDeleteMessage(message.id)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      🗑️ 
+                    </button>
                   )}
 
                 </div>
