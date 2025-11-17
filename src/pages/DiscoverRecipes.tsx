@@ -175,7 +175,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-xl font-bold text-gray-900 mb-4">
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Discover Amazing Recipes
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
