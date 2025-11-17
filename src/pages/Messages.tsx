@@ -331,34 +331,34 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           </div>
         </div>
 
-        {/* Messages Area - starts below fixed header */}
-        <div className="pt-16 flex-1 overflow-y-auto px-4 pb-24">
-          <div className="space-y-4 py-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                    message.sender_id === currentUserId
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-200 text-gray-900'
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                  <span className="text-xs opacity-70 mt-1 block">
-                    {new Date(message.created_at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
+       {/* Messages Area - starts below fixed header */}
+<div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
+  <div className="space-y-4 py-4">
+    {messages.map((message) => (
+      <div
+        key={message.id}
+        className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
+      >
+        <div
+          className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+            message.sender_id === currentUserId
+              ? 'bg-orange-500 text-white'
+              : 'bg-gray-200 text-gray-900'
+          }`}
+        >
+          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          <span className="text-xs opacity-70 mt-1 block">
+            {new Date(message.created_at).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
         </div>
+      </div>
+    ))}
+    <div ref={messagesEndRef} />
+  </div>
+</div>
 
         {/* FIXED INPUT BAR */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
