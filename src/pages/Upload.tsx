@@ -105,6 +105,7 @@ export function Upload({ onNavigate }: UploadProps) {
     }
   };
 
+ // YOUTUBE MUSIC SEARCH — WORKS EVERY TIME
 // YOUTUBE MUSIC SEARCH — PUBLIC, NO AUTH, ALWAYS WORKS
 const searchYouTubeMusic = async (query: string) => {
   if (!query.trim()) {
@@ -151,6 +152,7 @@ const searchYouTubeMusic = async (query: string) => {
   } finally {
     setSearchingMusic(false);
   }
+};
 };─────────────────────────────────────────────────
 
   const handleUpload = async () => {
