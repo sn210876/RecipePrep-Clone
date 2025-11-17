@@ -73,7 +73,6 @@ interface Profile {
   avatar_url: string | null;
   banner_url?: string | null;
   bio?: string | null;
-  link?: string | null;
   followers_count?: number;
   following_count?: number;
 }
@@ -85,9 +84,8 @@ export function Profile() {
   const [uploading, setUploading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
- const [newUsername, setNewUsername] = useState('');
+  const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
-  const [newLink, setNewLink] = useState('');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   useEffect(() => {
@@ -103,9 +101,9 @@ export function Profile() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
       setUserId(userData.user.id);
-     const { data: profileData } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
-        .select('username, avatar_url, banner_url, bio, link')
+        .select('username, avatar_url, banner_url, bio')
         .eq('id', userData.user.id)
         .maybeSingle();
       if (!profileData) {
