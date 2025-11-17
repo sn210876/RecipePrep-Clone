@@ -361,7 +361,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 </div>
 
      {/* CENTERED FULL-WIDTH INPUT BAR */}
-<div className="fixed bottom-20 left-0 right-10 w-80 bg-white border-t border-gray-200 px-4 py-3 z-50">
+<div className="fixed bottom-20 left-4 right-auto w-80 bg-white border-t border-gray-200 px-4 py-3 z-50">
+
 
 
 
