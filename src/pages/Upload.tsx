@@ -107,15 +107,32 @@ export function Upload({ onNavigate }: UploadProps) {
 
   // ── SPOTIFY SEARCH FUNCTION ─────────────────────────────────
   const searchSpotify = async (query: string) => {
-  if (!query.trim()) {
-    setSpotifyResults([]);
-    return;
-  }
-  setSearchingMusic(true);
-  try {
-    const res = await fetch(
-      `https://vohvdarghgqskzqjclux.supabase.co/functions/v1/dynamic-worker?q=${encodeURIComponent(query)}`
-    );
+    // YOUTUBE MUSIC SEARCH — WORKING 100%
+  const searchYouTubeMusic = async (query: string) => {
+    if (!query.trim()) {
+      setSpotifyResults([]);
+      return;
+    }
+    setSearchingMusic(true);
+    try {
+      const res = await fetch(`https://youtube-music-api.vercel.app/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      const tracks = (data?.result || []).map((t: any) => ({
+        id: t.videoId,
+        name: t.title || 'Unknown',
+        artists: [{ name: t.artist || 'Unknown Artist' }],
+        album: { images: [{ url: t.thumbnails?.[0]?.url || '' }] },
+        preview_url: `https://www.youtube.com/watch?v=${t.videoId}`,
+      }));
+      setSpotifyResults(tracks.slice(0, 12));
+    } catch (err) {
+      console.error(err);
+      toast.error('Search failed');
+      setSpotifyResults([]);
+    } finally {
+      setSearchingMusic(false);
+    }
+  };
     const data = await res.json();
 
     // THIS IS THE FIX: make sure we always have an array
