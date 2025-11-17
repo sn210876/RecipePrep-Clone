@@ -6,6 +6,17 @@ import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
 import { supabase, isAdmin } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+// ADD THIS STYLE TAG — THIS IS ALL YOU NEED
+<style jsx global>{`
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 4s linear infinite;
+  }
+`}</style>
+
 interface Post {
   id: string;
   user_id: string;
