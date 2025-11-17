@@ -365,7 +365,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             className={`w-48 rounded-2xl px-4 py-2 ${
               message.sender_id === currentUserId
                 // MODIFICATION 2: Sender's message is DIMMER (e.g., lower opacity white/gray)
-                ? 'bg-orange-500 bg-opacity-70 text-white' // Use lower opacity on background
+                ? 'bg-orange-500 bg-opacity-90 text-white' // Use lower opacity on background
                 // MODIFICATION 2: Receiver's message is BRIGHTER (e.g., full opacity white/gray)
                 : 'bg-gray-200 text-gray-900' // Receiver message is the bright one
             }`}
