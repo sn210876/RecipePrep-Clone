@@ -862,6 +862,16 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                         markNotificationRead(notification.id);
                       }
                       setShowNotifications(false);
+
+                      // Open the relevant post if notification has a post_id
+                      if (notification.post_id && (notification.type === 'like' || notification.type === 'comment')) {
+                        console.log('[Notifications] Opening post:', notification.post_id);
+                        setCommentModalPostId(notification.post_id);
+                      } else if (notification.type === 'follow' && notification.actor?.username) {
+                        // Navigate to the follower's profile
+                        console.log('[Notifications] Opening profile:', notification.actor.username);
+                        window.location.href = `/${notification.actor.username}`;
+                      }
                     }}
                     className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
                   >
