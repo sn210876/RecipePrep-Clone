@@ -462,26 +462,25 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
 
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg flex-1 pr-4">{post.title || 'Post'}</h3>
-              <div className="flex gap-1 mr-8">
-                {post.user_id === currentUserId && (
-                  <>
-                    <Button variant="ghost" size="sm" onClick={() => setEditingCaption(!editingCaption)} title="Edit Caption">
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setEditingMusic(!editingMusic)} title="Edit Music">
-                      <Music className="w-4 h-4 text-purple-600" />
-                    </Button>
-                  </>
-                )}
-                {canDeletePost && (
-                  <Button variant="ghost" size="sm" onClick={handleDeletePost} disabled={loading}>
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </Button>
-                )}
-              </div>
-            </div>
-
+  <h3 className="font-semibold text-lg flex-1 pr-4">{post.title || 'Post'}</h3>
+  <div className="flex gap-1 mr-8">
+    {post.user_id === currentUserId && (
+      <>
+        <Button variant="ghost" size="sm" onClick={() => setEditingCaption(!editingCaption)} title="Edit Caption">
+          <Edit2 className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setEditingMusic(!editingMusic)} title="Edit Music">
+          <Music className="w-4 h-4 text-purple-600" />
+        </Button>
+      </>
+    )}
+    {canDeletePost && (
+      <Button variant="ghost" size="sm" onClick={handleDeletePost} disabled={loading}>
+        <Trash2 className="w-4 h-4 text-red-600" />
+      </Button>
+    )}
+  </div>
+</div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div>
                 {editingCaption ? (
