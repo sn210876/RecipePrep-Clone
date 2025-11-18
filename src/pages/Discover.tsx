@@ -82,7 +82,17 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [postRatings, setPostRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
-  const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string; photoUrl: string } | null>(null);
+ const [editingPost, setEditingPost] = useState<{ 
+  id: string; 
+  caption: string; 
+  recipeUrl: string; 
+  photoUrl: string;
+  spotifyTrackId?: string | null;
+  spotifyTrackName?: string | null;
+  spotifyArtistName?: string | null;
+  spotifyAlbumArt?: string | null;
+  spotifyPreviewUrl?: string | null;
+} | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
