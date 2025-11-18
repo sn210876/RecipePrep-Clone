@@ -1350,9 +1350,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                     {selectedTrack ? 'Change Music' : 'Add Music'}
                   </button>
                 </div
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => { setEditingPost(null); setSelectedTrack(null); }}>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
                 Save changes
               </AlertDialogAction>
