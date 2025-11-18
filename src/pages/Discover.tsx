@@ -1343,6 +1343,30 @@ const searchMusic = async (query: string) => {
                 />
               )}
             </div>
+            <div>
+  <label className="text-sm font-medium mb-2 block">Music (optional)</label>
+  <div className="space-y-2">
+    {selectedTrack && (
+      <div className="flex items-center gap-2 p-2 bg-green-50 rounded border border-green-200">
+        <img src={selectedTrack.album.images[0]?.url} className="w-10 h-10 rounded" alt="Album" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium truncate">{selectedTrack.name}</p>
+          <p className="text-xs text-gray-600 truncate">{selectedTrack.artists[0].name}</p>
+        </div>
+        <button onClick={() => setSelectedTrack(null)} className="text-red-500 hover:text-red-700">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    )}
+    <button
+      type="button"
+      onClick={() => setShowMusicPicker(true)}
+      className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+    >
+      {selectedTrack ? 'Change Music' : 'Add Music'}
+    </button>
+  </div>
+</div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
