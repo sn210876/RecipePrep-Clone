@@ -14,16 +14,16 @@ export function RatingDisplay({ rating, size = 'md', interactive = false, onRate
 
   return (
     <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((pig) => (
+      {[1, 2, 3, 4, 5].map((fire) => (
         <button
-          key={pig}
+          key={fire}
           onClick={() => interactive && onRate?.(fire)}
           disabled={!interactive}
           className={`transition-transform ${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'} ${fontSize}`}
         >
           <span className={fire <= rating ? 'opacity-100' : 'opacity-30 grayscale'}>
-            pig
-          </span>s
+            🔥
+          </span>
         </button>
       ))}
     </div>
