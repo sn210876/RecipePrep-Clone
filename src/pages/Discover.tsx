@@ -501,7 +501,35 @@ const [searchingMusic, setSearchingMusic] = useState(false);
       setUploadingPhoto(false);
     }
   };
-
+const searchMusic = async (query: string) => {
+  if (!query.trim()) {
+    setMusicResults([]);
+    return;
+  }
+  setSearchingMusic(true);
+  try {
+    const res = await fetch(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=20`
+    );
+    const data = await res.json();
+    const tracks = (data.results || []).map((t: any) => ({
+      id: t.trackId.toString(),
+      name: t.trackName || 'Unknown Song',
+      artists: [{ name: t.artistName || 'Unknown Artist' }],
+      album: { 
+        images: [{ url: t.artworkUrl100?.replace('100x100', '300x300') }] 
+      },
+      preview_url: t.previewUrl || null,
+    }));
+    setMusicResults(tracks);
+  } catch (err) {
+    console.error('Music search failed:', err);
+    toast.error('Search failed');
+    setMusicResults([]);
+  } finally {
+    setSearchingMusic(false);
+  }
+};
   const handleEditPost = async () => {
     if (!editingPost) return;
 
