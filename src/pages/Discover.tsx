@@ -1463,45 +1463,6 @@ const searchMusic = async (query: string) => {
                           </button>
                         );
                       })}
-                      {showMusicPicker && (
-  <div className="fixed inset-0 bg-black/70 z-[9999] flex items-center justify-center p-4">
-    <div className="bg-white w-full max-w-md rounded-lg max-h-[500px] flex flex-col">
-      <div className="p-3 border-b flex items-center justify-between">
-        <h4 className="font-semibold">Choose Music</h4>
-        <button onClick={() => setShowMusicPicker(false)}><X className="w-5 h-5" /></button>
-      </div>
-      <div className="p-3">
-        <input
-          type="text"
-          value={musicSearch}
-          onChange={(e) => { setMusicSearch(e.target.value); searchMusic(e.target.value); }}
-          placeholder="Search songs..."
-          className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
-          autoFocus
-        />
-      </div>
-      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
-        {searchingMusic && <p className="text-center text-gray-500 py-4">Searching...</p>}
-        {musicResults.map((track) => (
-          <button
-            key={track.id}
-            onClick={() => { setSelectedTrack(track); setShowMusicPicker(false); toast.success('Music selected!'); }}
-            className="w-full flex items-center gap-2 p-2 rounded hover:bg-gray-100"
-          >
-            <img src={track.album.images[0]?.url} className="w-10 h-10 rounded" alt="Album" />
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-sm font-medium truncate">{track.name}</p>
-              <p className="text-xs text-gray-600 truncate">{track.artists[0].name}</p>
-            </div>
-          </button>
-        ))}
-        {musicSearch && musicResults.length === 0 && !searchingMusic && (
-          <p className="text-center text-gray-500 py-4">No songs found</p>
-        )}
-      </div>
-    </div>
-  </div>
-)}
                     </div>
                     <Button
                       onClick={handleSendToFollowers}
