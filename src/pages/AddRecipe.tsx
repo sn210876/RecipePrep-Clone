@@ -480,7 +480,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             <div className="mt-3 space-y-1">
   <p className="text-xs text-emerald-600 font-bold">
     NOW WORKS: All Recipes, Blogs.
-  </p>
+  
   </p>
  <p className="text-xs text-orange-600 font-">
     Instagram → If video has no ingredients in description, then please manually update
