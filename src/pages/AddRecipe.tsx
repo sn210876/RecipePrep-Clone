@@ -481,10 +481,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   <p className="text-xs text-emerald-600 font-bold">
     NOW WORKS: All Recipes, Blogs. For Instagram · TikTok, may need revising.
   </p>
-  <p className="text-xs text-pink-600 font-bold">
+  <p className="text-xs text-orange-600 font-bold">
     YouTube → Currently unstable (working on fix)
   </p>
- <p className="text-xs text-pink-600 font-bold">
+ <p className="text-xs text-orange-600 font-bold">
     Videos include transcript — ingredients may need manual grouping
   </p>
 </div>
