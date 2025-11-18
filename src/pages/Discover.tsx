@@ -100,6 +100,11 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [searchResults, setSearchResults] = useState<Array<{ id: string; username: string; avatar_url: string | null }>>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+const [musicSearch, setMusicSearch] = useState('');
+const [musicResults, setMusicResults] = useState<any[]>([]);
+const [selectedTrack, setSelectedTrack] = useState<any>(null);
+const [searchingMusic, setSearchingMusic] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [filterHashtag, setFilterHashtag] = useState<string | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
