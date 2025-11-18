@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
-import { Upload as UploadIcon, X, Image as ImageIcon, Video, Music } from 'lucide-react';
+import { Upload as UploadIcon, X, Image as ImageIcon, Video, Music, Play, Pause } from 'lucide-react';
 import { extractHashtags } from '../lib/hashtags';
+import React from 'react';
 import {
   Select,
   SelectContent,
@@ -41,6 +42,8 @@ export function Upload({ onNavigate }: UploadProps) {
   const [musicResults, setMusicResults] = useState<any[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [searchingMusic, setSearchingMusic] = useState(false);
+  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const audioPreviewRef = React.useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     loadUserRecipes();
@@ -101,6 +104,17 @@ export function Upload({ onNavigate }: UploadProps) {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
+    }
+  };
+
+  const togglePreview = () => {
+    if (audioPreviewRef.current) {
+      if (isPlayingPreview) {
+        audioPreviewRef.current.pause();
+      } else {
+        audioPreviewRef.current.play();
+      }
+      setIsPlayingPreview(!isPlayingPreview);
     }
   };
 
@@ -381,9 +395,22 @@ export function Upload({ onNavigate }: UploadProps) {
                 <p className="font-medium text-sm truncate">{selectedTrack.name}</p>
                 <p className="text-xs text-gray-600 truncate">{selectedTrack.artists[0].name}</p>
               </div>
+              <button 
+                onClick={togglePreview}
+                className="bg-green-600 hover:bg-green-700 text-white rounded-full p-2 transition-colors"
+              >
+                {isPlayingPreview ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+              </button>
               <button onClick={() => setSelectedTrack(null)} className="text-red-600">
                 <X className="w-5 h-5" />
               </button>
+              <audio
+                ref={audioPreviewRef}
+                src={selectedTrack.preview_url}
+                onEnded={() => setIsPlayingPreview(false)}
+                onPlay={() => setIsPlayingPreview(true)}
+                onPause={() => setIsPlayingPreview(false)}
+              />
             </div>
           )}
         </div>
@@ -464,13 +491,12 @@ export function Upload({ onNavigate }: UploadProps) {
       </div>
 
       {/* Submit Button at Bottom */}
-      {/* Submit Button at Bottom */}
       <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-white via-white to-transparent z-40">
-        <div className="max-w-lg mx-auto flex justify-center">
+        <div className="max-w-lg mx-auto">
           <Button
             onClick={handleUpload}
             disabled={!selectedFile || (postType === 'post' && !title.trim()) || uploading}
-            className="px-16 py-6 text-lg font-semibold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg rounded-full"
+            className="w-full py-6 text-lg font-semibold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
           >
             {uploading ? 'Submitting...' : 'Submit'}
           </Button>
