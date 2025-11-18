@@ -521,7 +521,9 @@ export function Upload({ onNavigate }: UploadProps) {
           </div>
         </div>
       )}
-      )}
+      
+    </div>
+    )}
       </div>
 
       {/* Submit Button at Bottom */}
@@ -539,6 +541,5 @@ export function Upload({ onNavigate }: UploadProps) {
     </div>
   );
 }
-    </div>
   );
 }
