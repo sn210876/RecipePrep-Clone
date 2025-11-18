@@ -1003,6 +1003,47 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                     )}
                   </div>
 
+                  // Add this to your Post interface at the top of Discover.tsx (around line 32)
+interface Post {
+  id: string;
+  user_id: string;
+  title: string;
+  image_url: string | null;
+  photo_url: string | null;
+  video_url: string | null;
+  caption: string | null;
+  recipe_url: string | null;
+  recipe_id: string | null;
+  created_at: string;
+  // Add these music fields
+  spotify_track_id?: string | null;
+  spotify_track_name?: string | null;
+  spotify_artist_name?: string | null;
+  spotify_album_art?: string | null;
+  spotify_preview_url?: string | null;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+  likes: { user_id: string }[];
+  comments: {
+    id: string;
+    user_id: string;
+    text: string;
+    created_at: string;
+    profiles: {
+      username: string;
+    };
+  }[];
+  _count?: {
+    likes: number;
+    comments: number;
+  };
+}
+
+// Then find the section where posts are rendered (around line 1050-1100)
+// Replace the <div className="relative"> section with this:
+
                   <div className="relative">
                     {post.image_url ? (
                       <img
@@ -1017,6 +1058,61 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                         className="w-full aspect-square object-cover"
                       />
                     ) : null}
+                    
+                    {/* Music Player Overlay */}
+                    {post.spotify_preview_url && (
+                      <div className="absolute top-4 right-4 z-10">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const audio = document.getElementById(`audio-${post.id}`) as HTMLAudioElement;
+                            const btn = e.currentTarget;
+                            
+                            // Pause all other audio
+                            document.querySelectorAll('audio').forEach((a) => {
+                              if (a.id !== `audio-${post.id}`) {
+                                a.pause();
+                                const otherBtn = document.querySelector(`[data-post-id="${a.id.replace('audio-', '')}"]`);
+                                if (otherBtn) otherBtn.textContent = '▶️';
+                              }
+                            });
+                            
+                            if (audio.paused) {
+                              audio.play();
+                              btn.textContent = '⏸️';
+                            } else {
+                              audio.pause();
+                              btn.textContent = '▶️';
+                            }
+                          }}
+                          data-post-id={post.id}
+                          className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-full shadow-lg transition-all flex items-center gap-2"
+                        >
+                          <span className="text-xl">▶️</span>
+                          <div className="text-left text-xs max-w-32">
+                            <div className="font-semibold truncate">{post.spotify_track_name}</div>
+                            <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
+                          </div>
+                        </button>
+                        <audio
+                          id={`audio-${post.id}`}
+                          src={post.spotify_preview_url}
+                          onEnded={(e) => {
+                            const btn = document.querySelector(`[data-post-id="${post.id}"]`);
+                            if (btn) btn.textContent = '▶️';
+                          }}
+                          onPause={(e) => {
+                            const btn = document.querySelector(`[data-post-id="${post.id}"]`);
+                            if (btn) btn.textContent = '▶️';
+                          }}
+                          onPlay={(e) => {
+                            const btn = document.querySelector(`[data-post-id="${post.id}"]`);
+                            if (btn) btn.textContent = '⏸️';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
                     {post.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
                         <div className="flex items-end justify-between gap-2">
