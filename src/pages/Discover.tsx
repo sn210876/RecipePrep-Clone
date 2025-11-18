@@ -39,10 +39,17 @@ interface Post {
   recipe_url: string | null;
   recipe_id: string | null;
   created_at: string;
+  spotify_track_id?: string | null;
+  spotify_track_name?: string | null;
+  spotify_artist_name?: string | null;
+  spotify_album_art?: string | null;
+  spotify_preview_url?: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
   };
+  // ... rest of interface
+}
   likes: { user_id: string }[];
   comments: {
     id: string;
