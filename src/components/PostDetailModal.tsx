@@ -27,7 +27,9 @@ import {
 } from '../components/ui/alert-dialog';
 import { Textarea } from '../components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-
+export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: PostDetailModalProps) {
+  // ... all the component code
+}
 interface Post {
   id: string;
   user_id: string;
