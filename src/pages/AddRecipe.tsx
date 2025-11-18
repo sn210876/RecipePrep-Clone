@@ -43,7 +43,7 @@ const UNITS = [
 ];
 
 const CUISINE_TYPES = [
-  'American', 'Chinese', 'Culinary/Baked Goods', 'French', 'Indian', 'Italian',
+  'American', 'Chinese', 'Culinary/Baked Goods', 'French', 'Indian', 'Italian', 'Juices/Smoothies'
   'Japanese', 'Korean', 'Mediterranean', 'Mexican', 'Other', 'Pet Meals',
   'Thai', 'Vegan/Vegetarian', 'Vietnamese'
 ];
