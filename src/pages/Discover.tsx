@@ -48,8 +48,6 @@ interface Post {
     username: string;
     avatar_url: string | null;
   };
-  // ... rest of interface
-}
   likes: { user_id: string }[];
   comments: {
     id: string;
