@@ -464,12 +464,13 @@ export function Upload({ onNavigate }: UploadProps) {
       </div>
 
       {/* Submit Button at Bottom */}
+      {/* Submit Button at Bottom */}
       <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-white via-white to-transparent z-40">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto flex justify-center">
           <Button
             onClick={handleUpload}
             disabled={!selectedFile || (postType === 'post' && !title.trim()) || uploading}
-            className="w-full py-6 text-lg font-semibold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
+            className="px-16 py-6 text-lg font-semibold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg rounded-full"
           >
             {uploading ? 'Submitting...' : 'Submit'}
           </Button>
