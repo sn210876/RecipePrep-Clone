@@ -481,7 +481,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   <p className="text-xs text-emerald-600 font-bold">
     NOW WORKS: All Recipes, Blogs. TikTok, may need revising.
   </p>
-  <p className="text-xs text-orange-600 font-bold">
+  <p className="text-xs text-orange-600 font-">
     YouTube → Coming Soon...
   </p>
  <p className="text-xs text-orange-600 font-">
