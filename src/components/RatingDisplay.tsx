@@ -14,9 +14,9 @@ export function RatingDisplay({ rating, size = 'md', interactive = false, onRate
 
   return (
     <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((fire) => (
+      {[1, 2, 3, 4, 5].map((pig) => (
         <button
-          key={fire}
+          key={pig}
           onClick={() => interactive && onRate?.(fire)}
           disabled={!interactive}
           className={`transition-transform ${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'} ${fontSize}`}
