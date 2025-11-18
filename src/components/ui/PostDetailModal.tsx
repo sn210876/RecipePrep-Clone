@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
+import { Edit2, Trash2, Heart, MessageCircle, Crown, Play, Pause } from 'lucide-react';
 import { supabase, isAdmin } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -61,6 +61,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (post) {
@@ -68,8 +70,30 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       loadReviewsAndComments();
       checkLikeStatus();
       loadCurrentUserAndAdminStatus();
+      setIsPlaying(false);
     }
   }, [post]);
+
+  useEffect(() => {
+    // Cleanup audio when modal closes
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
+  }, [open]);
+
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   const loadCurrentUserAndAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -301,66 +325,64 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
         `}</style>
 
         <div className="flex flex-col md:flex-row h-full">
-         <div className="md:w-3/5 bg-black flex items-center justify-center relative overflow-hidden">
-  {post.image_url ? (
-    <img
-      src={post.image_url}
-      alt={post.title || 'Post'}
-      className="max-w-full max-h-[90vh] object-contain"
-    />
-  ) : post.video_url ? (
-    <video
-      src={post.video_url}
-      controls
-      className="max-w-full max-h-[90vh] object-contain"
-    />
-  ) : null}
+          <div className="md:w-3/5 bg-black flex items-center justify-center relative overflow-hidden">
+            {post.image_url ? (
+              <img
+                src={post.image_url}
+                alt={post.title || 'Post'}
+                className="max-w-full max-h-[90vh] object-contain"
+              />
+            ) : post.video_url ? (
+              <video
+                src={post.video_url}
+                controls
+                className="max-w-full max-h-[90vh] object-contain"
+              />
+            ) : null}
 
-   {/* YOUTUBE MUSIC PLAYER — FULL SONG, ALWAYS WORKS */}
-  {post.spotify_preview_url && (
-    <>
-      {/* Click anywhere to play/pause */}
-      <button
-  className="absolute inset-0 z-10 cursor-pointer"
-  onClick={() => {
-    const iframe = document.querySelector(`#ytplayer-${post.id}`) as HTMLIFrameElement;
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.postMessage(
-        '{"event":"command","func":"togglePlayVideo","args":""}',
-        '*'
-      );
-    }
-  }}
-  aria-label="Play/Pause music"
-/>
+            {/* Music Player */}
+            {post.spotify_preview_url && (
+              <>
+                <audio
+                  ref={audioRef}
+                  src={post.spotify_preview_url}
+                  onEnded={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                />
 
-      {/* Beautiful Instagram-style music bar */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
-        <div className="flex items-center gap-5 max-w-3xl mx-auto">
-          <img
-            src={post.spotify_album_art || '/placeholder-album.png'}
-            alt="Album"
-            className="w-16 h-16 rounded-full animate-spin-slow shadow-2xl border-4 border-white/40"
-          />
-          <div className="flex-1 text-white">
-            <p className="font-bold text-lg truncate">{post.spotify_track_name || 'Song'}</p>
-            <p className="text-sm opacity-90">{post.spotify_artist_name || 'Artist'}</p>
+                {/* Beautiful Instagram-style music bar */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
+                  <div className="flex items-center gap-5 max-w-3xl mx-auto">
+                    <div className="relative">
+                      <img
+                        src={post.spotify_album_art || '/placeholder-album.png'}
+                        alt="Album"
+                        className={`w-16 h-16 rounded-full shadow-2xl border-4 border-white/40 ${isPlaying ? 'animate-spin-slow' : ''}`}
+                      />
+                      <button
+                        onClick={toggleMusic}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-all"
+                      >
+                        {isPlaying ? (
+                          <Pause className="w-6 h-6 text-white" />
+                        ) : (
+                          <Play className="w-6 h-6 text-white ml-1" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex-1 text-white">
+                      <p className="font-bold text-lg truncate">{post.spotify_track_name || 'Song'}</p>
+                      <p className="text-sm opacity-90">{post.spotify_artist_name || 'Artist'}</p>
+                    </div>
+                    <button onClick={toggleMusic} className="text-white text-3xl hover:scale-110 transition-transform">
+                      ♪
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-          <div className="text-white text-3xl">♪</div>
-        </div>
-      </div>
-
-      {/* Hidden YouTube player — full song, no controls shown */}
-      <iframe
-  id={`ytplayer-${post.id}`}
-  src={`https://www.youtube.com/embed/${post.spotify_preview_url.split('v=')[1]}?autoplay=1&loop=1&playlist=${post.spotify_preview_url.split('v=')[1]}&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${window.location.origin}`}
-  className="absolute inset-0 w-0 h-0 opacity-0 pointer-events-none"
-  allow="autoplay; encrypted-media; picture-in-picture"
-  allowFullScreen
-></iframe>
-    </>
-  )}
-</div>
 
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
@@ -414,7 +436,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <span key={i} className="text-base">
-                              {i < review.rating ? 'fire ' : 'star'}
+                              {i < review.rating ? '🔥' : '☆'}
                             </span>
                           ))}
                         </div>
