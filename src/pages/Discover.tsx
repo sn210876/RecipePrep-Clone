@@ -1037,18 +1037,37 @@ const searchMusic = async (query: string) => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setEditingPost({
-                              id: post.id,
-                              caption: post.caption || '',
-                              recipeUrl: post.recipe_url || '',
-                              photoUrl: post.photo_url || ''
-                            })}
-                            className="cursor-pointer"
-                          >
-                            <Edit3 className="w-4 h-4 mr-2" />
-                            Edit post
-                          </DropdownMenuItem>
+                        <DropdownMenuItem
+  onClick={() => {
+    setEditingPost({
+      id: post.id,
+      caption: post.caption || '',
+      recipeUrl: post.recipe_url || '',
+      photoUrl: post.photo_url || '',
+      spotifyTrackId: post.spotify_track_id,
+      spotifyTrackName: post.spotify_track_name,
+      spotifyArtistName: post.spotify_artist_name,
+      spotifyAlbumArt: post.spotify_album_art,
+      spotifyPreviewUrl: post.spotify_preview_url,
+    });
+    // Load existing music if present
+    if (post.spotify_track_id) {
+      setSelectedTrack({
+        id: post.spotify_track_id,
+        name: post.spotify_track_name,
+        artists: [{ name: post.spotify_artist_name }],
+        album: { images: [{ url: post.spotify_album_art }] },
+        preview_url: post.spotify_preview_url,
+      });
+    } else {
+      setSelectedTrack(null);
+    }
+  }}
+  className="cursor-pointer"
+>
+  <Edit3 className="w-4 h-4 mr-2" />
+  Edit post
+</DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeletePostId(post.id)}
                             className="cursor-pointer text-red-600"
