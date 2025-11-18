@@ -14,7 +14,7 @@ export function RatingDisplay({ rating, size = 'md', interactive = false, onRate
 
   return (
     <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((🐷 ) => (
+      {[1, 2, 3, 4, 5].map((pig) => (
         <button
           key={fire}
           onClick={() => interactive && onRate?.(fire)}
