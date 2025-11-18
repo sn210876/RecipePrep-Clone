@@ -479,13 +479,16 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </div>
             <div className="mt-3 space-y-1">
   <p className="text-xs text-emerald-600 font-bold">
-    NOW WORKS: All Recipes, Blogs. For Instagram · TikTok, may need revising.
+    NOW WORKS: All Recipes, Blogs. TikTok, may need revising.
   </p>
   <p className="text-xs text-orange-600 font-bold">
-    YouTube → Currently unstable (working on fix)
+    YouTube → Coming Soon...
   </p>
  <p className="text-xs text-orange-600 font-bold">
-    Videos include transcript — ingredients may need manual grouping
+    Instagram → If video has no ingredients in description, then please manually update
+  </p>
+  <p className="text-xs text-orange-600 font-bold">
+    Tiktok → If video has no ingredients in description, then please manually update
   </p>
 </div>
           </CardContent>
