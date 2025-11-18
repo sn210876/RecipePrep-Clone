@@ -222,17 +222,21 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   setIsExtracting(true);
   const platform = getPlatformFromUrl(urlInput);
   
+  let shouldRetry = false;  // ✅ ADD THIS FLAG
+  
   try {
     toast.loading('Extracting recipe...', { id: 'extract' });
     const data = await extractRecipeFromUrl(urlInput);
     setExtractedData(data);
     setShowPreview(true);
     toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`, { id: 'extract' });
+    setIsExtracting(false);  // ✅ Set to false on success
   } catch (error: any) {
     console.error('Extract error:', error);
     
     // If server is waking up, auto-retry once after 30 seconds
     if (error.message.includes('waking up')) {
+      shouldRetry = true;  // ✅ SET FLAG INSTEAD
       toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
       
       setTimeout(async () => {
@@ -242,22 +246,18 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           setExtractedData(data);
           setShowPreview(true);
           toast.success(`Recipe extracted from ${platform}!`, { id: 'extract' });
-          setIsExtracting(false);
         } catch (retryError: any) {
           toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
-          setIsExtracting(false);
+        } finally {
+          setIsExtracting(false);  // ✅ Set to false after retry
         }
-      }, 30000); // 30 seconds
-      return; // IMPORTANT: Don't set isExtracting to false yet
-    }
-    
-    toast.error(error.message || 'Failed to extract recipe.', { id: 'extract' });
-  } finally {
-    // Only set to false if not retrying
-    if (!error?.message?.includes('waking up')) {
-      setIsExtracting(false);
+      }, 30000);
+    } else {
+      toast.error(error.message || 'Failed to extract recipe.', { id: 'extract' });
+      setIsExtracting(false);  // ✅ Set to false on error
     }
   }
+  // ✅ REMOVE THE FINALLY BLOCK ENTIRELY
 };
 
   const handleAcceptExtraction = () => {
