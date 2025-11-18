@@ -215,7 +215,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
 
   if (isImageUrl) {
-    toast.error('Please paste a recipe page URL, not a direct image link. Enter the recipe page URL instead.');
+    toast.error('Please paste a recipe page URL, not a direct image link.');
     return;
   }
 
@@ -227,7 +227,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     const data = await extractRecipeFromUrl(urlInput);
     setExtractedData(data);
     setShowPreview(true);
-    toast.success(`Recipe extracted! Review and edit before saving.`, { id: 'extract' });
+    toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`, { id: 'extract' });
   } catch (error: any) {
     console.error('Extract error:', error);
     
@@ -248,11 +248,15 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           setIsExtracting(false);
         }
       }, 30000); // 30 seconds
-      return;
+      return; // IMPORTANT: Don't set isExtracting to false yet
     }
     
-    toast.error(error.message || 'Failed to extract recipe. Please try manual entry.', { id: 'extract' });
-    setIsExtracting(false);
+    toast.error(error.message || 'Failed to extract recipe.', { id: 'extract' });
+  } finally {
+    // Only set to false if not retrying
+    if (!error?.message?.includes('waking up')) {
+      setIsExtracting(false);
+    }
   }
 };
 
