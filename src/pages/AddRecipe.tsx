@@ -131,41 +131,66 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         : [...prev, tag]
     );
   };
+//start
+ const handleUrlExtract = async () => {
+  if (!urlInput.trim()) {
+    toast.error('Please enter a URL');
+    return;
+  }
 
-  const handleUrlExtract = async () => {
-    if (!urlInput.trim()) {
-      toast.error('Please enter a URL');
+  if (!isValidUrl(urlInput)) {
+    toast.error('Please enter a valid URL');
+    return;
+  }
+
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
+
+  if (isImageUrl) {
+    toast.error('Please paste a recipe page URL, not a direct image link. Enter the recipe page URL instead.');
+    return;
+  }
+
+  setIsExtracting(true);
+  const platform = getPlatformFromUrl(urlInput);
+  
+  try {
+    toast.loading('Extracting recipe...', { id: 'extract' });
+    const data = await extractRecipeFromUrl(urlInput);
+    setExtractedData(data);
+    setShowPreview(true);
+    toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`, { id: 'extract' });
+  } catch (error: any) {
+    console.error('Extract error:', error);
+    
+    // If server is waking up, auto-retry once after 30 seconds
+    if (error.message.includes('waking up')) {
+      toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
+      
+      setTimeout(async () => {
+        try {
+          toast.loading('Retrying extraction...', { id: 'extract' });
+          const data = await extractRecipeFromUrl(urlInput);
+          setExtractedData(data);
+          setShowPreview(true);
+          toast.success(`Recipe extracted from ${platform}!`, { id: 'extract' });
+          setIsExtracting(false);
+        } catch (retryError: any) {
+          toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
+          setIsExtracting(false);
+        }
+      }, 30000); // 30 seconds
       return;
     }
-
-    if (!isValidUrl(urlInput)) {
-      toast.error('Please enter a valid URL');
-      return;
-    }
-
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-    const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
-
-    if (isImageUrl) {
-      toast.error('Please paste a recipe page URL, not a direct image link. Enter the recipe page URL instead.');
-      return;
-    }
-
-    setIsExtracting(true);
-    const platform = getPlatformFromUrl(urlInput);
-
-    try {
-      const data = await extractRecipeFromUrl(urlInput);
-      setExtractedData(data);
-      setShowPreview(true);
-      toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`);
-    } catch (error: any) {
-      console.error('Extract error:', error);
-      toast.error(error.message || 'Failed to extract recipe. Please try manual entry.');
-    } finally {
+    
+    toast.error(error.message || 'Failed to extract recipe. Please try manual entry.', { id: 'extract' });
+  } finally {
+    // Only set to false if not retrying
+    if (!error?.message?.includes('waking up')) {
       setIsExtracting(false);
     }
-  };
+  }
+};
 
   const handleAcceptExtraction = () => {
     if (!extractedData) return;
