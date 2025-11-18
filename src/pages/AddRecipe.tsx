@@ -261,42 +261,50 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 };
 
   const handleAcceptExtraction = () => {
-    if (!extractedData) return;
+  if (!extractedData) return;
 
-    console.log('[AddRecipe] Accepting extraction');
-    console.log('[AddRecipe] Extracted ingredients:', extractedData.ingredients);
-    console.log('[AddRecipe] Extracted instructions:', extractedData.instructions);
+  console.log('[AddRecipe] Accepting extraction');
+  console.log('[AddRecipe] Extracted ingredients:', extractedData.ingredients);
+  console.log('[AddRecipe] Extracted instructions:', extractedData.instructions);
+  console.log('[AddRecipe] Extracted imageUrl:', extractedData.imageUrl);
 
-    setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
+  setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
 
-    // Ensure ingredients have proper structure
-    const normalizedIngredients = extractedData.ingredients.map(ing => ({
-      quantity: ing.quantity || '',
-      unit: ing.unit || 'cup',
-      name: ing.name || ''
-    }));
+  // Ensure ingredients have proper structure
+  const normalizedIngredients = extractedData.ingredients.map(ing => ({
+    quantity: ing.quantity || '',
+    unit: ing.unit || 'cup',
+    name: ing.name || ''
+  }));
 
-    console.log('[AddRecipe] Normalized ingredients:', normalizedIngredients);
-    setIngredients(normalizedIngredients);
+  console.log('[AddRecipe] Normalized ingredients:', normalizedIngredients);
+  setIngredients(normalizedIngredients);
 
-    setInstructions(extractedData.instructions);
-    setPrepTime(String(parseTimeValue(extractedData.prepTime)));
-    setCookTime(String(parseTimeValue(extractedData.cookTime)));
-    setServings(String(parseServingsValue(extractedData.servings)));
-    setCuisineType(extractedData.cuisineType);
-    setDifficulty(extractedData.difficulty);
-    setSelectedMealTypes(extractedData.mealTypes);
-    setSelectedDietaryTags(extractedData.dietaryTags);
+  setInstructions(extractedData.instructions);
+  setPrepTime(String(parseTimeValue(extractedData.prepTime)));
+  setCookTime(String(parseTimeValue(extractedData.cookTime)));
+  setServings(String(parseServingsValue(extractedData.servings)));
+  setCuisineType(extractedData.cuisineType);
+  setDifficulty(extractedData.difficulty);
+  setSelectedMealTypes(extractedData.mealTypes);
+  setSelectedDietaryTags(extractedData.dietaryTags);
+  
+  // FIX: Handle Instagram images properly - set the image URL directly
+  // The proxy will be applied later when creating the post
+  if (extractedData.imageUrl) {
+    console.log('[AddRecipe] Setting imageUrl from extraction:', extractedData.imageUrl);
     setImageUrl(extractedData.imageUrl);
-    setVideoUrl(extractedData.videoUrl || '');
-    const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
-    setNotes(sourceNote + (extractedData.notes || ''));
+  }
+  
+  setVideoUrl(extractedData.videoUrl || '');
+  const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
+  setNotes(sourceNote + (extractedData.notes || ''));
 
-    setShowPreview(false);
-    setExtractedData(null);
+  setShowPreview(false);
+  setExtractedData(null);
 
-    toast.success('Recipe loaded! Edit any details as needed.');
-  };
+  toast.success('Recipe loaded! Edit any details as needed.');
+};
 
   const handleCancelExtraction = () => {
     setShowPreview(false);
