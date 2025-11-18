@@ -1380,7 +1380,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                 )}
               </div>
             )}
-
+//
             {shareModalTab === 'link' && (
               <div className="space-y-4">
                 <Button
