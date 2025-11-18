@@ -285,14 +285,7 @@ export function Upload({ onNavigate }: UploadProps) {
             Cancel
           </button>
           <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
-          <Button
-  onClick={handleUpload}
-  disabled={!selectedFile || (postType === 'post' && !title.trim()) || uploading}
-  size="sm"
-  className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
->
-  {uploading ? 'Submitting...' : 'Submit'}
-</Button>
+          <div className="w-16"></div>
         </div>
       </div>
 
