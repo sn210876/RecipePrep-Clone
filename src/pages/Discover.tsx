@@ -1350,7 +1350,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                     {selectedTrack ? 'Change Music' : 'Add Music'}
                   </button>
                 </div
-                  </div>
+                  
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => { setEditingPost(null); setSelectedTrack(null); }}>Cancel</AlertDialogCancel>
