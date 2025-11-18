@@ -1343,7 +1343,8 @@ const searchMusic = async (query: string) => {
                 />
               )}
             </div>
-            <div>
+          </div>
+          <div>
   <label className="text-sm font-medium mb-2 block">Music (optional)</label>
   <div className="space-y-2">
     {selectedTrack && (
@@ -1367,7 +1368,6 @@ const searchMusic = async (query: string) => {
     </button>
   </div>
 </div>
-          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
