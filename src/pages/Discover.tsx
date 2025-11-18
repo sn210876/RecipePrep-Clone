@@ -1064,7 +1064,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                           <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
                           {postRatings[post.id] && postRatings[post.id].count > 0 && (
                             <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                              <span className="text-lg">🔥</span>
+                              <span className="text-lg"></span>
                               <span className="text-white text-xs font-semibold">
                                 {postRatings[post.id].average.toFixed(1)}
                               </span>
