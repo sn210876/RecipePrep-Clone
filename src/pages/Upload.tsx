@@ -286,7 +286,6 @@ export function Upload({ onNavigate }: UploadProps) {
           </button>
           <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
           <Button
-           <Button
   onClick={handleUpload}
   disabled={!selectedFile || (postType === 'post' && !title.trim()) || uploading}
   size="sm"
