@@ -35,13 +35,12 @@ export function Upload({ onNavigate }: UploadProps) {
   const [uploading, setUploading] = useState(false);
   const [videoDuration, setVideoDuration] = useState<number>(0);
 
-  // ── SPOTIFY STATES ───────────────────────────────────────
-  const [showSpotifyPicker, setShowSpotifyPicker] = useState(false);
-  const [spotifySearch, setSpotifySearch] = useState('');
-  const [spotifyResults, setSpotifyResults] = useState<any[]>([]);
+  // Music states
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [musicSearch, setMusicSearch] = useState('');
+  const [musicResults, setMusicResults] = useState<any[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<any>(null);
   const [searchingMusic, setSearchingMusic] = useState(false);
-  // ───────────────────────────────────────────────────────────
 
   useEffect(() => {
     loadUserRecipes();
@@ -105,30 +104,34 @@ export function Upload({ onNavigate }: UploadProps) {
     }
   };
 
-      // FINAL — WORKS IN PREVIEW + PRODUCTION (CORS fixed)
-  const searchYouTubeMusic = async (query: string) => {
+  // iTunes API search (free, no auth needed)
+  const searchMusic = async (query: string) => {
     if (!query.trim()) {
-      setSpotifyResults([]);
+      setMusicResults([]);
       return;
     }
     setSearchingMusic(true);
     try {
-      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent('https://youtube-music-api.vercel.app/search?q=' + query)}`);
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=20`
+      );
       const data = await res.json();
 
-      const tracks = (data?.result || []).map((t: any) => ({
-        id: t.videoId,
-        name: t.title || 'Unknown Song',
-        artists: [{ name: t.artist || 'Unknown Artist' }],
-        album: { images: [{ url: t.thumbnails?.[0]?.url || 'https://via.placeholder.com/300' }] },
-        preview_url: `https://www.youtube.com/watch?v=${t.videoId}`,
+      const tracks = (data.results || []).map((t: any) => ({
+        id: t.trackId.toString(),
+        name: t.trackName || 'Unknown Song',
+        artists: [{ name: t.artistName || 'Unknown Artist' }],
+        album: { 
+          images: [{ url: t.artworkUrl100?.replace('100x100', '300x300') || 'https://via.placeholder.com/300' }] 
+        },
+        preview_url: t.previewUrl || null,
       }));
 
-      setSpotifyResults(tracks.slice(0, 12));
+      setMusicResults(tracks);
     } catch (err) {
-      console.error('YouTube search failed:', err);
+      console.error('Music search failed:', err);
       toast.error('Search failed — try again');
-      setSpotifyResults([]);
+      setMusicResults([]);
     } finally {
       setSearchingMusic(false);
     }
@@ -153,7 +156,6 @@ export function Upload({ onNavigate }: UploadProps) {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
 
-      // Ensure profile exists
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
@@ -176,8 +178,8 @@ export function Upload({ onNavigate }: UploadProps) {
 
       const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
 
-      // ── COMMON DATA FOR BOTH POSTS & DAILIES ─────────────────────
-      const commonData: any = {
+      // Music data for both posts & dailies
+      const musicData: any = {
         spotify_track_id: selectedTrack?.id || null,
         spotify_track_name: selectedTrack?.name || null,
         spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
@@ -192,19 +194,18 @@ export function Upload({ onNavigate }: UploadProps) {
           media_type: fileType === 'image' ? 'photo' : 'video',
           caption: caption.trim() || null,
           duration: fileType === 'video' ? videoDuration : null,
-          ...commonData,
+          ...musicData,
         };
 
         const { error: insertError } = await supabase.from('dailies').insert(dailyData);
         if (insertError) throw insertError;
 
-        // Mirror to posts table for feed
         await supabase.from('posts').insert({
           user_id: userData.user.id,
           title: 'Daily',
           caption: caption.trim() || null,
           [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
-          ...commonData,
+          ...musicData,
         });
 
         toast.success('Daily posted successfully!');
@@ -219,7 +220,7 @@ export function Upload({ onNavigate }: UploadProps) {
           caption: caption.trim() || null,
           recipe_url: recipeLink,
           [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
-          ...commonData,
+          ...musicData,
         };
 
         const { data: newPost, error: insertError } = await supabase
@@ -229,7 +230,6 @@ export function Upload({ onNavigate }: UploadProps) {
           .single();
         if (insertError) throw insertError;
 
-        // Hashtags (unchanged)
         const hashtagTexts = extractHashtags(caption);
         if (hashtagTexts.length > 0 && newPost) {
           for (const tag of hashtagTexts) {
@@ -263,7 +263,6 @@ export function Upload({ onNavigate }: UploadProps) {
         toast.success('Post uploaded successfully!');
       }
 
-      // Reset everything
       handleClearImage();
       setTitle('');
       setCaption('');
@@ -280,7 +279,6 @@ export function Upload({ onNavigate }: UploadProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
       <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <button onClick={() => onNavigate('discover')} className="text-gray-600 hover:text-gray-900 font-medium">
@@ -299,7 +297,6 @@ export function Upload({ onNavigate }: UploadProps) {
       </div>
 
       <div className="max-w-lg mx-auto p-4 space-y-4">
-        {/* Post Type */}
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <label className="text-sm font-medium text-gray-700 mb-2 block">Post Type</label>
           <div className="flex gap-2">
@@ -331,7 +328,6 @@ export function Upload({ onNavigate }: UploadProps) {
           )}
         </div>
 
-        {/* Media Preview */}
         {!previewUrl ? (
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
             <label className="cursor-pointer">
@@ -368,12 +364,12 @@ export function Upload({ onNavigate }: UploadProps) {
           </div>
         )}
 
-        {/* Add Music Section */}
+        {/* Music Section */}
         <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-gray-700">Add Music (optional)</label>
             <button
-              onClick={() => setShowSpotifyPicker(true)}
+              onClick={() => setShowMusicPicker(true)}
               className="text-sm font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1.5"
             >
               <Music className="w-5 h-5" />
@@ -399,7 +395,6 @@ export function Upload({ onNavigate }: UploadProps) {
           )}
         </div>
 
-        {/* Title, Caption, Recipe */}
         <div className="space-y-4 bg-white rounded-xl p-4 shadow-sm">
           {postType === 'post' && (
             <div>
@@ -475,39 +470,39 @@ export function Upload({ onNavigate }: UploadProps) {
         )}
       </div>
 
-      {/* ── SPOTIFY PICKER MODAL ── */}
-      {showSpotifyPicker && (
+      {/* Music Picker Modal */}
+      {showMusicPicker && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-end md:items-center justify-center">
           <div className="bg-white w-full md:max-w-lg md:rounded-2xl md:max-h-[80vh] flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold text-lg">Choose Music</h3>
-              <button onClick={() => setShowSpotifyPicker(false)}>
+              <button onClick={() => setShowMusicPicker(false)}>
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             <div className="p-4">
               <input
-  type="text"
-  value={spotifySearch}
-  onChange={(e) => {
-    setSpotifySearch(e.target.value);
-    searchYouTubeMusic(e.target.value);
-  }}
-  placeholder="Search any song..."
-  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
-  autoFocus
-/>
+                type="text"
+                value={musicSearch}
+                onChange={(e) => {
+                  setMusicSearch(e.target.value);
+                  searchMusic(e.target.value);
+                }}
+                placeholder="Search any song..."
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                autoFocus
+              />
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 pb-20 md:pb-4 space-y-2">
               {searchingMusic && <p className="text-center text-gray-500 py-8">Searching...</p>}
-              {spotifyResults.map((track) => (
+              {musicResults.map((track) => (
                 <button
                   key={track.id}
                   onClick={() => {
                     setSelectedTrack(track);
-                    setShowSpotifyPicker(false);
+                    setShowMusicPicker(false);
                     toast.success('Music added!');
                   }}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition text-left"
@@ -523,10 +518,10 @@ export function Upload({ onNavigate }: UploadProps) {
                       {track.artists.map((a: any) => a.name).join(', ')}
                     </p>
                   </div>
-                 <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Full Song</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">30s Preview</span>
                 </button>
               ))}
-              {spotifySearch && spotifyResults.length === 0 && !searchingMusic && (
+              {musicSearch && musicResults.length === 0 && !searchingMusic && (
                 <p className="text-center text-gray-500 py-8">No tracks found</p>
               )}
             </div>
