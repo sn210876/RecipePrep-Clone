@@ -34,10 +34,13 @@ export function Upload({ onNavigate }: UploadProps) {
   const [userRecipes, setUserRecipes] = useState<UserRecipe[]>([]);
   const [uploading, setUploading] = useState(false);
   const [videoDuration, setVideoDuration] = useState<number>(0);
-  
-  // Music state
-  const [selectedMusic, setSelectedMusic] = useState<File | null>(null);
-  const [musicPreview, setMusicPreview] = useState<string | null>(null);
+
+  // Music states
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [musicSearch, setMusicSearch] = useState('');
+  const [musicResults, setMusicResults] = useState<any[]>([]);
+  const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [searchingMusic, setSearchingMusic] = useState(false);
 
   useEffect(() => {
     loadUserRecipes();
@@ -77,12 +80,10 @@ export function Upload({ onNavigate }: UploadProps) {
           window.URL.revokeObjectURL(video.src);
           const duration = Math.floor(video.duration);
           setVideoDuration(duration);
-
           if (postType === 'daily' && duration > 30) {
             toast.error('Daily videos must be 30 seconds or less');
             return;
           }
-
           setFileType('video');
           setSelectedFile(file);
           setPreviewUrl(URL.createObjectURL(file));
@@ -90,33 +91,7 @@ export function Upload({ onNavigate }: UploadProps) {
         video.src = URL.createObjectURL(file);
       } else {
         toast.error('Please select an image or video file');
-        return;
       }
-    }
-  };
-
-  const handleMusicSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('audio/')) {
-        toast.error('Please select an audio file');
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('Music file must be less than 10MB');
-        return;
-      }
-      setSelectedMusic(file);
-      setMusicPreview(URL.createObjectURL(file));
-      toast.success('Music added!');
-    }
-  };
-
-  const handleClearMusic = () => {
-    setSelectedMusic(null);
-    if (musicPreview) {
-      URL.revokeObjectURL(musicPreview);
-      setMusicPreview(null);
     }
   };
 
@@ -129,17 +104,48 @@ export function Upload({ onNavigate }: UploadProps) {
     }
   };
 
+  // iTunes API search (free, no auth needed)
+  const searchMusic = async (query: string) => {
+    if (!query.trim()) {
+      setMusicResults([]);
+      return;
+    }
+    setSearchingMusic(true);
+    try {
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=20`
+      );
+      const data = await res.json();
+
+      const tracks = (data.results || []).map((t: any) => ({
+        id: t.trackId.toString(),
+        name: t.trackName || 'Unknown Song',
+        artists: [{ name: t.artistName || 'Unknown Artist' }],
+        album: { 
+          images: [{ url: t.artworkUrl100?.replace('100x100', '300x300') || 'https://via.placeholder.com/300' }] 
+        },
+        preview_url: t.previewUrl || null,
+      }));
+
+      setMusicResults(tracks);
+    } catch (err) {
+      console.error('Music search failed:', err);
+      toast.error('Search failed — try again');
+      setMusicResults([]);
+    } finally {
+      setSearchingMusic(false);
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) {
       toast.error('Please select an image or video');
       return;
     }
-
     if (postType === 'post' && !title.trim()) {
       toast.error('Please enter a title');
       return;
     }
-
     if (postType === 'daily' && fileType === 'video' && videoDuration > 30) {
       toast.error('Daily videos must be 30 seconds or less');
       return;
@@ -149,13 +155,12 @@ export function Upload({ onNavigate }: UploadProps) {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
-      
+
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', userData.user.id)
         .maybeSingle();
-      
       if (!existingProfile) {
         await supabase.from('profiles').insert({
           id: userData.user.id,
@@ -164,37 +169,23 @@ export function Upload({ onNavigate }: UploadProps) {
         });
       }
 
-      // Upload media file
       const fileExt = selectedFile.name.split('.').pop();
       const fileName = `${userData.user.id}/${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from('posts')
-        .upload(fileName, selectedFile, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+        .upload(fileName, selectedFile, { cacheControl: '3600', upsert: false });
       if (uploadError) throw uploadError;
+
       const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
 
-      // Upload music if selected
-      let musicUrl = null;
-      if (selectedMusic) {
-        const musicExt = selectedMusic.name.split('.').pop();
-        const musicFileName = `${userData.user.id}/${Date.now()}.${musicExt}`;
-        const { error: musicUploadError } = await supabase.storage
-          .from('music')
-          .upload(musicFileName, selectedMusic, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-        if (musicUploadError) {
-          console.error('Music upload error:', musicUploadError);
-          toast.error('Failed to upload music');
-        } else {
-          const { data: musicUrlData } = supabase.storage.from('music').getPublicUrl(musicFileName);
-          musicUrl = musicUrlData.publicUrl;
-        }
-      }
+      // Music data for both posts & dailies
+      const musicData: any = {
+        spotify_track_id: selectedTrack?.id || null,
+        spotify_track_name: selectedTrack?.name || null,
+        spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
+        spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
+        spotify_preview_url: selectedTrack?.preview_url || null,
+      };
 
       if (postType === 'daily') {
         const dailyData: any = {
@@ -202,116 +193,85 @@ export function Upload({ onNavigate }: UploadProps) {
           media_url: urlData.publicUrl,
           media_type: fileType === 'image' ? 'photo' : 'video',
           caption: caption.trim() || null,
+          duration: fileType === 'video' ? videoDuration : null,
+          ...musicData,
         };
 
-        if (fileType === 'video') {
-          dailyData.duration = videoDuration;
-        }
-
-        const { error: insertError } = await supabase
-          .from('dailies')
-          .insert(dailyData);
+        const { error: insertError } = await supabase.from('dailies').insert(dailyData);
         if (insertError) throw insertError;
 
-        const postData: any = {
+        await supabase.from('posts').insert({
           user_id: userData.user.id,
           title: 'Daily',
           caption: caption.trim() || null,
-          music_url: musicUrl,
-        };
-
-        if (fileType === 'image') {
-          postData.image_url = urlData.publicUrl;
-        } else if (fileType === 'video') {
-          postData.video_url = urlData.publicUrl;
-        }
-
-        const { error: postInsertError } = await supabase
-          .from('posts')
-          .insert(postData);
-
-        if (postInsertError) {
-          console.error('Error creating post for daily:', postInsertError);
-        }
+          [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
+          ...musicData,
+        });
 
         toast.success('Daily posted successfully!');
-        handleClearImage();
-        handleClearMusic();
-        setTitle('');
-        setCaption('');
-        onNavigate('discover');
-        return;
-      }
+      } else {
+        let recipeLink = selectedRecipeId
+          ? `${window.location.origin}/#recipe/${selectedRecipeId}`
+          : null;
 
-      let recipeLink = null;
-      if (selectedRecipeId) {
-        recipeLink = `${window.location.origin}/#recipe/${selectedRecipeId}`;
-      }
+        const postData: any = {
+          user_id: userData.user.id,
+          title: title.trim(),
+          caption: caption.trim() || null,
+          recipe_url: recipeLink,
+          [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
+          ...musicData,
+        };
 
-      const postData: any = {
-        user_id: userData.user.id,
-        title: title.trim(),
-        caption: caption.trim() || null,
-        recipe_url: recipeLink,
-        music_url: musicUrl,
-      };
+        const { data: newPost, error: insertError } = await supabase
+          .from('posts')
+          .insert(postData)
+          .select()
+          .single();
+        if (insertError) throw insertError;
 
-      if (fileType === 'image') {
-        postData.image_url = urlData.publicUrl;
-      } else if (fileType === 'video') {
-        postData.video_url = urlData.publicUrl;
-      }
-
-      const { data: newPost, error: insertError } = await supabase
-        .from('posts')
-        .insert(postData)
-        .select()
-        .single();
-      if (insertError) throw insertError;
-
-      const hashtagTexts = extractHashtags(caption);
-      if (hashtagTexts.length > 0 && newPost) {
-        for (const tag of hashtagTexts) {
-          const { data: existingTag } = await supabase
-            .from('hashtags')
-            .select('id, usage_count')
-            .eq('tag', tag)
-            .maybeSingle();
-          let hashtagId: string;
-          if (existingTag) {
-            hashtagId = existingTag.id;
-            await supabase
+        const hashtagTexts = extractHashtags(caption);
+        if (hashtagTexts.length > 0 && newPost) {
+          for (const tag of hashtagTexts) {
+            const { data: existingTag } = await supabase
               .from('hashtags')
-              .update({ usage_count: existingTag.usage_count + 1 })
-              .eq('id', existingTag.id);
-          } else {
-            const { data: newTag } = await supabase
-              .from('hashtags')
-              .insert({ tag, usage_count: 1 })
-              .select()
-              .single();
-            if (newTag) {
-              hashtagId = newTag.id;
+              .select('id, usage_count')
+              .eq('tag', tag)
+              .maybeSingle();
+
+            let hashtagId: string;
+            if (existingTag) {
+              hashtagId = existingTag.id;
+              await supabase
+                .from('hashtags')
+                .update({ usage_count: existingTag.usage_count + 1 })
+                .eq('id', existingTag.id);
             } else {
-              continue;
+              const { data: newTag } = await supabase
+                .from('hashtags')
+                .insert({ tag, usage_count: 1 })
+                .select()
+                .single();
+              hashtagId = newTag!.id;
             }
+            await supabase
+              .from('post_hashtags')
+              .insert({ post_id: newPost.id, hashtag_id: hashtagId });
           }
-          await supabase
-            .from('post_hashtags')
-            .insert({ post_id: newPost.id, hashtag_id: hashtagId });
         }
+
+        toast.success('Post uploaded successfully!');
       }
 
-      toast.success('Post uploaded successfully!');
       handleClearImage();
-      handleClearMusic();
       setTitle('');
       setCaption('');
       setSelectedRecipeId('');
+      setSelectedTrack(null);
       onNavigate('discover');
     } catch (error: any) {
-      console.error('Error uploading post:', error);
-      toast.error(error.message || 'Failed to upload post');
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload');
     } finally {
       setUploading(false);
     }
@@ -321,10 +281,7 @@ export function Upload({ onNavigate }: UploadProps) {
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <button
-            onClick={() => onNavigate('discover')}
-            className="text-gray-600 hover:text-gray-900 font-medium"
-          >
+          <button onClick={() => onNavigate('discover')} className="text-gray-600 hover:text-gray-900 font-medium">
             Cancel
           </button>
           <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
@@ -338,6 +295,7 @@ export function Upload({ onNavigate }: UploadProps) {
           </Button>
         </div>
       </div>
+
       <div className="max-w-lg mx-auto p-4 space-y-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <label className="text-sm font-medium text-gray-700 mb-2 block">Post Type</label>
@@ -373,12 +331,7 @@ export function Upload({ onNavigate }: UploadProps) {
         {!previewUrl ? (
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
             <label className="cursor-pointer">
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
+              <input type="file" accept="image/*,video/*" onChange={handleFileSelect} className="hidden" />
               <div className="space-y-4">
                 <div className="flex gap-4 justify-center">
                   <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
@@ -391,7 +344,6 @@ export function Upload({ onNavigate }: UploadProps) {
                 <div>
                   <p className="text-lg font-semibold text-gray-900 mb-1">Upload a photo or video</p>
                   <p className="text-sm text-gray-500">Click to select a file from your device</p>
-                  <p className="text-xs text-gray-400 mt-2">Images: max 10MB • Videos: no limit</p>
                 </div>
               </div>
             </label>
@@ -399,61 +351,48 @@ export function Upload({ onNavigate }: UploadProps) {
         ) : (
           <div className="relative">
             {fileType === 'image' ? (
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="w-full aspect-square object-cover rounded-xl"
-              />
+              <img src={previewUrl} alt="Preview" className="w-full aspect-square object-cover rounded-xl" />
             ) : (
-              <video
-                src={previewUrl}
-                controls
-                className="w-full aspect-square object-cover rounded-xl"
-              />
+              <video src={previewUrl} controls className="w-full aspect-square object-cover rounded-xl" />
             )}
             <button
               onClick={handleClearImage}
-              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         )}
 
-        {/* Music Upload Section */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
-          <label className="text-sm font-medium text-gray-700 mb-2 block">Add Music (Optional)</label>
-          {!selectedMusic ? (
-            <label className="flex items-center justify-center gap-3 py-4 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 transition-colors cursor-pointer">
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleMusicSelect}
-                className="hidden"
+        {/* Music Section */}
+        <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">Add Music (optional)</label>
+            <button
+              onClick={() => setShowMusicPicker(true)}
+              className="text-sm font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1.5"
+            >
+              <Music className="w-5 h-5" />
+              {selectedTrack ? 'Change Music' : 'Add Music'}
+            </button>
+          </div>
+
+          {selectedTrack && (
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+              <img
+                src={selectedTrack.album.images[0]?.url}
+                alt="album"
+                className="w-12 h-12 rounded object-cover"
               />
-              <Music className="w-6 h-6 text-orange-600" />
-              <span className="text-sm text-gray-600">Click to add music</span>
-            </label>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
-                <Music className="w-5 h-5 text-orange-600 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{selectedMusic.name}</p>
-                  {musicPreview && (
-                    <audio src={musicPreview} controls className="w-full mt-2" />
-                  )}
-                </div>
-                <button
-                  onClick={handleClearMusic}
-                  className="text-red-600 hover:text-red-800 p-1"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{selectedTrack.name}</p>
+                <p className="text-xs text-gray-600 truncate">{selectedTrack.artists[0].name}</p>
               </div>
+              <button onClick={() => setSelectedTrack(null)} className="text-red-600">
+                <X className="w-5 h-5" />
+              </button>
             </div>
           )}
-          <p className="text-xs text-gray-500 mt-2">Supported: MP3, WAV, M4A • Max 10MB</p>
         </div>
 
         <div className="space-y-4 bg-white rounded-xl p-4 shadow-sm">
@@ -473,10 +412,9 @@ export function Upload({ onNavigate }: UploadProps) {
               <p className="text-xs text-gray-400 mt-1">{title.length}/200</p>
             </div>
           )}
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Caption
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Caption</label>
             <Textarea
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
@@ -486,44 +424,39 @@ export function Upload({ onNavigate }: UploadProps) {
             />
             <p className="text-xs text-gray-400 mt-1">{caption.length}/2200</p>
           </div>
+
           {postType === 'post' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Link to Recipe (optional)
               </label>
               <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a recipe from your collection" />
-              </SelectTrigger>
-              <SelectContent>
-                {userRecipes.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-gray-500">
-                    No recipes yet. Add some recipes first!
-                  </div>
-                ) : (
-                  userRecipes.map((recipe) => (
-                    <SelectItem key={recipe.id} value={recipe.id}>
-                      <div className="flex items-center gap-2">
-                        {recipe.image_url && (
-                          <img
-                            src={recipe.image_url}
-                            alt={recipe.title}
-                            className="w-8 h-8 rounded object-cover"
-                          />
-                        )}
-                        <span>{recipe.title}</span>
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-500 mt-1">
-              Choose a recipe from your collection to link with this post
-            </p>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a recipe from your collection" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userRecipes.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      No recipes yet. Add some recipes first!
+                    </div>
+                  ) : (
+                    userRecipes.map((recipe) => (
+                      <SelectItem key={recipe.id} value={recipe.id}>
+                        <div className="flex items-center gap-2">
+                          {recipe.image_url && (
+                            <img src={recipe.image_url} alt={recipe.title} className="w-8 h-8 rounded object-cover" />
+                          )}
+                          <span>{recipe.title}</span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           )}
         </div>
+
         {selectedFile && (
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
             <div className="flex items-start gap-3">
@@ -531,14 +464,70 @@ export function Upload({ onNavigate }: UploadProps) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-orange-900">Ready to post</p>
                 <p className="text-xs text-orange-700 mt-1 truncate">{selectedFile.name}</p>
-                {selectedMusic && (
-                  <p className="text-xs text-orange-700 mt-1">+ Music: {selectedMusic.name}</p>
-                )}
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Music Picker Modal */}
+      {showMusicPicker && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-end md:items-center justify-center">
+          <div className="bg-white w-full md:max-w-lg md:rounded-2xl md:max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="font-semibold text-lg">Choose Music</h3>
+              <button onClick={() => setShowMusicPicker(false)}>
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              <input
+                type="text"
+                value={musicSearch}
+                onChange={(e) => {
+                  setMusicSearch(e.target.value);
+                  searchMusic(e.target.value);
+                }}
+                placeholder="Search any song..."
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 pb-20 md:pb-4 space-y-2">
+              {searchingMusic && <p className="text-center text-gray-500 py-8">Searching...</p>}
+              {musicResults.map((track) => (
+                <button
+                  key={track.id}
+                  onClick={() => {
+                    setSelectedTrack(track);
+                    setShowMusicPicker(false);
+                    toast.success('Music added!');
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition text-left"
+                >
+                  <img
+                    src={track.album.images[0]?.url || '/placeholder.png'}
+                    alt="album"
+                    className="w-12 h-12 rounded"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{track.name}</p>
+                    <p className="text-sm text-gray-600 truncate">
+                      {track.artists.map((a: any) => a.name).join(', ')}
+                    </p>
+                  </div>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">30s Preview</span>
+                </button>
+              ))}
+              {musicSearch && musicResults.length === 0 && !searchingMusic && (
+                <p className="text-center text-gray-500 py-8">No tracks found</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
