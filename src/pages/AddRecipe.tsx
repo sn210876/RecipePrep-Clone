@@ -477,19 +477,19 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 )}
               </Button>
             </div>
-            <div className="mt-3 space-y-1">
+ <div className="mt-3 space-y-1">
   <p className="text-xs text-emerald-600 font-bold">
     NOW WORKS: All Recipes, Blogs.
-  
   </p>
- <p className="text-xs text-orange-600 font-">
+  <p className="text-xs text-orange-600 font-normal">
     Instagram → If video has no ingredients in description, then please manually update
   </p>
   <p className="text-xs text-orange-600 font-normal">
-    Tiktok → If video has no ingredients in description, then please manually update
+    TikTok → If video has no ingredients in description, then please manually update
   </p>
-  <p className="text-xs text-orange-600 font-">
+  <p className="text-xs text-orange-600 font-normal">
     YouTube → Coming Soon...
+  </p>
 </div>
           </CardContent>
         </Card>
