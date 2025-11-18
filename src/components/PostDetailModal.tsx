@@ -466,7 +466,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   <div className="flex gap-1 mr-8">
     {post.user_id === currentUserId && (
       <>
-        <Button variant="ghost" size="sm" onClick={() => setEditingCaption(!editingCaption)} title="Edit Caption">
+        <Button variant="ghost" size="xsm" onClick={() => setEditingCaption(!editingCaption)} title="Edit Caption">
           <Edit2 className="w-4 h-4" />
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setEditingMusic(!editingMusic)} title="Edit Music">
