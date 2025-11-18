@@ -488,7 +488,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   <p className="text-xs text-orange-600 font-normal">
     Tiktok → If video has no ingredients in description, then please manually update
   </p>
-              <p className="text-xs text-orange-600 font-">
+  <p className="text-xs text-orange-600 font-">
     YouTube → Coming Soon...
 </div>
           </CardContent>
