@@ -531,42 +531,52 @@ const searchMusic = async (query: string) => {
   }
 };
   const handleEditPost = async () => {
-    if (!editingPost) return;
+  if (!editingPost) return;
 
-    try {
-      const { error } = await supabase
-        .from('posts')
-        .update({
-          caption: editingPost.caption.trim() || null,
-          recipe_url: editingPost.recipeUrl.trim() || null,
-          photo_url: editingPost.photoUrl.trim() || null,
-          image_url: editingPost.photoUrl.trim() || null,
-        })
-        .eq('id', editingPost.id);
+  try {
+    const { error } = await supabase
+      .from('posts')
+      .update({
+        caption: editingPost.caption.trim() || null,
+        recipe_url: editingPost.recipeUrl.trim() || null,
+        photo_url: editingPost.photoUrl.trim() || null,
+        image_url: editingPost.photoUrl.trim() || null,
+        spotify_track_id: selectedTrack?.id || null,
+        spotify_track_name: selectedTrack?.name || null,
+        spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
+        spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
+        spotify_preview_url: selectedTrack?.preview_url || null,
+      })
+      .eq('id', editingPost.id);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      setPosts(prev =>
-        prev.map(p =>
-          p.id === editingPost.id
-            ? {
-                ...p,
-                caption: editingPost.caption.trim() || null,
-                image_url: editingPost.photoUrl.trim() || null,
-                recipe_url: editingPost.recipeUrl.trim() || null,
-                photo_url: editingPost.photoUrl.trim() || null
-              }
-            : p
-        )
-      );
-      toast.success('Post updated');
-      setEditingPost(null);
-    } catch (error: any) {
-      console.error('Error updating post:', error);
-      toast.error('Failed to update post');
-    }
-  };
-
+    setPosts(prev =>
+      prev.map(p =>
+        p.id === editingPost.id
+          ? {
+              ...p,
+              caption: editingPost.caption.trim() || null,
+              image_url: editingPost.photoUrl.trim() || null,
+              recipe_url: editingPost.recipeUrl.trim() || null,
+              photo_url: editingPost.photoUrl.trim() || null,
+              spotify_track_id: selectedTrack?.id || null,
+              spotify_track_name: selectedTrack?.name || null,
+              spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
+              spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
+              spotify_preview_url: selectedTrack?.preview_url || null,
+            }
+          : p
+      )
+    );
+    toast.success('Post updated');
+    setEditingPost(null);
+    setSelectedTrack(null);
+  } catch (error: any) {
+    console.error('Error updating post:', error);
+    toast.error('Failed to update post');
+  }
+};
   const toggleLike = async (postId: string) => {
     if (!currentUserId) return;
 
