@@ -428,8 +428,8 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                   onPause={() => setIsPlaying(false)}
                 />
 
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
-                  <div className="flex items-center gap-2 max-w-3xl mx-auto **opacity-60**">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent **p-3** z-30">
+                  <div className="flex items-center **gap-2** max-w-3xl mx-auto **opacity-60**">
                     <div className="relative">
                       <img
                         src={post.spotify_album_art || '/placeholder-album.png'}
