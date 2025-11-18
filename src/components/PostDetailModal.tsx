@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dial
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { Edit2, Trash2, Heart, MessageCircle, Crown, Play, Pause } from 'lucide-react';
+import { Edit2, Trash2, Heart, MessageCircle, Crown, Play, Pause, Music, X } from 'lucide-react';
 import { supabase, isAdmin } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -53,6 +53,7 @@ interface PostDetailModalProps {
 
 export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: PostDetailModalProps) {
   const [editingCaption, setEditingCaption] = useState(false);
+  const [editingMusic, setEditingMusic] = useState(false);
   const [caption, setCaption] = useState('');
   const [reviews, setReviews] = useState<Review[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -63,6 +64,13 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  // Music editing states
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [musicSearch, setMusicSearch] = useState('');
+  const [musicResults, setMusicResults] = useState<any[]>([]);
+  const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [searchingMusic, setSearchingMusic] = useState(false);
 
   useEffect(() => {
     if (post) {
@@ -71,11 +79,23 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       checkLikeStatus();
       loadCurrentUserAndAdminStatus();
       setIsPlaying(false);
+      
+      // Load existing music if present
+      if (post.spotify_track_id) {
+        setSelectedTrack({
+          id: post.spotify_track_id,
+          name: post.spotify_track_name,
+          artists: [{ name: post.spotify_artist_name }],
+          album: { images: [{ url: post.spotify_album_art }] },
+          preview_url: post.spotify_preview_url,
+        });
+      } else {
+        setSelectedTrack(null);
+      }
     }
   }, [post]);
 
   useEffect(() => {
-    // Cleanup audio when modal closes
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -92,6 +112,36 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
         audioRef.current.play();
       }
       setIsPlaying(!isPlaying);
+    }
+  };
+
+  const searchMusic = async (query: string) => {
+    if (!query.trim()) {
+      setMusicResults([]);
+      return;
+    }
+    setSearchingMusic(true);
+    try {
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=20`
+      );
+      const data = await res.json();
+      const tracks = (data.results || []).map((t: any) => ({
+        id: t.trackId.toString(),
+        name: t.trackName || 'Unknown Song',
+        artists: [{ name: t.artistName || 'Unknown Artist' }],
+        album: { 
+          images: [{ url: t.artworkUrl100?.replace('100x100', '300x300') || 'https://via.placeholder.com/300' }] 
+        },
+        preview_url: t.previewUrl || null,
+      }));
+      setMusicResults(tracks);
+    } catch (err) {
+      console.error('Music search failed:', err);
+      toast.error('Search failed');
+      setMusicResults([]);
+    } finally {
+      setSearchingMusic(false);
     }
   };
 
@@ -185,6 +235,34 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
     } catch (error) {
       console.error('Error updating caption:', error);
       toast.error('Failed to update caption');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateMusic = async () => {
+    if (!post) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({
+          spotify_track_id: selectedTrack?.id || null,
+          spotify_track_name: selectedTrack?.name || null,
+          spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
+          spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
+          spotify_preview_url: selectedTrack?.preview_url || null,
+        })
+        .eq('id', post.id);
+      if (error) throw error;
+      toast.success('Music updated!');
+      setEditingMusic(false);
+      onUpdate();
+      onClose();
+      setTimeout(() => window.location.reload(), 500);
+    } catch (error) {
+      console.error('Error updating music:', error);
+      toast.error('Failed to update music');
     } finally {
       setLoading(false);
     }
@@ -340,7 +418,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
               />
             ) : null}
 
-            {/* Music Player */}
             {post.spotify_preview_url && (
               <>
                 <audio
@@ -351,7 +428,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                   onPause={() => setIsPlaying(false)}
                 />
 
-                {/* Beautiful Instagram-style music bar */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
                   <div className="flex items-center gap-5 max-w-3xl mx-auto">
                     <div className="relative">
@@ -389,9 +465,14 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
               <h3 className="font-semibold text-lg flex-1 pr-4">{post.title || 'Post'}</h3>
               <div className="flex gap-1 mr-8">
                 {post.user_id === currentUserId && (
-                  <Button variant="ghost" size="sm" onClick={() => setEditingCaption(!editingCaption)}>
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => setEditingCaption(!editingCaption)} title="Edit Caption">
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEditingMusic(!editingMusic)} title="Edit Music">
+                      <Music className="w-4 h-4 text-purple-600" />
+                    </Button>
+                  </>
                 )}
                 {canDeletePost && (
                   <Button variant="ghost" size="sm" onClick={handleDeletePost} disabled={loading}>
@@ -422,6 +503,33 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
                   </p>
                 )}
               </div>
+
+              {editingMusic && (
+                <div className="space-y-2 bg-purple-50 p-3 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-purple-900">Edit Music</span>
+                    <button onClick={() => setShowMusicPicker(true)} className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+                      Search Music
+                    </button>
+                  </div>
+                  {selectedTrack && (
+                    <div className="flex items-center gap-2 p-2 bg-white rounded border">
+                      <img src={selectedTrack.album.images[0]?.url} className="w-10 h-10 rounded" alt="Album" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">{selectedTrack.name}</p>
+                        <p className="text-xs text-gray-600 truncate">{selectedTrack.artists[0].name}</p>
+                      </div>
+                      <button onClick={() => setSelectedTrack(null)} className="text-red-500 hover:text-red-700">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleUpdateMusic} disabled={loading}>Save Music</Button>
+                    <Button size="sm" variant="outline" onClick={() => { setEditingMusic(false); setSelectedTrack(post.spotify_track_id ? { id: post.spotify_track_id, name: post.spotify_track_name, artists: [{ name: post.spotify_artist_name }], album: { images: [{ url: post.spotify_album_art }] }, preview_url: post.spotify_preview_url } : null); }}>Cancel</Button>
+                  </div>
+                </div>
+              )}
 
               {reviews.length > 0 && (
                 <div className="space-y-2">
@@ -499,6 +607,46 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
             </div>
           </div>
         </div>
+
+        {showMusicPicker && (
+          <div className="absolute inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-md rounded-lg max-h-[500px] flex flex-col">
+              <div className="p-3 border-b flex items-center justify-between">
+                <h4 className="font-semibold">Choose Music</h4>
+                <button onClick={() => setShowMusicPicker(false)}><X className="w-5 h-5" /></button>
+              </div>
+              <div className="p-3">
+                <input
+                  type="text"
+                  value={musicSearch}
+                  onChange={(e) => { setMusicSearch(e.target.value); searchMusic(e.target.value); }}
+                  placeholder="Search songs..."
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  autoFocus
+                />
+              </div>
+              <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
+                {searchingMusic && <p className="text-center text-gray-500 py-4">Searching...</p>}
+                {musicResults.map((track) => (
+                  <button
+                    key={track.id}
+                    onClick={() => { setSelectedTrack(track); setShowMusicPicker(false); toast.success('Music selected!'); }}
+                    className="w-full flex items-center gap-2 p-2 rounded hover:bg-gray-100"
+                  >
+                    <img src={track.album.images[0]?.url} className="w-10 h-10 rounded" alt="Album" />
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="text-sm font-medium truncate">{track.name}</p>
+                      <p className="text-xs text-gray-600 truncate">{track.artists[0].name}</p>
+                    </div>
+                  </button>
+                ))}
+                {musicSearch && musicResults.length === 0 && !searchingMusic && (
+                  <p className="text-center text-gray-500 py-4">No songs found</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
