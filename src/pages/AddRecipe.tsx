@@ -484,7 +484,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   <p className="text-xs text-orange-600 font-bold">
     YouTube → Coming Soon...
   </p>
- <p className="text-xs text-orange-600 font-bold">
+ <p className="text-xs text-orange-600 font-">
     Instagram → If video has no ingredients in description, then please manually update
   </p>
   <p className="text-xs text-orange-600 font-normal">
