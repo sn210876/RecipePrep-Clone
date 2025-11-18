@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check, Music, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -82,7 +82,12 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [postRatings, setPostRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
-  const [editingPost, setEditingPost] = useState<{ id: string; caption: string; recipeUrl: string; photoUrl: string } | null>(null);
+  const [editingPost, setEditingPost] = useState<{ 
+    id: string; 
+    caption: string; 
+    recipeUrl: string; 
+    photoUrl: string;
+  } | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -100,6 +105,13 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [followers, setFollowers] = useState<any[]>([]);
   const [selectedFollowers, setSelectedFollowers] = useState<Set<string>>(new Set());
   const [copiedLink, setCopiedLink] = useState(false);
+  
+  // Music editing states
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [musicSearch, setMusicSearch] = useState('');
+  const [musicResults, setMusicResults] = useState<any[]>([]);
+  const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [searchingMusic, setSearchingMusic] = useState(false);
 
   const POSTS_PER_PAGE = 10;
 
@@ -146,7 +158,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       console.log('[Notifications] Loaded notifications:', data);
 
       if (data) {
-        // Manually fetch actor profiles for each notification
         const actorIds = [...new Set(data.map(n => n.actor_id))];
         const { data: profiles } = await supabase
           .from('profiles')
@@ -155,7 +166,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
         console.log('[Notifications] Loaded actor profiles:', profiles);
 
-        // Map profiles to notifications
         const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
         const mappedData = data.map(n => ({
           ...n,
@@ -203,6 +213,36 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       loadSharedPost();
     }
   }, [sharedPostId, currentUserId, onPostViewed]);
+
+  const searchMusic = async (query: string) => {
+    if (!query.trim()) {
+      setMusicResults([]);
+      return;
+    }
+    setSearchingMusic(true);
+    try {
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=20`
+      );
+      const data = await res.json();
+      const tracks = (data.results || []).map((t: any) => ({
+        id: t.trackId.toString(),
+        name: t.trackName || 'Unknown Song',
+        artists: [{ name: t.artistName || 'Unknown Artist' }],
+        album: { 
+          images: [{ url: t.artworkUrl100?.replace('100x100', '300x300') }] 
+        },
+        preview_url: t.previewUrl || null,
+      }));
+      setMusicResults(tracks);
+    } catch (err) {
+      console.error('Music search failed:', err);
+      toast.error('Search failed');
+      setMusicResults([]);
+    } finally {
+      setSearchingMusic(false);
+    }
+  };
 
   const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
     try {
@@ -498,6 +538,11 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           recipe_url: editingPost.recipeUrl.trim() || null,
           photo_url: editingPost.photoUrl.trim() || null,
           image_url: editingPost.photoUrl.trim() || null,
+          spotify_track_id: selectedTrack?.id || null,
+          spotify_track_name: selectedTrack?.name || null,
+          spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
+          spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
+          spotify_preview_url: selectedTrack?.preview_url || null,
         })
         .eq('id', editingPost.id);
 
@@ -511,13 +556,19 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                 caption: editingPost.caption.trim() || null,
                 image_url: editingPost.photoUrl.trim() || null,
                 recipe_url: editingPost.recipeUrl.trim() || null,
-                photo_url: editingPost.photoUrl.trim() || null
+                photo_url: editingPost.photoUrl.trim() || null,
+                spotify_track_id: selectedTrack?.id || null,
+                spotify_track_name: selectedTrack?.name || null,
+                spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
+                spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
+                spotify_preview_url: selectedTrack?.preview_url || null,
               }
             : p
         )
       );
       toast.success('Post updated');
       setEditingPost(null);
+      setSelectedTrack(null);
     } catch (error: any) {
       console.error('Error updating post:', error);
       toast.error('Failed to update post');
@@ -589,7 +640,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       toast.error('Failed to update like');
     }
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
