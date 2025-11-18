@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Clock, ChefHat, Bookmark, Flame, Trash2, MessageSquare } from 'lucide-react';
+import { Clock, ChefHat, Bookmark, Flame, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardFooter } from './ui/card';
 import { Recipe } from '../types/recipe';
 import { RecipeDetailModal } from './RecipeDetailModal';
-import { PostDetailModal } from './PostDetailModal';
 import { useRecipes } from '../context/RecipeContext';
 import { RatingDisplay } from './RatingDisplay';
 import { getRecipeReviews, getAverageRating } from '../services/reviewService';
@@ -29,7 +28,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [socialPost, setSocialPost] = useState<any>(null);
-  const [showSocialPost, setShowSocialPost] = useState(false);
+  // const [showSocialPost, setShowSocialPost] = useState(false); // Removed - not used
   const totalTime = recipe.prepTime + recipe.cookTime;
   const isSaved = state.savedRecipes.some(r => r.id === recipe.id);
 
@@ -264,18 +263,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
         )}
         {showReviewButton && socialPost && (
           <div className="w-full">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full border-gray-300 hover:bg-blue-50 hover:border-blue-500 transition-all"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowSocialPost(true);
-              }}
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              View Social Post
-            </Button>
+            {/* View Social Post button removed - view posts on Discover page */}
           </div>
         )}
       </CardFooter>
@@ -296,15 +284,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
         }}
       />
 
-      {socialPost && (
-        <PostDetailModal
-          post={socialPost}
-          open={showSocialPost}
-          onClose={() => setShowSocialPost(false)}
-          onDelete={() => {}}
-          onUpdate={() => {}}
-        />
-      )}
+      {/* Social post modal removed - view posts on Discover page */}
     </>
   );
 }
