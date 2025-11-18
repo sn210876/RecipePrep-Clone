@@ -360,7 +360,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Create New Recipe</h1>
-          <p className="text-slate-600">Share your culinary creation with the community</p>
+          <p className="text-slate-600">See a recipe online you like, add it here for the community</p>
         </div>
 
         <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
