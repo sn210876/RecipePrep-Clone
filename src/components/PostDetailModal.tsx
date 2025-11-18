@@ -418,46 +418,46 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
               />
             ) : null}
 
-            {post.spotify_preview_url && (
-              <>
-                <audio
-                  ref={audioRef}
-                  src={post.spotify_preview_url}
-                  onEnded={() => setIsPlaying(false)}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                />
+          {post.spotify_preview_url && (
+              <>
+                <audio
+                  ref={audioRef}
+                  src={post.spotify_preview_url}
+                  onEnded={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                />
 
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
-                  <div className="flex items-center gap-5 max-w-3xl mx-auto">
-                    <div className="relative">
-                      <img
-                        src={post.spotify_album_art || '/placeholder-album.png'}
-                        alt="Album"
-                        className={`w-16 h-16 rounded-full shadow-2xl border-4 border-white/40 ${isPlaying ? 'animate-spin-slow' : ''}`}
-                      />
-                      <button
-                        onClick={toggleMusic}
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-all"
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-6 h-6 text-white" />
-                        ) : (
-                          <Play className="w-6 h-6 text-white ml-1" />
-                        )}
-                      </button>
-                    </div>
-                    <div className="flex-1 text-white">
-                      <p className="font-bold text-lg truncate">{post.spotify_track_name || 'Song'}</p>
-                      <p className="text-sm opacity-90">{post.spotify_artist_name || 'Artist'}</p>
-                    </div>
-                    <button onClick={toggleMusic} className="text-white text-3xl hover:scale-110 transition-transform">
-                      ♪
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
+                  <div className="flex items-center gap-2 max-w-3xl mx-auto **opacity-60**">
+                    <div className="relative">
+                      <img
+                        src={post.spotify_album_art || '/placeholder-album.png'}
+                        alt="Album"
+                        className={`**w-8 h-8** rounded-full shadow-2xl border-2 border-white/40 ${isPlaying ? 'animate-spin-slow' : ''}`}
+                      />
+                      <button
+                        onClick={toggleMusic}
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-all"
+                      >
+                        {isPlaying ? (
+                          <Pause className="**w-3 h-3** text-white" />
+                        ) : (
+                          <Play className="**w-3 h-3** text-white ml-0.5" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex-1 text-white">
+                      <p className="font-bold **text-xs** truncate">{post.spotify_track_name || 'Song'}</p>
+                      <p className="**text-xs** opacity-90">{post.spotify_artist_name || 'Artist'}</p>
+                    </div>
+                    <button onClick={toggleMusic} className="text-white **text-xl** hover:scale-110 transition-transform">
+                      ♪
+                    </button>
+                  </div>
+                </div>
+            </>
+            )}
           </div>
 
           <div className="md:w-2/5 flex flex-col bg-white">
@@ -466,7 +466,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   <div className="flex gap-1 mr-8">
     {post.user_id === currentUserId && (
       <>
-        <Button variant="ghost" size="xsm" onClick={() => setEditingCaption(!editingCaption)} title="Edit Caption">
+        <Button variant="ghost" size="sm" onClick={() => setEditingCaption(!editingCaption)} title="Edit Caption">
           <Edit2 className="w-4 h-4" />
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setEditingMusic(!editingMusic)} title="Edit Music">
