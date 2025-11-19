@@ -63,4 +63,86 @@ function AppContent() {
   const handleNavigate = (page: string) => {
     const routes: Record<string, string> = {
       'discover-recipes': '/',
-      'discover':
+      'discover': '/discover',
+      'my-recipes': '/recipes',
+      'add-recipe': '/add-recipe',
+      'meal-planner': '/meal-planner',
+      'grocery-list': '/grocery-list',
+      'cart': '/cart',
+      'upload': '/upload',
+      'profile': '/profile',
+      'messages': '/messages',
+      'settings': '/settings',
+      'onboarding': '/onboarding',
+    };
+
+    const url = routes[page] || '/';
+    window.history.pushState({}, '', url);
+    setCurrentPage(page);
+  };
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'discover-recipes':
+        return <DiscoverRecipes onNavigate={handleNavigate} />;
+      case 'discover':
+        return <Discover onNavigate={handleNavigate} />;
+      case 'my-recipes':
+        return <MyRecipes onNavigate={handleNavigate} />;
+      case 'add-recipe':
+        return <AddRecipe onNavigate={handleNavigate} />;
+      case 'meal-planner':
+        return <MealPlanner onNavigate={handleNavigate} />;
+      case 'grocery-list':
+        return <GroceryList onNavigate={handleNavigate} />;
+      case 'cart':
+        return <Cart onNavigate={handleNavigate} />;
+      case 'upload':
+        return <Upload onNavigate={handleNavigate} />;
+      case 'profile':
+        return <Profile onNavigate={handleNavigate} />;
+      case 'messages':
+        return <Messages onBack={() => handleNavigate('discover')} />;
+      case 'settings':
+        return <Settings onNavigate={handleNavigate} />;
+      case 'reset-password':
+        return <ResetPassword />;
+      default:
+        return <Home onNavigate={handleNavigate} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+          <p className="mt-4 text-gray-600">Loading MealScrape...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return <AuthForm />;
+  if (showVerifying && !completedVerifying) return <Verifying onComplete={() => setCompletedVerifying(true)} />;
+  if (!isEmailVerified) return <VerifyEmail />;
+
+  return (
+    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+      {renderPage()}
+      <Toaster />
+    </Layout>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <RecipeProvider>
+        <AppContent />
+      </RecipeProvider>
+    </AuthProvider>
+  );
+}
+
+export default App;
