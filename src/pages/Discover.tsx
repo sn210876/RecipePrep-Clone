@@ -1298,7 +1298,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       <Dialog open={!!sharePostId} onOpenChange={(open) => !open && setSharePostId(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Share Post</DialogTitle>
+            <DialogTitle>Share</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
