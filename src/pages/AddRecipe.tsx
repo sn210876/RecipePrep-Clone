@@ -986,12 +986,12 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             {extractedData && (
               <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
                 <div className="space-y-6 py-4">
-                  {extractedData.imageUrl && (
-                    <div className="relative w-48 h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
-                      <img
-                        src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl.replace(/&amp;/g, '&'))}`}
-                        alt={extractedData.title}
-                        className="w-full h-full object-cover"
+                 {extractedData.imageUrl && (
+  <div className="relative w-48 h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
+    <img
+      src={extractedData.imageUrl}
+      alt={extractedData.title}
+      className="w-full h-full object-cover"
                         onError={(e) => {
                           console.error('[Preview] Image failed to load:', extractedData.imageUrl);
                           const parent = (e.target as HTMLImageElement).parentElement;
