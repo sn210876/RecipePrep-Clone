@@ -578,12 +578,12 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               </div>
 
               {(uploadedImageUrl || imageUrl) && (
-                <div className="space-y-2">
-                  <div className="relative w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
-                    <img
-                      src={uploadedImageUrl || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
-                      alt={title || 'Recipe'}
-                      className="w-full h-full object-cover"
+  <div className="space-y-2">
+    <div className="relative w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
+      <img
+        src={uploadedImageUrl || imageUrl}
+        alt={title || 'Recipe'}
+        className="w-full h-full object-cover"
                       onError={(e) => {
                         console.error('[AddRecipe] Image failed to load:', uploadedImageUrl || imageUrl);
                         const parent = (e.target as HTMLImageElement).parentElement;
