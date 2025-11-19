@@ -129,7 +129,11 @@ useEffect(() => {
   };
 
   window.addEventListener('open-shared-post', handleSharedPost);
-
+// Fallback: if App.tsx dispatched before we mounted
+if ((window as any).__pendingSharedPostId) {
+  setCommentModalPostId((window as any).__pendingSharedPostId);
+  delete (window as any).__pendingSharedPostId;
+}
   // Also check on first load (in case link was opened directly)
   const path = window.location.pathname;
   const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
