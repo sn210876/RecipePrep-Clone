@@ -15,10 +15,9 @@ import yt_dlp
 from openai import OpenAI
 import ytmusicapi
 
-# Initialize YTMusic (no auth needed)
+# Initialize YTMusic
 ytm = ytmusicapi.YTMusic()
 
-# Function to search songs
 def search_ytmusic(query: str, limit: int = 5):
     try:
         results = ytm.search(query, filter='songs', limit=limit)
@@ -36,24 +35,14 @@ def search_ytmusic(query: str, limit: int = 5):
         print(f"YTMusic error: {e}")
         return []
 
-# NUCLEAR YT-DLP UPDATE — NO CACHE
+# NUCLEAR YT-DLP UPDATE
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
     print("NUCLEAR YT-DLP UPDATED NOV 9 2025")
 except: pass
 
 app = FastAPI()
-# === NUCLEAR CORS — APPLIES TO ALL ENDPOINTS ===
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=600,
-)
-# NUCLEAR CORS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -64,14 +53,12 @@ app.add_middleware(
     max_age=600,
 )
 
-# NUCLEAR OPTIONS HANDLER
 @app.options("/extract")
 async def nuclear_options():
     return JSONResponse(content={}, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"})
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# YOUR MAC COOKIES - YT-DLP FAQ PERFECT
 INSTAGRAM_COOKIES = """
 # Netscape HTTP Cookie File
 .instagram.com TRUE / FALSE 1733875200 csrftoken abxvXW3Nl1NZES5GKhSebmYt7chBhJcK
@@ -87,6 +74,10 @@ INSTAGRAM_COOKIES = """
 
 class ExtractRequest(BaseModel):
     url: str
+
+class YTMusicRequest(BaseModel):
+    query: str
+    limit: int = 5
 
 def parse_with_ai(text: str):
     if not text.strip(): return [], [], ""
@@ -107,7 +98,7 @@ async def extract_recipe(request: ExtractRequest):
     # WEBSITES
     print("[EXTRACT] Trying recipe-scrapers...")
     try:
-        scraper = scrape_me(url, headers=headers)
+        scraper = scrape_me(url)
         data = scraper.to_json()
         print(f"[EXTRACT] ✓ recipe-scrapers success")
         return {
@@ -120,22 +111,24 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"[EXTRACT] recipe-scrapers failed: {str(e)}")
     
-  # AI HTML
-print("[EXTRACT] Trying AI HTML parsing...")
-try:
-    html = requests.get(url, headers=headers, timeout=20).text
-    ings, inst, notes = parse_with_ai(html)
-    if ings or inst:
-        print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
-        return {
-            "title": "AI Extracted Recipe", 
-            "ingredients": ings, 
-            "instructions": inst, 
-            "thumbnail": "",
-            "notes": f"AI parsed • {notes}"
-        }
-except Exception as e:
-    print(f"[EXTRACT] AI HTML parsing failed: {str(e)}")
+    # AI HTML - SKIP FOR INSTAGRAM/TIKTOK/YOUTUBE
+    if not any(x in url.lower() for x in ['instagram.com', 'tiktok.com', 'youtube.com', 'youtu.be']):
+        print("[EXTRACT] Trying AI HTML parsing...")
+        try:
+            html = requests.get(url, headers=headers, timeout=20).text
+            ings, inst, notes = parse_with_ai(html)
+            if ings or inst:
+                print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
+                return {
+                    "title": "AI Extracted Recipe", 
+                    "ingredients": ings, 
+                    "instructions": inst, 
+                    "thumbnail": "",
+                    "notes": f"AI parsed • {notes}"
+                }
+        except Exception as e:
+            print(f"[EXTRACT] AI HTML parsing failed: {str(e)}")
+    
     # VIDEOS WITH YOUR COOKIES
     print("[EXTRACT] Trying video extraction with yt-dlp...")
     ydl_opts = {
@@ -176,11 +169,6 @@ except Exception as e:
     finally:
         if cookie_file and os.path.exists(cookie_file): 
             os.unlink(cookie_file)
-
-# === YOUTUBE MUSIC SEARCH ENDPOINT ===
-class YTMusicRequest(BaseModel):
-    query: str
-    limit: int = 5
 
 @app.post("/ytmusic-search")
 async def ytmusic_search_endpoint(request: YTMusicRequest):
