@@ -11,7 +11,7 @@ import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTu
 import { Slider } from '../components/ui/slider';
 import { Switch } from '../components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { extractRecipeFromText } from '../lib/recipeExtractor';
+import { extractRecipeFromText } from '../services/recipeExtractor';
 import { toast } from 'sonner';
 import { getUserTimezone, COMMON_TIMEZONES } from '../lib/timezone';
 import { supabase } from '../lib/supabase';
