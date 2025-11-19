@@ -63,7 +63,7 @@ function AppContent() {
   const handleNavigate = (page: string) => {
     const routes: Record<string, string> = {
       'discover-recipes': '/',
-      'discover': '/discover',
+      'discover': '/feed',
       'my-recipes': '/recipes',
       'add-recipe': '/add-recipe',
       'meal-planner': '/meal-planner',
