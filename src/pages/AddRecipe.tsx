@@ -350,18 +350,22 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   console.log('[AddRecipe] Valid ingredients:', validIngredients.length);
   console.log('[AddRecipe] Valid instructions:', validInstructions.length);
 
-  // FIX: Process image URL - proxy Instagram/CDN images
+  // FIX: Process and proxy image URL BEFORE creating recipe
   let finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
+  let postImageUrl = null;
   
-  // Check if it's an Instagram/CDN image that needs proxying
   if (finalImageUrl && !uploadedImageUrl) {
     const needsProxy = finalImageUrl.includes('instagram.com') || 
                        finalImageUrl.includes('cdninstagram.com') ||
                        finalImageUrl.includes('fbcdn.net');
     
     if (needsProxy) {
-      console.log('[AddRecipe] Instagram image detected, will proxy for post:', finalImageUrl);
-      // Keep original URL for recipe, will proxy when creating post
+      console.log('[AddRecipe] Instagram image detected, proxying:', finalImageUrl);
+      const cleanUrl = finalImageUrl.replace(/&amp;/g, '&');
+      postImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
+      // CRITICAL: Also update the recipe image URL to use the proxy
+      finalImageUrl = postImageUrl;
+      console.log('[AddRecipe] Using proxied URL for both recipe and post:', postImageUrl);
     }
   }
 
@@ -377,14 +381,14 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     difficulty,
     dietaryTags: selectedDietaryTags,
     mealType: selectedMealTypes,
-    imageUrl: finalImageUrl,
+    imageUrl: finalImageUrl, // Now uses proxied URL
     videoUrl: videoUrl.trim() || undefined,
     sourceUrl: urlInput.trim() || undefined,
     notes: notes.trim() || undefined,
     isSaved: true
   };
 
-  console.log('[AddRecipe] Creating recipe:', newRecipe);
+  console.log('[AddRecipe] Creating recipe with imageUrl:', newRecipe.imageUrl);
 
   try {
     const { createRecipe } = await import('@/services/recipeService');
@@ -399,37 +403,15 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        // FIX: Properly handle Instagram images for social posts
-        let postImageUrl = null;
-        
-        if (uploadedImageUrl) {
-          // User uploaded their own image
-          postImageUrl = uploadedImageUrl;
-          console.log('[AddRecipe] Using uploaded image:', postImageUrl);
-        } else if (imageUrl.trim()) {
-          // External URL - check if it needs proxying
-          const needsProxy = imageUrl.includes('instagram.com') || 
-                            imageUrl.includes('cdninstagram.com') ||
-                            imageUrl.includes('fbcdn.net');
-          
-          if (needsProxy) {
-            // Proxy Instagram/Facebook CDN images
-            const cleanUrl = imageUrl.replace(/&amp;/g, '&');
-            postImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
-            console.log('[AddRecipe] Proxying Instagram image:', postImageUrl);
-          } else {
-            // Use URL directly for other sources
-            postImageUrl = imageUrl.trim();
-            console.log('[AddRecipe] Using external image directly:', postImageUrl);
-          }
-        }
+        // Use the already proxied URL or uploaded URL
+        const finalPostImageUrl = postImageUrl || uploadedImageUrl || null;
 
-        console.log('[AddRecipe] Creating social post with image:', postImageUrl);
+        console.log('[AddRecipe] Creating social post with image:', finalPostImageUrl);
 
         const { error: postError } = await supabase.from('posts').insert({
           user_id: user.id,
           title: title.trim(),
-          image_url: postImageUrl,
+          image_url: finalPostImageUrl,
           video_url: videoUrl.trim() || null,
           caption: notes.trim() || 'Check out my recipe!',
           recipe_url: videoUrl.trim() || urlInput.trim() || null,
@@ -459,7 +441,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     const errorMessage = error?.message || 'Failed to create recipe. Please try again.';
     toast.error(errorMessage);
   }
-  };
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 md:p-8">
