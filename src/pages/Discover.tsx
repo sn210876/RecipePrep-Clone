@@ -1103,8 +1103,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                           </span>
                         )}
                       </button>
-                      <button
- <button
+                     <button
   onClick={() => handleSharePost(post.id)}
   className="ml-auto transition-transform hover:scale-110 relative group"
   title="Share"   // ← this makes the browser tooltip say "Share"
