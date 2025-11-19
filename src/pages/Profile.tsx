@@ -419,19 +419,25 @@ export function Profile() {
         </div>
 
         {/* Posts Grid */}
-        <div className="border-b border-gray-200 bg-white">
-          <div className="flex items-center justify-center gap-2 py-3">
-            <Grid3x3 className="w-5 h-5 text-gray-900" />
-            <span className="text-sm font-semibold uppercase tracking-wider">Posts</span>
-          </div>
-        </div>
+       {/* Posts Grid */}
+<div className="border-b border-gray-200 bg-white">
+  <div className="flex items-center justify-center gap-2 py-3">
+    <Grid3x3 className="w-5 h-5 text-gray-900" />
+    <span className="text-sm font-semibold uppercase tracking-wider">Posts</span>
+  </div>
+</div>
 
-        {posts.length === 0 ? (
-  // ... no posts view
+{posts.length === 0 ? (
+  <div className="text-center py-16 px-4">
+    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg mb-4">
+      <UploadIcon className="w-10 h-10 text-white" />
+    </div>
+    <p className="text-gray-900 font-semibold text-lg mb-2">No posts yet</p>
+    <p className="text-gray-500">Share your first recipe!</p>
+  </div>
 ) : (
   <div className="grid grid-cols-3 gap-1">
     {posts.map(post => {
-      // Ensure Instagram images are proxied when displaying
       let displayImageUrl = post.image_url;
       if (displayImageUrl && !displayImageUrl.includes('image-proxy')) {
         const needsProxy = displayImageUrl.includes('instagram.com') || 
