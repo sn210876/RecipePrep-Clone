@@ -120,22 +120,66 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"[EXTRACT] recipe-scrapers failed: {str(e)}")
     
-  # AI HTML
-print("[EXTRACT] Trying AI HTML parsing...")
+    # AI HTML
+   # AI HTML - SKIP FOR INSTAGRAM/TIKTOK/YOUTUBE
+if not any(x in url.lower() for x in ['instagram.com', 'tiktok.com', 'youtube.com', 'youtu.be']):
+    print("[EXTRACT] Trying AI HTML parsing...")
+    try:
+        html = requests.get(url, headers=headers, timeout=20).text
+        ings, inst, notes = parse_with_ai(html)
+        if ings or inst:
+            print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
+            return {
+                "title": "AI Extracted Recipe", 
+                "ingredients": ings, 
+                "instructions": inst, 
+                "thumbnail": "",
+                "notes": f"AI parsed • {notes}"
+            }
+    except Exception as e:
+        print(f"[EXTRACT] AI HTML parsing failed: {str(e)}")
+
+# VIDEOS WITH YOUR COOKIES
+print("[EXTRACT] Trying video extraction with yt-dlp...")
+ydl_opts = {
+    'quiet': True,
+    'no_warnings': True,
+    'geo_bypass': True,
+    'http_headers': {'User-Agent': 'Instagram 219.0.0.12.117 Android', 'x-ig-app-id': '936619743392459'},
+}
+cookie_file = None
+if INSTAGRAM_COOKIES.strip():
+    temp = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
+    temp.write(INSTAGRAM_COOKIES)
+    temp.close()
+    cookie_file = temp.name
+    ydl_opts['cookiefile'] = cookie_file
+
 try:
-    html = requests.get(url, headers=headers, timeout=20).text
-    ings, inst, notes = parse_with_ai(html)
-    if ings or inst:
-        print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        thumbnail = info.get('thumbnail', '')
+        print(f"[EXTRACT] ✓ yt-dlp extracted video")
+        print(f"[EXTRACT] Thumbnail URL: {thumbnail}")
+        
+        text = f"{info.get('description', '')}\n{info.get('title', '')}"
+        ings, inst, notes = parse_with_ai(text)
+        print(f"[EXTRACT] ✓ AI extracted from video: {len(ings)} ingredients, {len(inst)} instructions")
+        
         return {
-            "title": "AI Extracted Recipe", 
-            "ingredients": ings, 
-            "instructions": inst, 
-            "thumbnail": "",
-            "notes": f"AI parsed • {notes}"
+            "title": info.get('title', 'Video Recipe'), 
+            "ingredients": ings or [], 
+            "instructions": inst or [], 
+            "thumbnail": thumbnail,
+            "notes": f"NUCLEAR CACHE BUSTER 9003 WIN NOV 9 • {notes}"
         }
 except Exception as e:
-    print(f"[EXTRACT] AI HTML parsing failed: {str(e)}")
+    print(f"[EXTRACT] Video extraction failed: {str(e)}")
+    raise HTTPException(400, f"Video failed: {str(e)}")
+finally:
+    if cookie_file and os.path.exists(cookie_file): 
+        os.unlink(cookie_file)
+    
     # VIDEOS WITH YOUR COOKIES
     print("[EXTRACT] Trying video extraction with yt-dlp...")
     ydl_opts = {
