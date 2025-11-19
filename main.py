@@ -213,19 +213,7 @@ async def extract_recipe(request: ExtractRequest):
                 "thumbnail": thumbnail,
                 "notes": f"NUCLEAR CACHE BUSTER 9003 WIN NOV 9 • {notes}"
             }
-    except Exception as e:
-        print(f"[EXTRACT] Video extraction failed: {str(e)}")
-        raise HTTPException(400, f"Video failed: {str(e)}")
-    finally:
-        if cookie_file and os.path.exists(cookie_file): 
-            os.unlink(cookie_file)
-
-# === YOUTUBE MUSIC SEARCH ENDPOINT ===
-class YTMusicRequest(BaseModel):
-    query: str
-    limit: int = 5
-
-@app.post("/ytmusic-search")
+    
 async def ytmusic_search_endpoint(request: YTMusicRequest):
     results = search_ytmusic(request.query, request.limit)
     return JSONResponse(
