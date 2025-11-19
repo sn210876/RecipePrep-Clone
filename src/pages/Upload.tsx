@@ -201,41 +201,36 @@ export function Upload({ onNavigate }: UploadProps) {
         spotify_preview_url: selectedTrack?.preview_url || null,
       };
 
-      if (postType === 'daily') {
-        const dailyData: any = {
-          user_id: userData.user.id,
-          media_url: urlData.publicUrl,
-          media_type: fileType === 'image' ? 'photo' : 'video',
-          caption: caption.trim() || null,
-          duration: fileType === 'video' ? videoDuration : null,
-          ...musicData,
-        };
+     if (postType === 'daily') {
+  // ... daily logic stays same
+} else {
+  let recipeLink = selectedRecipeId
+    ? `${window.location.origin}/#recipe/${selectedRecipeId}`
+    : null;
 
-        const { error: insertError } = await supabase.from('dailies').insert(dailyData);
-        if (insertError) throw insertError;
+  // FIX: Proxy Instagram images from posts
+  let postImageUrl = urlData.publicUrl;
+  if (postImageUrl && !postImageUrl.includes('supabase.co/storage')) {
+    const needsProxy = postImageUrl.includes('instagram.com') || 
+                      postImageUrl.includes('cdninstagram.com') ||
+                      postImageUrl.includes('fbcdn.net');
+    if (needsProxy) {
+      console.log('[Upload] Proxying external image:', postImageUrl);
+      postImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(postImageUrl)}`;
+    }
+  }
 
-        await supabase.from('posts').insert({
-          user_id: userData.user.id,
-          title: 'Daily',
-          caption: caption.trim() || null,
-          [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
-          ...musicData,
-        });
-
-        toast.success('Daily posted successfully!');
-      } else {
-        let recipeLink = selectedRecipeId
-          ? `${window.location.origin}/#recipe/${selectedRecipeId}`
-          : null;
-
-        const postData: any = {
-          user_id: userData.user.id,
-          title: title.trim(),
-          caption: caption.trim() || null,
-          recipe_url: recipeLink,
-          [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
-          ...musicData,
-        };
+  const postData: any = {
+    user_id: userData.user.id,
+    title: title.trim(),
+    caption: caption.trim() || null,
+    recipe_url: recipeLink,
+    [fileType === 'image' ? 'image_url' : 'video_url']: postImageUrl,
+    ...musicData,
+  };
+  
+  // ... rest of post creation
+}
 
         const { data: newPost, error: insertError } = await supabase
           .from('posts')
