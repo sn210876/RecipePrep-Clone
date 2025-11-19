@@ -48,7 +48,12 @@ function AppContent() {
     if (pathname === '/onboarding') return 'onboarding';
     return 'discover-recipes';
   };
-
+// THIS FIXES THE HOMEPAGE REDIRECT
+useEffect(() => {
+  if (window.location.pathname.startsWith('/post/')) {
+    setCurrentPage('discover');
+  }
+}, []);
   // Force correct page on direct /post/... links
 useEffect(() => {
   if (window.location.pathname.match(/^\/post\/[a-f0-9-]{36}$/)) {
