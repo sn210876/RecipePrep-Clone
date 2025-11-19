@@ -716,7 +716,7 @@ useEffect(() => {
   const handleNativeShare = async (postId: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
-
+const shareUrl = `https://mealscrape.com/post/${postId}`;
     // NEW — use this everywhere instead const shareUrl = `https://mealscrape.com/post/${postId}`;
     const shareData = {
       title: post.title || 'Check out this recipe!',
