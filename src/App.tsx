@@ -49,7 +49,8 @@ function AppContent() {
     return 'discover-recipes';
   };
 
-  
+  const [currentPage, setCurrentPage] = useState(getCurrentPage());
+
   // Update page when URL changes
   useEffect(() => {
     const handlePopState = () => setCurrentPage(getCurrentPage());
