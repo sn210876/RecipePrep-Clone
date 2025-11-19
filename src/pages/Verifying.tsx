@@ -31,7 +31,7 @@ export function Verifying({ onComplete }: VerifyingProps) {
               Verifying...
             </h1>
             <p className="text-gray-600 mb-6">
-              Your email has been verified successfully!
+              Loading...
             </p>
 
             <div className="flex items-center justify-center gap-2">
