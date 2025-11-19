@@ -13,13 +13,8 @@ from recipe_scrapers import scrape_me
 import yt_dlp
 from openai import OpenAI
 
-# Auto-update yt-dlp on every cold start (prevents Instagram breakage)
-try:
-    subprocess.check_call([
-        sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-except:
-    pass
+# DO NOT auto-update yt-dlp - newer versions break with Python 3.11
+# Pinned to 2024.10.22 which is stable
 
 app = FastAPI()
 
