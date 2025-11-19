@@ -1,12 +1,12 @@
 import { Ingredient } from '@/types/recipe';
+import { decodeHtmlEntities, normalizeQuantity } from '@/lib/utils';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
-const IMAGE_PROXY_URL = `${SUPABASE_URL}/functions/v1/image-proxy`;
 
-// PUBLIC 24/7 SERVER — NO LOCAL NEEDED EVER AGAIN
-const PUBLIC_VIDEO_EXTRACTOR = 'https://recipe-backend-nodejs-1.onrender.com/extract';
+// YOUR RENDER SERVER ONLY — 100% FINAL VERSION
+const RENDER_SERVER = 'https://recipe-backend-nodejs-1.onrender.com/extract';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -27,84 +27,120 @@ export interface ExtractedRecipeData {
   sourceUrl: string;
 }
 
-const parseIngredients = (ings: string[]): Ingredient[] => {
-  return ings.map(ing => {
-    const trimmed = ing.trim();
-    if (!trimmed) return { quantity: '', unit: 'cup', name: '' };
-    const quantityMatch = trimmed.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\-\.\s\,]+)\s*/);
-    const quantity = quantityMatch ? quantityMatch[1].trim() : '';
-    let rest = trimmed.slice(quantity.length).trim();
-    const unitMatch = rest.match(/^([a-zA-Z]+\.?\s*[a-zA-Z]*)\s+/);
-    const unit = unitMatch ? unitMatch[1].trim().replace(/\.$/, '') : 'cup';
-    if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-    const name = rest || trimmed;
-    return { quantity, unit, name };
-  });
-};
-
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
   if (!url.trim() || !isValidUrl(url)) {
     throw new Error('Please enter a valid URL');
   }
 
-  const isSocialMedia = 
-    url.includes('tiktok.com') || 
-    url.includes('instagram.com') || 
-    url.includes('youtube.com') || 
-    url.includes('youtu.be');
+  const isSocial = /tiktok\.com|instagram\.com|youtube\.com|youtu\.be/i.test(url);
 
-  const isTikTokOrInstagram = url.includes('tiktok.com') || url.includes('instagram.com');
+  // ALL SOCIAL MEDIA (YouTube, TikTok, Instagram) → YOUR RENDER SERVER ONLY
+  // ALL SOCIAL MEDIA (YouTube, TikTok, Instagram) → YOUR RENDER SERVER ONLY
+if (isSocial) {
+  try {
+    console.log('[Extractor] Sending to Render server:', url);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
 
-  // SOCIAL MEDIA → PUBLIC RENDER SERVER (24/7)
-  if (isSocialMedia) {
-    console.log('[RecipeExtractor] Social media video → using public Render server');
-    try {
-      const response = await fetch(PUBLIC_VIDEO_EXTRACTOR, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim() }),
-      });
+    const response = await fetch(RENDER_SERVER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url.trim() }),
+      signal: controller.signal,
+    });
 
-      if (!response.ok) {
-        const err = await response.text();
-        console.error('Render server error:', err);
-        throw new Error('Video extraction failed (server sleeping or down)');
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error('[Extractor] Server response not OK:', response.status);
+      if (response.status >= 500 || response.status === 429) {
+        throw new Error('Server waking up — try again in 20 seconds');
       }
-
-      const data = await response.json();
-      console.log('[RecipeExtractor] Render server success:', data);
-
-      const ingredients = parseIngredients(data.ingredients || []);
-      const proxiedImage = data.thumbnail 
-        ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.thumbnail)}&apikey=${SUPABASE_ANON_KEY}`
-        : '';
-
-      return {
-        title: data.title || 'Video Recipe',
-        description: 'Extracted from video audio',
-        creator: data.author || 'Unknown',
-        ingredients,
-        instructions: data.instructions || [],
-        prepTime: String(data.prep_time || 15),
-        cookTime: String(data.cook_time || 30),
-        servings: data.yield || '4',
-        cuisineType: 'Global',
-        difficulty: 'Medium',
-        mealTypes: ['Dinner'],
-        dietaryTags: [],
-        imageUrl: proxiedImage,
-        videoUrl: url,
-        notes: 'Extracted from spoken audio (public server)',
-        sourceUrl: url,
-      };
-    } catch (err) {
-      console.error('Render fallback failed:', err);
-      throw new Error('Video extraction unavailable — try again in a minute');
+      const errorText = await response.text();
+      console.error('[Extractor] Error response:', errorText);
+      throw new Error('Video extraction failed');
     }
-  }
 
-  // NORMAL WEBSITES → SUPABASE EDGE FUNCTION
-  console.log('[RecipeExtractor] Regular website → Supabase Edge Function:', API_URL);
+    const data = await response.json();
+    console.log('[Extractor] Raw data from server:', data);
+
+    // Get the raw image URL
+    const rawImageUrl = data.thumbnail || data.image || '';
+    console.log('[Extractor] Raw image URL:', rawImageUrl);
+
+    // ✅ NEW: Check if it's an Instagram/Facebook CDN URL that needs proxying
+    let finalImageUrl = rawImageUrl;
+    if (rawImageUrl) {
+      const needsProxy = rawImageUrl.includes('cdninstagram.com') || 
+                         rawImageUrl.includes('fbcdn.net') ||
+                         rawImageUrl.includes('instagram.com');
+      
+      if (needsProxy) {
+        // Wrap it with your Supabase proxy
+        const cleanUrl = rawImageUrl.replace(/&amp;/g, '&');
+        finalImageUrl = `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
+        console.log('[Extractor] Instagram image detected, proxying:', finalImageUrl);
+      } else {
+        console.log('[Extractor] Direct image URL (no proxy needed):', finalImageUrl);
+      }
+    }
+
+    // Normalize ingredients
+    const ingredients = (data.ingredients || []).map((ing: string) => {
+      const cleaned = decodeHtmlEntities(ing.trim());
+      if (!cleaned) return { quantity: '', unit: 'cup', name: '' };
+
+      const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)\s*/);
+      const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
+      const quantity = normalizeQuantity(rawQty);
+
+      let rest = cleaned.slice(rawQty.length).trim();
+      const unitMatch = rest.match(/^(cup|cups|tbsp|tablespoon|tsp|teaspoon|oz|ounce|lb|pound|g|gram|kg|ml|l|pinch|dash)\s+/i);
+      const unit = unitMatch ? unitMatch[1].toLowerCase().replace(/s$/, '') : 'cup';
+      if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
+
+      return { quantity, unit, name: rest || cleaned };
+    });
+
+    const formatTime = (mins: number): string => {
+      if (!mins || mins <= 0) return '30 mins';
+      if (mins < 60) return `${mins} mins`;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return m ? `${h} hr ${m} mins` : `${h} hr`;
+    };
+
+    console.log('[Extractor] Final image URL being returned:', finalImageUrl);
+
+    return {
+      title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
+      description: 'Extracted from video',
+      creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
+      ingredients,
+      instructions: (data.instructions || []).map((i: string) => decodeHtmlEntities(i)),
+      prepTime: formatTime(data.prep_time || 15),
+      cookTime: formatTime(data.cook_time || 35),
+      servings: data.servings || data.yield || '4',
+      cuisineType: 'Global',
+      difficulty: 'Medium',
+      mealTypes: ['Dinner'],
+      dietaryTags: [],
+      imageUrl: finalImageUrl, // ✅ Now using proxied URL
+      videoUrl: url,
+      notes: 'Extracted using your Render server',
+      sourceUrl: url,
+    };
+  } catch (err: any) {
+    console.error('[Extractor] Catch block error:', err);
+    if (err.name === 'AbortError') {
+      throw new Error('Server is waking up — please wait 20-30 seconds and try again');
+    }
+    throw new Error('Video extraction temporarily unavailable — try again soon');
+  }
+}
+
+  // Normal websites → Supabase Edge Function
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -115,47 +151,43 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     body: JSON.stringify({ url: url.trim() }),
   });
 
-  console.log('[RecipeExtractor] Response status:', response.status);
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[RecipeExtractor] Error:', errorText);
-    throw new Error('Failed to extract recipe. Try a different URL.');
+    await response.text();
+    throw new Error('Failed to extract from website');
   }
 
   const data = await response.json();
-  console.log('[RecipeExtractor] Success:', data);
 
-  const ingredients = parseIngredients(data.ingredients || []);
-  let instructions = data.instructions || [];
-  if (typeof instructions === 'string') {
-    instructions = instructions.split('\n').map((s: string) => s.trim()).filter((s: string) => s);
-  }
+  const ingredients = (data.ingredients || []).map((ing: string) => {
+    const cleaned = decodeHtmlEntities(ing.trim());
+    const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
+    const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
+    const quantity = normalizeQuantity(rawQty);
+    let rest = cleaned.slice(rawQty.length).trim();
+    const unitMatch = rest.match(/^(cup|cups|tbsp|tsp|oz|g|kg|ml|l|pinch|dash)\s+/i);
+    const unit = unitMatch ? unitMatch[1].toLowerCase() : 'cup';
+    if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
+    return { quantity, unit, name: rest || cleaned };
+  });
 
-  const proxiedImage = data.image 
-    ? `${IMAGE_PROXY_URL}?url=${encodeURIComponent(data.image)}&apikey=${SUPABASE_ANON_KEY}`
-    : '';
-
-  const result: ExtractedRecipeData = {
-    title: isTikTokOrInstagram ? '' : (data.title || 'Untitled Recipe'),
+  return {
+    title: decodeHtmlEntities(data.title || 'Untitled Recipe'),
     description: 'Extracted recipe',
-    creator: data.author || 'Unknown',
+    creator: decodeHtmlEntities(data.author || 'Unknown'),
     ingredients,
-    instructions,
-    prepTime: String(data.prep_time || data.time || 30),
-    cookTime: String(data.cook_time || data.time || 45),
+    instructions: (data.instructions || []).map(decodeHtmlEntities),
+    prepTime: data.prep_time ? `${data.prep_time} mins` : '30 mins',
+    cookTime: data.cook_time ? `${data.cook_time} mins` : '45 mins',
     servings: String(data.yield || '4'),
     cuisineType: 'Global',
     difficulty: 'Medium',
     mealTypes: ['Dinner'],
     dietaryTags: [],
-    imageUrl: proxiedImage || '',
+    imageUrl: data.image || '',
     videoUrl: '',
     notes: data.notes || '',
     sourceUrl: url,
   };
-
-  console.log('[RecipeExtractor] FINAL RESULT:', result);
-  return result;
 }
 
 export function isValidUrl(url: string): boolean {
