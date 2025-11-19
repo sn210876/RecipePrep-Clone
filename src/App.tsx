@@ -3,7 +3,7 @@ import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import { Discover as DiscoverRecipes } from './pages/DiscoverRecipes';
-import { Discover } from './pages/SocialFeed';
+import { Discover } from './pages/Discover';
 import { MyRecipes } from './pages/MyRecipes';
 import { AddRecipe } from './pages/AddRecipe';
 import { MealPlanner } from './pages/MealPlanner';
