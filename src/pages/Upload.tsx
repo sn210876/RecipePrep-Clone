@@ -152,137 +152,144 @@ export function Upload({ onNavigate }: UploadProps) {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      toast.error('Please select an image or video');
-      return;
-    }
-    if (postType === 'post' && !title.trim()) {
-      toast.error('Please enter a title');
-      return;
-    }
-    if (postType === 'daily' && fileType === 'video' && videoDuration > 30) {
-      toast.error('Daily videos must be 30 seconds or less');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('Not authenticated');
-
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userData.user.id)
-        .maybeSingle();
-      if (!existingProfile) {
-        await supabase.from('profiles').insert({
-          id: userData.user.id,
-          username: userData.user.email?.split('@')[0] || 'user',
-          avatar_url: null,
-        });
-      }
-
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${userData.user.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from('posts')
-        .upload(fileName, selectedFile, { cacheControl: '3600', upsert: false });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
-
-      // Music data for both posts & dailies
-      const musicData: any = {
-        spotify_track_id: selectedTrack?.id || null,
-        spotify_track_name: selectedTrack?.name || null,
-        spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
-        spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
-        spotify_preview_url: selectedTrack?.preview_url || null,
-      };
-
-     if (postType === 'daily') {
-  // ... daily logic stays same
-} else {
-  let recipeLink = selectedRecipeId
-    ? `${window.location.origin}/#recipe/${selectedRecipeId}`
-    : null;
-
-  // FIX: Proxy Instagram images from posts
-  let postImageUrl = urlData.publicUrl;
-  if (postImageUrl && !postImageUrl.includes('supabase.co/storage')) {
-    const needsProxy = postImageUrl.includes('instagram.com') || 
-                      postImageUrl.includes('cdninstagram.com') ||
-                      postImageUrl.includes('fbcdn.net');
-    if (needsProxy) {
-      console.log('[Upload] Proxying external image:', postImageUrl);
-      postImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(postImageUrl)}`;
-    }
+  if (!selectedFile) {
+    toast.error('Please select an image or video');
+    return;
+  }
+  if (postType === 'post' && !title.trim()) {
+    toast.error('Please enter a title');
+    return;
+  }
+  if (postType === 'daily' && fileType === 'video' && videoDuration > 30) {
+    toast.error('Daily videos must be 30 seconds or less');
+    return;
   }
 
-  const postData: any = {
-    user_id: userData.user.id,
-    title: title.trim(),
-    caption: caption.trim() || null,
-    recipe_url: recipeLink,
-    [fileType === 'image' ? 'image_url' : 'video_url']: postImageUrl,
-    ...musicData,
-  };
-  
-  // ... rest of post creation
-}
+  setUploading(true);
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error('Not authenticated');
 
-        const { data: newPost, error: insertError } = await supabase
-          .from('posts')
-          .insert(postData)
-          .select()
-          .single();
-        if (insertError) throw insertError;
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userData.user.id)
+      .maybeSingle();
+    if (!existingProfile) {
+      await supabase.from('profiles').insert({
+        id: userData.user.id,
+        username: userData.user.email?.split('@')[0] || 'user',
+        avatar_url: null,
+      });
+    }
 
-        const hashtagTexts = extractHashtags(caption);
-        if (hashtagTexts.length > 0 && newPost) {
-          for (const tag of hashtagTexts) {
-            const { data: existingTag } = await supabase
-              .from('hashtags')
-              .select('id, usage_count')
-              .eq('tag', tag)
-              .maybeSingle();
+    const fileExt = selectedFile.name.split('.').pop();
+    const fileName = `${userData.user.id}/${Date.now()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from('posts')
+      .upload(fileName, selectedFile, { cacheControl: '3600', upsert: false });
+    if (uploadError) throw uploadError;
 
-            let hashtagId: string;
-            if (existingTag) {
-              hashtagId = existingTag.id;
-              await supabase
-                .from('hashtags')
-                .update({ usage_count: existingTag.usage_count + 1 })
-                .eq('id', existingTag.id);
-            } else {
-              const { data: newTag } = await supabase
-                .from('hashtags')
-                .insert({ tag, usage_count: 1 })
-                .select()
-                .single();
-              hashtagId = newTag!.id;
-            }
+    const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+
+    // Music data for both posts & dailies
+    const musicData: any = {
+      spotify_track_id: selectedTrack?.id || null,
+      spotify_track_name: selectedTrack?.name || null,
+      spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
+      spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
+      spotify_preview_url: selectedTrack?.preview_url || null,
+    };
+
+    if (postType === 'daily') {
+      const dailyData: any = {
+        user_id: userData.user.id,
+        media_url: urlData.publicUrl,
+        media_type: fileType === 'image' ? 'photo' : 'video',
+        caption: caption.trim() || null,
+        duration: fileType === 'video' ? videoDuration : null,
+        ...musicData,
+      };
+
+      const { error: insertError } = await supabase.from('dailies').insert(dailyData);
+      if (insertError) throw insertError;
+
+      await supabase.from('posts').insert({
+        user_id: userData.user.id,
+        title: 'Daily',
+        caption: caption.trim() || null,
+        [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
+        ...musicData,
+      });
+
+      toast.success('Daily posted successfully!');
+    } else {
+      let recipeLink = selectedRecipeId
+        ? `${window.location.origin}/#recipe/${selectedRecipeId}`
+        : null;
+
+      const postData: any = {
+        user_id: userData.user.id,
+        title: title.trim(),
+        caption: caption.trim() || null,
+        recipe_url: recipeLink,
+        [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
+        ...musicData,
+      };
+
+      const { data: newPost, error: insertError } = await supabase
+        .from('posts')
+        .insert(postData)
+        .select()
+        .single();
+      if (insertError) throw insertError;
+
+      const hashtagTexts = extractHashtags(caption);
+      if (hashtagTexts.length > 0 && newPost) {
+        for (const tag of hashtagTexts) {
+          const { data: existingTag } = await supabase
+            .from('hashtags')
+            .select('id, usage_count')
+            .eq('tag', tag)
+            .maybeSingle();
+
+          let hashtagId: string;
+          if (existingTag) {
+            hashtagId = existingTag.id;
             await supabase
-              .from('post_hashtags')
-              .insert({ post_id: newPost.id, hashtag_id: hashtagId });
+              .from('hashtags')
+              .update({ usage_count: existingTag.usage_count + 1 })
+              .eq('id', existingTag.id);
+          } else {
+            const { data: newTag } = await supabase
+              .from('hashtags')
+              .insert({ tag, usage_count: 1 })
+              .select()
+              .single();
+            hashtagId = newTag!.id;
           }
+          await supabase
+            .from('post_hashtags')
+            .insert({ post_id: newPost.id, hashtag_id: hashtagId });
         }
-
-        toast.success('Post uploaded successfully!');
       }
 
-      handleClearImage();
-      setTitle('');
-      setCaption('');
-      setSelectedRecipeId('');
-      setSelectedTrack(null);
-      onNavigate('discover');
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error(error.message || 'Failed to upload');
-    } finally {
-      setUploading(false);
+      toast.success('Post uploaded successfully!');
+    }
+
+    handleClearImage();
+    setTitle('');
+    setCaption('');
+    setSelectedRecipeId('');
+    setSelectedTrack(null);
+    onNavigate('discover');
+  } catch (error: any) {
+    console.error('Upload error:', error);
+    toast.error(error.message || 'Failed to upload');
+  } finally {
+    setUploading(false);
+  }
+};
     }
   };
 
