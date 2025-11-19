@@ -24,41 +24,77 @@ function AppContent() {
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
   const [completedVerifying, setCompletedVerifying] = useState(false);
 
-  // Get current path
-  const pathname = window.location.pathname;
-  const searchParams = new URLSearchParams(window.location.search);
+  // ──────────────────────────────
+  // INITIAL PAGE + /post/ HANDLING
+  // ──────────────────────────────
+  const [currentPage, setCurrentPage] = useState<string>(() => {
+    const path = window.location.pathname;
 
-  // Handle password reset
-  const isPasswordReset = searchParams.get('type') === 'recovery' || pathname === '/reset-password';
+    // Direct deep link to a post → force Discover feed + modal
+    if (path.match(/^\/post\/[a-f0-9-]{36}$/)) {
+      return 'discover';
+    }
 
-  // Determine current page from URL
-  const getCurrentPage = () => {
-    if (isPasswordReset) return 'reset-password';
-    if (pathname === '/' || pathname === '/discover-recipes') return 'discover-recipes';
-    if (pathname === '/discover') return 'discover';
-    if (pathname === '/recipes' || pathname === '/my-recipes') return 'my-recipes';
-    if (pathname === '/add-recipe') return 'add-recipe';
-    if (pathname === '/meal-planner') return 'meal-planner';
-    if (pathname === '/grocery-list') return 'grocery-list';
-    if (pathname === '/cart') return 'cart';
-    if (pathname === '/upload') return 'upload';
-    if (pathname === '/profile') return 'profile';
-    if (pathname === '/messages') return 'messages';
-    if (pathname === '/settings') return 'settings';
-    if (pathname === '/onboarding') return 'onboarding';
+    if (path === '/' || path === '/discover-recipes') return 'discover-recipes';
+    if (path === '/discover') return 'discover';
+    if (path === '/recipes' || path === '/my-recipes') return 'my-recipes';
+    if (path === '/add-recipe') return 'add-recipe';
+    if (path === '/meal-planner') return 'meal-planner';
+    if (path === '/grocery-list') return 'grocery-list';
+    if (path === '/cart') return 'cart';
+    if (path === '/upload') return 'upload';
+    if (path === '/profile') return 'profile';
+    if (path === '/messages') return 'messages';
+    if (path === '/settings') return 'settings';
+    if (path === '/onboarding') return 'onboarding';
+
     return 'discover-recipes';
-  };
+  });
 
-  const [currentPage, setCurrentPage] = useState(getCurrentPage());
-
-  // Update page when URL changes
+  // ─────────────────────
+  // HANDLE /post/ links
+  // ─────────────────────
   useEffect(() => {
-    const handlePopState = () => setCurrentPage(getCurrentPage());
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    const path = window.location.pathname;
+    const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
+    if (match) {
+      const postId = match[1];
+
+      // Force page to Discover
+      setCurrentPage('discover');
+
+      // Send event immediately + fallback for race condition
+      window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
+      (window as any).__pendingSharedPostId = postId;
+
+      // Clean fallback after 2s
+      setTimeout(() => {
+        delete (window as any).__pendingSharedPostId;
+      }, 2000);
+
+      // Clean URL
+      window.history.replaceState({}, '', '/discover');
+    }
   }, []);
 
-  // Navigation function that updates URL
+  // ─────────────────────
+  // Sync URL changes
+  // ─────────────────────
+  useEffect(() => {
+    const handlePop = () => {
+      const path = window.location.pathname;
+      if (path === '/' || path === '/discover-recipes') setCurrentPage('discover-recipes');
+      else if (path === '/discover') setCurrentPage('discover');
+      else if (path === '/recipes' || path === '/my-recipes') setCurrentPage('my-recipes');
+      // ... add more if you want, but not needed for deep links
+    };
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, []);
+
+  // ─────────────────────
+  // Navigation helper
+  // ─────────────────────
   const handleNavigate = (page: string) => {
     const routes: Record<string, string> = {
       'discover-recipes': '/',
@@ -74,40 +110,28 @@ function AppContent() {
       'settings': '/settings',
       'onboarding': '/onboarding',
     };
-
     const url = routes[page] || '/';
     window.history.pushState({}, '', url);
     setCurrentPage(page);
   };
 
+  // ─────────────────────
+  // Render correct page
+  // ──────────────────────
   const renderPage = () => {
     switch (currentPage) {
-      case 'discover-recipes':
-        return <DiscoverRecipes onNavigate={handleNavigate} />;
-      case 'discover':
-        return <Discover onNavigate={handleNavigate} />;
-      case 'my-recipes':
-        return <MyRecipes />;
-      case 'add-recipe':
-        return <AddRecipe onNavigate={handleNavigate} />;
-      case 'meal-planner':
-        return <MealPlanner onNavigate={handleNavigate} />;
-      case 'grocery-list':
-        return <GroceryList onNavigate={handleNavigate} />;
-      case 'cart':
-        return <Cart onNavigate={handleNavigate} />;
-      case 'upload':
-        return <Upload onNavigate={handleNavigate} />;
-      case 'profile':
-        return <Profile />;
-      case 'messages':
-        return <Messages onBack={() => handleNavigate('discover')} />;
-      case 'settings':
-        return <Settings onNavigate={handleNavigate} />;
-      case 'reset-password':
-        return <ResetPassword />;
-      default:
-        return <Home onNavigate={handleNavigate} />;
+      case 'discover-recipes': return <DiscoverRecipes onNavigate={handleNavigate} />;
+      case 'discover':         return <Discover onNavigate={handleNavigate} />;
+      case 'my-recipes':       return <MyRecipes />;
+      case 'add-recipe':       return <AddRecipe onNavigate={handleNavigate} />;
+      case 'meal-planner':     return <MealPlanner onNavigate={handleNavigate} />;
+      case 'grocery-list':     return <GroceryList onNavigate={handleNavigate} />;
+      case 'cart':             return <Cart onNavigate={handleNavigate} />;
+      case 'upload':           return <Upload onNavigate={handleNavigate} />;
+      case 'profile':          return <Profile />;
+      case 'messages':         return <Messages onBack={() => handleNavigate('discover')} />;
+      case 'settings':         return <Settings onNavigate={handleNavigate} />;
+      default:                 return <Home onNavigate={handleNavigate} />;
     }
   };
 
