@@ -20,6 +20,13 @@ app.add_middleware(
 )
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Auto-update yt-dlp on every cold start (prevents Instagram breakage)
+try:
+    subprocess.check_call([
+        sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+except:
+    pass
 
 # Instagram cookies — valid Nov 2025 — TAB-separated
 INSTAGRAM_COOKIES = """# Netscape HTTP Cookie File
