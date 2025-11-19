@@ -654,7 +654,7 @@ if ((window as any).__pendingSharedPostId) {
     }
   };
 
-  const handleSearch = (query: string) => {
+ const handleSearch = (query: string) => {
     setSearchQuery(query);
 
     if (searchTimeoutRef.current) {
@@ -666,6 +666,11 @@ if ((window as any).__pendingSharedPostId) {
       setShowSearchResults(false);
       return;
     }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch(query);
+    }, 300);
+  };
 
     // Dispatch immediately + store fallback in case Discover hasn't mounted yet
 window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
