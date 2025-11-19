@@ -23,7 +23,7 @@ export function Home({ onNavigate }: HomeProps) {
               />
             </div>
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-3">
-              Recipe Prep
+              Meal Scrape
             </h1>
             <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
               Automate your <span className="font-semibold text-orange-700">Recipe</span>,{' '}
