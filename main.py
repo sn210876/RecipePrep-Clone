@@ -101,20 +101,44 @@ def parse_with_ai(text: str):
 @app.post("/extract")
 async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
+    print(f"[EXTRACT] Processing: {url}")
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    
     # WEBSITES
+    print("[EXTRACT] Trying recipe-scrapers...")
     try:
         scraper = scrape_me(url, headers=headers)
         data = scraper.to_json()
-        return {"title": data.get("title"), "ingredients": data.get("ingredients", []), "instructions": data.get("instructions", "").split("\n"), "image": data.get("image", ""), "notes": "Scraped"}
-    except: pass
+        print(f"[EXTRACT] ✓ recipe-scrapers success")
+        return {
+            "title": data.get("title"), 
+            "ingredients": data.get("ingredients", []), 
+            "instructions": data.get("instructions", "").split("\n"), 
+            "thumbnail": data.get("image", ""), 
+            "notes": "Scraped"
+        }
+    except Exception as e:
+        print(f"[EXTRACT] recipe-scrapers failed: {str(e)}")
+    
     # AI HTML
+    print("[EXTRACT] Trying AI HTML parsing...")
     try:
         html = requests.get(url, headers=headers, timeout=20).text
         ings, inst, notes = parse_with_ai(html)
-        if ings or inst: return {"title": "AI HTML", "ingredients": ings, "instructions": inst, "notes": notes}
-    except: pass
+        if ings or inst:
+            print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
+            return {
+                "title": "AI Extracted Recipe", 
+                "ingredients": ings, 
+                "instructions": inst, 
+                "thumbnail": "",
+                "notes": f"AI parsed • {notes}"
+            }
+    except Exception as e:
+        print(f"[EXTRACT] AI HTML parsing failed: {str(e)}")
+    
     # VIDEOS WITH YOUR COOKIES
+    print("[EXTRACT] Trying video extraction with yt-dlp...")
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -128,18 +152,33 @@ async def extract_recipe(request: ExtractRequest):
         temp.close()
         cookie_file = temp.name
         ydl_opts['cookiefile'] = cookie_file
+    
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            thumbnail = info.get('thumbnail', '')
+            print(f"[EXTRACT] ✓ yt-dlp extracted video")
+            print(f"[EXTRACT] Thumbnail URL: {thumbnail}")
+            
             text = f"{info.get('description', '')}\n{info.get('title', '')}"
             ings, inst, notes = parse_with_ai(text)
-            return {"title": info.get('title', 'Reel'), "ingredients": ings or [], "instructions": inst or [], "image": info.get('thumbnail', ''), "notes": f"NUCLEAR CACHE BUSTER 9003 WIN NOV 9 • {notes}"}
+            print(f"[EXTRACT] ✓ AI extracted from video: {len(ings)} ingredients, {len(inst)} instructions")
+            
+            return {
+                "title": info.get('title', 'Video Recipe'), 
+                "ingredients": ings or [], 
+                "instructions": inst or [], 
+                "thumbnail": thumbnail,
+                "notes": f"NUCLEAR CACHE BUSTER 9003 WIN NOV 9 • {notes}"
+            }
     except Exception as e:
+        print(f"[EXTRACT] Video extraction failed: {str(e)}")
         raise HTTPException(400, f"Video failed: {str(e)}")
     finally:
-        if cookie_file and os.path.exists(cookie_file): os.unlink(cookie_file)
+        if cookie_file and os.path.exists(cookie_file): 
+            os.unlink(cookie_file)
 
-# === YOUTUBE MUSIC SEARCH ENDPOINT (CORRECTLY PLACED) ===
+# === YOUTUBE MUSIC SEARCH ENDPOINT ===
 class YTMusicRequest(BaseModel):
     query: str
     limit: int = 5
@@ -156,6 +195,7 @@ async def ytmusic_search_endpoint(request: YTMusicRequest):
         }
     )
 
+@app.options("/ytmusic-search")
 async def ytmusic_search_options():
     return JSONResponse(
         content={},
