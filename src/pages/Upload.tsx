@@ -564,3 +564,4 @@ export function Upload({ onNavigate }: UploadProps) {
     </div>
   );
 }
+
