@@ -290,8 +290,7 @@ export function Upload({ onNavigate }: UploadProps) {
     setUploading(false);
   }
 };
-    }
-  };
+    
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
