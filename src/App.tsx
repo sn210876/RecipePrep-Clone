@@ -23,27 +23,7 @@ import { Home } from './pages/Home';
 function AppContent() {
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
   const [completedVerifying, setCompletedVerifying] = useState(false);
-//input
-  // ←←← ADD THIS WHOLE BLOCK ←←←
-  useEffect(() => {
-    const path = window.location.pathname;
-    const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
-    if (match) {
-      const postId = match[1];
-      // We are on Discover or DiscoverRecipes — both accept sharedPostId prop
-      // Force the page to Discover (the social feed) and open the modal
-      handleNavigate('discover');
-      // Small delay so the Discover component is mounted first
-      setTimeout(() => {
-        // This custom event is listened to inside Discover.tsx (we’ll add it in step 2)
-        window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
-      }, 100);
-      // Clean the URL so it looks nice again
-      window.history.replaceState({}, '', '/discover');
-    }
-  }, []);
-  // ←←← END OF BLOCK ←←←
-//output
+
   // Get current path
   const pathname = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
@@ -77,7 +57,27 @@ function AppContent() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-
+//input
+ // ←←← ADD THIS WHOLE BLOCK ←←←
+  useEffect(() => {
+    const path = window.location.pathname;
+    const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
+    if (match) {
+      const postId = match[1];
+      // We are on Discover or DiscoverRecipes — both accept sharedPostId prop
+      // Force the page to Discover (the social feed) and open the modal
+      handleNavigate('discover');
+      // Small delay so the Discover component is mounted first
+      setTimeout(() => {
+        // This custom event is listened to inside Discover.tsx (we’ll add it in step 2)
+        window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
+      }, 100);
+      // Clean the URL so it looks nice again
+      window.history.replaceState({}, '', '/discover');
+    }
+  }, []);
+  // ←←← END OF BLOCK ←←←
+//output
   // Navigation function that updates URL
   const handleNavigate = (page: string) => {
     const routes: Record<string, string> = {
