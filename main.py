@@ -15,10 +15,9 @@ import yt_dlp
 from openai import OpenAI
 import ytmusicapi
 
-# Initialize YTMusic (no auth needed)
+# Initialize YTMusic
 ytm = ytmusicapi.YTMusic()
 
-# Function to search songs
 def search_ytmusic(query: str, limit: int = 5):
     try:
         results = ytm.search(query, filter='songs', limit=limit)
@@ -36,24 +35,14 @@ def search_ytmusic(query: str, limit: int = 5):
         print(f"YTMusic error: {e}")
         return []
 
-# NUCLEAR YT-DLP UPDATE — NO CACHE
+# NUCLEAR YT-DLP UPDATE
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
     print("NUCLEAR YT-DLP UPDATED NOV 9 2025")
 except: pass
 
 app = FastAPI()
-# === NUCLEAR CORS — APPLIES TO ALL ENDPOINTS ===
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=600,
-)
-# NUCLEAR CORS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -64,14 +53,12 @@ app.add_middleware(
     max_age=600,
 )
 
-# NUCLEAR OPTIONS HANDLER
 @app.options("/extract")
 async def nuclear_options():
     return JSONResponse(content={}, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"})
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# YOUR MAC COOKIES - YT-DLP FAQ PERFECT
 INSTAGRAM_COOKIES = """
 # Netscape HTTP Cookie File
 .instagram.com TRUE / FALSE 1733875200 csrftoken abxvXW3Nl1NZES5GKhSebmYt7chBhJcK
@@ -87,6 +74,10 @@ INSTAGRAM_COOKIES = """
 
 class ExtractRequest(BaseModel):
     url: str
+
+class YTMusicRequest(BaseModel):
+    query: str
+    limit: int = 5
 
 def parse_with_ai(text: str):
     if not text.strip(): return [], [], ""
@@ -178,42 +169,8 @@ async def extract_recipe(request: ExtractRequest):
     finally:
         if cookie_file and os.path.exists(cookie_file): 
             os.unlink(cookie_file)
-    
-    # VIDEOS WITH YOUR COOKIES
-    print("[EXTRACT] Trying video extraction with yt-dlp...")
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'geo_bypass': True,
-        'http_headers': {'User-Agent': 'Instagram 219.0.0.12.117 Android', 'x-ig-app-id': '936619743392459'},
-    }
-    cookie_file = None
-    if INSTAGRAM_COOKIES.strip():
-        temp = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt')
-        temp.write(INSTAGRAM_COOKIES)
-        temp.close()
-        cookie_file = temp.name
-        ydl_opts['cookiefile'] = cookie_file
-    
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            thumbnail = info.get('thumbnail', '')
-            print(f"[EXTRACT] ✓ yt-dlp extracted video")
-            print(f"[EXTRACT] Thumbnail URL: {thumbnail}")
-            
-            text = f"{info.get('description', '')}\n{info.get('title', '')}"
-            ings, inst, notes = parse_with_ai(text)
-            print(f"[EXTRACT] ✓ AI extracted from video: {len(ings)} ingredients, {len(inst)} instructions")
-            
-            return {
-                "title": info.get('title', 'Video Recipe'), 
-                "ingredients": ings or [], 
-                "instructions": inst or [], 
-                "thumbnail": thumbnail,
-                "notes": f"NUCLEAR CACHE BUSTER 9003 WIN NOV 9 • {notes}"
-            }
-    
+
+@app.post("/ytmusic-search")
 async def ytmusic_search_endpoint(request: YTMusicRequest):
     results = search_ytmusic(request.query, request.limit)
     return JSONResponse(
