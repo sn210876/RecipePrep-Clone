@@ -36,7 +36,7 @@ function AppContent() {
   const getCurrentPage = () => {
     if (isPasswordReset) return 'reset-password';
     if (pathname === '/' || pathname === '/discover-recipes') return 'discover-recipes';
-    if (pathname === '/feed') return 'discover';
+    if (pathname === '/discover') return 'discover';
     if (pathname === '/recipes' || pathname === '/my-recipes') return 'my-recipes';
     if (pathname === '/add-recipe') return 'add-recipe';
     if (pathname === '/meal-planner') return 'meal-planner';
@@ -63,7 +63,7 @@ function AppContent() {
   const handleNavigate = (page: string) => {
     const routes: Record<string, string> = {
       'discover-recipes': '/',
-      'discover': '/feed',
+      'discover': '/discover',
       'my-recipes': '/recipes',
       'add-recipe': '/add-recipe',
       'meal-planner': '/meal-planner',
@@ -128,8 +128,8 @@ function AppContent() {
   if (!isEmailVerified) return <VerifyEmail />;
 
   return (
-<Layout currentPage={currentPage === 'discover' ? 'feed' : currentPage} onNavigate={handleNavigate}>     
-  {renderPage()}
+    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+      {renderPage()}
       <Toaster />
     </Layout>
   );
