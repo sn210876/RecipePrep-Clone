@@ -1,504 +1,350 @@
-import { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { Edit2, Trash2, Heart, MessageCircle, Crown, Play, Pause } from 'lucide-react';
-import { supabase, isAdmin } from '@/lib/supabase';
+import { Input } from './ui/input';
 import { toast } from 'sonner';
-
-interface Post {
-  id: string;
-  user_id: string;
-  image_url: string | null;
-  video_url: string | null;
-  title: string | null;
-  caption: string | null;
-  recipe_url: string | null;
-  recipe_id?: string | null;
-  created_at: string;
-  likes_count?: number;
-  comments_count?: number;
-  spotify_track_id?: string | null;
-  spotify_track_name?: string | null;
-  spotify_artist_name?: string | null;
-  spotify_album_art?: string | null;
-  spotify_preview_url?: string | null;
-}
-
-interface Review {
-  id: string;
-  rating: number;
-  comment: string;
-  created_at: string;
-  user_id: string;
-  username?: string;
-}
+import { Send } from 'lucide-react';
 
 interface Comment {
   id: string;
   text: string;
   created_at: string;
   user_id: string;
-  username?: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
 }
 
-interface PostDetailModalProps {
-  post: Post | null;
-  open: boolean;
+interface CommentModalProps {
+  postId: string;
+  isOpen: boolean;
   onClose: () => void;
-  onDelete: (postId: string) => void;
-  onUpdate: () => void;
+  onCommentPosted?: () => void;
 }
 
-export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: PostDetailModalProps) {
-  const [editingCaption, setEditingCaption] = useState(false);
-  const [caption, setCaption] = useState('');
-  const [reviews, setReviews] = useState<Review[]>([]);
+export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: CommentModalProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isUserAdmin, setIsUserAdmin] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [totalRatings, setTotalRatings] = useState<number>(0);
 
   useEffect(() => {
-    if (post) {
-      setCaption(post.caption || '');
-      loadReviewsAndComments();
-      checkLikeStatus();
-      loadCurrentUserAndAdminStatus();
-      setIsPlaying(false);
-    }
-  }, [post]);
-
-  useEffect(() => {
-    // Cleanup audio when modal closes
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    };
-  }, [open]);
-
-  const toggleMusic = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const loadCurrentUserAndAdminStatus = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setCurrentUserId(user.id);
-      const admin = await isAdmin();
-      setIsUserAdmin(admin);
-    }
-  };
-
-  const loadReviewsAndComments = async () => {
-    if (!post) return;
-    try {
-      if (post.recipe_url) {
-        const { data: recipeData } = await supabase
-          .from('public_recipes')
-          .select('id')
-          .eq('video_url', post.recipe_url)
-          .maybeSingle();
-        if (recipeData) {
-          const { data: reviewsData } = await supabase
-            .from('reviews')
-            .select(`
-              id,
-              rating,
-              comment,
-              created_at,
-              user_id,
-              profiles:user_id (username)
-            `)
-            .eq('recipe_id', recipeData.id)
-            .order('created_at', { ascending: false });
-          if (reviewsData) {
-            setReviews(reviewsData.map((r: any) => ({
-              ...r,
-              username: r.profiles?.username
-            })));
-          }
+    if (isOpen && postId) {
+      loadComments();
+      loadRatings();
+      supabase.auth.getUser().then(({ data }) => {
+        setCurrentUserId(data.user?.id || null);
+        if (data.user?.id) {
+          loadUserRating(data.user.id);
         }
-      }
-
-      const { data: commentsData } = await supabase
-        .from('comments')
-        .select(`
-          id,
-          text,
-          created_at,
-          user_id,
-          profiles:user_id (username)
-        `)
-        .eq('post_id', post.id)
-        .order('created_at', { ascending: false });
-      if (commentsData) {
-        setComments(commentsData.map((c: any) => ({
-          ...c,
-          username: c.profiles?.username
-        })));
-      }
-    } catch (error) {
-      console.error('Error loading reviews and comments:', error);
+      });
     }
-  };
+  }, [isOpen, postId]);
 
-  const checkLikeStatus = async () => {
-    if (!post) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase
-      .from('likes')
-      .select('id')
-      .eq('post_id', post.id)
-      .eq('user_id', user.id)
-      .maybeSingle();
-    setIsLiked(!!data);
-  };
+  const loadComments = async () => {
+    if (!postId) return;
 
-  const handleUpdateCaption = async () => {
-    if (!post) return;
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('posts')
-        .update({ caption: caption.trim() })
-        .eq('id', post.id);
-      if (error) throw error;
-      toast.success('Caption updated!');
-      setEditingCaption(false);
-      onUpdate();
-    } catch (error) {
-      console.error('Error updating caption:', error);
-      toast.error('Failed to update caption');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeletePost = async () => {
-    if (!post) return;
-    if (!confirm('Are you sure you want to delete this post?')) return;
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', post.id);
-      if (error) throw error;
-      toast.success('Post deleted!');
-      onDelete(post.id);
-      onClose();
-    } catch (error) {
-      console.error('Error deleting post:', error);
-      toast.error('Failed to delete post');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Delete this comment?')) return;
-    try {
-      const { error } = await supabase
+      const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
-        .delete()
-        .eq('id', commentId);
-      if (error) throw error;
-      setComments(comments.filter(c => c.id !== commentId));
-      toast.success('Comment deleted');
-    } catch (error) {
-      toast.error('Failed to delete comment');
-    }
-  };
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
 
-  const handleAddComment = async () => {
-    if (!post || !newComment.trim()) return;
-    setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      const { error } = await supabase
-        .from('comments')
-        .insert({
-          post_id: post.id,
-          user_id: user.id,
-          text: newComment.trim()
-        });
-
-      if (user.id !== post.user_id) {
-        await supabase.from('notifications').insert({
-          user_id: post.user_id,
-          actor_id: user.id,
-          type: 'comment',
-          post_id: post.id,
-          read: false
-        });
+      if (commentsError) {
+        console.error('Error loading comments:', commentsError);
+        throw commentsError;
       }
-      if (error) throw error;
-      setNewComment('');
-      await loadReviewsAndComments();
-      toast.success('Comment added!');
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      toast.error('Failed to add comment');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleToggleLike = async () => {
-    if (!post) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const userId = user.id;
-    const postOwnerId = post.user_id;
-    try {
-      if (isLiked) {
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', userId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('likes')
-          .insert({
-            post_id: post.id,
-            user_id: userId
-          });
-        if (error) throw error;
-        if (userId !== postOwnerId) {
-          const { error: notifError } = await supabase
-            .from('notifications')
-            .insert({
-              user_id: postOwnerId,
-              actor_id: userId,
-              type: 'like',
-              post_id: post.id,
-              read: false
-            });
-          if (notifError) console.error("Notification error:", notifError);
-        }
+      if (!commentsData || commentsData.length === 0) {
+        setComments([]);
+        return;
       }
-      setIsLiked(!isLiked);
-      onUpdate();
+
+      // Get unique user IDs
+      const userIds = [...new Set(commentsData.map(c => c.user_id))];
+
+      // Fetch profiles for all users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
+        throw profilesError;
+      }
+
+      // Create a map of user_id to profile
+      const profilesMap = new Map(
+        (profilesData || []).map(p => [p.id, p])
+      );
+
+      // Merge comments with profiles
+      const commentsWithProfiles = commentsData.map(comment => ({
+        ...comment,
+        profiles: profilesMap.get(comment.user_id) || {
+          username: 'Unknown User',
+          avatar_url: null,
+        },
+      }));
+
+      setComments(commentsWithProfiles);
     } catch (error: any) {
-      console.error("Error toggling like:", error);
-      toast.error("Failed to toggle like");
+      console.error('Error loading comments:', error);
+      toast.error('Failed to load comments');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!post) return null;
-  const canDeletePost = post.user_id === currentUserId || isUserAdmin;
-  const canDeleteComment = (commentUserId: string) => commentUserId === currentUserId || isUserAdmin;
+  const loadRatings = async () => {
+    if (!postId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', postId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+        setAverageRating(avg);
+        setTotalRatings(data.length);
+      } else {
+        setAverageRating(0);
+        setTotalRatings(0);
+      }
+    } catch (error) {
+      console.error('Error loading ratings:', error);
+    }
+  };
+
+  const loadUserRating = async (userId: string) => {
+    if (!postId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', postId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setUserRating(data?.rating || 0);
+    } catch (error) {
+      console.error('Error loading user rating:', error);
+    }
+  };
+
+  const handleRatingClick = async (rating: number) => {
+    if (!currentUserId) {
+      toast.error('Please log in to rate');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('post_ratings')
+        .upsert({
+          post_id: postId,
+          user_id: currentUserId,
+          rating: rating,
+        }, {
+          onConflict: 'post_id,user_id'
+        });
+
+      if (error) throw error;
+
+      setUserRating(rating);
+      await loadRatings();
+      if (onCommentPosted) {
+        onCommentPosted();
+      }
+      toast.success('Rating submitted!');
+    } catch (error: any) {
+      console.error('Error submitting rating:', error);
+      toast.error('Failed to submit rating');
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !currentUserId) return;
+
+    setSubmitting(true);
+    try {
+      const { data: postData } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', postId)
+        .maybeSingle();
+
+      const { error } = await supabase.from('comments').insert({
+        post_id: postId,
+        user_id: currentUserId,
+        text: newComment.trim(),
+      });
+
+      if (error) throw error;
+
+      if (postData && postData.user_id !== currentUserId) {
+        console.log('[Notifications] Sending comment notification:', {
+          user_id: postData.user_id,
+          actor_id: currentUserId,
+          type: 'comment',
+          post_id: postId,
+        });
+        const { data, error } = await supabase.from('notifications').insert({
+          user_id: postData.user_id,
+          actor_id: currentUserId,
+          type: 'comment',
+          post_id: postId,
+        });
+        if (error) {
+          console.error('[Notifications] Error sending comment notification:', error);
+        } else {
+          console.log('[Notifications] Comment notification sent successfully:', data);
+        }
+      }
+
+      setNewComment('');
+      await loadComments();
+      toast.success('Comment posted!');
+      if (onCommentPosted) {
+        onCommentPosted();
+      }
+      onClose();
+    } catch (error: any) {
+      console.error('Error posting comment:', error);
+      toast.error('Failed to post comment');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden z-[9999]">
-        <DialogTitle><VisuallyHidden>Post Details</VisuallyHidden></DialogTitle>
-        <DialogDescription><VisuallyHidden>View post with comments and music</VisuallyHidden></DialogDescription>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+<DialogContent className="max-w-lg h-[80vh] flex flex-col p-0 z-[9999]">
+        <DialogHeader className="px-4 py-3 border-b">
+          <DialogTitle>Comments & Ratings</DialogTitle>
 
-        <style jsx global>{`
-          @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          .animate-spin-slow {
-            animation: spin-slow 4s linear infinite;
-          }
-        `}</style>
-
-        <div className="flex flex-col md:flex-row h-full">
-          <div className="md:w-3/5 bg-black flex items-center justify-center relative overflow-hidden">
-            {post.image_url ? (
-              <img
-                src={post.image_url}
-                alt={post.title || 'Post'}
-                className="max-w-full max-h-[90vh] object-contain"
-              />
-            ) : post.video_url ? (
-              <video
-                src={post.video_url}
-                controls
-                className="max-w-full max-h-[90vh] object-contain"
-              />
-            ) : null}
-
-            {/* Music Player */}
-            {post.spotify_preview_url && (
-              <>
-                <audio
-                  ref={audioRef}
-                  src={post.spotify_preview_url}
-                  onEnded={() => setIsPlaying(false)}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                />
-
-                {/* Beautiful Instagram-style music bar */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 z-30">
-                  <div className="flex items-center gap-5 max-w-3xl mx-auto">
-                    <div className="relative">
-                      <img
-                        src={post.spotify_album_art || '/placeholder-album.png'}
-                        alt="Album"
-                        className={`w-16 h-16 rounded-full shadow-2xl border-4 border-white/40 ${isPlaying ? 'animate-spin-slow' : ''}`}
-                      />
-                      <button
-                        onClick={toggleMusic}
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-all"
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-6 h-6 text-white" />
-                        ) : (
-                          <Play className="w-6 h-6 text-white ml-1" />
-                        )}
-                      </button>
-                    </div>
-                    <div className="flex-1 text-white">
-                      <p className="font-bold text-lg truncate">{post.spotify_track_name || 'Song'}</p>
-                      <p className="text-sm opacity-90">{post.spotify_artist_name || 'Artist'}</p>
-                    </div>
-                    <button onClick={toggleMusic} className="text-white text-3xl hover:scale-110 transition-transform">
-                      ♪
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="md:w-2/5 flex flex-col bg-white">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-lg flex-1 pr-4">{post.title || 'Post'}</h3>
-              <div className="flex gap-1 mr-8">
-                {post.user_id === currentUserId && (
-                  <Button variant="ghost" size="sm" onClick={() => setEditingCaption(!editingCaption)}>
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                )}
-                {canDeletePost && (
-                  <Button variant="ghost" size="sm" onClick={handleDeletePost} disabled={loading}>
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </Button>
-                )}
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((fire) => (
+                  <span
+                    key={fire}
+                    className={`text-xl ${
+                      fire <= averageRating
+                        ? 'opacity-100'
+                        : 'opacity-20 grayscale'
+                    }`}
+                  >🔥</span>
+                ))}
               </div>
+              <span className="text-sm text-gray-600">
+                {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
+                {totalRatings > 0 && ` (${totalRatings} ${totalRatings === 1 ? 'rating' : 'ratings'})`}
+              </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div>
-                {editingCaption ? (
-                  <div className="space-y-2">
-                    <Textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write a caption..." rows={3} />
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleUpdateCaption} disabled={loading}>Save</Button>
-                      <Button size="sm" variant="outline" onClick={() => { setEditingCaption(false); setCaption(post.caption || ''); }}>Cancel</Button>
-                    </div>
-                  </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 font-medium">Your rating:</span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((fire) => (
+                  <button
+                    key={fire}
+                    type="button"
+                    onClick={() => handleRatingClick(fire)}
+                    onMouseEnter={() => setHoverRating(fire)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-transform hover:scale-110"
+                  >
+                    <span
+                      className={`text-2xl ${
+                        fire <= (hoverRating || userRating)
+                          ? 'opacity-100'
+                          : 'opacity-20 grayscale'
+                      }`}
+                    >🔥</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+            </div>
+          ) : comments.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No comments yet. Be the first to comment!
+            </div>
+          ) : (
+            comments.map(comment => (
+              <div key={comment.id} className="flex gap-3">
+                {comment.profiles?.avatar_url ? (
+                  <img
+                    src={comment.profiles.avatar_url}
+                    alt={comment.profiles.username}
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                  />
                 ) : (
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {post.caption?.split(' ').map((word, i) => {
-                      if (word.startsWith('http://') || word.startsWith('https://')) {
-                        return <a key={i} href={word} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{word}</a>;
-                      }
-                      return word + ' ';
-                    })}
-                  </p>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
+                    {comment.profiles?.username?.[0]?.toUpperCase()}
+                  </div>
                 )}
-              </div>
-
-              {reviews.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">Reviews</h4>
-                  {reviews.map((review) => (
-                    <div key={review.id} className="bg-gray-50 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <button onClick={() => window.location.href = `/${review.username || 'user'}`} className="font-medium text-sm hover:underline">
-                          {review.username || 'User'}
-                        </button>
-                        {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
-                        <div className="flex">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <span key={i} className="text-base">
-                              {i < review.rating ? '🔥' : '☆'}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-700">{review.comment}</p>
-                    </div>
-                  ))}
+                <div className="flex-1 min-w-0">
+                  <div className="bg-gray-100 rounded-2xl px-3 py-2">
+                    <button
+                      onClick={() => window.location.href = `/${comment.profiles?.username || 'user'}`}
+                      className="font-semibold text-sm hover:underline"
+                    >
+                      {comment.profiles?.username}
+                    </button>
+                    <p className="text-sm text-gray-700 break-words">{comment.text}</p>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1 px-3">
+                    {new Date(comment.created_at).toLocaleDateString()}
+                  </p>
                 </div>
-              )}
-
-              {comments.length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-sm">Comments</h4>
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => window.location.href = `/${comment.username || 'user'}`} className="font-medium text-sm hover:underline">
-                            {comment.username || 'User'}
-                          </button>
-                          {comment.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
-                        </div>
-                        <p className="text-sm text-gray-700 mt-0.5">{comment.text}</p>
-                      </div>
-                      {canDeleteComment(comment.user_id) && (
-                        <button onClick={() => handleDeleteComment(comment.id)} className="text-red-600 hover:text-red-800 p-1">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="border-t p-4 space-y-3">
-              <div className="flex items-center gap-4">
-                <button onClick={handleToggleLike} className="transition-transform hover:scale-110">
-                  <Heart className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'}`} />
-                </button>
-                <MessageCircle className="w-6 h-6 text-gray-700" />
               </div>
-              <div className="flex gap-2">
-                <Textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  rows={2}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleAddComment();
-                    }
-                  }}
-                />
-                <Button onClick={handleAddComment} disabled={loading || !newComment.trim()} size="sm">
-                  Post
-                </Button>
-              </div>
-            </div>
-          </div>
+            ))
+          )}
         </div>
+
+        <form onSubmit={handleSubmitComment} className="border-t px-4 py-3 flex gap-2">
+          <Input
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Add a comment..."
+            disabled={submitting}
+            className="flex-1"
+          />
+          <Button
+            type="submit"
+            disabled={!newComment.trim() || submitting}
+            size="icon"
+            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );
