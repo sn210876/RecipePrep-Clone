@@ -182,7 +182,7 @@ export function AuthForm() {
               />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {isLogin ? 'Welcome Back' : 'Join Recipe Prep'}
+              {isLogin ? 'Welcome Back' : 'Join Meal Scrape'}
             </h1>
             {!isLogin && (
               <p className="text-sm text-orange-600 font-semibold">
