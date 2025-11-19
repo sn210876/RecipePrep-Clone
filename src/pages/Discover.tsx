@@ -120,7 +120,28 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       }
     });
   }, []);
+useEffect(() => {
+  const handleSharedPost = (e: any) => {
+    const postId = e.detail;
+    if (postId) {
+      setCommentModalPostId(postId);
+    }
+  };
 
+  window.addEventListener('open-shared-post', handleSharedPost);
+
+  // Also check on first load (in case link was opened directly)
+  const path = window.location.pathname;
+  const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
+  if (match) {
+    setCommentModalPostId(match[1]);
+    window.history.replaceState({}, '', '/discover');
+  }
+
+  return () => {
+    window.removeEventListener('open-shared-post', handleSharedPost);
+  };
+}, []);
   useEffect(() => {
     return () => {};
   }, []);
