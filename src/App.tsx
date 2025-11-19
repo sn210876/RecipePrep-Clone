@@ -49,8 +49,12 @@ function AppContent() {
     return 'discover-recipes';
   };
 
-  const [currentPage, setCurrentPage] = useState(getCurrentPage());
-
+  // Force correct page on direct /post/... links
+useEffect(() => {
+  if (window.location.pathname.match(/^\/post\/[a-f0-9-]{36}$/)) {
+    setCurrentPage('discover');
+  }
+}, []);
   // Update page when URL changes
   useEffect(() => {
     const handlePopState = () => setCurrentPage(getCurrentPage());
