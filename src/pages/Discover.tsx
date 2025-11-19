@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check, ChefHat } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search, Hash, Bell, PiggyBank, Crown, Send, Copy, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
@@ -39,6 +39,11 @@ interface Post {
   recipe_url: string | null;
   recipe_id: string | null;
   created_at: string;
+  spotify_track_id?: string | null;
+  spotify_track_name?: string | null;
+  spotify_artist_name?: string | null;
+  spotify_album_art?: string | null;
+  spotify_preview_url?: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -66,7 +71,7 @@ interface DiscoverProps {
   onPostViewed?: () => void;
 }
 
-export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
+export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
   const { isAdmin } = useAuth();
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -124,17 +129,42 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
     if (!currentUserId) return;
 
     const loadNotifications = async () => {
-      const { data } = await supabase
+      console.log('[Notifications] Loading notifications for user:', currentUserId);
+      const { data, error } = await supabase
         .from('notifications')
-        .select('*, actor:actor_id(username, avatar_url)')
+        .select('*')
         .eq('user_id', currentUserId)
         .neq('type', 'message')
         .order('created_at', { ascending: false })
         .limit(20);
 
+      if (error) {
+        console.error('[Notifications] Error loading notifications:', error);
+        return;
+      }
+
+      console.log('[Notifications] Loaded notifications:', data);
+
       if (data) {
-        setNotifications(data);
-        setUnreadNotifications(data.filter(n => !n.read).length);
+        // Manually fetch actor profiles for each notification
+        const actorIds = [...new Set(data.map(n => n.actor_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', actorIds);
+
+        console.log('[Notifications] Loaded actor profiles:', profiles);
+
+        // Map profiles to notifications
+        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const mappedData = data.map(n => ({
+          ...n,
+          actor: profilesMap.get(n.actor_id) || { username: 'Unknown', avatar_url: null }
+        }));
+
+        setNotifications(mappedData);
+        setUnreadNotifications(mappedData.filter(n => !n.read).length);
+        console.log('[Notifications] Unread count:', mappedData.filter(n => !n.read).length);
       }
     };
 
@@ -523,12 +553,23 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
 
         const post = posts.find(p => p.id === postId);
         if (post && post.user_id !== currentUserId) {
-          await supabase.from('notifications').insert({
+          console.log('[Notifications] Sending like notification:', {
             user_id: post.user_id,
             actor_id: currentUserId,
             type: 'like',
             post_id: postId,
           });
+          const { data, error } = await supabase.from('notifications').insert({
+            user_id: post.user_id,
+            actor_id: currentUserId,
+            type: 'like',
+            post_id: postId,
+          });
+          if (error) {
+            console.error('[Notifications] Error sending like notification:', error);
+          } else {
+            console.log('[Notifications] Like notification sent successfully:', data);
+          }
         }
 
         setPosts(prev =>
@@ -744,7 +785,7 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
+<div className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
           <div className="flex items-center gap-2">
             <div className="relative" style={{ width: '70%' }}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -758,38 +799,37 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
               />
               {showSearchResults && (
                 <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-60 overflow-y-auto shadow-lg z-50">
-              {searchResults.length > 0 ? (
-                searchResults.map((user) => (
-                  <button
-                    key={user.id}
-                    onClick={() => {
-                      console.log('[Search] User selected:', user.username);
-                      setViewingUserId(user.id);
-                      setShowSearchResults(false);
-                      setSearchQuery('');
-                    }}
-                    className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-400 overflow-hidden flex items-center justify-center">
-                      {user.avatar_url ? (
-                        <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-white font-semibold text-sm">
-                          {user.username.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <span className="font-medium text-gray-900">{user.username}</span>
-                  </button>
-                ))
-              ) : (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  No users found
-                </div>
-              )}
+                  {searchResults.length > 0 ? (
+                    searchResults.map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => {
+                          setViewingUserId(user.id);
+                          setShowSearchResults(false);
+                          setSearchQuery('');
+                        }}
+                        className="w-full flex items-center gap-2 p-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                      >
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-400 overflow-hidden flex items-center justify-center">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white font-semibold text-sm">
+                              {user.username.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-medium text-gray-900">{user.username}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 text-sm">No users found</div>
+                  )}
                 </div>
               )}
             </div>
+
+            {/* ONLY BELL — CHEFHAT GONE */}
             <button
               onClick={async (e) => {
                 e.stopPropagation();
@@ -812,20 +852,12 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                 </span>
               )}
             </button>
-            <button
-              onClick={() => onNavigate?.('discover-recipes')}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Discover Recipes"
-            >
-              <ChefHat className="w-6 h-6 text-gray-700" />
-            </button>
           </div>
+
           {showNotifications && (
             <div className="absolute left-4 right-4 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto shadow-lg z-50">
               {notifications.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  No notifications yet
-                </div>
+                <div className="p-4 text-center text-gray-500 text-sm">No notifications yet</div>
               ) : (
                 notifications.map((notification) => (
                   <div
@@ -835,10 +867,18 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                         markNotificationRead(notification.id);
                       }
                       setShowNotifications(false);
+
+                      // Open the relevant post if notification has a post_id
+                      if (notification.post_id && (notification.type === 'like' || notification.type === 'comment')) {
+                        console.log('[Notifications] Opening post:', notification.post_id);
+                        setCommentModalPostId(notification.post_id);
+                      } else if (notification.type === 'follow' && notification.actor?.username) {
+                        // Navigate to the follower's profile
+                        console.log('[Notifications] Opening profile:', notification.actor.username);
+                        window.location.href = `/${notification.actor.username}`;
+                      }
                     }}
-                    className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                      !notification.read ? 'bg-blue-50' : ''
-                    }`}
+                    className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.read ? 'bg-blue-50' : ''}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
@@ -854,9 +894,7 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                           {new Date(notification.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                      {!notification.read && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
-                      )}
+                      {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />}
                     </div>
                   </div>
                 ))
@@ -911,7 +949,7 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
               const isOwnPost = post.user_id === currentUserId;
 
               return (
-                <div key={post.id} className="bg-white border-b border-gray-200 mb-2">
+<div key={post.id} className="bg-white border-b border-gray-200 mb-2 relative z-9999">
                   <div className="px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {post.profiles?.avatar_url ? (
@@ -970,7 +1008,7 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                     )}
                   </div>
 
-                  <div className="relative">
+  <div className="relative">
                     {post.image_url ? (
                       <img
                         src={post.image_url}
@@ -984,6 +1022,42 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
                         className="w-full aspect-square object-cover"
                       />
                     ) : null}
+                    
+                    {/* Music Player Overlay */}
+                    {post.spotify_preview_url && (
+                      <div className="absolute top-4 right-4 z-10">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const audio = document.getElementById(`audio-${post.id}`) as HTMLAudioElement;
+                            const btn = e.currentTarget.querySelector('.play-icon');
+                            
+                            document.querySelectorAll('audio').forEach((a) => {
+                              if (a.id !== `audio-${post.id}`) {
+                                a.pause();
+                              }
+                            });
+                            
+                            if (audio.paused) {
+                              audio.play();
+                              if (btn) btn.textContent = '⏸️';
+                            } else {
+                              audio.pause();
+                              if (btn) btn.textContent = '▶️';
+                            }
+                          }}
+                          className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-full shadow-lg transition-all flex items-center gap-2"
+                        >
+                          <span className="text-xl play-icon">▶️</span>
+                          <div className="text-left text-xs max-w-32">
+                            <div className="font-semibold truncate">{post.spotify_track_name}</div>
+                            <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
+                          </div>
+                        </button>
+                        <audio id={`audio-${post.id}`} src={post.spotify_preview_url} />
+                      </div>
+                    )}
+                    
                     {post.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
                         <div className="flex items-end justify-between gap-2">
@@ -1006,41 +1080,39 @@ export function Discover({ onNavigateToMessages, onNavigate, sharedPostId, onPos
 
                   <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center gap-4">
-                      <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110">
-                        <Heart
-                          className={`w-7 h-7 ${
-                            isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'
-                          }`}
-                        />
-                      </button>
+                     <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110 relative">
+  <Heart
+    className={`w-7 h-7 ${
+      isLiked ? 'fill-red-500 text-red-500' : 'text-black-700'
+    }`}
+  />
+  {post._count?.likes && post._count.likes > 0 && (
+    <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+      {post._count.likes}
+    </span>
+  )}
+</button>
                       <button
                         onClick={() => setCommentModalPostId(post.id)}
                         className="transition-transform hover:scale-110 relative"
                       >
                         <MessageCircle className="w-7 h-7 text-gray-700" />
                         {post._count?.comments && post._count.comments > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                          <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                             {post._count.comments}
                           </span>
                         )}
                       </button>
                       <button
-                        onClick={() => handleSharePost(post.id)}
-                        className="transition-transform hover:scale-110 text-2xl"
-                      >
-                        🥄
-                      </button>
-                      <div className="ml-auto flex items-center gap-1">
-                        <span className="text-xl">🔥</span>
-                        <span className="text-sm font-semibold text-gray-700">
-                          {postRatings[post.id]?.count || 0}
-                        </span>
-                      </div>
+  onClick={() => handleSharePost(post.id)}
+  className="ml-auto transition-transform hover:scale-110 text-2xl"
+>
+  🥄
+</button>
+                     
                     </div>
 
-                    <div className="text-sm font-semibold">
-                      {post._count?.likes || 0} {post._count?.likes === 1 ? 'like' : 'likes'}
-                    </div>
+              
 
                     {post.caption && (
                       <div className="text-sm">

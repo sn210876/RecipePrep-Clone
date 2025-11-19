@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
 import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
@@ -43,8 +43,8 @@ const UNITS = [
 ];
 
 const CUISINE_TYPES = [
-  'American', 'Chinese', 'Culinary/Baked Goods', 'French', 'Indian', 'Italian',
-  'Japanese', 'Korean', 'Mediterranean', 'Mexican', 'Other', 'Pet Meals',
+  'American', 'Chinese', 'Culinary/Baked Goods', 'French', 'Healing/Medicine', 'Indian', 'Italian', 'Juices/Smoothies', 
+  'Japanese', 'Korean', 'Mediterranean', 'Mexican/Spanish', 'Other', 'Pet Meals',
   'Thai', 'Vegan/Vegetarian', 'Vietnamese'
 ];
 
@@ -83,6 +83,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedRecipeData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [uploadedImageFile, setUploadedImageFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const addIngredient = () => {
     setIngredients([...ingredients, { quantity: '', unit: 'cup', name: '' }]);
@@ -132,40 +135,126 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     );
   };
 
-  const handleUrlExtract = async () => {
-    if (!urlInput.trim()) {
-      toast.error('Please enter a URL');
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
       return;
     }
 
-    if (!isValidUrl(urlInput)) {
-      toast.error('Please enter a valid URL');
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
       return;
     }
 
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-    const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
-
-    if (isImageUrl) {
-      toast.error('Please paste a recipe page URL, not a direct image link. Enter the recipe page URL instead.');
-      return;
-    }
-
-    setIsExtracting(true);
-    const platform = getPlatformFromUrl(urlInput);
-
+    setIsUploadingImage(true);
     try {
-      const data = await extractRecipeFromUrl(urlInput);
-      setExtractedData(data);
-      setShowPreview(true);
-      toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`);
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error('You must be logged in to upload images');
+        return;
+      }
+
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      console.log('[AddRecipe] Uploading image to recipe-images bucket:', fileName);
+
+      // Upload to Supabase storage
+      const { error } = await supabase.storage
+        .from('recipe-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error('[AddRecipe] Upload error:', error);
+        throw error;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('recipe-images')
+        .getPublicUrl(fileName);
+
+      console.log('[AddRecipe] Image uploaded successfully:', publicUrl);
+
+      setUploadedImageFile(file);
+      setUploadedImageUrl(publicUrl);
+      setImageUrl(''); // Clear URL field when file is uploaded
+      toast.success('Image uploaded successfully!');
     } catch (error: any) {
-      console.error('Extract error:', error);
-      toast.error(error.message || 'Failed to extract recipe. Please try manual entry.');
+      console.error('[AddRecipe] Failed to upload image:', error);
+      toast.error(error.message || 'Failed to upload image');
     } finally {
-      setIsExtracting(false);
+      setIsUploadingImage(false);
     }
   };
+
+//start
+ const handleUrlExtract = async () => {
+  if (!urlInput.trim()) {
+    toast.error('Please enter a URL');
+    return;
+  }
+
+  if (!isValidUrl(urlInput)) {
+    toast.error('Please enter a valid URL');
+    return;
+  }
+
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
+
+  if (isImageUrl) {
+    toast.error('Please paste a recipe page URL, not a direct image link. Enter the recipe page URL instead.');
+    return;
+  }
+
+  setIsExtracting(true);
+  const platform = getPlatformFromUrl(urlInput);
+  
+  try {
+    toast.loading('Extracting recipe...', { id: 'extract' });
+    const data = await extractRecipeFromUrl(urlInput);
+    setExtractedData(data);
+    setShowPreview(true);
+    toast.success(`Recipe extracted! Review and edit before saving.`, { id: 'extract' });
+  } catch (error: any) {
+    console.error('Extract error:', error);
+    
+    // If server is waking up, auto-retry once after 30 seconds
+    if (error.message.includes('waking up')) {
+      toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
+      
+      setTimeout(async () => {
+        try {
+          toast.loading('Retrying extraction...', { id: 'extract' });
+          const data = await extractRecipeFromUrl(urlInput);
+          setExtractedData(data);
+          setShowPreview(true);
+          toast.success(`Recipe extracted from ${platform}!`, { id: 'extract' });
+          setIsExtracting(false);
+        } catch (retryError: any) {
+          toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
+          setIsExtracting(false);
+        }
+      }, 30000); // 30 seconds
+      return;
+    }
+    
+    toast.error(error.message || 'Failed to extract recipe. Please try manual entry.', { id: 'extract' });
+    setIsExtracting(false);
+  }
+};
 
   const handleAcceptExtraction = () => {
     if (!extractedData) return;
@@ -255,6 +344,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     console.log('[AddRecipe] Valid ingredients:', validIngredients.length);
     console.log('[AddRecipe] Valid instructions:', validInstructions.length);
 
+    // Use uploaded image URL if available, otherwise use the URL field
+    const finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
+
     const newRecipe = {
       title: title.trim(),
       ingredients: validIngredients,
@@ -267,7 +359,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       difficulty,
       dietaryTags: selectedDietaryTags,
       mealType: selectedMealTypes,
-      imageUrl: imageUrl.trim() || undefined,
+      imageUrl: finalImageUrl,
       videoUrl: videoUrl.trim() || undefined,
       sourceUrl: urlInput.trim() || undefined,
       notes: notes.trim() || undefined,
@@ -289,11 +381,16 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
-          const postImageUrl = imageUrl.trim()
-            ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')
-              ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
-              : imageUrl.trim())
-            : null;
+          // Use uploaded image URL directly, otherwise process external URL
+          const postImageUrl = uploadedImageUrl
+            ? uploadedImageUrl
+            : (imageUrl.trim()
+              ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')
+                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
+                : imageUrl.trim())
+              : null);
+
+          console.log('[AddRecipe] Creating social post with image:', postImageUrl);
 
           const { error: postError } = await supabase.from('posts').insert({
             user_id: user.id,
@@ -335,7 +432,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Create New Recipe</h1>
-          <p className="text-slate-600">Share your culinary creation with the community</p>
+          <p className="text-slate-600">See a recipe online you like, add it here for the community</p>
         </div>
 
         <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
@@ -443,19 +540,19 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
               </div>
 
-              {imageUrl && (
+              {(uploadedImageUrl || imageUrl) && (
                 <div className="space-y-2">
                   <div className="relative w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
                     <img
-                      src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
+                      src={uploadedImageUrl || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
                       alt={title || 'Recipe'}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        console.error('[AddRecipe] Image failed to load:', imageUrl);
+                        console.error('[AddRecipe] Image failed to load:', uploadedImageUrl || imageUrl);
                         const parent = (e.target as HTMLImageElement).parentElement;
                         if (parent) {
                           parent.innerHTML = `
-                            <div class="w-full h-64 flex flex-col items-center justify-center text-slate-500">
+                            <div class="w-full h-full flex flex-col items-center justify-center text-slate-500">
                               <svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
@@ -467,6 +564,23 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                       }}
                     />
                   </div>
+                  {uploadedImageUrl && (
+                    <div className="text-center">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setUploadedImageFile(null);
+                          setUploadedImageUrl('');
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Remove uploaded image
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -554,15 +668,81 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="imageUrl" className="text-sm font-medium">Image URL</Label>
-                <Input
-                  id="imageUrl"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="mt-1.5"
-                />
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" />
+                    Recipe Image
+                  </Label>
+                  <p className="text-xs text-slate-500 mt-1 mb-3">Upload your own image or paste a URL</p>
+
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        id="imageUpload"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        disabled={isUploadingImage}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('imageUpload')?.click()}
+                        disabled={isUploadingImage}
+                        className="w-full"
+                      >
+                        {isUploadingImage ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Image
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {uploadedImageFile && (
+                    <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                      <ImageIcon className="w-3 h-3" />
+                      {uploadedImageFile.name}
+                    </p>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-slate-200" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-slate-500">or</span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="imageUrl" className="text-sm font-medium">Image URL</Label>
+                  <Input
+                    id="imageUrl"
+                    value={imageUrl}
+                    onChange={(e) => {
+                      setImageUrl(e.target.value);
+                      setUploadedImageFile(null);
+                      setUploadedImageUrl('');
+                    }}
+                    placeholder="https://example.com/image.jpg"
+                    className="mt-1.5"
+                    disabled={!!uploadedImageFile}
+                  />
+                  {uploadedImageFile && (
+                    <p className="text-xs text-slate-500 mt-1">Clear uploaded image to use URL instead</p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

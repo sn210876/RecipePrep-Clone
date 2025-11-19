@@ -10,14 +10,77 @@ interface BottomNavProps {
 export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAvatar();
-    loadUnreadCount();
-
-    const interval = setInterval(loadUnreadCount, 10000);
-    return () => clearInterval(interval);
+    initializeMessaging();
   }, []);
+
+  // Real-time subscription for new direct messages
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel('direct-message-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'direct_messages',
+        },
+        async (payload) => {
+          const newMessage = payload.new as any;
+
+          if (newMessage.sender_id !== currentUserId && !newMessage.read) {
+            const { data: convo } = await supabase
+              .from('conversations')
+              .select('id')
+              .eq('id', newMessage.conversation_id)
+              .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
+              .maybeSingle();
+
+            if (convo) {
+              setUnreadCount((prev) => prev + 1);
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'direct_messages',
+        },
+        (payload) => {
+          const updatedMessage = payload.new as any;
+          const oldMessage = payload.old as any;
+
+          if (updatedMessage.read && !oldMessage.read && updatedMessage.sender_id !== currentUserId) {
+            setUnreadCount((prev) => Math.max(0, prev - 1));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId]);
+
+  const initializeMessaging = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setCurrentUserId(user.id);
+      await loadUnreadCount(user.id);
+    } catch (error) {
+      console.error('Error initializing messaging:', error);
+    }
+  };
 
   const loadAvatar = async () => {
     try {
@@ -38,15 +101,12 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
     }
   };
 
-  const loadUnreadCount = async () => {
+  const loadUnreadCount = async (userId: string) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
-
       const { data: conversations } = await supabase
         .from('conversations')
         .select('id, user1_id, user2_id, last_message_at')
-        .or(`user1_id.eq.${userData.user.id},user2_id.eq.${userData.user.id}`)
+        .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
         .order('last_message_at', { ascending: false });
 
       if (!conversations) {
@@ -57,11 +117,11 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
       let totalUnread = 0;
       for (const convo of conversations) {
         const { count } = await supabase
-          .from('messages')
+          .from('direct_messages')
           .select('*', { count: 'exact', head: true })
           .eq('conversation_id', convo.id)
           .eq('read', false)
-          .neq('sender_id', userData.user.id);
+          .neq('sender_id', userId);
 
         totalUnread += count || 0;
       }

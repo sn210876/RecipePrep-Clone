@@ -200,12 +200,23 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       if (error) throw error;
 
       if (postData && postData.user_id !== currentUserId) {
-        await supabase.from('notifications').insert({
+        console.log('[Notifications] Sending comment notification:', {
           user_id: postData.user_id,
           actor_id: currentUserId,
           type: 'comment',
           post_id: postId,
         });
+        const { data, error } = await supabase.from('notifications').insert({
+          user_id: postData.user_id,
+          actor_id: currentUserId,
+          type: 'comment',
+          post_id: postId,
+        });
+        if (error) {
+          console.error('[Notifications] Error sending comment notification:', error);
+        } else {
+          console.log('[Notifications] Comment notification sent successfully:', data);
+        }
       }
 
       setNewComment('');
@@ -225,7 +236,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg h-[80vh] flex flex-col p-0">
+<DialogContent className="max-w-lg h-[80vh] flex flex-col p-0 z-[9999]">
         <DialogHeader className="px-4 py-3 border-b">
           <DialogTitle>Comments & Ratings</DialogTitle>
 
@@ -300,7 +311,12 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="bg-gray-100 rounded-2xl px-3 py-2">
-                    <p className="font-semibold text-sm">{comment.profiles?.username}</p>
+                    <button
+                      onClick={() => window.location.href = `/${comment.profiles?.username || 'user'}`}
+                      className="font-semibold text-sm hover:underline"
+                    >
+                      {comment.profiles?.username}
+                    </button>
                     <p className="text-sm text-gray-700 break-words">{comment.text}</p>
                   </div>
                   <p className="text-xs text-gray-400 mt-1 px-3">
