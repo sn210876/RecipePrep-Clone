@@ -2,15 +2,48 @@ import { useState, useEffect } from 'react';
 import { VoiceSettings } from '../components/VoiceControls';
 import { useRecipes } from '../context/RecipeContext';
 import { useAuth } from '../context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
-import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock } from 'lucide-react';
+import {
+  Mail,
+  Copy,
+  Check,
+  Instagram,
+  MessageSquare,
+  Camera,
+  ArrowRight,
+  TestTube,
+  Loader2,
+  Mic,
+  Volume2,
+  LogOut,
+  Globe,
+  Lock,
+} from 'lucide-react';
 import { Slider } from '../components/ui/slider';
 import { Switch } from '../components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { extractRecipeFromText } from '../lib/recipeExtractor';
 import { toast } from 'sonner';
 import { getUserTimezone, COMMON_TIMEZONES } from '../lib/timezone';
@@ -29,11 +62,15 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
   const [showTestModal, setShowTestModal] = useState(false);
   const [recipeText, setRecipeText] = useState('');
   const [importing, setImporting] = useState(false);
-  const [voiceSettings, setVoiceSettings] = useState(() => {
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(() => {
     const saved = localStorage.getItem('voiceSettings');
-    return saved ? JSON.parse(saved) : { speechRate: 1.0, voiceIndex: 0, autoRead: true };
+    return saved
+      ? JSON.parse(saved)
+      : { speechRate: 1.0, voiceIndex: 0, autoRead: true };
   });
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [availableVoices, setAvailableVoices] = useState<
+    SpeechSynthesisVoice[]
+  >([]);
   const [testingVoice, setTestingVoice] = useState(false);
   const [timezone, setTimezone] = useState<string>(getUserTimezone());
   const [savingTimezone, setSavingTimezone] = useState(false);
@@ -50,14 +87,12 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
 
   const loadTimezone = async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('timezone')
         .eq('id', user.id)
         .maybeSingle();
-
       if (error) throw error;
       if (data?.timezone) {
         setTimezone(data.timezone);
@@ -73,16 +108,13 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
       toast.info('Timezone updated locally. Sign in to save across devices.');
       return;
     }
-
     setSavingTimezone(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ timezone: newTimezone })
         .eq('id', user.id);
-
       if (error) throw error;
-
       setTimezone(newTimezone);
       toast.success('Timezone updated successfully');
     } catch (error) {
@@ -101,7 +133,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
     if ('speechSynthesis' in window) {
       const voices = window.speechSynthesis.getVoices();
       setAvailableVoices(voices);
-
       if (voices.length === 0) {
         window.speechSynthesis.onvoiceschanged = () => {
           setAvailableVoices(window.speechSynthesis.getVoices());
@@ -112,8 +143,11 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
 
   const initializeUser = async () => {
     try {
-      const userId = localStorage.getItem('userId') || generateUserId();
-      localStorage.setItem('userId', userId);
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = generateUserId();
+        localStorage.setItem('userId', userId);
+      }
       setForwardingEmail(`user-${userId.substring(0, 8)}@recipeprep.app`);
     } catch (error) {
       console.error('Error initializing user:', error);
@@ -132,36 +166,31 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
   };
 
   const handleSpeechRateChange = (value: number[]) => {
-    setVoiceSettings((prev: VoiceSettings) => ({ ...prev, speechRate: value[0] }));
+    setVoiceSettings((prev) => ({ ...prev, speechRate: value[0] }));
   };
 
   const handleVoiceChange = (value: string) => {
-    setVoiceSettings((prev: VoiceSettings) => ({ ...prev, voiceIndex: parseInt(value) }));
+    setVoiceSettings((prev) => ({ ...prev, voiceIndex: parseInt(value) }));
   };
 
   const handleAutoReadChange = (checked: boolean) => {
-    setVoiceSettings((prev: VoiceSettings) => ({ ...prev, autoRead: checked }));
+    setVoiceSettings((prev) => ({ ...prev, autoRead: checked }));
   };
 
   const testVoice = () => {
-    if ('speechSynthesis' in window) {
-      setTestingVoice(true);
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(
-        'This is how I will read your recipe steps. Next, preheat the oven to 350 degrees Fahrenheit.'
-      );
-      utterance.rate = voiceSettings.speechRate;
-
-      if (availableVoices.length > 0 && voiceSettings.voiceIndex < availableVoices.length) {
-        utterance.voice = availableVoices[voiceSettings.voiceIndex];
-      }
-
-      utterance.onend = () => setTestingVoice(false);
-      utterance.onerror = () => setTestingVoice(false);
-
-      window.speechSynthesis.speak(utterance);
+    if (!('speechSynthesis' in window)) return;
+    setTestingVoice(true);
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(
+      'This is how I will read your recipe steps. Next, preheat the oven to 350 degrees Fahrenheit.'
+    );
+    utterance.rate = voiceSettings.speechRate;
+    if (availableVoices.length > 0 && voiceSettings.voiceIndex < availableVoices.length) {
+      utterance.voice = availableVoices[voiceSettings.voiceIndex];
     }
+    utterance.onend = () => setTestingVoice(false);
+    utterance.onerror = () => setTestingVoice(false);
+    window.speechSynthesis.speak(utterance);
   };
 
   const copyToClipboard = async () => {
@@ -180,39 +209,36 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
       toast.error('Please paste some recipe text');
       return;
     }
-
     setImporting(true);
     try {
       const extractedRecipe = await extractRecipeFromText(recipeText);
-
       dispatch({
         type: 'SAVE_RECIPE',
         payload: {
           id: Date.now().toString(),
-          title: extractedRecipe.title,
+          title: extractedRecipe.title || 'Untitled Recipe',
           ingredients: extractedRecipe.ingredients,
           instructions: extractedRecipe.instructions,
-          prepTime: parseInt(extractedRecipe.prepTime),
-          cookTime: parseInt(extractedRecipe.cookTime),
-          servings: parseInt(extractedRecipe.servings),
-          tags: [...extractedRecipe.mealTypes, ...extractedRecipe.dietaryTags],
-          cuisineType: extractedRecipe.cuisineType,
-          difficulty: extractedRecipe.difficulty,
-          dietaryTags: extractedRecipe.dietaryTags,
-          imageUrl: extractedRecipe.imageUrl,
+          prepTime: parseInt(extractedRecipe.prepTime) || 15,
+          cookTime: parseInt(extractedRecipe.cookTime) || 30,
+          servings: parseInt(extractedRecipe.servings) || 4,
+          tags: [...(extractedRecipe.mealTypes || []), ...(extractedRecipe.dietaryTags || [])],
+          cuisineType: extractedRecipe.cuisineType || 'Global',
+          difficulty: extractedRecipe.difficulty || 'Medium',
+          dietaryTags: extractedRecipe.dietaryTags || [],
+          imageUrl: extractedRecipe.imageUrl || '',
           sourceUrl: '',
-          notes: extractedRecipe.notes,
-          mealType: extractedRecipe.mealTypes,
-          isSaved: true
-        }
+          notes: extractedRecipe.notes || '',
+          mealType: extractedRecipe.mealTypes || [],
+          isSaved: true,
+        },
       });
-
       toast.success('Recipe imported successfully!');
       setShowTestModal(false);
       setRecipeText('');
     } catch (error) {
       console.error('Error importing recipe:', error);
-      toast.error('Failed to import recipe');
+      toast.error('Failed to import recipe – check format and try again');
     } finally {
       setImporting(false);
     }
@@ -234,7 +260,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Settings</h1>
           <p className="text-slate-600">Manage your account and preferences</p>
         </div>
-
         <div className="space-y-6">
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-gradient-to-br from-orange-50 to-red-50 border-b border-orange-100">
@@ -259,7 +284,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
               </div>
             </CardHeader>
           </Card>
-
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-100">
               <div className="flex items-center gap-3">
@@ -305,7 +329,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
               </div>
             </CardContent>
           </Card>
-
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 border-b border-purple-100">
               <div className="flex items-center gap-3">
@@ -330,8 +353,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
               </Button>
             </CardContent>
           </Card>
-
-          <Card className="border-slate-200 shadow-sm overflow-hidden">
+          <Card className="border-slate udemy-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-gradient-to-br from-blue-50 to-cyan-50 border-b border-blue-100">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
@@ -374,7 +396,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                       </Button>
                     </div>
                   </div>
-
                   <div className="mt-6 space-y-3">
                     <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
                       <p className="text-sm text-slate-700">
@@ -394,7 +415,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
               )}
             </CardContent>
           </Card>
-
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle className="text-2xl text-slate-900">How to Save Recipes</CardTitle>
@@ -411,7 +431,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900">From Instagram DMs</h3>
                   </div>
-
                   <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                     <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-md flex items-center justify-center mb-3">
                       <div className="text-center space-y-2">
@@ -441,7 +460,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                     </ol>
                   </div>
                 </div>
-
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
@@ -449,7 +467,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900">From Photos</h3>
                   </div>
-
                   <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                     <div className="aspect-video bg-gradient-to-br from-blue-100 to-cyan-100 rounded-md flex items-center justify-center mb-3">
                       <div className="text-center space-y-2">
@@ -479,7 +496,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                     </ol>
                   </div>
                 </div>
-
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
@@ -487,7 +503,6 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900">Copy & Paste Link</h3>
                   </div>
-
                   <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                     <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 rounded-md flex items-center justify-center mb-3">
                       <div className="text-center space-y-2">
@@ -521,292 +536,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                   </div>
                 </div>
               </div>
-
               <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-5 border-2 border-blue-200">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
-                    <ArrowRight className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-2">Pro Tip</h4>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      Save your forwarding email as a contact in your phone for quick access. You can also set up auto-forwarding rules in your email app to automatically send recipes from specific senders or subjects to your RecipePrep inbox.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
-                  <Mic className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl text-slate-900">Voice Control Settings</CardTitle>
-                  <CardDescription className="text-slate-600">
-                    Customize how voice commands work in Cook Mode
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {'speechSynthesis' in window ? (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
-                    <div className="flex-1">
-                      <Label htmlFor="auto-read" className="text-base font-semibold text-slate-900 cursor-pointer">
-                        Auto-Read Steps
-                      </Label>
-                      <p className="text-sm text-slate-600 mt-1">
-                        Automatically read each step aloud when you navigate to it
-                      </p>
-                    </div>
-                    <Switch
-                      id="auto-read"
-                      checked={voiceSettings.autoRead}
-                      onCheckedChange={handleAutoReadChange}
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold text-slate-900">
-                      Speech Rate: {voiceSettings.speechRate.toFixed(1)}x
-                    </Label>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-slate-600 w-12">Slow</span>
-                      <Slider
-                        value={[voiceSettings.speechRate]}
-                        onValueChange={handleSpeechRateChange}
-                        min={0.5}
-                        max={2.0}
-                        step={0.1}
-                        className="flex-1"
-                      />
-                      <span className="text-sm text-slate-600 w-12 text-right">Fast</span>
-                    </div>
-                  </div>
-
-                  {availableVoices.length > 0 && (
-                    <div className="space-y-3">
-                      <Label className="text-base font-semibold text-slate-900">
-                        Voice Selection
-                      </Label>
-                      <Select
-                        value={voiceSettings.voiceIndex.toString()}
-                        onValueChange={handleVoiceChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableVoices.map((voice, index) => (
-                            <SelectItem key={index} value={index.toString()}>
-                              {voice.name} ({voice.lang})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={testVoice}
-                    disabled={testingVoice}
-                    variant="outline"
-                    className="w-full border-emerald-300 hover:bg-emerald-50"
-                  >
-                    <Volume2 className="w-4 h-4 mr-2" />
-                    {testingVoice ? 'Playing...' : 'Test Voice Settings'}
-                  </Button>
-
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-slate-700">
-                      <span className="font-semibold">Voice commands available in Cook Mode:</span>
-                      <br />"Next", "Previous", "Repeat", "Read ingredients", "How long", "Start timer", and more.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-300">
-                  <p className="text-sm text-amber-900">
-                    Voice control is not supported in your browser. Try using Chrome, Edge, or Safari.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-        </div>
-      </div>
-
-      <Dialog open={showTestModal} onOpenChange={setShowTestModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <TestTube className="w-6 h-6 text-blue-600" />
-              Test Email Import
-            </DialogTitle>
-            <DialogDescription>
-              Paste recipe text below to simulate receiving it via email. The app will parse and save it to your collection.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 mt-4">
-            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <p className="text-sm text-slate-600 mb-2">
-                <span className="font-semibold">Example format:</span>
-              </p>
-              <pre className="text-xs text-slate-700 bg-white p-3 rounded border border-slate-200 overflow-x-auto">
-{`Chocolate Chip Cookies
-
-Ingredients:
-2 cups all-purpose flour
-1 tsp baking soda
-1 cup butter
-2 eggs
-2 cups chocolate chips
-
-Instructions:
-1. Preheat oven to 375°F
-2. Mix dry ingredients
-3. Cream butter and sugar
-4. Combine everything and fold in chips
-5. Bake for 10-12 minutes`}
-              </pre>
-            </div>
-
-            <div>
-              <Label htmlFor="recipe-text" className="text-base font-semibold mb-2 block">
-                Paste Recipe Text
-              </Label>
-              <Textarea
-                id="recipe-text"
-                placeholder="Paste your recipe here..."
-                value={recipeText}
-                onChange={(e) => setRecipeText(e.target.value)}
-                className="min-h-[300px] font-mono text-sm"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={handleTestImport}
-                disabled={importing || !recipeText.trim()}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                {importing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  'Import Recipe'
-                )}
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowTestModal(false);
-                  setRecipeText('');
-                }}
-                variant="outline"
-                disabled={importing}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Change Password</DialogTitle>
-            <DialogDescription>
-              Enter your new password. Must be at least 6 characters.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="new-password">New Password</Label>
-              <input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Enter new password"
-              />
-            </div>
-            <div>
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Confirm new password"
-              />
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={async () => {
-                  if (newPassword !== confirmPassword) {
-                    toast.error('Passwords do not match');
-                    return;
-                  }
-                  if (newPassword.length < 6) {
-                    toast.error('Password must be at least 6 characters');
-                    return;
-                  }
-                  setChangingPassword(true);
-                  try {
-                    const { error } = await supabase.auth.updateUser({
-                      password: newPassword
-                    });
-                    if (error) throw error;
-                    toast.success('Password updated successfully');
-                    setShowPasswordModal(false);
-                    setNewPassword('');
-                    setConfirmPassword('');
-                  } catch (error: any) {
-                    console.error('Error changing password:', error);
-                    toast.error(error.message || 'Failed to change password');
-                  } finally {
-                    setChangingPassword(false);
-                  }
-                }}
-                disabled={changingPassword || !newPassword || !confirmPassword}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
-              >
-                {changingPassword ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  'Update Password'
-                )}
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowPasswordModal(false);
-                  setNewPassword('');
-                  setConfirmPassword('');
-                }}
-                variant="outline"
-                disabled={changingPassword}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+                    <ArrowRight className="w-5 h-5<|eos|>
