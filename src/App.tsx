@@ -128,8 +128,8 @@ function AppContent() {
   if (!isEmailVerified) return <VerifyEmail />;
 
   return (
-    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
-      {renderPage()}
+<Layout currentPage={currentPage === 'discover' ? 'feed' : currentPage} onNavigate={handleNavigate}>     
+  {renderPage()}
       <Toaster />
     </Layout>
   );
