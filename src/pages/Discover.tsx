@@ -719,12 +719,17 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   };
 
   const handleCopyLink = (postId: string) => {
-    // NEW — use this everywhere instead const shareUrl = `https://mealscrape.com/post/${postId}`;
-    navigator.clipboard.writeText(shareUrl);
+  const shareUrl = `https://mealscrape.com/post/${postId}`;
+  
+  navigator.clipboard.writeText(shareUrl).then(() => {
     setCopiedLink(true);
-    toast.success('Link copied to clipboard!');
+    toast.success('Link copied!');
     setTimeout(() => setCopiedLink(false), 2000);
-  };
+  }).catch((err) => {
+    console.error('Failed to copy:', err);
+    toast.error('Failed to copy link');
+  });
+};
 
   const handleSendToFollowers = async () => {
     if (!sharePostId || selectedFollowers.size === 0) return;
