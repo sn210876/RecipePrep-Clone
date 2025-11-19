@@ -663,9 +663,15 @@ useEffect(() => {
       return;
     }
 
-    searchTimeoutRef.current = setTimeout(() => {
-      performSearch(query);
-    }, 300);
+    // Dispatch immediately + store fallback in case Discover hasn't mounted yet
+window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
+// Fallback: store it globally so Discover can pick it up even if it mounts late
+(window as any).__pendingSharedPostId = postId;
+
+// Clean up after 2 seconds
+setTimeout(() => {
+  delete (window as any).__pendingSharedPostId;
+}, 2000);
   };
 
 
