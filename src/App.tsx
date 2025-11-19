@@ -56,7 +56,7 @@ function AppContent() {
   // ─────────────────────
   useEffect(() => {
     const path = window.location.pathname;
-    const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
+    const match = path.match(/^\/post\/([a-f0-9]{36})$/);
     if (match) {
       const postId = match[1];
 
