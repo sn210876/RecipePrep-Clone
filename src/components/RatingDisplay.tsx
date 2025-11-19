@@ -23,7 +23,7 @@ export function RatingDisplay({ rating, size = 'md', interactive = false, onRate
         >
           <span className={fire <= rating ? 'opacity-100' : 'opacity-30 grayscale'}>
             🔥
-          </span>
+          </span>s
         </button>
       ))}
     </div>
