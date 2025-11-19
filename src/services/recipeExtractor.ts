@@ -41,7 +41,7 @@ if (isSocial) {
     console.log('[Extractor] Sending to Render server:', url);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 50000); // 50s max
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
 
     const response = await fetch(RENDER_SERVER, {
       method: 'POST',
@@ -64,13 +64,29 @@ if (isSocial) {
 
     const data = await response.json();
     console.log('[Extractor] Raw data from server:', data);
-    console.log('[Extractor] Thumbnail/Image URLs:', {
-      thumbnail: data.thumbnail,
-      image: data.image,
-      finalImageUrl: data.thumbnail || data.image || ''
-    });
 
-    // Normalize ingredients with your existing logic
+    // Get the raw image URL
+    const rawImageUrl = data.thumbnail || data.image || '';
+    console.log('[Extractor] Raw image URL:', rawImageUrl);
+
+    // ✅ NEW: Check if it's an Instagram/Facebook CDN URL that needs proxying
+    let finalImageUrl = rawImageUrl;
+    if (rawImageUrl) {
+      const needsProxy = rawImageUrl.includes('cdninstagram.com') || 
+                         rawImageUrl.includes('fbcdn.net') ||
+                         rawImageUrl.includes('instagram.com');
+      
+      if (needsProxy) {
+        // Wrap it with your Supabase proxy
+        const cleanUrl = rawImageUrl.replace(/&amp;/g, '&');
+        finalImageUrl = `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
+        console.log('[Extractor] Instagram image detected, proxying:', finalImageUrl);
+      } else {
+        console.log('[Extractor] Direct image URL (no proxy needed):', finalImageUrl);
+      }
+    }
+
+    // Normalize ingredients
     const ingredients = (data.ingredients || []).map((ing: string) => {
       const cleaned = decodeHtmlEntities(ing.trim());
       if (!cleaned) return { quantity: '', unit: 'cup', name: '' };
@@ -95,7 +111,6 @@ if (isSocial) {
       return m ? `${h} hr ${m} mins` : `${h} hr`;
     };
 
-    const finalImageUrl = data.thumbnail || data.image || '';
     console.log('[Extractor] Final image URL being returned:', finalImageUrl);
 
     return {
@@ -111,7 +126,7 @@ if (isSocial) {
       difficulty: 'Medium',
       mealTypes: ['Dinner'],
       dietaryTags: [],
-      imageUrl: finalImageUrl,
+      imageUrl: finalImageUrl, // ✅ Now using proxied URL
       videoUrl: url,
       notes: 'Extracted using your Render server',
       sourceUrl: url,
