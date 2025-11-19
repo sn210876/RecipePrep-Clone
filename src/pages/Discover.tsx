@@ -120,34 +120,39 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       }
     });
   }, []);
-useEffect(() => {
-  const handleSharedPost = (e: any) => {
-    const postId = e.detail;
-    if (postId) {
-      setCommentModalPostId(postId);
-    }
-  };
 
-  window.addEventListener('open-shared-post', handleSharedPost);
-// Fallback: if App.tsx dispatched before we mounted
-if ((window as any).__pendingSharedPostId) {
-  setCommentModalPostId((window as any).__pendingSharedPostId);
-  delete (window as any).__pendingSharedPostId;
-}
-  // Also check on first load (in case link was opened directly)
-  const path = window.location.pathname;
-  const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
-  if (match) {
-    setCommentModalPostId(match[1]);
-    window.history.replaceState({}, '', '/discover');
-  }
-
-  return () => {
-    window.removeEventListener('open-shared-post', handleSharedPost);
-  };
-}, []);
+  // Fixed: Listen for shared post events and check URL
   useEffect(() => {
-    return () => {};
+    const handleSharedPost = (e: any) => {
+      const postId = e.detail;
+      console.log('[Discover] Received shared post event:', postId);
+      if (postId) {
+        setCommentModalPostId(postId);
+      }
+    };
+
+    window.addEventListener('open-shared-post', handleSharedPost);
+
+    // Fallback: if App.tsx dispatched before we mounted
+    if ((window as any).__pendingSharedPostId) {
+      console.log('[Discover] Found pending shared post ID:', (window as any).__pendingSharedPostId);
+      setCommentModalPostId((window as any).__pendingSharedPostId);
+      delete (window as any).__pendingSharedPostId;
+    }
+
+    // Also check on first load (in case link was opened directly)
+    const path = window.location.pathname;
+    // Fixed regex: UUID format is xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    const match = path.match(/^\/post\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/);
+    if (match) {
+      console.log('[Discover] Found post ID in URL:', match[1]);
+      setCommentModalPostId(match[1]);
+      window.history.replaceState({}, '', '/discover');
+    }
+
+    return () => {
+      window.removeEventListener('open-shared-post', handleSharedPost);
+    };
   }, []);
 
   useEffect(() => {
@@ -667,17 +672,10 @@ if ((window as any).__pendingSharedPostId) {
       return;
     }
 
-    // Dispatch immediately + store fallback in case Discover hasn't mounted yet
-window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
-// Fallback: store it globally so Discover can pick it up even if it mounts late
-(window as any).__pendingSharedPostId = postId;
-
-// Clean up after 2 seconds
-setTimeout(() => {
-  delete (window as any).__pendingSharedPostId;
-}, 2000);
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch(query);
+    }, 300);
   };
-
 
   const markNotificationRead = async (notificationId: string) => {
     await supabase
@@ -726,11 +724,11 @@ setTimeout(() => {
   const handleNativeShare = async (postId: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
-const shareUrl = `https://mealscrape.com/post/${postId}`;
-    // NEW — use this everywhere instead const shareUrl = `https://mealscrape.com/post/${postId}`;
+
+    const shareUrl = `https://mealscrape.com/post/${postId}`;
     const shareData = {
       title: post.title || 'Check out this recipe!',
-      text: post.caption || 'Found this amazing recipe on RecipePrep!',
+      text: post.caption || 'Found this amazing recipe on MealScrape!',
       url: shareUrl
     };
 
@@ -750,17 +748,17 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
   };
 
   const handleCopyLink = (postId: string) => {
-  const shareUrl = `https://mealscrape.com/post/${postId}`;
-  
-  navigator.clipboard.writeText(shareUrl).then(() => {
-    setCopiedLink(true);
-    toast.success('Link copied!');
-    setTimeout(() => setCopiedLink(false), 2000);
-  }).catch((err) => {
-    console.error('Failed to copy:', err);
-    toast.error('Failed to copy link');
-  });
-};
+    const shareUrl = `https://mealscrape.com/post/${postId}`;
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setCopiedLink(true);
+      toast.success('Link copied!');
+      setTimeout(() => setCopiedLink(false), 2000);
+    }).catch((err) => {
+      console.error('Failed to copy:', err);
+      toast.error('Failed to copy link');
+    });
+  };
 
   const handleSendToFollowers = async () => {
     if (!sharePostId || selectedFollowers.size === 0) return;
@@ -821,7 +819,7 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-<div className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
           <div className="flex items-center gap-2">
             <div className="relative" style={{ width: '70%' }}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -865,7 +863,6 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
               )}
             </div>
 
-            {/* ONLY BELL — CHEFHAT GONE */}
             <button
               onClick={async (e) => {
                 e.stopPropagation();
@@ -904,12 +901,10 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
                       }
                       setShowNotifications(false);
 
-                      // Open the relevant post if notification has a post_id
                       if (notification.post_id && (notification.type === 'like' || notification.type === 'comment')) {
                         console.log('[Notifications] Opening post:', notification.post_id);
                         setCommentModalPostId(notification.post_id);
                       } else if (notification.type === 'follow' && notification.actor?.username) {
-                        // Navigate to the follower's profile
                         console.log('[Notifications] Opening profile:', notification.actor.username);
                         window.location.href = `/${notification.actor.username}`;
                       }
@@ -985,7 +980,7 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
               const isOwnPost = post.user_id === currentUserId;
 
               return (
-<div key={post.id} className="bg-white border-b border-gray-200 mb-2 relative z-9999">
+                <div key={post.id} className="bg-white border-b border-gray-200 mb-2 relative z-9999">
                   <div className="px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {post.profiles?.avatar_url ? (
@@ -1044,7 +1039,7 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
                     )}
                   </div>
 
-  <div className="relative">
+                  <div className="relative">
                     {post.image_url ? (
                       <img
                         src={post.image_url}
@@ -1059,7 +1054,6 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
                       />
                     ) : null}
                     
-                    {/* Music Player Overlay */}
                     {post.spotify_preview_url && (
                       <div className="absolute top-4 right-4 z-10">
                         <button
@@ -1116,18 +1110,18 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
 
                   <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center gap-4">
-                     <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110 relative">
-  <Heart
-    className={`w-7 h-7 ${
-      isLiked ? 'fill-red-500 text-red-500' : 'text-black-700'
-    }`}
-  />
-  {post._count?.likes && post._count.likes > 0 && (
-    <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-      {post._count.likes}
-    </span>
-  )}
-</button>
+                      <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110 relative">
+                        <Heart
+                          className={`w-7 h-7 ${
+                            isLiked ? 'fill-red-500 text-red-500' : 'text-black-700'
+                          }`}
+                        />
+                        {post._count?.likes && post._count.likes > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                            {post._count.likes}
+                          </span>
+                        )}
+                      </button>
                       <button
                         onClick={() => setCommentModalPostId(post.id)}
                         className="transition-transform hover:scale-110 relative"
@@ -1139,22 +1133,17 @@ const shareUrl = `https://mealscrape.com/post/${postId}`;
                           </span>
                         )}
                       </button>
-                     <button
-  onClick={() => handleSharePost(post.id)}
-  className="ml-auto transition-transform hover:scale-110 relative group"
-  title="Spoon"   // ← this makes the browser tooltip say "Share"
->
-  <Send className="w-7 h-7 text-gray-700 hover:text-orange-600 transition-colors" />
-  
-  {/* Optional extra pretty tooltip (you can delete if you don’t want it) */}
-  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-    Share
-  </span>
-</button>
-                     
+                      <button
+                        onClick={() => handleSharePost(post.id)}
+                        className="ml-auto transition-transform hover:scale-110 relative group"
+                        title="Share"
+                      >
+                        <Send className="w-7 h-7 text-gray-700 hover:text-orange-600 transition-colors" />
+                        <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                          Share
+                        </span>
+                      </button>
                     </div>
-
-              
 
                     {post.caption && (
                       <div className="text-sm">
