@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, LogOut, Upload as UploadIcon, Edit2, Crown, Trash2 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2 } from 'lucide-react';
+// import { useAuth } from '../context/AuthContext'; // Not used here
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
-import { PostDetailModal } from '../components/PostDetailModal';
+// PostDetailModal removed - using CommentModal instead
 
 // AUTO-RESIZE IMAGE FUNCTION — WORKS EVERYWHERE (PHONE + COMPUTER)
 const resizeImage = (
@@ -82,7 +82,7 @@ interface Profile {
 }
 
 export function Profile() {
-  const { signOut } = useAuth();
+  // const { signOut } = useAuth(); // Logout in Settings
   const [posts, setPosts] = useState<Post[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +92,7 @@ export function Profile() {
   const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
   const [newLink, setNewLink] = useState('');
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  // const [selectedPost, setSelectedPost] = useState<Post | null>(null); // Removed - not used
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
@@ -288,7 +288,7 @@ export function Profile() {
     setEditingProfile(false);
   };
 
-  const handleLogout = async () => { await signOut(); };
+  // Logout handled in Settings page
 
   if (loading) {
     return (
@@ -437,7 +437,7 @@ export function Profile() {
         ) : (
           <div className="grid grid-cols-3 gap-1">
             {posts.map(post => (
-              <div key={post.id} onClick={() => setSelectedPost(post)} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
+              <div key={post.id} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
                 {post.image_url ? (
                   <img src={post.image_url} alt={post.title || 'Post'} className="w-full h-full object-cover" />
                 ) : post.video_url ? (
@@ -519,13 +519,7 @@ export function Profile() {
         </DialogContent>
       </Dialog>
 
-      <PostDetailModal
-        post={selectedPost}
-        open={!!selectedPost}
-        onClose={() => setSelectedPost(null)}
-        onDelete={postId => setPosts(prev => prev.filter(p => p.id !== postId))}
-        onUpdate={loadProfile}
-      />
+      {/* PostDetailModal removed - view full posts on Discover page */}
     </div>
   );
 }

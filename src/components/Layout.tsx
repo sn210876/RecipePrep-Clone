@@ -1,9 +1,9 @@
 import { ReactNode, useState } from 'react';
-import { ChefHat, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X, LogOut, UtensilsCrossed, PiggyBank } from 'lucide-react';
+import { ChefHat, BookMarked, Plus, Calendar, ShoppingCart, Settings, Menu, X, UtensilsCrossed, PiggyBank } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { useAuth } from '../context/AuthContext';
-import { toast } from 'sonner';
+// import { useAuth } from '../context/AuthContext';
+// import { toast } from 'sonner';
 import { BottomNav } from './BottomNav';
 
 interface LayoutProps {
@@ -14,16 +14,9 @@ interface LayoutProps {
 
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { signOut } = useAuth();
+  // const { signOut } = useAuth(); // Logout in Settings
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success('Logged out successfully');
-    } catch (error) {
-      toast.error('Failed to log out');
-    }
-  };
+  // Logout handled in Settings page
 
   const navItems = [
     { id: 'discover-recipes', label: 'Discover Recipes', icon: ChefHat },
@@ -36,8 +29,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
-  const socialPages = ['discover', 'upload', 'profile', 'messages'];
-
+const socialPages = ['discover', 'upload', 'profile', 'messages']; // 'discover' = feed page
   // REUSABLE FLOATING ICON BAR — ALWAYS ON TOP
   const FloatingNavIcons = () => (
     <div className="pointer-events-none fixed z-[500]">
