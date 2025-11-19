@@ -696,7 +696,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 
-    // NEW — use this everywhere instead const shareUrl = `${window.location.origin}/post/${postId}`;
+    // NEW — use this everywhere instead const shareUrl = `https://mealscrape.com/post/${postId}`;
     const shareData = {
       title: post.title || 'Check out this recipe!',
       text: post.caption || 'Found this amazing recipe on RecipePrep!',
@@ -719,7 +719,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   };
 
   const handleCopyLink = (postId: string) => {
-    // NEW — use this everywhere instead const shareUrl = `${window.location.origin}/post/${postId}`;
+    // NEW — use this everywhere instead const shareUrl = `https://mealscrape.com/post/${postId}`;
     navigator.clipboard.writeText(shareUrl);
     setCopiedLink(true);
     toast.success('Link copied to clipboard!');
