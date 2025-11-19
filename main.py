@@ -1,10 +1,8 @@
-# SHAWN NUCLEAR CACHE BUSTER 9003 NOV 9 2025 - YOUR COOKIES + YT-DLP UPDATE + CORS + IG + ALLRECIPES WORKING
+# SHAWN NUCLEAR CACHE BUSTER 9003 NOV 9 2025
 import os
 import re
 import json
 import requests
-import subprocess
-import sys
 import tempfile
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +13,6 @@ import yt_dlp
 from openai import OpenAI
 import ytmusicapi
 
-# Initialize YTMusic
 ytm = ytmusicapi.YTMusic()
 
 def search_ytmusic(query: str, limit: int = 5):
@@ -35,12 +32,6 @@ def search_ytmusic(query: str, limit: int = 5):
         print(f"YTMusic error: {e}")
         return []
 
-# NUCLEAR YT-DLP UPDATE
-try:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "--no-cache-dir", "yt-dlp"])
-    print("NUCLEAR YT-DLP UPDATED NOV 9 2025")
-except: pass
-
 app = FastAPI()
 
 app.add_middleware(
@@ -54,8 +45,8 @@ app.add_middleware(
 )
 
 @app.options("/extract")
-async def nuclear_options():
-    return JSONResponse(content={}, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "*", "Access-Control-Allow-Headers": "*"})
+async def options_extract():
+    return JSONResponse(content={}, headers={"Access-Control-Allow-Origin": "*"})
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -93,14 +84,13 @@ def parse_with_ai(text: str):
 async def extract_recipe(request: ExtractRequest):
     url = request.url.strip()
     print(f"[EXTRACT] Processing: {url}")
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     
-    # WEBSITES
+    # Try recipe-scrapers for websites (without headers param)
     print("[EXTRACT] Trying recipe-scrapers...")
     try:
-        scraper = scrape_me(url)
+        scraper = scrape_me(url)  # ✅ No headers parameter
         data = scraper.to_json()
-        print(f"[EXTRACT] ✓ recipe-scrapers success")
+        print(f"[EXTRACT] ✓ Scraped: {data.get('title')}")
         return {
             "title": data.get("title"), 
             "ingredients": data.get("ingredients", []), 
@@ -111,10 +101,11 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"[EXTRACT] recipe-scrapers failed: {str(e)}")
     
-    # AI HTML - SKIP FOR INSTAGRAM/TIKTOK/YOUTUBE
+    # AI HTML - skip for social media
     if not any(x in url.lower() for x in ['instagram.com', 'tiktok.com', 'youtube.com', 'youtu.be']):
         print("[EXTRACT] Trying AI HTML parsing...")
         try:
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
             html = requests.get(url, headers=headers, timeout=20).text
             ings, inst, notes = parse_with_ai(html)
             if ings or inst:
@@ -129,7 +120,7 @@ async def extract_recipe(request: ExtractRequest):
         except Exception as e:
             print(f"[EXTRACT] AI HTML parsing failed: {str(e)}")
     
-    # VIDEOS WITH YOUR COOKIES
+    # Videos with yt-dlp
     print("[EXTRACT] Trying video extraction with yt-dlp...")
     ydl_opts = {
         'quiet': True,
@@ -160,8 +151,8 @@ async def extract_recipe(request: ExtractRequest):
                 "title": info.get('title', 'Video Recipe'), 
                 "ingredients": ings or [], 
                 "instructions": inst or [], 
-                "thumbnail": thumbnail,
-                "notes": f"NUCLEAR CACHE BUSTER 9003 WIN NOV 9 • {notes}"
+                "thumbnail": thumbnail,  # ✅ Returns thumbnail
+                "notes": f"Extracted from Instagram • {notes}"
             }
     except Exception as e:
         print(f"[EXTRACT] Video extraction failed: {str(e)}")
@@ -173,27 +164,12 @@ async def extract_recipe(request: ExtractRequest):
 @app.post("/ytmusic-search")
 async def ytmusic_search_endpoint(request: YTMusicRequest):
     results = search_ytmusic(request.query, request.limit)
-    return JSONResponse(
-        content={"songs": results},
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-        }
-    )
+    return JSONResponse(content={"songs": results}, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.options("/ytmusic-search")
-async def ytmusic_search_options():
-    return JSONResponse(
-        content={},
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Max-Age": "600",
-        }
-    )
+async def options_ytmusic():
+    return JSONResponse(content={}, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/")
 async def root():
-    return {"message": "SHAWN NUCLEAR CACHE BUSTER 9003 NOV 9 2025 - MAC COOKIES + YT-DLP + CORS + IG + ALLRECIPES + YTMUSIC WORKING"}
+    return {"message": "Recipe Extraction Server - Instagram Working"}
