@@ -39,11 +39,6 @@ interface Post {
   recipe_url: string | null;
   recipe_id: string | null;
   created_at: string;
-  spotify_track_id?: string | null;
-  spotify_track_name?: string | null;
-  spotify_artist_name?: string | null;
-  spotify_album_art?: string | null;
-  spotify_preview_url?: string | null;
   profiles: {
     username: string;
     avatar_url: string | null;
@@ -1008,7 +1003,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                     )}
                   </div>
 
-  <div className="relative">
+                  <div className="relative">
                     {post.image_url ? (
                       <img
                         src={post.image_url}
@@ -1022,42 +1017,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                         className="w-full aspect-square object-cover"
                       />
                     ) : null}
-                    
-                    {/* Music Player Overlay */}
-                    {post.spotify_preview_url && (
-                      <div className="absolute top-4 right-4 z-10">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const audio = document.getElementById(`audio-${post.id}`) as HTMLAudioElement;
-                            const btn = e.currentTarget.querySelector('.play-icon');
-                            
-                            document.querySelectorAll('audio').forEach((a) => {
-                              if (a.id !== `audio-${post.id}`) {
-                                a.pause();
-                              }
-                            });
-                            
-                            if (audio.paused) {
-                              audio.play();
-                              if (btn) btn.textContent = '⏸️';
-                            } else {
-                              audio.pause();
-                              if (btn) btn.textContent = '▶️';
-                            }
-                          }}
-                          className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-full shadow-lg transition-all flex items-center gap-2"
-                        >
-                          <span className="text-xl play-icon">▶️</span>
-                          <div className="text-left text-xs max-w-32">
-                            <div className="font-semibold truncate">{post.spotify_track_name}</div>
-                            <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
-                          </div>
-                        </button>
-                        <audio id={`audio-${post.id}`} src={post.spotify_preview_url} />
-                      </div>
-                    )}
-                    
                     {post.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
                         <div className="flex items-end justify-between gap-2">

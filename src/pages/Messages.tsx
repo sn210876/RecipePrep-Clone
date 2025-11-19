@@ -286,24 +286,6 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     }
   };
 
-  // *** DELETE MESSAGE ***
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!currentUserId) return;
-
-    setMessages(prev => prev.filter(m => m.id !== messageId));
-
-    const { error } = await supabase
-      .from('direct_messages')
-      .delete()
-      .eq('id', messageId)
-      .eq('sender_id', currentUserId);
-
-    if (error) {
-      console.error('Error deleting message:', error);
-      toast.error('Failed to delete message');
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-20">
@@ -315,7 +297,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   if (selectedConversation) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        {/* CHAT HEADER */}
+        {/* FIXED CHAT HEADER */}
         <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center gap-3">
             <button
@@ -328,11 +310,10 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                   loadConversations(currentUserId);
                 }
               }}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-
             <div className="flex items-center gap-2 flex-1">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
                 {selectedConversation.other_user.avatar_url ? (
@@ -350,47 +331,28 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           </div>
         </div>
 
-        {/* MESSAGES */}
-        <div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
-  <div className="space-y-1 py-4">
-    {messages.map((message) => (
-      <div
-        key={message.id}
-        // MODIFICATION 1: Align ALL messages to the right using 'justify-end'
-        className="flex justify-end"
-      >
-        <div className="relative group">
-          {/* BUBBLE */}
-          <div
-            className={`w-48 rounded-2xl px-4 py-2 ${
-              message.sender_id === currentUserId
-                // MODIFICATION 2: Sender's message is DIMMER (e.g., lower opacity white/gray)
-                ? 'bg-gray-200 text-gray-900' // Use lower opacity on background
-                // MODIFICATION 2: Receiver's message is BRIGHTER (e.g., full opacity white/gray)
-                : 'bg-orange-500 bg-opacity-80 text-white' // Receiver message is the bright one
-            }`}
-          >
-            <p className="whitespace-pre-wrap break-words text-sm leading-tight">
-              {message.content}
-            </p>
-            <span className="text-xs opacity-70 mt-1 block">
-              {new Date(message.created_at).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-          </div>
-
-                  {/* DELETE BUTTON (ONLY FOR YOUR MESSAGES) */}
-                  {message.sender_id === currentUserId && (
-                    <button
-                      onClick={() => handleDeleteMessage(message.id)}
-                      className="absolute -top-2 -right-2 bg-white-500 text-white text-s px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      🗑️ 
-                    </button>
-                  )}
-
+        {/* Messages Area - starts below fixed header */}
+        <div className="pt-16 flex-1 overflow-y-auto px-4 pb-24">
+          <div className="space-y-4 py-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                    message.sender_id === currentUserId
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-gray-200 text-gray-900'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                  <span className="text-xs opacity-70 mt-1 block">
+                    {new Date(message.created_at).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
                 </div>
               </div>
             ))}
@@ -398,8 +360,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           </div>
         </div>
 
-        {/* INPUT BAR */}
-        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 w-80 bg-white border-t border-gray-200 px-4 py-3 z-50">
+        {/* FIXED INPUT BAR */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
           <div className="flex gap-2">
             <input
               type="text"
@@ -407,7 +369,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
-              className="w-[80%] px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <Button
               onClick={sendMessage}
@@ -418,21 +380,20 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             </Button>
           </div>
         </div>
-
       </div>
     );
   }
 
-  // CONVERSATION LIST
+  // CONVERSATION LIST — FIXED HEADER WITH "Social Feed"
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* TOP BAR */}
+      {/* FIXED TOP BAR */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
               onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -443,7 +404,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         </div>
       </div>
 
-      {/* CONVERSATION LIST */}
+      {/* Scrollable Conversations List */}
       <div className="pt-16 pb-20 px-4">
         {conversations.length === 0 ? (
           <div className="text-center py-12">
@@ -458,7 +419,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                 onClick={() => setSelectedConversation(convo)}
                 className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold flex-shrink-0 overflow-hidden">
                   {convo.other_user.avatar_url ? (
                     <img
                       src={convo.other_user.avatar_url}
