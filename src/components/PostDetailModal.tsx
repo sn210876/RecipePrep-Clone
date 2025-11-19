@@ -5,6 +5,7 @@ import { Textarea } from './ui/textarea';
 import { Edit2, Trash2, Heart, MessageCircle, Crown } from 'lucide-react';
 import { supabase, isAdmin } from '@/lib/supabase';
 import { toast } from 'sonner';
+
 interface Post {
   id: string;
   user_id: string;
@@ -18,6 +19,7 @@ interface Post {
   likes_count?: number;
   comments_count?: number;
 }
+
 interface Review {
   id: string;
   rating: number;
@@ -26,6 +28,7 @@ interface Review {
   user_id: string;
   username?: string;
 }
+
 interface Comment {
   id: string;
   text: string;
@@ -33,6 +36,7 @@ interface Comment {
   user_id: string;
   username?: string;
 }
+
 interface PostDetailModalProps {
   post: Post | null;
   open: boolean;
@@ -40,6 +44,7 @@ interface PostDetailModalProps {
   onDelete: (postId: string) => void;
   onUpdate: () => void;
 }
+
 export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: PostDetailModalProps) {
   const [editingCaption, setEditingCaption] = useState(false);
   const [caption, setCaption] = useState('');
@@ -50,16 +55,30 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
-  // Rating state removed - not displayed in this modal
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [totalRatings, setTotalRatings] = useState<number>(0);
+
   useEffect(() => {
     if (post) {
       setCaption(post.caption || '');
       loadReviewsAndComments();
       checkLikeStatus();
       loadCurrentUserAndAdminStatus();
+      loadRatings();
+      if (currentUserId) {
+        loadUserRating(currentUserId);
+      }
     }
   }, [post]);
-  // Rating effect removed - not used in this modal
+
+  useEffect(() => {
+    if (post && currentUserId) {
+      loadUserRating(currentUserId);
+    }
+  }, [post, currentUserId]);
+
   const loadCurrentUserAndAdminStatus = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -68,38 +87,38 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setIsUserAdmin(admin);
     }
   };
+
   const loadReviewsAndComments = async () => {
-    if (!post) return;
+    if (!post?.recipe_url) return;
     try {
-      // Load reviews only if recipe_url exists
-      if (post.recipe_url) {
-        const { data: recipeData } = await supabase
-          .from('public_recipes')
-          .select('id')
-          .eq('video_url', post.recipe_url)
-          .maybeSingle();
-        if (recipeData) {
-          const { data: reviewsData } = await supabase
-            .from('reviews')
-            .select(`
-              id,
-              rating,
-              comment,
-              created_at,
-              user_id,
-              profiles:user_id (username)
-            `)
-            .eq('recipe_id', recipeData.id)
-            .order('created_at', { ascending: false });
-          if (reviewsData) {
-            setReviews(reviewsData.map((r: any) => ({
-              ...r,
-              username: r.profiles?.username
-            })));
-          }
+      const { data: recipeData } = await supabase
+        .from('public_recipes')
+        .select('id')
+        .eq('video_url', post.recipe_url)
+        .maybeSingle();
+
+      if (recipeData) {
+        const { data: reviewsData } = await supabase
+          .from('reviews')
+          .select(`
+            id,
+            rating,
+            comment,
+            created_at,
+            user_id,
+            profiles:user_id (username)
+          `)
+          .eq('recipe_id', recipeData.id)
+          .order('created_at', { ascending: false });
+
+        if (reviewsData) {
+          setReviews(reviewsData.map((r: any) => ({
+            ...r,
+            username: r.profiles?.username
+          })));
         }
       }
-      // Always load comments for the post
+
       const { data: commentsData } = await supabase
         .from('comments')
         .select(`
@@ -111,6 +130,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
         `)
         .eq('post_id', post.id)
         .order('created_at', { ascending: false });
+
       if (commentsData) {
         setComments(commentsData.map((c: any) => ({
           ...c,
@@ -121,6 +141,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       console.error('Error loading reviews and comments:', error);
     }
   };
+
   const checkLikeStatus = async () => {
     if (!post) return;
     const { data: { user } } = await supabase.auth.getUser();
@@ -133,6 +154,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       .maybeSingle();
     setIsLiked(!!data);
   };
+
   const handleUpdateCaption = async () => {
     if (!post) return;
     setLoading(true);
@@ -152,6 +174,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setLoading(false);
     }
   };
+
   const handleDeletePost = async () => {
     if (!post) return;
     if (!confirm('Are you sure you want to delete this post?')) return;
@@ -172,6 +195,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       setLoading(false);
     }
   };
+
   const handleDeleteComment = async (commentId: string) => {
     if (!confirm('Delete this comment?')) return;
     try {
@@ -186,6 +210,7 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
       toast.error('Failed to delete comment');
     }
   };
+
   const handleAddComment = async () => {
     if (!post || !newComment.trim()) return;
     setLoading(true);
@@ -199,17 +224,6 @@ export function PostDetailModal({ post, open, onClose, onDelete, onUpdate }: Pos
           user_id: user.id,
           text: newComment.trim()
         });
-      // 🔔 SEND COMMENT NOTIFICATION (don't notify yourself)
-if (user.id !== post.user_id) {
-  await supabase.from('notifications').insert({
-    user_id: post.user_id,
-    actor_id: user.id,
-    type: 'comment',
-    post_id: post.id,
-    read: false
-  });
-}
-
       if (error) throw error;
       setNewComment('');
       await loadReviewsAndComments();
@@ -221,72 +235,110 @@ if (user.id !== post.user_id) {
       setLoading(false);
     }
   };
+
   const handleToggleLike = async () => {
-  if (!post) return;
+    if (!post) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    try {
+      if (isLiked) {
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('likes')
+          .insert({ post_id: post.id, user_id: user.id });
+      }
+      setIsLiked(!isLiked);
+      onUpdate();
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+  const loadRatings = async () => {
+    if (!post) return;
 
-  const userId = user.id;
-  const postOwnerId = post.user_id;
-
-  try {
-    if (isLiked) {
-      // Remove like
-      const { error } = await supabase
-        .from('likes')
-        .delete()
-        .eq('post_id', post.id)
-        .eq('user_id', userId);
+    try {
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', post.id);
 
       if (error) throw error;
 
-    } else {
-      // Add like
+      if (data && data.length > 0) {
+        const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+        setAverageRating(avg);
+        setTotalRatings(data.length);
+      } else {
+        setAverageRating(0);
+        setTotalRatings(0);
+      }
+    } catch (error) {
+      console.error('Error loading ratings:', error);
+    }
+  };
+
+  const loadUserRating = async (userId: string) => {
+    if (!post) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('post_ratings')
+        .select('rating')
+        .eq('post_id', post.id)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setUserRating(data?.rating || 0);
+    } catch (error) {
+      console.error('Error loading user rating:', error);
+    }
+  };
+
+  const handleRatingClick = async (rating: number) => {
+    if (!currentUserId || !post) {
+      toast.error('Please log in to rate');
+      return;
+    }
+
+    try {
       const { error } = await supabase
-        .from('likes')
-        .insert({
+        .from('post_ratings')
+        .upsert({
           post_id: post.id,
-          user_id: userId
+          user_id: currentUserId,
+          rating: rating,
+        }, {
+          onConflict: 'post_id,user_id'
         });
 
       if (error) throw error;
 
-      // 🔔 Send notification ONLY if liking someone else's post
-      if (userId !== postOwnerId) {
-        const { error: notifError } = await supabase
-          .from('notifications')
-          .insert({
-            user_id: postOwnerId,   // receiver
-            actor_id: userId,       // who performed the like
-            type: 'like',
-            post_id: post.id,
-            read: false
-          });
-
-        if (notifError) console.error("Notification error:", notifError);
-      }
+      setUserRating(rating);
+      await loadRatings();
+      onUpdate();
+      toast.success('Rating submitted!');
+    } catch (error: any) {
+      console.error('Error submitting rating:', error);
+      toast.error('Failed to submit rating');
     }
+  };
 
-    // Update UI instantly
-    setIsLiked(!isLiked);
-    onUpdate();
-
-  } catch (error: any) {
-    console.error("Error toggling like:", error);
-    toast.error("Failed to toggle like");
-  }
-};
-
-
-  // Rating functions removed - not displayed in this modal
   if (!post) return null;
+
   const canDeletePost = post.user_id === currentUserId || isUserAdmin;
   const canDeleteComment = (commentUserId: string) => commentUserId === currentUserId || isUserAdmin;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-<DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden z-[9999]">
-  <div className="flex flex-col md:flex-row h-full">
+      <DialogContent className="max-w-5xl max-h-[90vh] p-0 overflow-hidden">
+        <div className="flex flex-col md:flex-row h-full">
           <div className="md:w-3/5 bg-black flex items-center justify-center">
             {post.image_url ? (
               <img
@@ -302,6 +354,7 @@ if (user.id !== post.user_id) {
               />
             ) : null}
           </div>
+
           <div className="md:w-2/5 flex flex-col bg-white">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="font-semibold text-lg flex-1 pr-4">{post.title || 'Post'}</h3>
@@ -327,7 +380,52 @@ if (user.id !== post.user_id) {
                 )}
               </div>
             </div>
+
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((fire) => (
+                      <span
+                        key={fire}
+                        className={`text-xl ${
+                          fire <= averageRating
+                            ? 'opacity-100'
+                            : 'opacity-20 grayscale'
+                        }`}
+                      >🔥</span>
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-700 font-medium">
+                    {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
+                    {totalRatings > 0 && ` (${totalRatings})`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700 font-medium">Rate this post:</span>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((fire) => (
+                      <button
+                        key={fire}
+                        type="button"
+                        onClick={() => handleRatingClick(fire)}
+                        onMouseEnter={() => setHoverRating(fire)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <span
+                          className={`text-2xl ${
+                            fire <= (hoverRating || userRating)
+                              ? 'opacity-100'
+                              : 'opacity-20 grayscale'
+                          }`}
+                        >🔥</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               <div>
                 {editingCaption ? (
@@ -375,25 +473,21 @@ if (user.id !== post.user_id) {
                   </p>
                 )}
               </div>
+
               {reviews.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-semibold text-sm">Reviews</h4>
                   {reviews.map((review) => (
                     <div key={review.id} className="bg-gray-50 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
-                        <button
-                          onClick={() => window.location.href = `/${review.username || 'user'}`}
-                          className="font-medium text-sm hover:underline"
-                        >
-                          {review.username || 'User'}
-                        </button>
+                        <span className="font-medium text-sm">{review.username || 'User'}</span>
                         {review.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                           <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         )}
                         <div className="flex">
                           {Array.from({ length: 5 }).map((_, i) => (
                             <span key={i} className="text-base">
-                              {i < review.rating ? '🔥 ' : '☆'}
+                              {i < review.rating ? '⭐' : '☆'}
                             </span>
                           ))}
                         </div>
@@ -403,6 +497,7 @@ if (user.id !== post.user_id) {
                   ))}
                 </div>
               )}
+
               {comments.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm">Comments</h4>
@@ -410,12 +505,7 @@ if (user.id !== post.user_id) {
                     <div key={comment.id} className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => window.location.href = `/${comment.username || 'user'}`}
-                            className="font-medium text-sm hover:underline"
-                          >
-                            {comment.username || 'User'}
-                          </button>
+                          <span className="font-medium text-sm">{comment.username || 'User'}</span>
                           {comment.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                             <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                           )}
@@ -435,6 +525,7 @@ if (user.id !== post.user_id) {
                 </div>
               )}
             </div>
+
             <div className="border-t p-4 space-y-3">
               <div className="flex items-center gap-4">
                 <button onClick={handleToggleLike} className="transition-transform hover:scale-110">
@@ -442,6 +533,7 @@ if (user.id !== post.user_id) {
                 </button>
                 <MessageCircle className="w-6 h-6 text-gray-700" />
               </div>
+
               <div className="flex gap-2">
                 <Textarea
                   value={newComment}
