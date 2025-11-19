@@ -123,4 +123,4 @@ async def extract_recipe(request: ExtractRequest):
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "version": "2025-11-19"}
+    return {"status": "ok", "version": "2025-11-19"}A
