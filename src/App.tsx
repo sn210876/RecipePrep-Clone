@@ -49,12 +49,6 @@ function AppContent() {
     return 'discover-recipes';
   };
 
-  // Force correct page on direct /post/... links
-useEffect(() => {
-  if (window.location.pathname.match(/^\/post\/[a-f0-9-]{36}$/)) {
-    setCurrentPage('discover');
-  }
-}, []);
   
   // Update page when URL changes
   useEffect(() => {
@@ -62,12 +56,6 @@ useEffect(() => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-// THIS FIXES THE HOMEPAGE REDIRECT
-useEffect(() => {
-  if (window.location.pathname.startsWith('/post/')) {
-    setCurrentPage('discover');
-  }
-}, []);
 //input
  // ←←← ADD THIS WHOLE BLOCK ←←←
   useEffect(() => {
