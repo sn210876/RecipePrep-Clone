@@ -36,7 +36,7 @@ function AppContent() {
   const getCurrentPage = () => {
     if (isPasswordReset) return 'reset-password';
     if (pathname === '/' || pathname === '/discover-recipes') return 'discover-recipes';
-    if (pathname === '/discover') return 'discover';
+   if (pathname === '/feed') return 'discover';
     if (pathname === '/recipes' || pathname === '/my-recipes') return 'my-recipes';
     if (pathname === '/add-recipe') return 'add-recipe';
     if (pathname === '/meal-planner') return 'meal-planner';
