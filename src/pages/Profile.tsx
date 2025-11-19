@@ -427,31 +427,46 @@ export function Profile() {
         </div>
 
         {posts.length === 0 ? (
-          <div className="text-center py-16 px-4">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg mb-4">
-              <UploadIcon className="w-10 h-10 text-white" />
+  // ... no posts view
+) : (
+  <div className="grid grid-cols-3 gap-1">
+    {posts.map(post => {
+      // Ensure Instagram images are proxied when displaying
+      let displayImageUrl = post.image_url;
+      if (displayImageUrl && !displayImageUrl.includes('image-proxy')) {
+        const needsProxy = displayImageUrl.includes('instagram.com') || 
+                          displayImageUrl.includes('cdninstagram.com') ||
+                          displayImageUrl.includes('fbcdn.net');
+        if (needsProxy) {
+          displayImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(displayImageUrl)}`;
+        }
+      }
+
+      return (
+        <div key={post.id} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
+          {displayImageUrl ? (
+            <img 
+              src={displayImageUrl} 
+              alt={post.title || 'Post'} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error('[Profile] Image failed to load:', displayImageUrl);
+                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
+              }}
+            />
+          ) : post.video_url ? (
+            <video src={post.video_url} className="w-full h-full object-cover" />
+          ) : null}
+          {post.title && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+              <p className="text-white text-xs font-semibold truncate">{post.title}</p>
             </div>
-            <p className="text-gray-900 font-semibold text-lg mb-2">No posts yet</p>
-            <p className="text-gray-500">Share your first recipe!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-1">
-            {posts.map(post => (
-              <div key={post.id} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
-                {post.image_url ? (
-                  <img src={post.image_url} alt={post.title || 'Post'} className="w-full h-full object-cover" />
-                ) : post.video_url ? (
-                  <video src={post.video_url} className="w-full h-full object-cover" />
-                ) : null}
-                {post.title && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                    <p className="text-white text-xs font-semibold truncate">{post.title}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
       </div>
 
       {/* EDIT DIALOG */}
