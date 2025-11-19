@@ -31,7 +31,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <div className="text-center mb-12 space-y-4">
           <div className="flex items-center justify-center gap-3 mb-2">
             <ChefHat className="w-12 h-12 text-emerald-600" strokeWidth={2} />
-            <h1 className="text-5xl font-bold text-gray-900">Recipe Prep</h1>
+            <h1 className="text-5xl font-bold text-gray-900">Meal Scrape</h1>
           </div>
           <p className="text-xl text-gray-600 font-medium">
             Discover, Save, Plan, Shop - All in One Place
