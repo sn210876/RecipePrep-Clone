@@ -179,7 +179,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
             Discover Amazing Recipes
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-Save thousands of recipes from all over <span className="font-bold text-blue-600">Social Media</span> & <span className="font-bold text-blue-600">Online</span>
+Save thousands of recipes from all over <span className="font-bold text-blue-600">Social Media</span> & the <span className="font-bold text-blue-600"> Web</span>
 </p>
         </div>
 
