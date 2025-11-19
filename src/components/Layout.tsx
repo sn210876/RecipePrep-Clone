@@ -141,7 +141,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             </Button>
             {!socialPages.includes(currentPage) && (
               <h2 className="text-xl font-semibold text-gray-900 capitalize">
-                {navItems.find(item => item.id === currentPage)?.label || 'Recipe Prep'}
+                {navItems.find(item => item.id === currentPage)?.label || 'Meal Scrape'}
               </h2>
             )}
             <div className="w-10" />
