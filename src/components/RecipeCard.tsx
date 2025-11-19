@@ -262,9 +262,18 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           </Button>
         )}
         {showReviewButton && socialPost && (
-          <div className="w-full">
-            {/* View Social Post button removed - view posts on Discover page */}
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-500 transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.location.href = `/post/${socialPost.id}`;
+            }}
+          >
+            <span className="text-base mr-2">💬</span>
+            See Reviews
+          </Button>
         )}
       </CardFooter>
     </Card>
