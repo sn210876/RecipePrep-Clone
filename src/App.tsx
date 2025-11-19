@@ -32,7 +32,6 @@ function AppContent() {
 
     // Direct deep link to a post → force Discover feed + modal
    if (path.match(/^\/post\/[a-f0-9-]{36}$/)) {
-    
       return 'discover';
     }
 
