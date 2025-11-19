@@ -60,22 +60,27 @@ function AppContent() {
 //input
  // ←←← ADD THIS WHOLE BLOCK ←←←
   useEffect(() => {
-    const path = window.location.pathname;
-    const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
-    if (match) {
-      const postId = match[1];
-      // We are on Discover or DiscoverRecipes — both accept sharedPostId prop
-      // Force the page to Discover (the social feed) and open the modal
-      handleNavigate('discover');
-      // Small delay so the Discover component is mounted first
-      setTimeout(() => {
-        // This custom event is listened to inside Discover.tsx (we’ll add it in step 2)
-        window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
-      }, 100);
-      // Clean the URL so it looks nice again
-      window.history.replaceState({}, '', '/discover');
-    }
-  }, []);
+  const path = window.location.pathname;
+  const match = path.match(/^\/post\/([a-f0-9-]{36})$/);
+  if (match) {
+    const postId = match[1];
+
+    // 1. Navigate to discover feed
+    handleNavigate('discover');
+
+    // 2. Fire event IMMEDIATELY + store fallback
+    window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
+    (window as any).__pendingSharedPostId = postId;
+
+    // 3. Clean up fallback after 2 seconds
+    setTimeout(() => {
+      delete (window as any).__pendingSharedPostId;
+    }, 2000);
+
+    // 4. Clean URL
+    window.history.replaceState({}, '', '/discover');
+  }
+}, []);
   // ←←← END OF BLOCK ←←←
 //output
   // Navigation function that updates URL
