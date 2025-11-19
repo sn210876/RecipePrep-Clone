@@ -27,7 +27,6 @@ function AppContent() {
   // Get current path
   const pathname = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
-  const hash = window.location.hash;
 
   // Handle password reset
   const isPasswordReset = searchParams.get('type') === 'recovery' || pathname === '/reset-password';
@@ -88,7 +87,7 @@ function AppContent() {
       case 'discover':
         return <Discover onNavigate={handleNavigate} />;
       case 'my-recipes':
-        return <MyRecipes onNavigate={handleNavigate} />;
+        return <MyRecipes />;
       case 'add-recipe':
         return <AddRecipe onNavigate={handleNavigate} />;
       case 'meal-planner':
@@ -100,7 +99,7 @@ function AppContent() {
       case 'upload':
         return <Upload onNavigate={handleNavigate} />;
       case 'profile':
-        return <Profile onNavigate={handleNavigate} />;
+        return <Profile />;
       case 'messages':
         return <Messages onBack={() => handleNavigate('discover')} />;
       case 'settings':
