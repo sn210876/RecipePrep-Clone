@@ -349,5 +349,3 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     </Dialog>
   );
 }
-
-
