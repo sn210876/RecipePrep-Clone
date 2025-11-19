@@ -758,8 +758,8 @@ useEffect(() => {
     const post = posts.find(p => p.id === sharePostId);
     if (!post) return;
 
-    const shareUrl = `https://mealscrape.com/post/${postId}`;
-const messageContent = `Check out this recipe: ${post.title || 'Shared post'}\n${shareUrl}`;
+    const shareUrl = `https://mealscrape.com/post/${sharePostId}`;
+    const messageContent = `Check out this recipe: ${post.title || 'Shared post'}\n${shareUrl}`;
 
     try {
       for (const followerId of selectedFollowers) {
