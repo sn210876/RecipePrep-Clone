@@ -120,23 +120,22 @@ async def extract_recipe(request: ExtractRequest):
     except Exception as e:
         print(f"[EXTRACT] recipe-scrapers failed: {str(e)}")
     
-    # AI HTML
-    print("[EXTRACT] Trying AI HTML parsing...")
-    try:
-        html = requests.get(url, headers=headers, timeout=20).text
-        ings, inst, notes = parse_with_ai(html)
-        if ings or inst:
-            print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
-            return {
-                "title": "AI Extracted Recipe", 
-                "ingredients": ings, 
-                "instructions": inst, 
-                "thumbnail": "",
-                "notes": f"AI parsed • {notes}"
-            }
-    except Exception as e:
-        print(f"[EXTRACT] AI HTML parsing failed: {str(e)}")
-    
+  # AI HTML
+print("[EXTRACT] Trying AI HTML parsing...")
+try:
+    html = requests.get(url, headers=headers, timeout=20).text
+    ings, inst, notes = parse_with_ai(html)
+    if ings or inst:
+        print(f"[EXTRACT] ✓ AI extracted: {len(ings)} ingredients, {len(inst)} instructions")
+        return {
+            "title": "AI Extracted Recipe", 
+            "ingredients": ings, 
+            "instructions": inst, 
+            "thumbnail": "",
+            "notes": f"AI parsed • {notes}"
+        }
+except Exception as e:
+    print(f"[EXTRACT] AI HTML parsing failed: {str(e)}")
     # VIDEOS WITH YOUR COOKIES
     print("[EXTRACT] Trying video extraction with yt-dlp...")
     ydl_opts = {
