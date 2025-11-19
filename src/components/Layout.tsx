@@ -29,7 +29,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
-const socialPages = ['discover', 'upload', 'profile', 'messages']; // 'discover' = feed page
+  const socialPages = ['discover', 'upload', 'profile', 'messages'];
+
   // REUSABLE FLOATING ICON BAR — ALWAYS ON TOP
   const FloatingNavIcons = () => (
     <div className="pointer-events-none fixed z-[500]">

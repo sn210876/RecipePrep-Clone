@@ -142,7 +142,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg mb-4">COMING SOON....</p>
+            <p className="text-gray-500 text-lg mb-4">Your cart is empty</p>
             <Button onClick={() => onNavigate?.('meal-planner')}>
               Add items from Meal Planner
             </Button>

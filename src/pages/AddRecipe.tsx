@@ -215,7 +215,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
 
   if (isImageUrl) {
-    toast.error('Please paste a recipe page URL, not a direct image link.');
+    toast.error('Please paste a recipe page URL, not a direct image link. Enter the recipe page URL instead.');
     return;
   }
 
@@ -227,11 +227,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     const data = await extractRecipeFromUrl(urlInput);
     setExtractedData(data);
     setShowPreview(true);
-    toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`, { id: 'extract' });
-    setIsExtracting(false);
+    toast.success(`Recipe extracted! Review and edit before saving.`, { id: 'extract' });
   } catch (error: any) {
     console.error('Extract error:', error);
     
+    // If server is waking up, auto-retry once after 30 seconds
     if (error.message.includes('waking up')) {
       toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
       
@@ -242,65 +242,57 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           setExtractedData(data);
           setShowPreview(true);
           toast.success(`Recipe extracted from ${platform}!`, { id: 'extract' });
+          setIsExtracting(false);
         } catch (retryError: any) {
           toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
-        } finally {
           setIsExtracting(false);
         }
-      }, 30000);
-    } else {
-      toast.error(error.message || 'Failed to extract recipe.', { id: 'extract' });
-      setIsExtracting(false);
+      }, 30000); // 30 seconds
+      return;
     }
+    
+    toast.error(error.message || 'Failed to extract recipe. Please try manual entry.', { id: 'extract' });
+    setIsExtracting(false);
   }
 };
-  // ✅ REMOVE THE FINALLY BLOCK ENTIRELY
 
   const handleAcceptExtraction = () => {
-  if (!extractedData) return;
+    if (!extractedData) return;
 
-  console.log('[AddRecipe] Accepting extraction');
-  console.log('[AddRecipe] Extracted ingredients:', extractedData.ingredients);
-  console.log('[AddRecipe] Extracted instructions:', extractedData.instructions);
-  console.log('[AddRecipe] Extracted imageUrl:', extractedData.imageUrl);
+    console.log('[AddRecipe] Accepting extraction');
+    console.log('[AddRecipe] Extracted ingredients:', extractedData.ingredients);
+    console.log('[AddRecipe] Extracted instructions:', extractedData.instructions);
 
-  setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
+    setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
 
-  // Ensure ingredients have proper structure
-  const normalizedIngredients = extractedData.ingredients.map(ing => ({
-    quantity: ing.quantity || '',
-    unit: ing.unit || 'cup',
-    name: ing.name || ''
-  }));
+    // Ensure ingredients have proper structure
+    const normalizedIngredients = extractedData.ingredients.map(ing => ({
+      quantity: ing.quantity || '',
+      unit: ing.unit || 'cup',
+      name: ing.name || ''
+    }));
 
-  console.log('[AddRecipe] Normalized ingredients:', normalizedIngredients);
-  setIngredients(normalizedIngredients);
+    console.log('[AddRecipe] Normalized ingredients:', normalizedIngredients);
+    setIngredients(normalizedIngredients);
 
-  setInstructions(extractedData.instructions);
-  setPrepTime(String(parseTimeValue(extractedData.prepTime)));
-  setCookTime(String(parseTimeValue(extractedData.cookTime)));
-  setServings(String(parseServingsValue(extractedData.servings)));
-  setCuisineType(extractedData.cuisineType);
-  setDifficulty(extractedData.difficulty);
-  setSelectedMealTypes(extractedData.mealTypes);
-  setSelectedDietaryTags(extractedData.dietaryTags);
-  
-  // FIX: Handle Instagram images properly - set the image URL directly
-  // The proxy will be applied later when creating the post
-  if (extractedData.imageUrl) {
-    console.log('[AddRecipe] Setting imageUrl from extraction:', extractedData.imageUrl);
+    setInstructions(extractedData.instructions);
+    setPrepTime(String(parseTimeValue(extractedData.prepTime)));
+    setCookTime(String(parseTimeValue(extractedData.cookTime)));
+    setServings(String(parseServingsValue(extractedData.servings)));
+    setCuisineType(extractedData.cuisineType);
+    setDifficulty(extractedData.difficulty);
+    setSelectedMealTypes(extractedData.mealTypes);
+    setSelectedDietaryTags(extractedData.dietaryTags);
     setImageUrl(extractedData.imageUrl);
-  }
-  
-  setVideoUrl(extractedData.videoUrl || '');
-  const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
-  setNotes(sourceNote + (extractedData.notes || ''));
+    setVideoUrl(extractedData.videoUrl || '');
+    const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
+    setNotes(sourceNote + (extractedData.notes || ''));
 
-  setShowPreview(false);
-  setExtractedData(null);
+    setShowPreview(false);
+    setExtractedData(null);
 
-  toast.success('Recipe loaded! Edit any details as needed.');
-};
+    toast.success('Recipe loaded! Edit any details as needed.');
+  };
 
   const handleCancelExtraction = () => {
     setShowPreview(false);
@@ -334,131 +326,105 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  console.log('[AddRecipe] Form submitted');
-  setShowErrors(true);
+    e.preventDefault();
+    console.log('[AddRecipe] Form submitted');
+    setShowErrors(true);
 
-  if (!validate()) {
-    console.log('[AddRecipe] Validation failed, errors:', errors);
-    toast.error('Please fill in all required fields');
-    return;
-  }
-
-  const validIngredients = ingredients.filter(ing => ing.name.trim());
-  const validInstructions = instructions.filter(inst => inst.trim());
-
-  console.log('[AddRecipe] Valid ingredients:', validIngredients.length);
-  console.log('[AddRecipe] Valid instructions:', validInstructions.length);
-
-  // FIX: Process image URL - proxy Instagram/CDN images
-  let finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
-  
-  // Check if it's an Instagram/CDN image that needs proxying
-  if (finalImageUrl && !uploadedImageUrl) {
-    const needsProxy = finalImageUrl.includes('instagram.com') || 
-                       finalImageUrl.includes('cdninstagram.com') ||
-                       finalImageUrl.includes('fbcdn.net');
-    
-    if (needsProxy) {
-      console.log('[AddRecipe] Instagram image detected, will proxy for post:', finalImageUrl);
-      // Keep original URL for recipe, will proxy when creating post
+    if (!validate()) {
+      console.log('[AddRecipe] Validation failed, errors:', errors);
+      toast.error('Please fill in all required fields');
+      return;
     }
-  }
 
-  const newRecipe = {
-    title: title.trim(),
-    ingredients: validIngredients,
-    instructions: validInstructions,
-    prepTime: parseTimeValue(prepTime),
-    cookTime: parseTimeValue(cookTime),
-    servings: parseServingsValue(servings),
-    tags: [...selectedMealTypes, ...selectedDietaryTags],
-    cuisineType,
-    difficulty,
-    dietaryTags: selectedDietaryTags,
-    mealType: selectedMealTypes,
-    imageUrl: finalImageUrl,
-    videoUrl: videoUrl.trim() || undefined,
-    sourceUrl: urlInput.trim() || undefined,
-    notes: notes.trim() || undefined,
-    isSaved: true
-  };
+    const validIngredients = ingredients.filter(
+      ing => ing.name.trim()
+    );
+    const validInstructions = instructions.filter(inst => inst.trim());
 
-  console.log('[AddRecipe] Creating recipe:', newRecipe);
+    console.log('[AddRecipe] Valid ingredients:', validIngredients.length);
+    console.log('[AddRecipe] Valid instructions:', validInstructions.length);
 
-  try {
-    const { createRecipe } = await import('@/services/recipeService');
-    console.log('[AddRecipe] Calling createRecipe...');
-    const createdRecipe = await createRecipe(newRecipe);
-    console.log('[AddRecipe] Recipe created:', createdRecipe);
+    // Use uploaded image URL if available, otherwise use the URL field
+    const finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
 
-    dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+    const newRecipe = {
+      title: title.trim(),
+      ingredients: validIngredients,
+      instructions: validInstructions,
+      prepTime: parseTimeValue(prepTime),
+      cookTime: parseTimeValue(cookTime),
+      servings: parseServingsValue(servings),
+      tags: [...selectedMealTypes, ...selectedDietaryTags],
+      cuisineType,
+      difficulty,
+      dietaryTags: selectedDietaryTags,
+      mealType: selectedMealTypes,
+      imageUrl: finalImageUrl,
+      videoUrl: videoUrl.trim() || undefined,
+      sourceUrl: urlInput.trim() || undefined,
+      notes: notes.trim() || undefined,
+      isSaved: true
+    };
+
+    console.log('[AddRecipe] Creating recipe:', newRecipe);
 
     try {
-      const { supabase } = await import('@/lib/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
+      const { createRecipe } = await import('@/services/recipeService');
+      console.log('[AddRecipe] Calling createRecipe...');
+      const createdRecipe = await createRecipe(newRecipe);
+      console.log('[AddRecipe] Recipe created:', createdRecipe);
 
-      if (user) {
-        // FIX: Properly handle Instagram images for social posts
-        let postImageUrl = null;
-        
-        if (uploadedImageUrl) {
-          // User uploaded their own image
-          postImageUrl = uploadedImageUrl;
-          console.log('[AddRecipe] Using uploaded image:', postImageUrl);
-        } else if (imageUrl.trim()) {
-          // External URL - check if it needs proxying
-          const needsProxy = imageUrl.includes('instagram.com') || 
-                            imageUrl.includes('cdninstagram.com') ||
-                            imageUrl.includes('fbcdn.net');
-          
-          if (needsProxy) {
-            // Proxy Instagram/Facebook CDN images
-            const cleanUrl = imageUrl.replace(/&amp;/g, '&');
-            postImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
-            console.log('[AddRecipe] Proxying Instagram image:', postImageUrl);
+      dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          // Use uploaded image URL directly, otherwise process external URL
+          const postImageUrl = uploadedImageUrl
+            ? uploadedImageUrl
+            : (imageUrl.trim()
+              ? (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')
+                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`
+                : imageUrl.trim())
+              : null);
+
+          console.log('[AddRecipe] Creating social post with image:', postImageUrl);
+
+          const { error: postError } = await supabase.from('posts').insert({
+            user_id: user.id,
+            title: title.trim(),
+            image_url: postImageUrl,
+            video_url: videoUrl.trim() || null,
+            caption: notes.trim() || 'Check out my recipe!',
+            recipe_url: videoUrl.trim() || urlInput.trim() || null,
+            recipe_id: createdRecipe.id,
+          });
+
+          if (postError) {
+            console.error('[AddRecipe] Failed to create social post:', postError);
+            toast.success('Recipe created successfully!');
           } else {
-            // Use URL directly for other sources
-            postImageUrl = imageUrl.trim();
-            console.log('[AddRecipe] Using external image directly:', postImageUrl);
+            console.log('[AddRecipe] Social post created successfully');
+            toast.success('Recipe created and posted to your profile!');
           }
-        }
-
-        console.log('[AddRecipe] Creating social post with image:', postImageUrl);
-
-        const { error: postError } = await supabase.from('posts').insert({
-          user_id: user.id,
-          title: title.trim(),
-          image_url: postImageUrl,
-          video_url: videoUrl.trim() || null,
-          caption: notes.trim() || 'Check out my recipe!',
-          recipe_url: videoUrl.trim() || urlInput.trim() || null,
-          recipe_id: createdRecipe.id,
-        });
-
-        if (postError) {
-          console.error('[AddRecipe] Failed to create social post:', postError);
-          toast.success('Recipe created successfully!');
         } else {
-          console.log('[AddRecipe] Social post created successfully');
-          toast.success('Recipe created and posted to your profile!');
+          toast.success('Recipe created successfully!');
         }
-      } else {
+      } catch (postError) {
+        console.error('[AddRecipe] Failed to create social post:', postError);
         toast.success('Recipe created successfully!');
       }
-    } catch (postError) {
-      console.error('[AddRecipe] Failed to create social post:', postError);
-      toast.success('Recipe created successfully!');
-    }
 
-    if (onNavigate) {
-      onNavigate('my-recipes');
+      if (onNavigate) {
+        onNavigate('my-recipes');
+      }
+    } catch (error: any) {
+      console.error('[AddRecipe] Failed to create recipe:', error);
+      const errorMessage = error?.message || 'Failed to create recipe. Please try again.';
+      toast.error(errorMessage);
     }
-  } catch (error: any) {
-    console.error('[AddRecipe] Failed to create recipe:', error);
-    const errorMessage = error?.message || 'Failed to create recipe. Please try again.';
-    toast.error(errorMessage);
-  }
   };
 
   return (
@@ -511,18 +477,15 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 )}
               </Button>
             </div>
- <div className="mt-3 space-y-1">
+            <div className="mt-3 space-y-1">
   <p className="text-xs text-emerald-600 font-bold">
-    NOW WORKS: All Recipes, Blogs.
+    NOW WORKS: All Recipes, Blogs. For Instagram · TikTok, may need revising.
   </p>
-  <p className="text-xs text-orange-600 font-normal">
-    Instagram → If video has no ingredients in description, then please manually update
+  <p className="text-xs text-red-600 font-bold">
+    YouTube → Currently unstable (working on fix)
   </p>
-  <p className="text-xs text-orange-600 font-normal">
-    TikTok → If video has no ingredients in description, then please manually update
-  </p>
-  <p className="text-xs text-orange-600 font-normal">
-    YouTube → Coming Soon...
+ <p className="text-xs text-red-600 font-bold">
+    Videos include transcript — ingredients may need manual grouping
   </p>
 </div>
           </CardContent>
@@ -578,12 +541,12 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               </div>
 
               {(uploadedImageUrl || imageUrl) && (
-  <div className="space-y-2">
-    <div className="relative w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
-      <img
-        src={uploadedImageUrl || imageUrl}
-        alt={title || 'Recipe'}
-        className="w-full h-full object-cover"
+                <div className="space-y-2">
+                  <div className="relative w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
+                    <img
+                      src={uploadedImageUrl || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl.replace(/&amp;/g, '&'))}`}
+                      alt={title || 'Recipe'}
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         console.error('[AddRecipe] Image failed to load:', uploadedImageUrl || imageUrl);
                         const parent = (e.target as HTMLImageElement).parentElement;
@@ -986,12 +949,12 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             {extractedData && (
               <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
                 <div className="space-y-6 py-4">
-                 {extractedData.imageUrl && (
-  <div className="relative w-48 h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
-    <img
-      src={extractedData.imageUrl}
-      alt={extractedData.title}
-      className="w-full h-full object-cover"
+                  {extractedData.imageUrl && (
+                    <div className="relative w-48 h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
+                      <img
+                        src={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(extractedData.imageUrl.replace(/&amp;/g, '&'))}`}
+                        alt={extractedData.title}
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           console.error('[Preview] Image failed to load:', extractedData.imageUrl);
                           const parent = (e.target as HTMLImageElement).parentElement;
