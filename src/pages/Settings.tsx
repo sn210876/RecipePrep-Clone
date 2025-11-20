@@ -447,7 +447,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
                       <Camera className="w-5 h-5 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">From Photos</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">From Photos - Feature Coming Soon...</h3>
                   </div>
 
                   <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
