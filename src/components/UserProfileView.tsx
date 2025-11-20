@@ -446,31 +446,94 @@ const handleDeleteComment = async (commentId: string) => {
             )}
 
             {/* DELETE BUTTON - only for post owner */}
-            {currentUserId === selectedPost.user_id && (
-              <button
-                onClick={async () => {
-                  if (!confirm("Delete this post?")) return;
+           {selectedPostId && (() => {
+    const selectedPost = userPosts.find(p => p.id === selectedPostId);
+    const canEdit = selectedPost && currentUserId && (
+      currentUserId === selectedPost.user_id
+    );
 
-                  const { error } = await supabase
-                    .from("posts")
-                    .delete()
-                    .eq("id", selectedPostId)
-                    .eq("user_id", currentUserId);
+    if (!selectedPost) return null;
 
-                  if (error) {
-                    toast.error("Failed to delete post");
-                  } else {
-                    toast.success("Post deleted");
-                    setSelectedPostId(null);
-                    if (onRefresh) onRefresh();
-                  }
-                }}
-                className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 z-[70]"
-                title="Delete post"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            )}
+    return (
+      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+        <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full z-[60]">
+          
+          {/* COMMENT MODAL */}
+          <div className="relative z-[50]">
+            <CommentModal
+              postId={selectedPostId}
+              isOpen
+              onClose={() => setSelectedPostId(null)}
+            />
+          </div>
+
+          {/* Back Arrow - Always visible */}
+          <button
+            onClick={() => setSelectedPostId(null)}
+            className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full shadow hover:bg-black/70 z-[100]"
+            title="Close"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          {/* EDIT BUTTON - only for post owner */}
+          {canEdit && (
+            <button
+              onClick={() => {
+                const newCaption = prompt("Edit your caption:");
+                if (!newCaption) return;
+
+                supabase
+                  .from("posts")
+                  .update({ caption: newCaption })
+                  .eq("id", selectedPostId)
+                  .eq("user_id", currentUserId)
+                  .then(({ error }) => {
+                    if (error) toast.error("Failed to update post");
+                    else {
+                      toast.success("Post updated");
+                      if (onRefresh) onRefresh();
+                    }
+                  });
+              }}
+              className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700 z-[100]"
+              title="Edit post"
+            >
+              ✏️
+            </button>
+          )}
+
+          {/* DELETE BUTTON - only for post owner */}
+          {canEdit && (
+            <button
+              onClick={async () => {
+                if (!confirm("Delete this post?")) return;
+
+                const { error } = await supabase
+                  .from("posts")
+                  .delete()
+                  .eq("id", selectedPostId)
+                  .eq("user_id", currentUserId);
+
+                if (error) {
+                  toast.error("Failed to delete post");
+                } else {
+                  toast.success("Post deleted");
+                  setSelectedPostId(null);
+                  if (onRefresh) onRefresh();
+                }
+              }}
+              className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 z-[100]"
+              title="Delete post"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
+
+        </div>
+      </div>
+    );
+  })()}
 
             {/* COMMENT MODAL */}
             <div className="relative z-[50]">
