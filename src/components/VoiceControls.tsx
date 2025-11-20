@@ -3,7 +3,8 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Mic, MicOff, Volume2, HelpCircle, Check, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
-
+const SpeechRecognitionAPI =
+  (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 interface VoiceControlsProps {
   onCommand: (command: VoiceCommand) => void;
   isActive: boolean;
