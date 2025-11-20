@@ -114,10 +114,10 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
     try {
       const userId = localStorage.getItem('userId') || generateUserId();
       localStorage.setItem('userId', userId);
-      setForwardingEmail(`user-${userId.substring(0, 8)}@recipeprep.app`);
+      setForwardingEmail(`user-${userId.substring(0, 8)}@mealscrape.app`);
     } catch (error) {
       console.error('Error initializing user:', error);
-      setForwardingEmail('user-demo123@recipeprep.app');
+      setForwardingEmail('user-demo123@mealscrape.app');
     } finally {
       setLoading(false);
     }
@@ -530,7 +530,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                   <div>
                     <h4 className="font-semibold text-slate-900 mb-2">Pro Tip</h4>
                     <p className="text-sm text-slate-700 leading-relaxed">
-                      Save your forwarding email as a contact in your phone for quick access. You can also set up auto-forwarding rules in your email app to automatically send recipes from specific senders or subjects to your RecipePrep inbox.
+                      Save your forwarding email as a contact in your phone for quick access. You can also set up auto-forwarding rules in your email app to automatically send recipes from specific senders or subjects to your Meal Scrape inbox.
                     </p>
                   </div>
                 </div>
