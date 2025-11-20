@@ -310,22 +310,29 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   };
 
   // *** DELETE MESSAGE ***
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!currentUserId) return;
+ const handleDeleteMessage = async (messageId: string) => {
+  if (!currentUserId) return;
 
-    setMessages(prev => prev.filter(m => m.id !== messageId));
+  // Optimistic delete
+  setMessages(prev => prev.filter(m => m.id !== messageId));
 
-    const { error } = await supabase
-      .from('direct_messages')
-      .delete()
-      .eq('id', messageId)
-      .eq('sender_id', currentUserId);
+  const { error } = await supabase
+    .from('direct_messages')
+    .delete()
+    .eq('id', messageId)
+    .eq('sender_id', currentUserId); // Security: only delete your own
 
-    if (error) {
-      console.error('Error deleting message:', error);
-      toast.error('Failed to delete message');
+  if (error) {
+    console.error('Failed to delete message:', error);
+    toast.error('Could not delete message');
+    // Optionally re-fetch messages if delete fails
+    if (selectedConversation) {
+      loadMessages(selectedConversation.id);
     }
-  };
+  } else {
+    toast.success('Message deleted');
+  }
+};
 
   if (loading) {
     return (
