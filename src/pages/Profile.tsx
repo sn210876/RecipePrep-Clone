@@ -690,14 +690,30 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         </DialogContent>
       </Dialog>
 
-      {selectedPostId && (
-        <CommentModal
-          postId={selectedPostId}
-          isOpen={!!selectedPostId}
-          onClose={() => setSelectedPostId(null)}
-          onCommentPosted={() => window.location.reload()}
-        />
-      )}
+     {selectedPostId && (
+  <CommentModal
+    postId={selectedPostId}
+    isOpen={!!selectedPostId}
+    onClose={() => setSelectedPostId(null)}
+    onCommentPosted={() => window.location.reload()}
+    // ADD THESE 3 LINES
+    isOwnPost={currentUserId === posts.find(p => p.id === selectedPostId)?.user_id}
+    isAdmin={isUserAdmin}
+    onEditPost={() => {
+      const post = posts.find(p => p.id === selectedPostId);
+      if (post) {
+        setEditingPost({
+          id: post.id,
+          title: post.title || '',
+          caption: post.caption || '',
+          recipeUrl: post.recipe_url || '',
+          photoUrl: post.image_url || post.video_url || '',
+        });
+      }
+      setSelectedPostId(null); // close the modal
+    }}
+  />
+)}
     </div>
   );
 }
