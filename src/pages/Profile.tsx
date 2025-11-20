@@ -310,34 +310,66 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   };
 
   const handleEditProfile = async () => {
-    if (!currentUserId) return;
-    const lines = newBio.trim().split('\n');
-    if (lines.length > 3) {
-      toast.error('Maximum 3 lines allowed');
-      return;
-    }
-    if (lines.some(line => line.length > 40)) {
-      toast.error('Maximum 40 characters per line');
-      return;
-    }
-    const updates: any = {};
-    if (newUsername.trim() && newUsername.trim() !== profile?.username) updates.username = newUsername.trim();
-    if (newBio.trim() !== (profile?.bio || '').trim()) updates.bio = newBio.trim() || null;
-    if (newLink.trim() !== (profile?.link || '').trim()) updates.link = newLink.trim() || null;
-    if (Object.keys(updates).length > 0) {
-      const { error } = await supabase.from('profiles').update(updates).eq('id', currentUserId);
-      if (error) {
+  if (!currentUserId) return;
+
+  // Validate username
+  const usernameValidationError = validateUsername(newUsername);
+  if (usernameValidationError) {
+    setUsernameError(usernameValidationError);
+    toast.error(usernameValidationError);
+    return;
+  }
+  setUsernameError(null);
+
+  // Bio validation
+  const lines = newBio.trim().split('\n');
+  if (lines.length > 3) {
+    toast.error('Maximum 3 lines allowed');
+    return;
+  }
+  if (lines.some(line => line.length > 40)) {
+    toast.error('Maximum 40 characters per line');
+    return;
+  }
+
+  const updates: any = {};
+  const trimmedUsername = newUsername.trim();
+
+  if (trimmedUsername !== profile?.username) {
+    updates.username = trimmedUsername;
+  }
+  if (newBio.trim() !== (profile?.bio || '').trim()) {
+    updates.bio = newBio.trim() || null;
+  }
+  if (newLink.trim() !== (profile?.link || '').trim()) {
+    updates.link = newLink.trim() || null;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', currentUserId);
+
+    if (error) {
+      if (error.message.includes('profiles_username_key')) {
+        toast.error('Username already taken');
+      } else {
         toast.error('Failed to update profile');
-        return;
       }
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
-      toast.success('Profile updated!');
-      if (updates.username) {
-        window.history.replaceState({}, '', `/profile/${updates.username}`);
-      }
+      return;
     }
-    setEditingProfile(false);
-  };
+
+    setProfile(prev => prev ? { ...prev, ...updates } : null);
+    toast.success('Profile updated!');
+
+    if (updates.username) {
+      window.history.replaceState({}, '', `/profile/${updates.username}`);
+    }
+  }
+
+  setEditingProfile(false);
+};
 
   if (loading) {
     return (
