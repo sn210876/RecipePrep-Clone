@@ -188,14 +188,14 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Discover Amazing Recipes
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-These recipes have been selected from all over <span className="font-bold text-blue-600">Social Media</span> & the <span className="font-bold text-blue-600"> Web</span>
+  Discover Amazing Recipes
+</h1>
+<p className="text-base text-gray-600 max-w-2xl mx-auto mb-2">
+  Curated from across <span className="font-semibold text-blue-600">social media</span> and the <span className="font-semibold text-blue-600">web</span>
 </p> 
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-So let's <span className="font-bold text-blue-600">save a recipe</span>, <span className="font-bold text-blue-600">   add a recipe to the list, and then go shopping!</span>
-</p> 
+<p className="text-sm text-gray-500 max-w-2xl mx-auto">
+  Save recipes • Build your list • Start shopping
+</p>
         </div>
 
         <div className="mb-12 space-y-6">
