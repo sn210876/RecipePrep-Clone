@@ -697,29 +697,51 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         </DialogContent>
       </Dialog>
 
-     {selectedPostId && (
-  <CommentModal
-    postId={selectedPostId}
-    isOpen={!!selectedPostId}
-    onClose={() => setSelectedPostId(null)}
-    onCommentPosted={() => window.location.reload()}
-    // ADD THESE 3 LINES
-    isOwnPost={currentUserId === posts.find(p => p.id === selectedPostId)?.user_id}
-    isAdmin={isUserAdmin}
-    onEditPost={() => {
-      const post = posts.find(p => p.id === selectedPostId);
-      if (post) {
-        setEditingPost({
-          id: post.id,
-          title: post.title || '',
-          caption: post.caption || '',
-          recipeUrl: post.recipe_url || '',
-          photoUrl: post.image_url || post.video_url || '',
-        });
-      }
-      setSelectedPostId(null); // close the modal
-    }}
-  />
+    {selectedPostId && (
+  <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
+    <DialogContent className="max-w-lg p-0 overflow-hidden bg-black">
+      {/* TOP BAR: Back + Edit Button */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <button
+          onClick={() => setSelectedPostId(null)}
+          className="p-2 hover:bg-white/10 rounded-full transition"
+        >
+          <ArrowLeft className="w-6 h-6 text-white" />
+        </button>
+
+        {/* EDIT BUTTON – ONLY ON OWN POST */}
+        {currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
+          <button
+            onClick={() => {
+              const post = posts.find(p => p.id === selectedPostId);
+              if (post) {
+                setEditingPost({
+                  id: post.id,
+                  title: post.title || '',
+                  caption: post.caption || '',
+                  recipeUrl: post.recipe_url || '',
+                  photoUrl: post.image_url || post.video_url || '',
+                });
+              }
+              setSelectedPostId(null);
+            }}
+            className="p-2 hover:bg-orange-500/20 rounded-full transition group"
+          >
+            <Edit3 className="w-5 h-5 text-white group-hover:text-orange-400" />
+          </button>
+        )}
+      </div>
+
+      {/* Reuse your existing CommentModal content here if you want */}
+      {/* Or just keep it simple for now */}
+      <CommentModal
+        postId={selectedPostId}
+        isOpen={true}
+        onClose={() => setSelectedPostId(null)}
+        onCommentPosted={() => window.location.reload()}
+      />
+    </DialogContent>
+  </Dialog>
 )}
     </div>
   );
