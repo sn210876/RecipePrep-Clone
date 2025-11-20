@@ -787,9 +787,25 @@ export function Profile({ username: targetUsername }: ProfileProps) {
       </Dialog>
 {selectedPostId && (() => {
   const selectedPost = posts.find(p => p.id === selectedPostId);
-  const canEdit = selectedPost && currentUserId && (
+  
+  // Early return if post not found
+  if (!selectedPost) {
+    console.log('❌ Post not found:', selectedPostId);
+    return null;
+  }
+
+  // Check edit permission
+  const canEdit = currentUserId && (
     currentUserId === selectedPost.user_id || isUserAdmin
   );
+
+  console.log('🔍 Debug info:', {
+    postId: selectedPostId,
+    postUserId: selectedPost.user_id,
+    currentUserId: currentUserId,
+    isUserAdmin: isUserAdmin,
+    canEdit: canEdit
+  });
 
   return (
     <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
@@ -813,6 +829,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
             <div className="flex gap-2">
               <button
                 onClick={() => {
+                  console.log('✏️ Edit clicked');
                   if (selectedPost) {
                     setEditingPost({
                       id: selectedPost.id,
@@ -824,7 +841,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                   }
                   setSelectedPostId(null);
                 }}
-                className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
+                className="pointer-events-auto p-3 bg-orange-500 backdrop-blur-md hover:bg-orange-600 rounded-full transition-all shadow-lg"
                 title="Edit post"
               >
                 <Edit3 className="w-5 h-5 text-white" />
@@ -832,10 +849,11 @@ export function Profile({ username: targetUsername }: ProfileProps) {
 
               <button
                 onClick={() => {
+                  console.log('🗑️ Delete clicked');
                   setDeletePostId(selectedPostId);
                   setSelectedPostId(null);
                 }}
-                className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-red-600/70 rounded-full transition-all shadow-lg"
+                className="pointer-events-auto p-3 bg-red-500 backdrop-blur-md hover:bg-red-600 rounded-full transition-all shadow-lg"
                 title="Delete post"
               >
                 <Trash2 className="w-5 h-5 text-white" />
