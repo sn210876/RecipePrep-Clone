@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3 } from 'lucide-react';
+import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3, MoreVertical } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { Input } from '../components/ui/input';
@@ -9,6 +9,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { CommentModal } from '../components/CommentModal';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
   if (trimmed.length === 0) return 'Username required';
@@ -675,25 +676,62 @@ export function Profile({ username: targetUsername }: ProfileProps) {
               return (
                 <div
                   key={post.id}
-                  className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative"
-                  onClick={() => setSelectedPostId(post.id)}
+                  className="aspect-square bg-gray-100 overflow-hidden relative group"
                 >
-                  {displayImageUrl ? (
-                    <img
-                      src={displayImageUrl}
-                      alt={post.title || 'Post'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        console.error('[Profile] Image failed to load:', displayImageUrl);
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
-                      }}
-                    />
-                  ) : post.video_url ? (
-                    <video src={post.video_url} className="w-full h-full object-cover" />
-                  ) : null}
-                  {post.title && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                      <p className="text-white text-xs font-semibold truncate">{post.title}</p>
+                  <div onClick={() => setSelectedPostId(post.id)} className="cursor-pointer hover:opacity-90 w-full h-full">
+                    {displayImageUrl ? (
+                      <img
+                        src={displayImageUrl}
+                        alt={post.title || 'Post'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('[Profile] Image failed to load:', displayImageUrl);
+                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
+                        }}
+                      />
+                    ) : post.video_url ? (
+                      <video src={post.video_url} className="w-full h-full object-cover" />
+                    ) : null}
+                    {post.title && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                        <p className="text-white text-xs font-semibold truncate">{post.title}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {(isOwnProfile || isUserAdmin) && (
+                    <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1.5 bg-black/50 hover:bg-black/70 rounded-full backdrop-blur-sm">
+                            <MoreVertical className="w-4 h-4 text-white" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingPost({
+                                id: post.id,
+                                title: post.title || '',
+                                caption: post.caption || '',
+                                recipeUrl: post.recipe_url || '',
+                                photoUrl: post.image_url || post.video_url || ''
+                              });
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <Edit3 className="w-4 h-4 mr-2" />
+                            Edit post
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setDeletePostId(post.id)}
+                            className="cursor-pointer text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete post
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   )}
                 </div>
