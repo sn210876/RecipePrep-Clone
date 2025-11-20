@@ -17,19 +17,20 @@ CRITICAL RULES:
 1. If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
 2. Extract EVERY SINGLE ingredient listed in the recipe - do not skip any.
 3. Extract EVERY SINGLE instruction step - include all details and sub-steps.
-4. Preserve quantities, measurements, and cooking times exactly.
+4. Preserve quantities, measurements, and cooking times EXACTLY as written - do not convert units.
 5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include all of them.
 6. If there are detailed preparation steps, include them all.
-7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed).
-8. Extract yield/servings information.
+7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed). If prep time includes proofing/rising time, add it to prep time.
+8. Extract yield/servings information EXACTLY - count the number of servings/rolls/pieces accurately.
+9. DO NOT convert metric to imperial or vice versa - keep original units (g, kg, cups, etc).
 
 Return ONLY valid JSON in this exact format:
 {
-  "ingredients": ["1 cup flour", "2 eggs", "1 tsp salt", ...],
+  "ingredients": ["520g bread flour", "2 eggs", "1 tsp salt", ...],
   "instructions": ["Step 1 with full details", "Step 2 with full details", ...],
-  "prep_time": 15,
-  "cook_time": 120,
-  "yield": "4-5 servings",
+  "prep_time": 100,
+  "cook_time": 25,
+  "yield": "12 rolls",
   "notes": "Any cooking tips or notes"
 }
 

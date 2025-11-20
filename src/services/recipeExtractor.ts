@@ -89,16 +89,45 @@ if (isSocial) {
     // Normalize ingredients
     const ingredients = (data.ingredients || []).map((ing: string) => {
       const cleaned = decodeHtmlEntities(ing.trim());
-      if (!cleaned) return { quantity: '', unit: 'cup', name: '' };
+      if (!cleaned) return { quantity: '', unit: '', name: '' };
 
-      const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)\s*/);
+      const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
       const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
       const quantity = normalizeQuantity(rawQty);
 
       let rest = cleaned.slice(rawQty.length).trim();
-      const unitMatch = rest.match(/^(cup|cups|tbsp|tablespoon|tsp|teaspoon|oz|ounce|lb|pound|g|gram|kg|ml|l|pinch|dash)\s+/i);
-      const unit = unitMatch ? unitMatch[1].toLowerCase().replace(/s$/, '') : 'cup';
-      if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
+
+      const unitMatch = rest.match(/^(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|kilograms?|ml|milliliters?|l|liters?|pinch|dash|piece|pieces|clove|cloves|slice|slices|can|cans)\s+/i);
+
+      let unit = '';
+      if (unitMatch) {
+        const matchedUnit = unitMatch[1].toLowerCase();
+        rest = rest.slice(unitMatch[0].length).trim();
+
+        if (matchedUnit === 'g' || matchedUnit === 'gram' || matchedUnit === 'grams') {
+          unit = 'g';
+        } else if (matchedUnit === 'kg' || matchedUnit === 'kilogram' || matchedUnit === 'kilograms') {
+          unit = 'kg';
+        } else if (matchedUnit === 'ml' || matchedUnit === 'milliliter' || matchedUnit === 'milliliters') {
+          unit = 'ml';
+        } else if (matchedUnit === 'l' || matchedUnit === 'liter' || matchedUnit === 'liters') {
+          unit = 'l';
+        } else if (matchedUnit.startsWith('cup')) {
+          unit = 'cup';
+        } else if (matchedUnit.startsWith('tbsp') || matchedUnit.startsWith('tablespoon')) {
+          unit = 'tbsp';
+        } else if (matchedUnit.startsWith('tsp') || matchedUnit.startsWith('teaspoon')) {
+          unit = 'tsp';
+        } else if (matchedUnit === 'oz' || matchedUnit.startsWith('ounce')) {
+          unit = 'oz';
+        } else if (matchedUnit.startsWith('lb') || matchedUnit.startsWith('pound')) {
+          unit = 'lb';
+        } else {
+          unit = matchedUnit;
+        }
+      } else {
+        unit = quantity ? 'piece' : '';
+      }
 
       return { quantity, unit, name: rest || cleaned };
     });
@@ -160,14 +189,50 @@ if (isSocial) {
 
   const ingredients = (data.ingredients || []).map((ing: string) => {
     const cleaned = decodeHtmlEntities(ing.trim());
+
     const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
     const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
     const quantity = normalizeQuantity(rawQty);
+
     let rest = cleaned.slice(rawQty.length).trim();
-    const unitMatch = rest.match(/^(cup|cups|tbsp|tsp|oz|g|kg|ml|l|pinch|dash)\s+/i);
-    const unit = unitMatch ? unitMatch[1].toLowerCase() : 'cup';
-    if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-    return { quantity, unit, name: rest || cleaned };
+
+    const unitMatch = rest.match(/^(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|kilograms?|ml|milliliters?|l|liters?|pinch|dash|piece|pieces|clove|cloves|slice|slices|can|cans)\s+/i);
+
+    let unit = '';
+    if (unitMatch) {
+      const matchedUnit = unitMatch[1].toLowerCase();
+      rest = rest.slice(unitMatch[0].length).trim();
+
+      if (matchedUnit === 'g' || matchedUnit === 'gram' || matchedUnit === 'grams') {
+        unit = 'g';
+      } else if (matchedUnit === 'kg' || matchedUnit === 'kilogram' || matchedUnit === 'kilograms') {
+        unit = 'kg';
+      } else if (matchedUnit === 'ml' || matchedUnit === 'milliliter' || matchedUnit === 'milliliters') {
+        unit = 'ml';
+      } else if (matchedUnit === 'l' || matchedUnit === 'liter' || matchedUnit === 'liters') {
+        unit = 'l';
+      } else if (matchedUnit.startsWith('cup')) {
+        unit = 'cup';
+      } else if (matchedUnit.startsWith('tbsp') || matchedUnit.startsWith('tablespoon')) {
+        unit = 'tbsp';
+      } else if (matchedUnit.startsWith('tsp') || matchedUnit.startsWith('teaspoon')) {
+        unit = 'tsp';
+      } else if (matchedUnit === 'oz' || matchedUnit.startsWith('ounce')) {
+        unit = 'oz';
+      } else if (matchedUnit.startsWith('lb') || matchedUnit.startsWith('pound')) {
+        unit = 'lb';
+      } else {
+        unit = matchedUnit;
+      }
+    } else {
+      unit = quantity ? 'piece' : '';
+    }
+
+    return {
+      quantity,
+      unit,
+      name: rest || cleaned
+    };
   });
 
   return {
