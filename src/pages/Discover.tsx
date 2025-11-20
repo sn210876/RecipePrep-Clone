@@ -123,35 +123,37 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
   // Fixed: Listen for shared post events and check URL
   useEffect(() => {
-    const handleSharedPost = (e: any) => {
-      const postId = e.detail;
-      console.log('[Discover] Received shared post event:', postId);
-      if (postId) {
+     // FIXED: Deep linking for /post/:id — works on direct open, back button, and shared links
+  useEffect(() => {
+    const openPostFromUrl = () => {
+      const path = window.location.pathname;
+      const match = path.match(/^\/post\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i);
+      if (match) {
+        const postId = match[1];
+        console.log('[Discover] Opening shared post from URL:', postId);
         setCommentModalPostId(postId);
+        // Clean the URL so it doesn't stay as /post/xxx
+        window.history.replaceState({}, '', '/discover');
       }
     };
 
-    window.addEventListener('open-shared-post', handleSharedPost);
+    // Run on mount
+    openPostFromUrl();
 
-    // Fallback: if App.tsx dispatched before we mounted
-    if ((window as any).__pendingSharedPostId) {
-      console.log('[Discover] Found pending shared post ID:', (window as any).__pendingSharedPostId);
-      setCommentModalPostId((window as any).__pendingSharedPostId);
-      delete (window as any).__pendingSharedPostId;
-    }
+    // Run when user navigates back/forward or clicks a shared link
+    window.addEventListener('popstate', openPostFromUrl);
 
-    // Also check on first load (in case link was opened directly)
-    const path = window.location.pathname;
-    // Fixed regex: UUID format is xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    const match = path.match(/^\/post\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/);
-    if (match) {
-      console.log('[Discover] Found post ID in URL:', match[1]);
-      setCommentModalPostId(match[1]);
-      window.history.replaceState({}, '', '/discover');
-    }
+    // Still support your custom event (for internal sharing)
+    const handleSharedEvent = (e: any) => {
+      if (e.detail) {
+        setCommentModalPostId(e.detail);
+      }
+    };
+    window.addEventListener('open-shared-post', handleSharedEvent);
 
     return () => {
-      window.removeEventListener('open-shared-post', handleSharedPost);
+      window.removeEventListener('popstate', openPostFromUrl);
+      window.removeEventListener('open-shared-post', handleSharedEvent);
     };
   }, []);
 
