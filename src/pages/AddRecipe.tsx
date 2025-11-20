@@ -248,7 +248,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           const data = await extractRecipeFromUrl(urlInput);
           setExtractedData(data);
           setShowPreview(true);
-          toast.success(`Recipe extracted from ${platform}!`, { id: 'extract' });
+          toast.success(` `, { id: 'extract' });
         } catch (retryError: any) {
           toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
         } finally {
