@@ -452,12 +452,13 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 md:p-8">
-    <div className="min-h-screen flex items-center justify-center">
-  <div className="max-w-4xl w-full px-4">
-    <h1 className="text-4xl font-bold text-slate-900 text-center">
-      Create New Recipe
-    </h1>
+      <div className="max-w-4xl mx-auto px-4 pt-12">
+  <div className="text-center">
+    <h1 className="text-4xl font-bold text-slate-900 mb-2">Create New Recipe</h1>
+  </div>
 
+  {/* rest of your form */}
+</div>
           <p className="text-slate-600">See a recipe online you like, add it here for the community</p>
         </div>
 
