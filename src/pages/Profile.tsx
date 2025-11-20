@@ -803,7 +803,10 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
 
-        {(isOwnProfile || isUserAdmin) && currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
+      {(() => {
+  const post = posts.find(p => p.id === selectedPostId);
+  return (isOwnProfile || isUserAdmin) && post && currentUserId === post.user_id;
+})() && (
           <div className="flex gap-2">
             <button
               onClick={() => {
