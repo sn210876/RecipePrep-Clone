@@ -156,7 +156,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   };
 
 const FloatingNavIcons = () => (
-  <div className="pointer-events-none fixed inset-0 z-[500]">
+  <div className="pointer-events-none fixed z-[500]">
     <div className="pointer-events-auto fixed top-4 right-4">
       <TooltipProvider>
         <div className="flex items-center gap-3 bg-white/85 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/40 px-4 py-3">
