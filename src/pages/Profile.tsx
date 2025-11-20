@@ -701,7 +701,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
     <DialogContent className="max-w-lg p-0 overflow-hidden bg-black">
       {/* TOP BAR: Back + Edit Button */}
-   <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
+   <div className="absolute inset-x-0 top-0 z-[9999] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
   <button
     onClick={() => setSelectedPostId(null)}
     className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all"
