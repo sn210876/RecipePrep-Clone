@@ -697,14 +697,48 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         </DialogContent>
       </Dialog>
 
-  {selectedPostId && (
-  <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
-    <DialogContent className="max-w-lg p-0 overflow-hidden bg-black relative">
-      <CommentModal
-        postId={selectedPostId}
-        isOpen={true}
-        onClose={() => setSelectedPostId(null)}
-        onCommentPosted={() => window.location.reload()}
+ {selectedPostId && (
+  <>
+    {/* Back and Edit buttons - floating overlay */}
+    <div className="fixed inset-x-0 top-0 z-[99999] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
+      <button
+        onClick={() => setSelectedPostId(null)}
+        className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all"
+      >
+        <ArrowLeft className="w-6 h-6 text-white" />
+      </button>
+
+      {currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
+        <button
+          onClick={() => {
+            const post = posts.find(p => p.id === selectedPostId);
+            if (post) {
+              setEditingPost({
+                id: post.id,
+                title: post.title || '',
+                caption: post.caption || '',
+                recipeUrl: post.recipe_url || '',
+                photoUrl: post.image_url || post.video_url || '',
+              });
+            }
+            setSelectedPostId(null);
+          }}
+          className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all"
+        >
+          <Edit3 className="w-6 h-6 text-white" />
+        </button>
+      )}
+    </div>
+
+    {/* CommentModal renders its own Dialog */}
+    <CommentModal
+      postId={selectedPostId}
+      isOpen={true}
+      onClose={() => setSelectedPostId(null)}
+      onCommentPosted={() => window.location.reload()}
+    />
+  </>
+)}
       />
       
       {/* Move buttons here, AFTER CommentModal */}
