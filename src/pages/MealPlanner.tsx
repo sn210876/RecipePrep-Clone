@@ -25,7 +25,7 @@ import {
   Layers,
   Plus,
   Check,
-  PiggyBank
+  ShoppingCart
   Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
