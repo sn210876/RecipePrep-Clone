@@ -376,47 +376,46 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         {/* MESSAGES */}
         <div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
   <div className="space-y-1 py-4">
-    {messages.map((message) => (
+   // Inside your message rendering loop — REPLACE this part:
+{messages.map((message) => (
+  <div
+    key={message.id}
+    className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
+  >
+    <div className="relative group max-w-xs">
+      {/* Message Bubble */}
       <div
-        key={message.id}
-        // MODIFICATION 1: Align ALL messages to the right using 'justify-end'
-        className="flex justify-end"
+        className={`rounded-2xl px-4 py-2.5 text-sm leading-tight break-words ${
+          message.sender_id === currentUserId
+            ? 'bg-gray-200 text-gray-900'
+            : 'bg-orange-500 text-white'
+        }`}
       >
-        <div className="relative group">
-          {/* BUBBLE */}
-          <div
-            className={`w-48 rounded-2xl px-4 py-2 ${
-              message.sender_id === currentUserId
-                // MODIFICATION 2: Sender's message is DIMMER (e.g., lower opacity white/gray)
-                ? 'bg-gray-200 text-gray-900' // Use lower opacity on background
-                // MODIFICATION 2: Receiver's message is BRIGHTER (e.g., full opacity white/gray)
-                : 'bg-orange-500 bg-opacity-80 text-white' // Receiver message is the bright one
-            }`}
-          >
-            <p className="whitespace-pre-wrap break-words text-sm leading-tight">
-              {renderMessageContent(message.content)}
-            </p>
-            <span className="text-xs opacity-70 mt-1 block">
-              {new Date(message.created_at).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-          </div>
+        <p className="whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
+        <span className="text-xs opacity-70 mt-1 block">
+          {new Date(message.created_at).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </span>
+      </div>
 
-                  {/* DELETE BUTTON (ONLY FOR YOUR MESSAGES) */}
-                  {message.sender_id === currentUserId && (
-                    <button
-                      onClick={() => handleDeleteMessage(message.id)}
-                      className="absolute -top-2 -right-2 bg-white-500 text-white text-s px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      🗑️ 
-                    </button>
-                  )}
-
-                </div>
-              </div>
-            ))}
+      {/* DELETE BUTTON — Only for YOUR messages */}
+      {message.sender_id === currentUserId && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteMessage(message.id);
+          }}
+          className="absolute -top-2 -right-2 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg hover:bg-red-600 active:scale-95"
+          title="Delete message"
+        >
+          Trash
+        </button>
+      )}
+    </div>
+  </div>
+))}
             <div ref={messagesEndRef} />
           </div>
         </div>
