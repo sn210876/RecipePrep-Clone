@@ -722,48 +722,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     }
   };
 
-  const handleNativeShare = async (postId: string) => {
-  const post = posts.find(p => p.id === postId);
-  if (!post) return;
+  
 
-  const username = post.profiles?.username || 'someone';
-  const shareUrl = `${window.location.origin}/${username}?post=${postId}`;
-
-  const shareData = {
-    title: post.title || 'Check out this recipe on MealScrape!',
-    text: post.caption
-      ? `${post.caption}\n\nShared via MealScrape`
-      : 'I found this fire recipe on MealScrape!',
-    url: shareUrl,
-  };
-
-  // Native share (mobile)
-  if (navigator.share && navigator.canShare?.(shareData)) {
-    try {
-      await navigator.share(shareData);
-      toast.success('Shared successfully!');
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.error('Native share failed:', err);
-        fallbackCopy(shareUrl);
-      }
-    }
-  } else {
-    // Fallback: copy to clipboard
-    fallbackCopy(shareUrl);
-  }
-};
-
-const fallbackCopy = (url: string) => {
-  navigator.clipboard
-    .writeText(url)
-    .then(() => {
-      toast.success('Link copied to clipboard!');
-    })
-    .catch(() => {
-      toast.error('Failed to copy link');
-    });
-};
     if (navigator.share && navigator.canShare?.(shareData)) {
       try {
         await navigator.share(shareData);
