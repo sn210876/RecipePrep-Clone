@@ -698,7 +698,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                   <Label className="text-sm font-medium flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" />
                     Recipe Image
-                  </Label>
+                  </ShoppingCart>
                   <p className="text-xs text-slate-500 mt-1 mb-3">Upload your own image or paste a URL</p>
 
                   <div className="flex gap-2">
