@@ -974,13 +974,14 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           </div>
         ) : (
           <>
-            {posts.map(post => {
-              const isLiked = post.likes?.some(like => like.user_id === currentUserId);
-              const latestComments = post.comments?.slice(0, 2) || [];
-              const isOwnPost = post.user_id === currentUserId;
-
-              return (
-                <div key={post.id} className="bg-white border-b border-gray-200 mb-2 relative z-9999">
+           {posts.map(post => {
+  const isLiked = post.likes?.some(like => like.user_id === currentUserId);
+  const latestComments = post.comments?.slice(0, 2) || [];
+  const isOwnPost = post.user_id === currentUserId;
+  return (
+    <div key={post.id} className="flex flex-col min-h-0">
+      <div className="bg-white border-b border-gray-200 mb-2 flex flex-col">
+        {/* ← This is the only change: flex + flex-col */}
                   <div className="px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {post.profiles?.avatar_url ? (
