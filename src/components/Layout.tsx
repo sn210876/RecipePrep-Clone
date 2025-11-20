@@ -27,7 +27,6 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const navItems = [
     { id: 'discover-recipes', label: 'Discover Recipes', icon: ChefHat },
@@ -42,64 +41,67 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const socialPages = ['discover', 'upload', 'profile', 'messages'];
 
-  // Load user + avatar
+  // Load avatar + unread count + real-time listener
   useEffect(() => {
-    const loadUser = async () => {
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-        const { data } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
-        setAvatarUrl(data?.avatar_url || null);
-        loadUnreadCount(user.id);
-      }
+      if (!user) return;
+
+      // Load avatar
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+      setAvatarUrl(profile?.avatar_url || null);
+
+      // Initial unread count
+      await fetchUnreadCount(user.id);
+
+      // Real-time subscription
+      const channel = supabase
+        .channel('messages-layout')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'direct_messages',
+          },
+          () => fetchUnreadCount(user.id) // Just refetch on any change — simple & bulletproof
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
-    loadUser();
+
+    init();
   }, []);
 
-  // Load unread message count
-  const loadUnreadCount = async (userId: string) => {
+  const fetchUnreadCount = async (userId: string) => {
+    const { data: conversations } = await supabase
+      .from('conversations')
+      .select('id')
+      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
+
+    if (!conversations || conversations.length === 0) {
+      setUnreadCount(0);
+      return;
+    }
+
+    const convoIds = conversations.map(c => c.id);
+
     const { count } = await supabase
       .from('direct_messages')
       .select('*', { count: 'exact', head: true })
+      .in('conversation_id', convoIds)
       .eq('read', false)
-      .neq('sender_id', userId)
-      .in('conversation_id', 
-        supabase
-          .from('conversations')
-          .select('id')
-          .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-      );
+      .neq('sender_id', userId);
+
     setUnreadCount(count || 0);
   };
-
-  // Real-time listener for new messages
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    const channel = supabase
-      .channel('direct-messages')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'direct_messages',
-      }, (payload: any) => {
-        if (payload.new.sender_id !== currentUserId && !payload.new.read) {
-          setUnreadCount(prev => prev + 1);
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'direct_messages',
-      }, (payload: any) => {
-        if (payload.new.read && payload.old.read === false && payload.new.sender_id !== currentUserId) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [currentUserId]);
 
   const FloatingNavIcons = () => (
     <div className="pointer-events-none fixed z-[500]">
@@ -141,7 +143,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Sidebar */}
+      {/* Sidebar — unchanged */}
       <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
@@ -210,31 +212,35 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           {children}
         </main>
 
-        {/* Messages + Profile + Badge */}
+        {/* Messages + Profile + RED BADGE THAT ACTUALLY SHOWS */}
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
           <div className="pointer-events-auto max-w-lg mx-auto px-6 pb-6 flex justify-between items-end">
             <TooltipProvider>
-              {/* Messages with badge */}
+              {/* Messages */}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onNavigate('messages')}
-                    className={`relative transition-all duration-200 ${
-                      currentPage === 'messages'
-                        ? 'text-cyan-500 scale-110'
-                        : 'text-gray-500 hover:text-cyan-500 hover:scale-110 opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <MessageCircle className="w-10 h-10" strokeWidth={currentPage === 'messages' ? 2.8 : 2} />
+                  <div className="relative">
+                    <button
+                      onClick={() => onNavigate('messages')}
+                      className={`transition-all duration-200 ${
+                        currentPage === 'messages'
+                          ? 'text-cyan-500 scale-110'
+                          : 'text-gray-500 hover:text-cyan-500 hover:scale-110 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <MessageCircle className="w-10 h-10" strokeWidth={currentPage === 'messages' ? 2.8 : 2} />
+                    </button>
+
+                    {/* RED BADGE — ALWAYS VISIBLE WHEN >0 */}
                     {unreadCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
+                      <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center animate-pulse shadow-lg border-2 border-white">
                         {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
+                      </div>
                     )}
-                  </button>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="bg-gray-900 text-white">
-                  <p className="font-medium">Messages</p>
+                  <p className="font-medium">Messages {unreadCount > 0 && `(${unreadCount})`}</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -264,7 +270,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           </div>
         </div>
 
-        {/* Upload Button — 50% smaller + tooltip */}
+        {/* Upload Button — smaller */}
         {socialPages.includes(currentPage) && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
             <TooltipProvider>
