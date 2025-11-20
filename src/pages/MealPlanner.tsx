@@ -414,12 +414,12 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
 
   <div className="flex items-center gap-3">
     <Button
-      onClick={() => onNavigate?.('grocery-list')}
-      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg"
-    >
-      <ShoppingCart className="w-5 h-5 mr-2" />
-      Go to Grocery List
-    </Button>
+  onClick={() => onNavigate?.('grocery-list')}
+  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg"
+>
+  <ShoppingCart className="w-5 h-5 mr-2" />
+  Go to Grocery List
+</Button>
 
     <Button
       variant="destructive"
