@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
@@ -277,27 +277,37 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     }
   };
 
+  if (!post && loading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-lg h-[90vh] flex items-center justify-center p-0 z-[9999]">
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+            <p className="mt-4 text-gray-600">Loading post...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-<DialogContent className="max-w-lg h-[90vh] flex flex-col p-0 z-[9999]">
-        <DialogHeader className="px-4 py-3 border-b">
-          <DialogTitle>Post Details</DialogTitle>
-        </DialogHeader>
-
-        {/* Post Image */}
-        {post?.image_url && (
-          <div className="relative w-full aspect-square bg-gray-100">
-            <img
-              src={post.image_url}
-              alt={post.title || 'Post'}
-              className="w-full h-full object-cover"
-            />
-            {post.title && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-                <h3 className="text-white text-sm font-semibold">{post.title}</h3>
+      <DialogContent className="max-w-4xl w-full h-[90vh] p-0 z-[9999]">
+        <div className="flex h-full">
+          {/* Left Side - Image */}
+          <div className="w-1/2 bg-black flex items-center justify-center relative">
+            {post?.image_url ? (
+              <img
+                src={post.image_url}
+                alt={post.title || 'Post'}
+                className="max-w-full max-h-full object-contain"
+              />
+            ) : (
+              <div className="text-white text-center">
+                <p>No image available</p>
               </div>
             )}
-            {post.spotify_preview_url && (
+            {post?.spotify_preview_url && (
               <div className="absolute top-4 right-4 z-10">
                 <button
                   onClick={togglePlay}
@@ -313,124 +323,128 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               </div>
             )}
           </div>
-        )}
 
-        {/* Caption */}
-        {post?.caption && (
-          <div className="px-4 py-2 border-b">
-            <p className="text-sm text-gray-700">{post.caption}</p>
-          </div>
-        )}
-
-        {/* Ratings Section */}
-        <div className="px-4 py-3 border-b">
-          <h3 className="font-semibold mb-2">Ratings</h3>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((fire) => (
-                  <span
-                    key={fire}
-                    className={`text-xl ${
-                      fire <= averageRating
-                        ? 'opacity-100'
-                        : 'opacity-20 grayscale'
-                    }`}
-                  >🔥</span>
-                ))}
-              </div>
-              <span className="text-sm text-gray-600">
-                {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
-                {totalRatings > 0 && ` (${totalRatings} ${totalRatings === 1 ? 'rating' : 'ratings'})`}
-              </span>
+          {/* Right Side - Details, Ratings, Comments */}
+          <div className="w-1/2 flex flex-col bg-white">
+            {/* Header with title */}
+            <div className="px-4 py-3 border-b">
+              <h3 className="font-bold text-lg">{post?.title || 'Post'}</h3>
+              {post?.caption && (
+                <p className="text-sm text-gray-600 mt-1">{post.caption}</p>
+              )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700 font-medium">Your rating:</span>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((fire) => (
-                  <button
-                    key={fire}
-                    type="button"
-                    onClick={() => handleRatingClick(fire)}
-                    onMouseEnter={() => setHoverRating(fire)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    className="transition-transform hover:scale-110"
-                  >
-                    <span
-                      className={`text-2xl ${
-                        fire <= (hoverRating || userRating)
-                          ? 'opacity-100'
-                          : 'opacity-20 grayscale'
-                      }`}
-                    >🔥</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
-            </div>
-          ) : comments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No comments yet. Be the first to comment!
-            </div>
-          ) : (
-            comments.map(comment => (
-              <div key={comment.id} className="flex gap-3">
-                {comment.profiles?.avatar_url ? (
-                  <img
-                    src={comment.profiles.avatar_url}
-                    alt={comment.profiles.username}
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
-                    {comment.profiles?.username?.[0]?.toUpperCase()}
+            {/* Ratings Section */}
+            <div className="px-4 py-3 border-b">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((fire) => (
+                      <span
+                        key={fire}
+                        className={`text-xl ${
+                          fire <= averageRating
+                            ? 'opacity-100'
+                            : 'opacity-20 grayscale'
+                        }`}
+                      >🔥</span>
+                    ))}
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="bg-gray-100 rounded-2xl px-3 py-2">
-                    <button
-                      onClick={() => window.location.href = `/${comment.profiles?.username || 'user'}`}
-                      className="font-semibold text-sm hover:underline"
-                    >
-                      {comment.profiles?.username}
-                    </button>
-                    <p className="text-sm text-gray-700 break-words">{comment.text}</p>
+                  <span className="text-sm text-gray-600">
+                    {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
+                    {totalRatings > 0 && ` (${totalRatings} ${totalRatings === 1 ? 'rating' : 'ratings'})`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700 font-medium">Your rating:</span>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((fire) => (
+                      <button
+                        key={fire}
+                        type="button"
+                        onClick={() => handleRatingClick(fire)}
+                        onMouseEnter={() => setHoverRating(fire)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <span
+                          className={`text-2xl ${
+                            fire <= (hoverRating || userRating)
+                              ? 'opacity-100'
+                              : 'opacity-20 grayscale'
+                          }`}
+                        >🔥</span>
+                      </button>
+                    ))}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1 px-3">
-                    {new Date(comment.created_at).toLocaleDateString()}
-                  </p>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            </div>
 
-        <form onSubmit={handleSubmitComment} className="border-t px-4 py-3 flex gap-2">
-          <Input
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add a comment..."
-            disabled={submitting}
-            className="flex-1"
-          />
-          <Button
-            type="submit"
-            disabled={!newComment.trim() || submitting}
-            size="icon"
-            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
+            {/* Comments Section */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+                </div>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No comments yet. Be the first to comment!
+                </div>
+              ) : (
+                comments.map(comment => (
+                  <div key={comment.id} className="flex gap-3">
+                    {comment.profiles?.avatar_url ? (
+                      <img
+                        src={comment.profiles.avatar_url}
+                        alt={comment.profiles.username}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
+                        {comment.profiles?.username?.[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="bg-gray-100 rounded-2xl px-3 py-2">
+                        <button
+                          onClick={() => window.location.href = `/${comment.profiles?.username || 'user'}`}
+                          className="font-semibold text-sm hover:underline"
+                        >
+                          {comment.profiles?.username}
+                        </button>
+                        <p className="text-sm text-gray-700 break-words">{comment.text}</p>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1 px-3">
+                        {new Date(comment.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Comment Input */}
+            <form onSubmit={handleSubmitComment} className="border-t px-4 py-3 flex gap-2">
+              <Input
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Add a comment..."
+                disabled={submitting}
+                className="flex-1"
+              />
+              <Button
+                type="submit"
+                disabled={!newComment.trim() || submitting}
+                size="icon"
+                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </form>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
