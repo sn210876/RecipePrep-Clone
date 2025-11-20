@@ -14,7 +14,6 @@ import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { Verifying } from './pages/Verifying';
-import { ResetPassword } from './pages/ResetPassword';
 import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';

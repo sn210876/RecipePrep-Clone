@@ -996,7 +996,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                       )}
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => setViewingUserId(post.user_id)}
+                          onClick={() => window.location.href = `/${post.profiles?.username}`}
                           className="font-semibold text-sm hover:underline"
                         >
                           {post.profiles?.username}

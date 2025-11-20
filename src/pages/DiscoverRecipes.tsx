@@ -10,6 +10,7 @@ import { Recipe } from '../types/recipe';
 import { getAllPublicRecipes, deleteRecipe } from '../services/recipeService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { CommentModal } from '../components/CommentModal';
 
 interface DiscoverProps {
   onNavigate: (page: string) => void;
@@ -22,6 +23,17 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOpenPost = (e: CustomEvent) => {
+      setSelectedPostId(e.detail);
+    };
+    window.addEventListener('open-shared-post' as any, handleOpenPost);
+    return () => {
+      window.removeEventListener('open-shared-post' as any, handleOpenPost);
+    };
+  }, []);
 
   useEffect(() => {
     const loadRecipes = async () => {
@@ -546,6 +558,14 @@ Save thousands of recipes from all over <span className="font-bold text-blue-600
         <CookMode
           recipe={cookingRecipe}
           onClose={() => setCookingRecipe(null)}
+        />
+      )}
+      {selectedPostId && (
+        <CommentModal
+          postId={selectedPostId}
+          isOpen={!!selectedPostId}
+          onClose={() => setSelectedPostId(null)}
+          onCommentPosted={() => {}}
         />
       )}
     </div>
