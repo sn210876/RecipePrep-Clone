@@ -263,7 +263,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           }}
         >
           <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-white' : ''}`} />
-          {isSaved ? 'Saved' : 'Save to My Recipes'}
+          {isSaved ? 'Saved' : 'Save to "My Recipes"'}
         </Button>
         <Button
           size="sm"
