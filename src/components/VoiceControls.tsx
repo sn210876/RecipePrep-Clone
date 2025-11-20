@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Mic, MicOff, Volume2, HelpCircle, Check, AlertCircle } from 'lucide-react';
-import { Collapsible, { CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
 interface VoiceControlsProps {
   onCommand: (command: VoiceCommand) => void;
@@ -33,7 +33,7 @@ const commandExamples = [
   { text: '"Back" or "Previous"', description: 'Go to previous step' },
   { text: '"Repeat" or "Say that again"', description: 'Repeat current step' },
   { text: '"Read ingredients"', description: 'Read full ingredient list' },
-  { text: '"How long"', description: 'Tell cooking time for step' },
+  { text: '"How long"', description: 'Tell cooking time for step time' },
   { text: '"Start timer"', description: 'Start timer for current step' },
   { text: '"Show 3" or "Step 5"', description: 'Jump to step number' },
   { text: '"Pause" or "Stop"', description: 'Pause voice mode' },
@@ -52,9 +52,10 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isManuallyStoppedRef = useRef(false);
 
-  // Initialize Speech Recognition (runs once)
+  // Initialize Speech Recognition
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setIsSupported(false);
@@ -81,21 +82,20 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
           try {
             recognition.start();
           } catch {
-            // ignore — already starting
+            // ignore
           }
         }, 300);
       }
     };
 
     recognition.onerror = (event: any) => {
-      console.warn('Speech recognition error:', event.error);
+      console.warn('Speech error:', event.error);
 
       if (event.error === 'not-allowed' || event.error === 'permission-denied') {
         setError('Microphone access denied. Please allow it and reload.');
         onToggle();
         isManuallyStoppedRef.current = true;
       } else if (event.error !== 'aborted') {
-        // ignore normal aborts during restart
         setError(`Speech error: ${event.error}`);
         setTimeout(() => setError(''), 5000);
       }
@@ -107,7 +107,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       const final = results
         .filter((r: any) => r.isFinal)
         .map((r: any) => r[0].transcript)
-        .join(' ');
+        .join(' ' ');
 
       const interim = results
         .filter((r: any) => !r.isFinal)
@@ -131,7 +131,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
     };
   }, []);
 
-  // Handle toggle on/off
+  // Toggle voice mode
   useEffect(() => {
     if (!recognitionRef.current || !isSupported) return;
 
@@ -141,9 +141,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         recognitionRef.current.start();
         setShowHelp(true);
         setTimeout(() => setShowHelp(false), 10000);
-      } catch {
-        // already starting
-      }
+      } catch {}
     } else {
       isManuallyStoppedRef.current = true;
       recognitionRef.current.stop();
@@ -158,23 +156,25 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
     let command: VoiceCommand | null = null;
 
-    if (/next|next step/.test(lower)) && (command = { type: 'next' });
-    (/back|previous|go back/.test(lower)) && (command = { type: 'previous' });
-    (/repeat|again|say that again/.test(lower)) && (command = { type: 'repeat' });
-    (/ingredient/.test(lower)) && (command = { type: 'readIngredients' });
-    (/how long|time left|how much time/.test(lower)) && (command = { type: 'howLong' });
-    (/timer|start timer|set timer/.test(lower)) && (command = { type: 'startTimer' });
-    (/pause|stop listening|stop/.test(lower)) && (command = { type: 'pause' });
-    (/resume|continue|keep going/.test(lower)) && (command = { type: 'resume' });
-    (/help/.test(lower)) && (setShowHelp(true), speak('Say next, back, repeat, read ingredients, how long, start timer, show five, pause, or resume.'));
+    if (/next|next step/.test(lower)) command = { type: 'next' };
+    else if (/back|previous|go back/.test(lower)) command = { type: 'previous' };
+    else if (/repeat|again|say that again/.test(lower)) command = { type: 'repeat' };
+    else if (/ingredient/.test(lower)) command = { type: 'readIngredients' };
+    else if (/how long|time left|how much time/.test(lower)) command = { type: 'howLong' };
+    else if (/timer|start timer|set timer/.test(lower)) command = { type: 'startTimer' };
+    else if (/pause|stop listening|stop/.test(lower)) command = { type: 'pause' };
+    else if (/resume|continue|keep going/.test(lower)) command = { type: 'resume' };
+    else if (/help/.test(lower)) {
+      setShowHelp(true);
+      speak('Say next, back, repeat, read ingredients, how long, start timer, show five, pause, or resume.');
+      return;
+    }
 
-    // Jump to step number
-    if (!command) {
-      const match = lower.match(/(?:show|step|go to)\s+(\d+)/);
-      if (match) {
-        const num = parseInt(match[1]) - 1;
-        if (num >= 0) command = { type: 'jumpTo', stepNumber: num };
-      }
+    // Jump to step
+    const match = lower.match(/(?:show|step|go to)\s+(\d+)/);
+    if (match) {
+      const num = parseInt(match[1]) - 1;
+      if (num >= 0) command = { type: 'jumpTo', stepNumber: num };
     }
 
     if (command) {
@@ -194,6 +194,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0 && voiceSettings.voiceIndex < voices.length) {
+      {
       utterance.voice = voices[voiceSettings.voiceIndex];
     }
 
