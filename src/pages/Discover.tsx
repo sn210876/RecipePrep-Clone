@@ -723,31 +723,47 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   };
 
   const handleNativeShare = async (postId: string) => {
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
+  const post = posts.find(p => p.id === postId);
+  if (!post) return;
 
-    const username = post.profiles?.username || 'user';
-    const shareUrl = `https://mealscrape.com/${username}?post=${postId}`;
-    const shareData = {
-      title: post.title || '',
-      text: post.caption || 'Found this amazing recipe on MealScrape!',
-      url: shareUrl
-    };
+  const username = post.profiles?.username || 'someone';
+  const shareUrl = `${window.location.origin}/${username}?post=${postId}`;
 
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData);
-        toast.success('Shared successfully!');
-      } catch (error: any) {
-        if (error.name !== 'AbortError') {
-          console.error('Error sharing:', error);
-        }
-      }
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      toast.success('Link copied to clipboard!');
-    }
+  const shareData = {
+    title: post.title || 'Check out this recipe on MealScrape!',
+    text: post.caption
+      ? `${post.caption}\n\nShared via MealScrape`
+      : 'I found this fire recipe on MealScrape!',
+    url: shareUrl,
   };
+
+  // Native share (mobile)
+  if (navigator.share && navigator.canShare?.(shareData)) {
+    try {
+      await navigator.share(shareData);
+      toast.success('Shared successfully!');
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Native share failed:', err);
+        fallbackCopy(shareUrl);
+      }
+    }
+  } else {
+    // Fallback: copy to clipboard
+    fallbackCopy(shareUrl);
+  }
+};
+
+const fallbackCopy = (url: string) => {
+  navigator.clipboard
+    .writeText(url)
+    .then(() => {
+      toast.success('Link copied to clipboard!');
+    })
+    .catch(() => {
+      toast.error('Failed to copy link');
+    });
+};
 
   const handleCopyLink = (postId: string) => {
     const post = posts.find(p => p.id === postId);
