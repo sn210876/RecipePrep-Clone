@@ -785,66 +785,68 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-{selectedPostId && (
-  <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
-    <DialogContent className="max-w-lg p-0 overflow-hidden bg-black relative">
-      <CommentModal
-        postId={selectedPostId}
-        isOpen={true}
-        onClose={() => setSelectedPostId(null)}
-      />
+{selectedPostId && (() => {
+  const selectedPost = posts.find(p => p.id === selectedPostId);
+  const canEdit = selectedPost && currentUserId && (
+    currentUserId === selectedPost.user_id || isUserAdmin
+  );
 
-      {/* Edit and Delete buttons - layered on top with high z-index */}
-      <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
-        <button
-          onClick={() => setSelectedPostId(null)}
-          className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all shadow-lg"
-        >
-          <ArrowLeft className="w-6 h-6 text-white" />
-        </button>
+  return (
+    <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
+      <DialogContent className="max-w-lg p-0 overflow-hidden bg-black relative">
+        <CommentModal
+          postId={selectedPostId}
+          isOpen={true}
+          onClose={() => setSelectedPostId(null)}
+        />
 
-      {(() => {
-  const post = posts.find(p => p.id === selectedPostId);
-  return (isOwnProfile || isUserAdmin) && post && currentUserId === post.user_id;
-})() && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const post = posts.find(p => p.id === selectedPostId);
-                if (post) {
-                  setEditingPost({
-                    id: post.id,
-                    title: post.title || '',
-                    caption: post.caption || '',
-                    recipeUrl: post.recipe_url || '',
-                    photoUrl: post.image_url || post.video_url || '',
-                  });
-                }
-                setSelectedPostId(null);
-              }}
-              className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
-              title="Edit post"
-            >
-              <Edit3 className="w-5 h-5 text-white" />
-            </button>
+        {/* Edit and Delete buttons - layered on top with high z-index */}
+        <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
+          <button
+            onClick={() => setSelectedPostId(null)}
+            className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all shadow-lg"
+          >
+            <ArrowLeft className="w-6 h-6 text-white" />
+          </button>
 
-            <button
-              onClick={() => {
-                setDeletePostId(selectedPostId);
-                setSelectedPostId(null);
-              }}
-              className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-red-600/70 rounded-full transition-all shadow-lg"
-              title="Delete post"
-            >
-              <Trash2 className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        )}
-      </div>
-    </DialogContent>
-  </Dialog>
-)}
+          {canEdit && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (selectedPost) {
+                    setEditingPost({
+                      id: selectedPost.id,
+                      title: selectedPost.title || '',
+                      caption: selectedPost.caption || '',
+                      recipeUrl: selectedPost.recipe_url || '',
+                      photoUrl: selectedPost.image_url || selectedPost.video_url || '',
+                    });
+                  }
+                  setSelectedPostId(null);
+                }}
+                className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
+                title="Edit post"
+              >
+                <Edit3 className="w-5 h-5 text-white" />
+              </button>
 
+              <button
+                onClick={() => {
+                  setDeletePostId(selectedPostId);
+                  setSelectedPostId(null);
+                }}
+                className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-red-600/70 rounded-full transition-all shadow-lg"
+                title="Delete post"
+              >
+                <Trash2 className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+})()}
 {/* Edit Post Dialog */}
 <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
   <AlertDialogContent>
