@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle, Crown, Trash2 } from 'lucide-react';
+import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle, Crown, Trash2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { CommentModal } from './CommentModal';
@@ -69,6 +69,7 @@ export function UserProfileView({
   const [supporters, setSupporters] = useState<any[]>([]);
   const [supporting, setSupporting] = useState<any[]>([]);
   const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null);
+  
   useEffect(() => {
     const fetchProfile = async () => {
       const { data } = await supabase
@@ -135,24 +136,26 @@ export function UserProfileView({
     setSupporting(data || []);
     setShowSupporting(true);
   };
-const handleDeleteComment = async (commentId: string) => {
-  if (!currentUserId) return;
 
-  const { error } = await supabase
-    .from('comments')
-    .delete()
-    .eq('id', commentId)
-    .eq('user_id', currentUserId);
+  const handleDeleteComment = async (commentId: string) => {
+    if (!currentUserId) return;
 
-  if (error) {
-    toast.error('Failed to delete comment');
-  } else {
-    toast.success('Comment deleted');
-    if (onRefresh) {
-      onRefresh();
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('user_id', currentUserId);
+
+    if (error) {
+      toast.error('Failed to delete comment');
+    } else {
+      toast.success('Comment deleted');
+      if (onRefresh) {
+        onRefresh();
+      }
     }
-  }
-};
+  };
+
   const toggleLike = async (postId: string) => {
     if (!currentUserId) return;
 
@@ -351,7 +354,7 @@ const handleDeleteComment = async (commentId: string) => {
                       <MessageCircle className="w-6 h-6 text-gray-600" />
                     </button>
                   </div>
-                                  <div className="text-sm text-gray-600 mb-2">
+                  <div className="text-sm text-gray-600 mb-2">
                     {post._count?.likes || 0} likes
                   </div>
                   {post.caption && (
@@ -407,179 +410,125 @@ const handleDeleteComment = async (commentId: string) => {
         </div>
       )}
 
-  {selectedPostId && (
-  <>
-    {(() => {
-      const selectedPost = userPosts.find(p => p.id === selectedPostId);
+      {/* POST MODAL WITH EDIT/DELETE BUTTONS */}
+      {selectedPostId && (() => {
+        const selectedPost = userPosts.find(p => p.id === selectedPostId);
+        const canEdit = selectedPost && currentUserId && (
+          currentUserId === selectedPost.user_id
+        );
 
-      if (!selectedPost) return null;
+        if (!selectedPost) return null;
 
-      return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full z-[60]">
+        return (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+            <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full z-[60]">
+              
+              {/* COMMENT MODAL */}
+              <div className="relative z-[50]">
+                <CommentModal
+                  postId={selectedPostId}
+                  isOpen
+                  onClose={() => setSelectedPostId(null)}
+                />
+              </div>
 
-            {/* EDIT BUTTON - only for post owner */}
-            {currentUserId === selectedPost.user_id && (
+              {/* Back Arrow - Always visible */}
               <button
-                onClick={() => {
-                  const newCaption = prompt("Edit your caption:");
-                  if (!newCaption) return;
-
-                  supabase
-                    .from("posts")
-                    .update({ caption: newCaption })
-                    .eq("id", selectedPostId)
-                    .eq("user_id", currentUserId)
-                    .then(({ error }) => {
-                      if (error) toast.error("Failed to update post");
-                      else {
-                        toast.success("Post updated");
-                        if (onRefresh) onRefresh();
-                      }
-                    });
-                }}
-                className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700 z-[70]"
-                title="Edit post"
+                onClick={() => setSelectedPostId(null)}
+                className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full shadow hover:bg-black/70 z-[100]"
+                title="Close"
               >
-                ✏️
+                <ArrowLeft className="w-5 h-5" />
               </button>
-            )}
 
-            {/* DELETE BUTTON - only for post owner */}
-           {selectedPostId && (() => {
-    const selectedPost = userPosts.find(p => p.id === selectedPostId);
-    const canEdit = selectedPost && currentUserId && (
-      currentUserId === selectedPost.user_id
-    );
+              {/* EDIT BUTTON - only for post owner */}
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    const newCaption = prompt("Edit your caption:");
+                    if (!newCaption) return;
 
-    if (!selectedPost) return null;
+                    supabase
+                      .from("posts")
+                      .update({ caption: newCaption })
+                      .eq("id", selectedPostId)
+                      .eq("user_id", currentUserId)
+                      .then(({ error }) => {
+                        if (error) toast.error("Failed to update post");
+                        else {
+                          toast.success("Post updated");
+                          if (onRefresh) onRefresh();
+                        }
+                      });
+                  }}
+                  className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700 z-[100]"
+                  title="Edit post"
+                >
+                  ✏️
+                </button>
+              )}
 
-    return (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-        <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full z-[60]">
-          
-          {/* COMMENT MODAL */}
-          <div className="relative z-[50]">
-            <CommentModal
-              postId={selectedPostId}
-              isOpen
-              onClose={() => setSelectedPostId(null)}
-            />
-          </div>
+              {/* DELETE BUTTON - only for post owner */}
+              {canEdit && (
+                <button
+                  onClick={async () => {
+                    if (!confirm("Delete this post?")) return;
 
-          {/* Back Arrow - Always visible */}
-          <button
-            onClick={() => setSelectedPostId(null)}
-            className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full shadow hover:bg-black/70 z-[100]"
-            title="Close"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+                    const { error } = await supabase
+                      .from("posts")
+                      .delete()
+                      .eq("id", selectedPostId)
+                      .eq("user_id", currentUserId);
 
-          {/* EDIT BUTTON - only for post owner */}
-          {canEdit && (
-            <button
-              onClick={() => {
-                const newCaption = prompt("Edit your caption:");
-                if (!newCaption) return;
-
-                supabase
-                  .from("posts")
-                  .update({ caption: newCaption })
-                  .eq("id", selectedPostId)
-                  .eq("user_id", currentUserId)
-                  .then(({ error }) => {
-                    if (error) toast.error("Failed to update post");
-                    else {
-                      toast.success("Post updated");
+                    if (error) {
+                      toast.error("Failed to delete post");
+                    } else {
+                      toast.success("Post deleted");
+                      setSelectedPostId(null);
                       if (onRefresh) onRefresh();
                     }
-                  });
-              }}
-              className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700 z-[100]"
-              title="Edit post"
-            >
-              ✏️
-            </button>
-          )}
+                  }}
+                  className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 z-[100]"
+                  title="Delete post"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
 
-          {/* DELETE BUTTON - only for post owner */}
-          {canEdit && (
-            <button
-              onClick={async () => {
-                if (!confirm("Delete this post?")) return;
-
-                const { error } = await supabase
-                  .from("posts")
-                  .delete()
-                  .eq("id", selectedPostId)
-                  .eq("user_id", currentUserId);
-
-                if (error) {
-                  toast.error("Failed to delete post");
-                } else {
-                  toast.success("Post deleted");
-                  setSelectedPostId(null);
-                  if (onRefresh) onRefresh();
-                }
-              }}
-              className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 z-[100]"
-              title="Delete post"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          )}
-
-        </div>
-      </div>
-    );
-  })()}
-
-            {/* COMMENT MODAL */}
-            <div className="relative z-[50]">
-              <CommentModal
-                postId={selectedPostId}
-                isOpen
-                onClose={() => setSelectedPostId(null)}
-              />
             </div>
-
           </div>
-        </div>
-      );
-    })()}
-  </>
-)}
+        );
+      })()}
 
+      {/* SUPPORTERS DIALOG */}
+      <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supporters</DialogTitle>
+          </DialogHeader>
 
-     <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Supporters</DialogTitle>
-    </DialogHeader>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {supporters.map((supporter) => (
+              <div key={supporter.follower_id} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold">
+                  {supporter.profiles?.username?.[0]?.toUpperCase() || (
+                    <PiggyBank className="w-5 h-5" />
+                  )}
+                </div>
+                <span className="font-medium">
+                  {supporter.profiles?.username || 'User'}
+                </span>
+              </div>
+            ))}
 
-    <div className="space-y-3 max-h-96 overflow-y-auto">
-      {supporters.map((supporter) => (
-        <div key={supporter.follower_id} className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold">
-            {supporter.profiles?.username?.[0]?.toUpperCase() || (
-              <PiggyBank className="w-5 h-5" />
+            {supporters.length === 0 && (
+              <p className="text-center text-gray-500 py-4">No supporters yet</p>
             )}
           </div>
-          <span className="font-medium">
-            {supporter.profiles?.username || 'User'}
-          </span>
-        </div>
-      ))}
+        </DialogContent>
+      </Dialog>
 
-      {supporters.length === 0 && (
-        <p className="text-center text-gray-500 py-4">No supporters yet</p>
-      )}
-    </div>
-  </DialogContent>
-</Dialog>
-
-
+      {/* SUPPORTING DIALOG */}
       <Dialog open={showSupporting} onOpenChange={setShowSupporting}>
         <DialogContent>
           <DialogHeader>
