@@ -697,18 +697,18 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         </DialogContent>
       </Dialog>
 
-   {selectedPostId && (
+    {selectedPostId && (
   <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
     <DialogContent className="max-w-lg p-0 overflow-hidden bg-black">
       {/* TOP BAR: Back + Edit Button */}
-     <div className="relative z-50 flex items-center justify-between px-4 pt-4 pb-2 bg-black/50 backdrop-blur-sm">
+   <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
   <button
     onClick={() => setSelectedPostId(null)}
-    className="p-3 hover:bg-white/20 rounded-full transition-all"
+    className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all"
   >
     <ArrowLeft className="w-6 h-6 text-white" />
   </button>
-  {/* EDIT BUTTON — NOW VISIBLE */}
+
   {currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
     <button
       onClick={() => {
@@ -724,12 +724,15 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         }
         setSelectedPostId(null);
       }}
-      className="p-3 hover:bg-orange-500/30 rounded-full transition-all group"
+      className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all"
     >
-      <Edit3 className="w-6 h-6 text-white group-hover:text-orange-400 drop-shadow-lg" />
+      <Edit3 className="w-6 h-6 text-white" />
     </button>
   )}
 </div>
+
+      {/* Reuse your existing CommentModal content here if you want */}
+      {/* Or just keep it simple for now */}
       <CommentModal
         postId={selectedPostId}
         isOpen={true}
