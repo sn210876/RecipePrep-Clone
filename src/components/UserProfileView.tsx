@@ -345,7 +345,7 @@ const handleDeleteComment = async (commentId: string) => {
                   {post.caption && (
                     <p className="text-sm">{post.caption}</p>
                   )}
-                                   {post._count && post._count.comments > 0 && (
+                   {post._count && post._count.comments > 0 && (
                     <button
                       onClick={() => setSelectedPostId(post.id)}
                       className="text-sm text-gray-500 mt-2 hover:text-gray-700"
