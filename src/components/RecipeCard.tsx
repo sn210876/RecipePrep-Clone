@@ -28,7 +28,6 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [socialPost, setSocialPost] = useState<any>(null);
-  // const [showSocialPost, setShowSocialPost] = useState(false); // Removed - not used
   const totalTime = recipe.prepTime + recipe.cookTime;
   const isSaved = state.savedRecipes.some(r => r.id === recipe.id);
 
@@ -53,24 +52,26 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
     try {
       let postData = null;
 
+      // First try to find by recipe_id
       const { data: postByRecipeId, error: recipeIdError } = await supabase
         .from('posts')
         .select('*')
         .eq('recipe_id', recipe.id)
         .maybeSingle();
 
-      console.log('Search by recipe_id:', recipe.id, 'Found:', postByRecipeId ? 'YES' : 'NO', 'Error:', recipeIdError);
+      console.log('[RecipeCard] Search by recipe_id:', recipe.id, 'Found:', postByRecipeId ? 'YES' : 'NO', 'Error:', recipeIdError);
 
       if (postByRecipeId) {
         postData = postByRecipeId;
       } else {
+        // Fallback: try to find by video_url
         const { data: recipeData } = await supabase
           .from('public_recipes')
           .select('video_url')
           .eq('id', recipe.id)
           .maybeSingle();
 
-        console.log('Search by video_url. Recipe DB entry:', recipeData?.video_url);
+        console.log('[RecipeCard] Search by video_url. Recipe DB entry:', recipeData?.video_url);
 
         if (recipeData?.video_url) {
           const { data: postByUrl } = await supabase
@@ -79,7 +80,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
             .eq('recipe_url', recipeData.video_url)
             .maybeSingle();
 
-          console.log('Found post by URL:', postByUrl ? 'YES' : 'NO');
+          console.log('[RecipeCard] Found post by URL:', postByUrl ? 'YES' : 'NO');
           postData = postByUrl;
         }
       }
@@ -88,7 +89,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
         const { data: profile } = await supabase
           .from('profiles')
           .select('username, avatar_url')
-          .eq('user_id', postData.user_id)
+          .eq('id', postData.user_id)
           .maybeSingle();
 
         const { data: likes } = await supabase
@@ -96,20 +97,25 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           .select('user_id')
           .eq('post_id', postData.id);
 
+        const { count: commentsCount } = await supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', postData.id);
+
         setSocialPost({
           ...postData,
           profiles: profile,
           _count: {
             likes: likes?.length || 0,
-            comments: 0
+            comments: commentsCount || 0
           }
         });
-        console.log('✅ Social post loaded for recipe:', recipe.id);
+        console.log('[RecipeCard] ✅ Social post loaded for recipe:', recipe.id, 'Post ID:', postData.id);
       } else {
-        console.log('❌ No social post found for recipe:', recipe.id);
+        console.log('[RecipeCard] ❌ No social post found for recipe:', recipe.id);
       }
     } catch (error) {
-      console.error('Failed to load social post:', error);
+      console.error('[RecipeCard] Failed to load social post:', error);
     }
   };
 
@@ -119,8 +125,38 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
   }, [recipe.id]);
 
   useEffect(() => {
-    console.log('Recipe:', recipe.id, 'Review count:', reviewCount, 'Social post:', socialPost ? 'EXISTS' : 'NULL');
+    console.log('[RecipeCard] Recipe:', recipe.id, 'Review count:', reviewCount, 'Social post:', socialPost ? 'EXISTS' : 'NULL');
   }, [reviewCount, socialPost]);
+
+  const handleSeeReviews = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!socialPost) {
+      console.error('[RecipeCard] No social post available');
+      return;
+    }
+
+    console.log('[RecipeCard] 🎯 Opening post:', socialPost.id);
+
+    // Dispatch the event to open the modal
+    window.dispatchEvent(new CustomEvent('open-shared-post', { detail: socialPost.id }));
+    
+    // Set fallback
+    (window as any).__pendingSharedPostId = socialPost.id;
+
+    // Clean up after 2 seconds
+    setTimeout(() => {
+      delete (window as any).__pendingSharedPostId;
+    }, 2000);
+
+    // Navigate to discover page if not already there
+    if (window.location.pathname !== '/discover') {
+      console.log('[RecipeCard] Navigating to /discover');
+      window.history.pushState({}, '', '/discover');
+      // Trigger a custom navigation event if your app uses one
+      window.dispatchEvent(new CustomEvent('navigate', { detail: 'discover' }));
+    }
+  };
 
   return (
     <>
@@ -266,18 +302,17 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
             variant="outline"
             size="sm"
             className="w-full border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-500 transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              const event = new CustomEvent('open-shared-post', { detail: socialPost.id });
-              window.dispatchEvent(event);
-              window.history.pushState({}, '', '/discover');
-              if (window.location.pathname !== '/discover') {
-                window.location.href = `/post/${socialPost.id}`;
-              }
-            }}
+            onClick={handleSeeReviews}
           >
             <span className="text-base mr-2">💬</span>
-            See Reviews
+            <span className="flex items-center gap-2">
+              See Reviews
+              {socialPost._count?.comments > 0 && (
+                <span className="text-xs bg-orange-100 px-2 py-0.5 rounded-full font-semibold">
+                  {socialPost._count.comments}
+                </span>
+              )}
+            </span>
           </Button>
         )}
       </CardFooter>
@@ -297,8 +332,6 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           loadReviewData();
         }}
       />
-
-      {/* Social post modal removed - view posts on Discover page */}
     </>
   );
 }
