@@ -381,51 +381,78 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         </div>
 
         {/* MESSAGES */}
-        <div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
-  <div className="space-y-1 py-4">
-   // Inside your message rendering loop — REPLACE this part:
-{messages.map((message) => (
-  <div
-    key={message.id}
-    className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
-  >
-    <div className="relative group max-w-xs">
-      {/* Message Bubble */}
+      {/* MESSAGES */}
+<div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
+  <div className="space-y-4 py-4">
+    {messages.map((message) => (
       <div
-        className={`rounded-2xl px-4 py-2.5 text-sm leading-tight break-words ${
-          message.sender_id === currentUserId
-            ? 'bg-gray-200 text-gray-900'
-            : 'bg-orange-500 text-white'
-        }`}
+        key={message.id}
+        className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
       >
-        <p className="whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
-        <span className="text-xs opacity-70 mt-1 block">
-          {new Date(message.created_at).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </span>
-      </div>
-
-      {/* DELETE BUTTON — Only for YOUR messages */}
-      {message.sender_id === currentUserId && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteMessage(message.id);
+        {/* Message container with hover/long-press support */}
+        <div
+          className="relative group max-w-[75%]"
+          // Mobile: long-press (300ms) shows delete button
+          onTouchStart={(e) => {
+            if (message.sender_id !== currentUserId) return;
+            const touch = e.touches[0];
+            const timer = setTimeout(() => {
+              e.target.closest('.group')?.classList.add('show-delete');
+            }, 400);
+            const end = () => {
+              clearTimeout(timer);
+              document.removeEventListener('touchend', end);
+            };
+            document.addEventListener('touchend', end);
           }}
-          className="absolute -top-2 -right-2 bg-red-500 text-white w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg hover:bg-red-600 active:scale-95"
-          title="Delete message"
         >
-          Trash
-        </button>
-      )}
-    </div>
-  </div>
-))}
-            <div ref={messagesEndRef} />
+          {/* Message Bubble */}
+          <div
+            className={`rounded-2xl px-4 py-2.5 text-sm leading-tight break-words shadow-sm ${
+              message.sender_id === currentUserId
+                ? 'bg-gray-200 text-gray-900'
+                : 'bg-orange-500 text-white'
+            }`}
+          >
+            <p className="whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
+            <span className="text-xs opacity-70 mt-1 block text-right">
+              {new Date(message.created_at).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
           </div>
+
+          {/* DELETE BUTTON – Only for YOUR messages */}
+          {message.sender_id === currentUserId && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteMessage(message.id);
+              }}
+              className={`
+                absolute -top-3 -right-3 
+                w-9 h-9 rounded-full 
+                bg-red-500 text-white 
+                flex items-center justify-center 
+                shadow-lg text-lg
+                opacity-0 
+                group-hover:opacity-100 
+                group-[.show-delete]:opacity-100 
+                transition-all duration-200 
+                hover:bg-red-600 active:scale-95
+                z-10
+              `}
+            >
+              Trash
+            </button>
+          )}
         </div>
+      </div>
+    ))}
+    <div ref={messagesEndRef} />
+  </div>
+</div>
 
         {/* INPUT BAR */}
         <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 w-80 bg-white border-t border-gray-200 px-4 py-3 z-50">
