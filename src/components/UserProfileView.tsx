@@ -410,6 +410,32 @@ const handleDeleteComment = async (commentId: string) => {
      {selectedPostId && (
   <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
     <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full">
+{/* EDIT POST BUTTON */}
+{currentUserId === userId && (
+  <button
+    onClick={() => {
+      const newCaption = prompt("Edit your caption:");
+      if (!newCaption) return;
+
+      supabase
+        .from("posts")
+        .update({ caption: newCaption })
+        .eq("id", selectedPostId)
+        .eq("user_id", currentUserId)
+        .then(({ error }) => {
+          if (error) {
+            toast.error("Failed to update post");
+          } else {
+            toast.success("Post updated");
+            if (onRefresh) onRefresh();
+          }
+        });
+    }}
+    className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700"
+  >
+    ✏️
+  </button>
+)}
 
       {/* DELETE POST BUTTON */}
       {currentUserId === userId && (
