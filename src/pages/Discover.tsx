@@ -788,6 +788,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
         if (existingConvo) {
           conversationId = existingConvo.id;
+          console.log('Found existing conversation:', conversationId);
         } else {
           const { data: newConvo, error } = await supabase
             .from('conversations')
@@ -798,20 +799,34 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
             .select()
             .single();
 
-          if (error) throw error;
+          if (error) {
+            console.error('Error creating conversation:', error);
+            throw error;
+          }
           conversationId = newConvo.id;
+          console.log('Created new conversation:', conversationId);
         }
 
-        await supabase.from('messages').insert({
+        const { error: messageError } = await supabase.from('messages').insert({
           conversation_id: conversationId,
           sender_id: currentUserId,
           content: messageContent,
         });
 
-        await supabase.from('conversations').update({
+        if (messageError) {
+          console.error('Error inserting message:', messageError);
+          throw messageError;
+        }
+        console.log('Message sent successfully to conversation:', conversationId);
+
+        const { error: updateError } = await supabase.from('conversations').update({
           updated_at: new Date().toISOString(),
           last_message_at: new Date().toISOString(),
         }).eq('id', conversationId);
+
+        if (updateError) {
+          console.error('Error updating conversation:', updateError);
+        }
       }
 
       toast.success(`Shared with ${selectedFollowers.size} ${selectedFollowers.size === 1 ? 'person' : 'people'}!`);
@@ -821,9 +836,9 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       // Navigate to messages if only one follower was selected
       if (selectedFollowers.size === 1 && onNavigateToMessages) {
         const followerId = Array.from(selectedFollowers)[0];
-        const followerData = followers.find(f => f.id === followerId);
-        if (followerData) {
-          onNavigateToMessages(followerId, followerData.username);
+        const followerData = followers.find(f => f.following_id === followerId);
+        if (followerData?.profiles) {
+          onNavigateToMessages(followerId, followerData.profiles.username);
         }
       }
     } catch (error) {
