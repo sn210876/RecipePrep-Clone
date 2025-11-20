@@ -176,8 +176,12 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                         group relative h-11 w-11 rounded-full
                         ${isActive
                           ? 'bg-orange-500 text-white shadow-lg'
-                          : 'text-gray-700'
+                          : 'text-gray-700 hover:text-gray-900'
                         }
+                        hover:bg-transparent               /* ← blocks any background */
+                        focus:bg-transparent               /* ← blocks focus ring too */
+                        focus:ring-0 focus-visible:ring-0  /* ← kills any outline/ring */
+                        focus:outline-none
                       `}
                       onClick={() => onNavigate(item.id)}
                     >
