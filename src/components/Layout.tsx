@@ -155,37 +155,17 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     }
   };
 
-import { Home, Search, Heart, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-
-const FloatingNavIcons = () => {
-  const navItems = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'search', icon: Search, label: 'Search' },
-    { id: 'likes', icon: Heart, label: 'Likes' },
-    { id: 'messages', icon: MessageCircle, label: 'Messages' },
-  ];
-
-  const currentPage = 'home';
-
-  const onNavigate = (id) => {
-    console.log('Navigate to:', id);
-  };
-
-  return (
-    <div className="pointer-events-none fixed z-[500]">
-      <div className="pointer-events-auto fixed top-4 right-4">
-        <TooltipProvider>
-          <div className="flex items-center gap-3 bg-white/85 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/40 px-4 py-3">
-            {navItems.map((item) => {
+const FloatingNavIcons = () => (
+  <div className="pointer-events-none fixed z-[500]">
+    <div className="pointer-events-auto fixed top-4 right-4">
+      <TooltipProvider>
+        <div className="flex items-center gap-3 bg-white/85 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/40 px-4 py-3">
+          {navItems
+            .filter((item) => item.id !== 'discover' && item.id !== 'settings')
+            .map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
+
               return (
                 <Tooltip key={item.id}>
                   <TooltipTrigger asChild>
@@ -193,21 +173,21 @@ const FloatingNavIcons = () => {
                       variant="ghost"
                       size="icon"
                       className={`
-                        group h-11 w-11 rounded-full
-                        ${isActive ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-700 hover:bg-gray-200/50'}
+                        group h-11 w-11 rounded-full transition-colors
+                        ${isActive ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-700 group-hover:bg-black/10'}
                         focus:outline-none focus:ring-0
                       `}
                       onClick={() => onNavigate(item.id)}
                     >
-                      <Icon
-                        className={`
-                          h-5 w-5 transition-opacity duration-300
-                          ${isActive
-                            ? 'opacity-100'
-                            : 'opacity-100 group-hover:opacity-50'
-                          }
-                        `}
-                      />
+                     <Icon
+                       className={`
+                         h-5 w-5 transition-opacity duration-300
+                         ${isActive
+                           ? 'opacity-100'
+                           : 'opacity-100 group-hover:opacity-50'
+                         }
+                       `}
+                     />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -216,14 +196,12 @@ const FloatingNavIcons = () => {
                 </Tooltip>
               );
             })}
-          </div>
-        </TooltipProvider>
-      </div>
+        </div>
+      </TooltipProvider>
     </div>
-  );
-};
+  </div>
+);
 
-export default FloatingNavIcons;
   return (
     <div className="min-h-screen bg-white">
       {/* Sidebar */}
