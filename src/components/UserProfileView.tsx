@@ -339,18 +339,52 @@ const handleDeleteComment = async (commentId: string) => {
                       <MessageCircle className="w-6 h-6 text-gray-600" />
                     </button>
                   </div>
-                  <div className="text-sm text-gray-600 mb-2">
+                                  <div className="text-sm text-gray-600 mb-2">
                     {post._count?.likes || 0} likes
                   </div>
                   {post.caption && (
                     <p className="text-sm">{post.caption}</p>
                   )}
-                   {post._count && post._count.comments > 0 && (
+
+                  {/* Show latest comment with delete button for your own */}
+                  {post.latest_comment && (
+                    <div
+                      className="mt-3 relative"
+                      onMouseEnter={() => post.latest_comment.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
+                      onMouseLeave={() => setHoveredCommentId(null)}
+                      onTouchStart={() => post.latest_comment.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
+                      onTouchEnd={() => setHoveredCommentId(null)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="font-semibold text-sm">
+                          {post.latest_comment.profiles?.username}
+                        </span>
+                        <span className="text-sm text-gray-700">
+                          {post.latest_comment.text}
+                        </span>
+                      </div>
+
+                      {/* DELETE BUTTON – only on your comment */}
+                      {post.latest_comment.user_id === currentUserId && hoveredCommentId === post.latest_comment.id && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteComment(post.latest_comment.id);
+                          }}
+                          className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-lg shadow-lg hover:bg-red-600 active:scale-95 z-10"
+                        >
+                          Trash
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {post._count && post._count.comments > 0 && (
                     <button
                       onClick={() => setSelectedPostId(post.id)}
-                      className="text-sm text-gray-500 mt-2 hover:text-gray-700"
+                      className="text-sm text-gray-500 mt-2 hover:text-gray-700 block"
                     >
-                      View all {post._count.comments} comments
+                      View all {post._count.comments} {post._count.comments === 1 ? 'comment' : 'comments'}
                     </button>
                   )}
                 </div>
