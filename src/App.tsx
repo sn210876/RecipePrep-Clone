@@ -29,11 +29,16 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState<string>(() => {
     const path = window.location.pathname;
 
-    // Direct deep link to a post → force Discover feed + modal
-    if (path.match(/^\/post\/[a-f0-9]{36}$/)) {
-      return 'discover';
+    // Deep-link to a post → force Discover + modal
+    if (path.match(/^\/post\/[a-f0-9]{36}$/)) return 'discover';
+
+    // NEW: /profile/username
+    if (path.startsWith('/profile/') && path !== '/profile') {
+      const username = path.split('/profile/')[1];
+      if (username) return `profile:${username}`;
     }
 
+    // Existing routes
     if (path === '/' || path === '/discover-recipes') return 'discover-recipes';
     if (path === '/discover') return 'discover';
     if (path === '/recipes' || path === '/my-recipes') return 'my-recipes';
@@ -46,7 +51,6 @@ function AppContent() {
     if (path === '/messages') return 'messages';
     if (path === '/settings') return 'settings';
     if (path === '/onboarding') return 'onboarding';
-
     return 'discover-recipes';
   });
 
@@ -58,20 +62,10 @@ function AppContent() {
     const match = path.match(/^\/post\/([a-f0-9]{36})$/);
     if (match) {
       const postId = match[1];
-
-      // Force page to Discover
       setCurrentPage('discover');
-
-      // Send event immediately + fallback for race condition
       window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
       (window as any).__pendingSharedPostId = postId;
-
-      // Clean fallback after 2s
-      setTimeout(() => {
-        delete (window as any).__pendingSharedPostId;
-      }, 2000);
-
-      // Clean URL
+      setTimeout(() => delete (window as any).__pendingSharedPostId, 2000);
       window.history.replaceState({}, '', '/discover');
     }
   }, []);
@@ -85,7 +79,11 @@ function AppContent() {
       if (path === '/' || path === '/discover-recipes') setCurrentPage('discover-recipes');
       else if (path === '/discover') setCurrentPage('discover');
       else if (path === '/recipes' || path === '/my-recipes') setCurrentPage('my-recipes');
-      // ... add more if you want, but not needed for deep links
+      else if (path.startsWith('/profile/') && path !== '/profile') {
+        const username = path.split('/profile/')[1];
+        if (username) setCurrentPage(`profile:${username}`);
+      }
+      // Add more if needed
     };
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
@@ -109,6 +107,15 @@ function AppContent() {
       'settings': '/settings',
       'onboarding': '/onboarding',
     };
+
+    // Handle profile navigation
+    if (page.startsWith('profile:')) {
+      const username = page.split('profile:')[1];
+      window.history.pushState({}, '', `/profile/${username}`);
+      setCurrentPage(page);
+      return;
+    }
+
     const url = routes[page] || '/';
     window.history.pushState({}, '', url);
     setCurrentPage(page);
@@ -118,19 +125,25 @@ function AppContent() {
   // Render correct page
   // ──────────────────────
   const renderPage = () => {
+    // Dynamic profile
+    if (currentPage.startsWith('profile:')) {
+      const username = currentPage.split('profile:')[1];
+      return <Profile username={username} />;
+    }
+
     switch (currentPage) {
       case 'discover-recipes': return <DiscoverRecipes onNavigate={handleNavigate} />;
-      case 'discover':         return <Discover onNavigate={handleNavigate} />;
-      case 'my-recipes':       return <MyRecipes />;
-      case 'add-recipe':       return <AddRecipe onNavigate={handleNavigate} />;
-      case 'meal-planner':     return <MealPlanner onNavigate={handleNavigate} />;
-      case 'grocery-list':     return <GroceryList onNavigate={handleNavigate} />;
-      case 'cart':             return <Cart onNavigate={handleNavigate} />;
-      case 'upload':           return <Upload onNavigate={handleNavigate} />;
-      case 'profile':          return <Profile />;
-      case 'messages':         return <Messages onBack={() => handleNavigate('discover')} />;
-      case 'settings':         return <Settings onNavigate={handleNavigate} />;
-      default:                 return <Home onNavigate={handleNavigate} />;
+      case 'discover': return <Discover onNavigate={handleNavigate} />;
+      case 'my-recipes': return <MyRecipes />;
+      case 'add-recipe': return <AddRecipe onNavigate={handleNavigate} />;
+      case 'meal-planner': return <MealPlanner onNavigate={handleNavigate} />;
+      case 'grocery-list': return <GroceryList onNavigate={handleNavigate} />;
+      case 'cart': return <Cart onNavigate={handleNavigate} />;
+      case 'upload': return <Upload onNavigate={handleNavigate} />;
+      case 'profile': return <Profile />;
+      case 'messages': return <Messages onBack={() => handleNavigate('discover')} />;
+      case 'settings': return <Settings onNavigate={handleNavigate} />;
+      default: return <Home onNavigate={handleNavigate} />;
     }
   };
 
