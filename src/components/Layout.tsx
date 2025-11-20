@@ -179,15 +179,15 @@ const FloatingNavIcons = () => (
                       `}
                       onClick={() => onNavigate(item.id)}
                     >
-                      <Icon
-                        className={`
-                          h-5 w-5 transition-opacity duration-300
-                          ${isActive
-                            ? 'opacity-100'
-                            : 'opacity-80 group-hover:opacity-60'
-                          }
-                        `}
-                      />
+                     <Icon
+  className={`
+    h-5 w-5 transition-opacity duration-300
+    ${isActive
+      ? 'opacity-100'
+      : 'opacity-100 group-hover:opacity-50'
+    }
+  `}
+/>
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
