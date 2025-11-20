@@ -294,13 +294,14 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-full h-[90vh] p-0 z-[9999]">
         <div className="flex h-full">
-          {/* Left Side - Image */}
-          <div className="w-1/2 bg-black flex items-center justify-center relative">
+          {/* Left Side - Image (now smaller and with object-contain) */}
+          <div className="w-[45%] bg-black flex items-center justify-center relative overflow-hidden">
             {post?.image_url ? (
               <img
                 src={post.image_url}
                 alt={post.title || 'Post'}
-                className="max-w-full max-h-full object-contain"
+                className="w-full h-full object-contain"
+                style={{ maxHeight: '100%' }}
               />
             ) : (
               <div className="text-white text-center">
@@ -324,25 +325,25 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             )}
           </div>
 
-          {/* Right Side - Details, Ratings, Comments */}
-          <div className="w-1/2 flex flex-col bg-white">
-            {/* Header with title */}
-            <div className="px-4 py-3 border-b">
-              <h3 className="font-bold text-lg">{post?.title || 'Post'}</h3>
+          {/* Right Side - Details, Ratings, Comments (now larger) */}
+          <div className="w-[55%] flex flex-col bg-white">
+            {/* Header with title - more compact */}
+            <div className="px-4 py-2 border-b">
+              <h3 className="font-bold text-base">{post?.title || 'Post'}</h3>
               {post?.caption && (
-                <p className="text-sm text-gray-600 mt-1">{post.caption}</p>
+                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{post.caption}</p>
               )}
             </div>
 
-            {/* Ratings Section */}
-            <div className="px-4 py-3 border-b">
-              <div className="space-y-2">
+            {/* Ratings Section - more compact */}
+            <div className="px-4 py-2 border-b">
+              <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center">
                     {[1, 2, 3, 4, 5].map((fire) => (
                       <span
                         key={fire}
-                        className={`text-xl ${
+                        className={`text-base ${
                           fire <= averageRating
                             ? 'opacity-100'
                             : 'opacity-20 grayscale'
@@ -350,14 +351,14 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                       >🔥</span>
                     ))}
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-xs text-gray-600">
                     {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
-                    {totalRatings > 0 && ` (${totalRatings} ${totalRatings === 1 ? 'rating' : 'ratings'})`}
+                    {totalRatings > 0 && ` (${totalRatings})`}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-700 font-medium">Your rating:</span>
+                  <span className="text-xs text-gray-700 font-medium">Your rating:</span>
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((fire) => (
                       <button
@@ -369,7 +370,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                         className="transition-transform hover:scale-110"
                       >
                         <span
-                          className={`text-2xl ${
+                          className={`text-lg ${
                             fire <= (hoverRating || userRating)
                               ? 'opacity-100'
                               : 'opacity-20 grayscale'
@@ -382,27 +383,27 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               </div>
             </div>
 
-            {/* Comments Section */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+            {/* Comments Section - larger scrollable area */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
               {loading ? (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
                 </div>
               ) : comments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 text-sm">
                   No comments yet. Be the first to comment!
                 </div>
               ) : (
                 comments.map(comment => (
-                  <div key={comment.id} className="flex gap-3">
+                  <div key={comment.id} className="flex gap-2">
                     {comment.profiles?.avatar_url ? (
                       <img
                         src={comment.profiles.avatar_url}
                         alt={comment.profiles.username}
-                        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                        className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
                         {comment.profiles?.username?.[0]?.toUpperCase()}
                       </div>
                     )}
@@ -410,13 +411,13 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                       <div className="bg-gray-100 rounded-2xl px-3 py-2">
                         <button
                           onClick={() => window.location.href = `/${comment.profiles?.username || 'user'}`}
-                          className="font-semibold text-sm hover:underline"
+                          className="font-semibold text-xs hover:underline"
                         >
                           {comment.profiles?.username}
                         </button>
-                        <p className="text-sm text-gray-700 break-words">{comment.text}</p>
+                        <p className="text-xs text-gray-700 break-words">{comment.text}</p>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1 px-3">
+                      <p className="text-[10px] text-gray-400 mt-1 px-3">
                         {new Date(comment.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -425,20 +426,20 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               )}
             </div>
 
-            {/* Comment Input */}
-            <form onSubmit={handleSubmitComment} className="border-t px-4 py-3 flex gap-2">
+            {/* Comment Input - fixed at bottom, always visible */}
+            <form onSubmit={handleSubmitComment} className="border-t px-4 py-3 flex gap-2 bg-white flex-shrink-0">
               <Input
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Add a comment..."
                 disabled={submitting}
-                className="flex-1"
+                className="flex-1 text-sm"
               />
               <Button
                 type="submit"
                 disabled={!newComment.trim() || submitting}
                 size="icon"
-                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 flex-shrink-0"
               >
                 <Send className="w-4 h-4" />
               </Button>
