@@ -619,21 +619,23 @@ export function Profile({ username: targetUsername }: ProfileProps) {
               <Label htmlFor="username">Username</Label>
              <div className="space-y-1">
   <Input
+   <div className="space-y-1">
+  <Input
     id="username"
     value={newUsername}
     onChange={(e) => {
       setNewUsername(e.target.value);
       setUsernameError(null);
     }}
-    placeholder="max 10 chars, no spaces"
-    maxLength={10}
+    placeholder="max 20 chars, no spaces"
+    maxLength={20}
     className={usernameError ? 'border-red-500' : ''}
   />
   {usernameError && (
     <p className="text-xs text-red-600 font-medium">{usernameError}</p>
   )}
   <p className="text-xs text-gray-500">
-    {newUsername.length}/10 • letters, numbers, _ .
+    {newUsername.length}/20 • letters, numbers, _ .
   </p>
 </div>
             </div>
