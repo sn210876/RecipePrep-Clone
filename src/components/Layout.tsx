@@ -155,6 +155,42 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   };
 
   const FloatingNavIcons = () => (
+    <div className="pointer-events-none fixed z-[500]">
+      <div className="pointer-events-auto fixed top-4 right-4 p-2">
+        <TooltipProvider>
+          <div className="flex items-center gap-2 bg-white/80 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2">
+            {navItems
+              .filter(item => item.id !== 'discover' && item.id !== 'settings')
+              .map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPage === item.id;
+                return (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-11 w-11 rounded-full transition-all ${
+                          isActive
+                            ? 'bg-orange-500 text-white shadow-lg'
+                            : 'text-gray-700 hover:bg-gray-100 hover:scale-110'
+                        }`}
+                        onClick={() => onNavigate(item.id)}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+          </div>
+        </TooltipProvider>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white">
