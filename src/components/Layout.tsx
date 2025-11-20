@@ -36,7 +36,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     { id: 'add-recipe', label: 'Add Recipe', icon: Plus },
     { id: 'meal-planner', label: 'Meal Planner', icon: Calendar },
     { id: 'grocery-list', label: 'Grocery List', icon: ShoppingCart },
-    { id: 'cart', label: 'Cart', icon: ShoppingCart },
+    { id: 'cart', label: 'Cart', icon: pig },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
