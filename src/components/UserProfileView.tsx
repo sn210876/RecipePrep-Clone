@@ -406,6 +406,13 @@ const handleDeleteComment = async (commentId: string) => {
           })}
         </div>
       )}
+{selectedPostId && (
+  <CommentModal
+    postId={selectedPostId}
+    isOpen={true}
+    onClose={() => setSelectedPostId(null)}
+  />
+)}
 
       {selectedPostId && (
         <CommentModal
