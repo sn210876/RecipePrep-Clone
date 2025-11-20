@@ -1015,8 +1015,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
             <div className="flex items-center gap-1">
              <button
   onClick={() => {
-    // This instantly opens their profile without full reload
-    window.location.href = `/profile/${post.profiles?.username}`;
+    window.location.href = `/${post.profiles?.username}`;
   }}
   className="font-semibold text-sm hover:underline cursor-pointer"
 >

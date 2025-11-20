@@ -32,13 +32,7 @@ function AppContent() {
     // Deep-link to a post → force Discover + modal
     if (path.match(/^\/post\/[a-f0-9]{36}$/)) return 'discover';
 
-    // NEW: /profile/username
-    if (path.startsWith('/profile/') && path !== '/profile') {
-      const username = path.split('/profile/')[1];
-      if (username) return `profile:${username}`;
-    }
-
-    // Existing routes
+    // Existing routes (check these first before username catch-all)
     if (path === '/' || path === '/discover-recipes') return 'discover-recipes';
     if (path === '/discover') return 'discover';
     if (path === '/recipes' || path === '/my-recipes') return 'my-recipes';
@@ -51,6 +45,19 @@ function AppContent() {
     if (path === '/messages') return 'messages';
     if (path === '/settings') return 'settings';
     if (path === '/onboarding') return 'onboarding';
+
+    // /profile/username format
+    if (path.startsWith('/profile/') && path !== '/profile') {
+      const username = path.split('/profile/')[1];
+      if (username) return `profile:${username}`;
+    }
+
+    // /:username format (catch-all for user profiles)
+    if (path !== '/' && path.length > 1 && !path.includes('.')) {
+      const username = path.substring(1); // Remove leading slash
+      if (username && !username.includes('/')) return `profile:${username}`;
+    }
+
     return 'discover-recipes';
   });
 
@@ -79,11 +86,16 @@ function AppContent() {
       if (path === '/' || path === '/discover-recipes') setCurrentPage('discover-recipes');
       else if (path === '/discover') setCurrentPage('discover');
       else if (path === '/recipes' || path === '/my-recipes') setCurrentPage('my-recipes');
+      else if (path === '/profile') setCurrentPage('profile');
       else if (path.startsWith('/profile/') && path !== '/profile') {
         const username = path.split('/profile/')[1];
         if (username) setCurrentPage(`profile:${username}`);
       }
-      // Add more if needed
+      // /:username format
+      else if (path !== '/' && path.length > 1 && !path.includes('.')) {
+        const username = path.substring(1);
+        if (username && !username.includes('/')) setCurrentPage(`profile:${username}`);
+      }
     };
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
@@ -111,7 +123,7 @@ function AppContent() {
     // Handle profile navigation
     if (page.startsWith('profile:')) {
       const username = page.split('profile:')[1];
-      window.history.pushState({}, '', `/profile/${username}`);
+      window.history.pushState({}, '', `/${username}`);
       setCurrentPage(page);
       return;
     }
