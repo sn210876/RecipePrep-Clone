@@ -280,7 +280,7 @@ const handleDeleteComment = async (commentId: string) => {
   if (error) {
     console.error('Failed to delete comment:', error);
     toast.error('Could not delete comment');
-    // Re-fetch if failed
+    // Re-fetch comments if delete fails
     loadComments();
   } else {
     toast.success('Comment deleted');
