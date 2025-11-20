@@ -233,7 +233,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract' });
     } else {
       setShowPreview(true);
-      toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`, { id: 'extract' });
+      toast.success(`! Review and edit before saving.`, { id: 'extract' });
     }
     setIsExtracting(false);
   } catch (error: any) {
