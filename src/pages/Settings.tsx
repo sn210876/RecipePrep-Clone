@@ -114,7 +114,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
     try {
       const userId = localStorage.getItem('userId') || generateUserId();
       localStorage.setItem('userId', userId);
-      setForwardingEmail(`user-${userId.substring(0, 8)}@mealscrape.app`);
+      setForwardingEmail(`user-${userId.substring(0,8)}@mealscrape.forwardemail.net`);
     } catch (error) {
       console.error('Error initializing user:', error);
       setForwardingEmail('user-demo123@mealscrape.app');
