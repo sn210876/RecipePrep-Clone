@@ -438,42 +438,77 @@ const handleDeleteComment = async (commentId: string) => {
 )}
 
       {/* DELETE POST BUTTON */}
+     {selectedPostId && (
+  <>
+    {(() => {
       const selectedPost = userPosts.find(p => p.id === selectedPostId);
+      return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full">
 
-{selectedPost && currentUserId === selectedPost.user_id && (
-        <button
-          onClick={async () => {
-            const confirmed = confirm("Delete this post?");
-            if (!confirmed) return;
+            {/* EDIT BUTTON */}
+            {selectedPost && currentUserId === selectedPost.user_id && (
+              <button
+                onClick={() => {
+                  const newCaption = prompt("Edit your caption:");
+                  if (!newCaption) return;
 
-            const { error } = await supabase
-              .from("posts")
-              .delete()
-              .eq("id", selectedPostId)
-              .eq("user_id", currentUserId);
+                  supabase
+                    .from("posts")
+                    .update({ caption: newCaption })
+                    .eq("id", selectedPostId)
+                    .eq("user_id", currentUserId)
+                    .then(({ error }) => {
+                      if (error) toast.error("Failed to update post");
+                      else {
+                        toast.success("Post updated");
+                        if (onRefresh) onRefresh();
+                      }
+                    });
+                }}
+                className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700"
+              >
+                ✏️
+              </button>
+            )}
 
-            if (error) {
-              toast.error("Failed to delete post");
-            } else {
-              toast.success("Post deleted");
-              setSelectedPostId(null);
-              if (onRefresh) onRefresh();
-            }
-          }}
-          className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700"
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
-      )}
+            {/* DELETE BUTTON */}
+            {selectedPost && currentUserId === selectedPost.user_id && (
+              <button
+                onClick={async () => {
+                  const confirmed = confirm("Delete this post?");
+                  if (!confirmed) return;
 
-      {/* EXISTING COMMENT MODAL */}
-      <CommentModal
-        postId={selectedPostId}
-        isOpen={true}
-        onClose={() => setSelectedPostId(null)}
-      />
-    </div>
-  </div>
+                  const { error } = await supabase
+                    .from("posts")
+                    .delete()
+                    .eq("id", selectedPostId)
+                    .eq("user_id", currentUserId);
+
+                  if (error) {
+                    toast.error("Failed to delete post");
+                  } else {
+                    toast.success("Post deleted");
+                    setSelectedPostId(null);
+                    if (onRefresh) onRefresh();
+                  }
+                }}
+                className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
+
+            <CommentModal
+              postId={selectedPostId}
+              isOpen={true}
+              onClose={() => setSelectedPostId(null)}
+            />
+          </div>
+        </div>
+      );
+    })()}
+  </>
 )}
 
 
