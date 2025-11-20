@@ -550,7 +550,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
-              <CardDescription>The essential details about your recipe</CardDescription>
+              <CardDescription>Review your pasted link and ensure they copied over correctly</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
