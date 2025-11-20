@@ -192,7 +192,8 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
 These recipes have been selected from all over <span className="font-bold text-blue-600">Social Media</span> & the <span className="font-bold text-blue-600"> Web</span>
-</p>  </h1> so enjoy
+</p>  </h1> <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+These recipes have been selected from all ove
         </div>
 
         <div className="mb-12 space-y-6">
