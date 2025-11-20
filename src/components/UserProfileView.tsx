@@ -481,25 +481,7 @@ const handleDeleteComment = async (commentId: string) => {
   </>
 )}
 
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Supporters</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {supporters.map((supporter) => (
-              <div key={supporter.follower_id} className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold">
-                  {supporter.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-5 h-5" />}
-                </div>
-                <span className="font-medium">{supporter.profiles?.username || 'User'}</span>
-              </div>
-            ))}
-            {supporters.length === 0 && (
-              <p className="text-center text-gray-500 py-4">No supporters yet</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+     
 
       <Dialog open={showSupporting} onOpenChange={setShowSupporting}>
         <DialogContent>
