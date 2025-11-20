@@ -14,21 +14,23 @@ async function parseWithAI(text: string): Promise<{ ingredients: string[], instr
   const prompt = `You are a recipe extraction expert. Extract ALL ingredients, ALL instructions, prep time, cook time, and yield from the recipe text. TRANSLATE EVERYTHING TO ENGLISH.
 
 CRITICAL RULES:
-1. If the recipe is in another language (Vietnamese, Spanish, French, etc.), you MUST translate all ingredients and instructions to English.
-2. Extract EVERY SINGLE ingredient listed in the recipe - do not skip any.
-3. Extract EVERY SINGLE instruction step - include all details and sub-steps.
-4. Preserve quantities, measurements, and cooking times EXACTLY as written - do not convert units.
-5. If there are multiple ingredient sections (like "For the broth", "For the noodles"), include all of them.
-6. If there are detailed preparation steps, include them all.
-7. Extract prep time and cook time in MINUTES (convert hours to minutes if needed). If prep time includes proofing/rising time, add it to prep time.
-8. Extract yield/servings information EXACTLY - count the number of servings/rolls/pieces accurately.
-9. DO NOT convert metric to imperial or vice versa - keep original units (g, kg, cups, etc).
+1. Extract EVERY SINGLE ingredient listed in the recipe - do not skip any. Include ALL sections (Dough, Filling, Topping, Sauce, etc.).
+2. Extract EVERY SINGLE instruction step - include all details and sub-steps.
+3. Preserve quantities and units EXACTLY as written - do not convert units (keep g, kg, cups, tsp as-is).
+4. For yield/servings: READ THE INSTRUCTIONS CAREFULLY. Look for phrases like "divide into X pieces", "makes X servings", "cut into X portions". The yield MUST match what the instructions say, NOT what a website header might claim.
+5. For prep time: Add up ALL non-cooking time (mixing, proofing, rising, resting, chilling, assembly). Convert hours to minutes.
+6. For cook time: ONLY the actual oven/stove/cooking time. Do NOT include proofing or prep time.
+7. If there are multiple ingredient sections, include them ALL with their section names.
+8. If the recipe is in another language, translate all ingredients and instructions to English.
+
+EXAMPLE:
+If instructions say "Divide dough into 12 pieces" but the website says "Serves: 7", the correct yield is "12" (trust the instructions, not the website metadata).
 
 Return ONLY valid JSON in this exact format:
 {
-  "ingredients": ["520g bread flour", "2 eggs", "1 tsp salt", ...],
-  "instructions": ["Step 1 with full details", "Step 2 with full details", ...],
-  "prep_time": 100,
+  "ingredients": ["520g bread flour", "30g powdered skim milk", "Salt flakes for topping", ...],
+  "instructions": ["Place all the ingredients in a mixer bowl and mix for 5 minutes at slow speed.", "Increase the speed to medium and continue mixing for 5 more minutes.", ...],
+  "prep_time": 115,
   "cook_time": 25,
   "yield": "12 rolls",
   "notes": "Any cooking tips or notes"
