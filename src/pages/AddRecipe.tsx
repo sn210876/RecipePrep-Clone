@@ -484,14 +484,14 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             <div className="flex gap-3">
               <div className="flex-1 relative">
                 <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Paste copy and pasted link here"
-                  className="pl-10"
-                  disabled={isExtracting}
-                  onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-                />
+               <Input
+  value={urlInput}
+  onChange={(e) => setUrlInput(e.target.value)}
+  placeholder="Paste copy and pasted link here"
+  className="pl-10 border-red-500 focus-visible:ring-red-500 focus:border-red-500"
+  disabled={isExtracting}
+  onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+/>
               </div>
               <Button
                 type="button"
