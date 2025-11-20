@@ -697,52 +697,79 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         </DialogContent>
       </Dialog>
 
-    {selectedPostId && (
-  <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
-    <DialogContent className="max-w-lg p-0 overflow-hidden bg-black">
-      {/* TOP BAR: Back + Edit Button */}
-     <div className="relative z-50 flex items-center justify-between px-4 pt-4 pb-2 bg-black/50 backdrop-blur-sm">
-  <button
-    onClick={() => setSelectedPostId(null)}
-    className="p-3 hover:bg-white/20 rounded-full transition-all"
-  >
-    <ArrowLeft className="w-6 h-6 text-white" />
-  </button>
+         {/* FULL POST VIEW MODAL WITH EDIT BUTTON */}
+      {selectedPostId && (
+        <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
+          <DialogContent className="max-w-lg p-0 overflow-hidden bg-black h-[90vh] rounded-t-3xl">
+            {/* Find the actual post */}
+            {(() => {
+              const post = posts.find(p => p.id === selectedPostId);
+              if (!post) return null;
 
-  {/* EDIT BUTTON — NOW VISIBLE */}
-  {currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
-    <button
-      onClick={() => {
-        const post = posts.find(p => p.id === selectedPostId);
-        if (post) {
-          setEditingPost({
-            id: post.id,
-            title: post.title || '',
-            caption: post.caption || '',
-            recipeUrl: post.recipe_url || '',
-            photoUrl: post.image_url || post.video_url || '',
-          });
-        }
-        setSelectedPostId(null);
-      }}
-      className="p-3 hover:bg-orange-500/30 rounded-full transition-all group"
-    >
-      <Edit3 className="w-6 h-6 text-white group-hover:text-orange-400 drop-shadow-lg" />
-    </button>
-  )}
-</div>
+              const isOwner = currentUserId === post.user_id;
 
-      {/* Reuse your existing CommentModal content here if you want */}
-      {/* Or just keep it simple for now */}
-      <CommentModal
-        postId={selectedPostId}
-        isOpen={true}
-        onClose={() => setSelectedPostId(null)}
-        onCommentPosted={() => window.location.reload()}
-      />
-    </DialogContent>
-  </Dialog>
-)}
+              return (
+                <>
+                  {/* TOP BAR WITH BACK + EDIT */}
+                  <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-gradient-to-b from-black/70 to-transparent">
+                    <button
+                      onClick={() => setSelectedPostId(null)}
+                      className="p-3 bg-white/20 backdrop-blur-md rounded-full"
+                    >
+                      <ArrowLeft className="w-6 h-6 text-white" />
+                    </button>
+
+                    {isOwner && (
+                      <button
+                        onClick={() => {
+                          setEditingPost({
+                            id: post.id,
+                            title: post.title || '',
+                            caption: post.caption || '',
+                            recipeUrl: post.recipe_url || '',
+                            photoUrl: post.image_url || post.video_url || '',
+                          });
+                          setSelectedPostId(null);
+                        }}
+                        className="p-3 bg-white/20 backdrop-blur-md rounded-full"
+                      >
+                        <Edit3 className="w-6 h-6 text-white" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* POST IMAGE/VIDEO */}
+                  <div className="relative w-full h-full">
+                    {post.image_url ? (
+                      <img
+                        src={post.image_url.includes('instagram.com') || post.image_url.includes('fbcdn.net')
+                          ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(post.image_url)}`
+                          : post.image_url}
+                        alt={post.title || ''}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : post.video_url ? (
+                      <video
+                        src={post.video_url}
+                        controls
+                        className="w-full h-full object-contain"
+                      />
+                    ) : null}
+
+                    {/* TITLE & CAPTION OVERLAY */}
+                    {(post.title || post.caption) && (
+                      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
+                        {post.title && <h2 className="text-2xl font-bold mb-2">{post.title}</h2>}
+                        {post.caption && <p className="text-lg opacity-90">{post.caption}</p>}
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
