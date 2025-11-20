@@ -25,8 +25,8 @@ import {
   Layers,
   Plus,
   Check,
-  ShoppingCart
-  Trash2
+  Trash2,
+  ShoppingCart,   // ← comma was missing here!
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
