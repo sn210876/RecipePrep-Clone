@@ -420,7 +420,7 @@ const handleDeleteComment = async (commentId: string) => {
             {selectedPost && currentUserId === selectedPost.user_id && (
               <button
                 onClick={() => {
-                  const newCaption =d\ prompt("Edit your caption:");
+                  const newCaption =d prompt("Edit your caption:");
                   if (!newCaption) return;
 
                   supabase
