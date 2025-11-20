@@ -740,6 +740,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
     </DialogContent>
   </Dialog>
 )}
+</div>
 
       {/* Reuse your existing CommentModal content here if you want */}
       {/* Or just keep it simple for now */}
