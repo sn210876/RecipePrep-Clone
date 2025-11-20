@@ -169,13 +169,16 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="icon"
-            className={`h-11 w-11 rounded-full transition-all
+          className={`h-11 w-11 rounded-full transition-all
   ${
     isActive
       ? 'bg-orange-500 text-white shadow-lg'
-      : 'text-gray-700 hover:text-gray-700 opacity-70 hover:opacity-100 hover:scale-110 focus:outline-none focus:ring-0 focus-visible:ring-0 hover:ring-1 hover:ring-blue-300'
+      : 'text-gray-700 hover:text-gray-700 opacity-70 hover:opacity-100 hover:scale-110 
+         hover:bg-transparent focus:bg-transparent active:bg-transparent
+         data-[state=open]:bg-transparent
+         ring-0 focus:ring-0 focus-visible:ring-0'
   }`}
+
 
 
 
