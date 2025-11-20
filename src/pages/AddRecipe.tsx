@@ -44,7 +44,7 @@ const UNITS = [
 
 const CUISINE_TYPES = [
   'American', 'Chinese', 'Culinary/Baked Goods', 'French', 'Healing/Medicine', 'Indian', 'Italian', 'Juices/Smoothies', 
-  'Japanese', 'Korean', 'Mediterranean', 'Mexican/Spanish', 'Other', 'Pet Meals',
+  'Japanese', 'Korean', 'Mediterranean', 'Mexican/Spanish', 'Other', 'Pet Meals', 'Supplements',
   'Thai', 'Vegan/Vegetarian', 'Vietnamese'
 ];
 
