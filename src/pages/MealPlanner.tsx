@@ -413,7 +413,6 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     </div>
   </div>
 
-  {/* RIGHT SIDE BUTTONS — CLEAN AND CORRECT */}
   <div className="flex items-center gap-3">
     <Button
       onClick={() => onNavigate?.('grocery-list')}
@@ -457,6 +456,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
       </Button>
     </div>
   </div>
+</div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
