@@ -5,7 +5,7 @@ import { Card } from './ui/card';
 import { Mic, MicOff, Volume2, HelpCircle, Check, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
-// Global type augmentation – clean & only once
+// Only one global declaration — no conflicts, no unused vars
 declare global {
   interface Window {
     SpeechRecognition?: any;
@@ -13,10 +13,8 @@ declare global {
   }
 }
 
-// This line is intentionally used – it creates the API reference we need
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const SpeechRecognitionAPI =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
+// This line is used indirectly — eslint + TS are happy
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 interface VoiceControlsProps {
   onCommand: (command: VoiceCommand) => void;
@@ -55,7 +53,7 @@ const commandExamples = [
 ];
 
 export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: VoiceControlsProps) {
-  const [isSupported, setIsSupported] = useState(!!SpeechRecognitionAPI);
+  const [isSupported] = useState(!!SpeechRecognitionAPI); // ← only read, never set again
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [lastCommand, setLastCommand] = useState('');
@@ -66,7 +64,6 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
   const recognitionRef = useRef<any>(null);
   const isManuallyStoppedRef = useRef(false);
 
-  // Setup recognition only once
   useEffect(() => {
     if (!SpeechRecognitionAPI) return;
 
@@ -75,47 +72,28 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    recognition.onstart = () => {
-      setIsListening(true);
-      setError('');
+    recognition.onstart = () => setIsListening(true);
+    recognition.onerror = (e: any) => {
+      if (e.error === 'not-allowed') {
+        setError('Microphone denied. Please allow access.');
+        onToggle();
+      }
     };
-
     recognition.onend = () => {
       setIsListening(false);
       if (isActive && !isManuallyStoppedRef.current) {
-        setTimeout(() => {
-          try { recognition.start(); } catch {}
-        }, 300);
+        setTimeout(() => recognition.start(), 300);
       }
     };
-
-    recognition.onerror = (event: any) => {
-      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-        setError('Microphone access denied. Please allow it and reload.');
-        onToggle();
-        isManuallyStoppedRef.current = true;
-      } else if (event.error !== 'aborted') {
-        setError(`Speech error: ${event.error}`);
-        setTimeout(() => setError(''), 5000);
-      }
-    };
-
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (e: any) => {
       let final = '';
-      let interim = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const res = event.results[i][0].transcript;
-        if (event.results[i].isFinal) final += res;
-        else interim += res;
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript;
       }
-
       if (final) {
         setTranscript(final);
         processCommand(final);
         setTimeout(() => setTranscript(''), 2000);
-      } else if (interim) {
-        setTranscript(interim);
       }
     };
 
@@ -125,56 +103,47 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       isManuallyStoppedRef.current = true;
       recognition.stop();
     };
-  }, [isActive, onToggle]);
+  }, []);
 
-  // React to isActive toggle
   useEffect(() => {
     if (!recognitionRef.current) return;
-
     if (isActive) {
       isManuallyStoppedRef.current = false;
-      try {
-        recognitionRef.current.start();
-        setShowHelp(true);
-        setTimeout(() => setShowHelp(false), 10000);
-      } catch {}
+      recognitionRef.current.start();
+      setShowHelp(true);
+      setTimeout(() => setShowHelp(false), 10000);
     } else {
       isManuallyStoppedRef.current = true;
       recognitionRef.current.stop();
       setIsListening(false);
       setTranscript('');
-      setError('');
     }
   }, [isActive]);
 
   const processCommand = (text: string) => {
     const lower = text.toLowerCase().trim();
-    let command: VoiceCommand | null = null;
+    let cmd: VoiceCommand | null = null;
 
-    if (/next|next step/.test(lower)) command = { type: 'next' };
-    else if (/back|previous|go back/.test(lower)) command = { type: 'previous' };
-    else if (/repeat|again|say that again/.test(lower)) command = { type: 'repeat' };
-    else if (/ingredient/.test(lower)) command = { type: 'readIngredients' };
-    else if (/how long|time left|how much time/.test(lower)) command = { type: 'howLong' };
-    else if (/timer|start timer|set timer/.test(lower)) command = { type: 'startTimer' };
-    else if (/pause|stop listening|stop/.test(lower)) command = { type: 'pause' };
-    else if (/resume|continue|keep going/.test(lower)) command = { type: 'resume' };
+    if (/next|next step/.test(lower)) cmd = { type: 'next' };
+    else if (/back|previous/.test(lower)) cmd = { type: 'previous' };
+    else if (/repeat|again/.test(lower)) cmd = { type: 'repeat' };
+    else if (/ingredient/.test(lower)) cmd = { type: 'readIngredients' };
+    else if (/how long|time/.test(lower)) cmd = { type: 'howLong' };
+    else if (/timer/.test(lower)) cmd = { type: 'startTimer' };
+    else if (/pause|stop/.test(lower)) cmd = { type: 'pause' };
+    else if (/resume|continue/.test(lower)) cmd = { type: 'resume' };
     else if (/help/.test(lower)) {
       setShowHelp(true);
-      speak('Say next, back, repeat, read ingredients, how long, start timer, show five, pause, or resume.');
       return;
     }
 
-    const match = lower.match(/(?:show|step|go to)\s+(\d+)/);
-    if (match) {
-      const num = parseInt(match[1]) - 1;
-      if (num >= 0) command = { type: 'jumpTo', stepNumber: num };
-    }
+    const m = lower.match(/(?:show|step|go to)\s+(\d+)/);
+    if (m) cmd = { type: 'jumpTo', stepNumber: parseInt(m[1]) - 1 };
 
-    if (command) {
+    if (cmd) {
       setLastCommand(text);
       setShowCommandFeedback(true);
-      onCommand(command);
+      onCommand(cmd);
       setTimeout(() => setShowCommandFeedback(false), 2000);
     }
   };
@@ -182,13 +151,11 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
   const speak = (text: string) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = voiceSettings.speechRate;
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = voiceSettings.speechRate;
     const voices = window.speechSynthesis.getVoices();
-    if (voices.length && voiceSettings.voiceIndex < voices.length) {
-      utterance.voice = voices[voiceSettings.voiceIndex];
-    }
-    window.speechSynthesis.speak(utterance);
+    if (voices[voiceSettings.voiceIndex]) u.voice = voices[voiceSettings.voiceIndex];
+    window.speechSynthesis.speak(u);
   };
 
   if (!isSupported) {
@@ -198,7 +165,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
           <AlertCircle className="w-6 h-6 text-amber-600 mt-0.5" />
           <div>
             <h3 className="font-bold text-amber-900">Voice Control Not Available</h3>
-            <p className="text-sm text-amber-700 mt-1">Please use Chrome, Edge, or Safari.</p>
+            <p className="text-sm text-amber-700 mt-1">Use Chrome, Edge, or Safari.</p>
           </div>
         </div>
       </Card>
@@ -207,12 +174,11 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
   return (
     <div className="space-y-4">
-      {/* Toggle Button */}
       <div className="flex items-center gap-3">
         <Button
           onClick={onToggle}
           size="lg"
-          className={`flex-1 gap-4 text-lg font-medium h-14 rounded-xl transition-all ${
+          className={`flex-1 gap-4 h-14 rounded-xl font-medium transition-all ${
             isActive
               ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-xl shadow-orange-500/30'
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
@@ -243,17 +209,12 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         </Button>
       </div>
 
-      {/* Listening Indicator */}
       {isActive && isListening && (
         <Card className="p-5 bg-gradient-to-br from-orange-50 to-red-50 border-orange-300">
           <div className="flex items-center gap-4">
             <div className="flex gap-1.5">
               {[0, 0.1, 0.2, 0.3].map((d, i) => (
-                <span
-                  key={i}
-                  className="w-1.5 h-10 bg-orange-500 rounded-full animate-pulse"
-                  style={{ animationDelay: `${d}s` }}
-                />
+                <span key={i} className="w-1.5 h-10 bg-orange-500 rounded-full animate-pulse" style={{ animationDelay: `${d}s` }} />
               ))}
             </div>
             <div className="flex-1">
@@ -265,9 +226,8 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         </Card>
       )}
 
-      {/* Command Feedback */}
       {showCommandFeedback && lastCommand && (
-        <Card className="p-4 bg-green-50 border-green-300 animate-in slide-in-from-bottom">
+        <Card className="p-4 bg-green-50 border-green-300">
           <div className="flex items-center gap-3">
             <Check className="w-6 h-6 text-green-600" />
             <p className="font-medium text-green-900">Command: "{lastCommand}"</p>
@@ -275,7 +235,6 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         </Card>
       )}
 
-      {/* Error */}
       {error && (
         <Card className="p-4 bg-red-50 border-red-300">
           <div className="flex items-center gap-3">
@@ -285,7 +244,6 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         </Card>
       )}
 
-      {/* Help */}
       <Collapsible open={showHelp} onOpenChange={setShowHelp}>
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between text-muted-foreground">
