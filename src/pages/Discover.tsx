@@ -726,7 +726,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     const post = posts.find(p => p.id === postId);
     if (!post) return;
 
-    const shareUrl = `https://mealscrape.com/post/${postId}`;
+    const username = post.profiles?.username || 'user';
+    const shareUrl = `https://mealscrape.com/${username}?post=${postId}`;
     const shareData = {
       title: post.title || 'Check out this recipe!',
       text: post.caption || 'Found this amazing recipe on MealScrape!',
@@ -749,7 +750,11 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   };
 
   const handleCopyLink = (postId: string) => {
-    const shareUrl = `https://mealscrape.com/post/${postId}`;
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const username = post.profiles?.username || 'user';
+    const shareUrl = `https://mealscrape.com/${username}?post=${postId}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
       setCopiedLink(true);
@@ -767,7 +772,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     const post = posts.find(p => p.id === sharePostId);
     if (!post) return;
 
-    const shareUrl = `https://mealscrape.com/post/${sharePostId}`;
+    const username = post.profiles?.username || 'user';
+    const shareUrl = `https://mealscrape.com/${username}?post=${sharePostId}`;
     const messageContent = `Check out this recipe: ${post.title || 'Shared post'}\n${shareUrl}`;
 
     try {
@@ -811,6 +817,15 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       toast.success(`Shared with ${selectedFollowers.size} ${selectedFollowers.size === 1 ? 'person' : 'people'}!`);
       setSharePostId(null);
       setSelectedFollowers(new Set());
+
+      // Navigate to messages if only one follower was selected
+      if (selectedFollowers.size === 1 && onNavigateToMessages) {
+        const followerId = Array.from(selectedFollowers)[0];
+        const followerData = followers.find(f => f.id === followerId);
+        if (followerData) {
+          onNavigateToMessages(followerId, followerData.username);
+        }
+      }
     } catch (error) {
       console.error('Error sharing post:', error);
       toast.error('Failed to share post');
