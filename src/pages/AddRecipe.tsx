@@ -38,7 +38,7 @@ function parseServingsValue(value: string | number): number {
 }
 
 const UNITS = [
-  'cup', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'l',
+  'cup', 'TBSP', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'l',
   'piece', 'whole', 'pinch', 'dash', 'egg(s)', 'to taste'
 ];
 
