@@ -33,7 +33,7 @@ const commandExamples = [
   { text: '"Back" or "Previous"', description: 'Go to previous step' },
   { text: '"Repeat" or "Say that again"', description: 'Repeat current step' },
   { text: '"Read ingredients"', description: 'Read full ingredient list' },
-  { text: '"How long"', description: 'Tell cooking time for step time' },
+  { text: '"How long"', description: 'Tell cooking time for step' },
   { text: '"Start timer"', description: 'Start timer for current step' },
   { text: '"Show 3" or "Step 5"', description: 'Jump to step number' },
   { text: '"Pause" or "Stop"', description: 'Pause voice mode' },
@@ -52,7 +52,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isManuallyStoppedRef = useRef(false);
 
-  // Initialize Speech Recognition
+  // Initialize SpeechRecognition once
   useEffect(() => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -76,21 +76,18 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
     recognition.onend = () => {
       setIsListening(false);
-
       if (isActive && !isManuallyStoppedRef.current) {
         setTimeout(() => {
           try {
             recognition.start();
           } catch {
-            // ignore
+            /* ignore */
           }
         }, 300);
       }
     };
 
     recognition.onerror = (event: any) => {
-      console.warn('Speech error:', event.error);
-
       if (event.error === 'not-allowed' || event.error === 'permission-denied') {
         setError('Microphone access denied. Please allow it and reload.');
         onToggle();
@@ -107,7 +104,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       const final = results
         .filter((r: any) => r.isFinal)
         .map((r: any) => r[0].transcript)
-        .join(' ' ');
+        .join(' ');
 
       const interim = results
         .filter((r: any) => !r.isFinal)
@@ -131,7 +128,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
     };
   }, []);
 
-  // Toggle voice mode
+  // React to isActive toggle
   useEffect(() => {
     if (!recognitionRef.current || !isSupported) return;
 
@@ -141,7 +138,9 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         recognitionRef.current.start();
         setShowHelp(true);
         setTimeout(() => setShowHelp(false), 10000);
-      } catch {}
+      } catch {
+        /* already starting */
+      }
     } else {
       isManuallyStoppedRef.current = true;
       recognitionRef.current.stop();
@@ -170,7 +169,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       return;
     }
 
-    // Jump to step
+    // Jump to specific step
     const match = lower.match(/(?:show|step|go to)\s+(\d+)/);
     if (match) {
       const num = parseInt(match[1]) - 1;
@@ -194,7 +193,6 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0 && voiceSettings.voiceIndex < voices.length) {
-      {
       utterance.voice = voices[voiceSettings.voiceIndex];
     }
 
@@ -209,7 +207,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
           <div>
             <h3 className="font-bold text-amber-900">Voice Control Not Available</h3>
             <p className="text-sm text-amber-700 mt-1">
-              Use Chrome, Edge, or Safari for voice commands.
+              Please use Chrome, Edge, or Safari.
             </p>
           </div>
         </div>
@@ -219,6 +217,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
   return (
     <div className="space-y-4">
+      {/* Toggle Button */}
       <div className="flex items-center gap-3">
         <Button
           onClick={onToggle}
@@ -255,6 +254,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         </Button>
       </div>
 
+      {/* Listening Indicator */}
       {isActive && isListening && (
         <Card className="p-5 bg-gradient-to-br from-orange-50 to-red-50 border-orange-300">
           <div className="flex items-center gap-4">
@@ -276,6 +276,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         </Card>
       )}
 
+      {/* Command Feedback */}
       {showCommandFeedback && lastCommand && (
         <Card className="p-4 bg-green-50 border-green-300 animate-in slide-in-from-bottom">
           <div className="flex items-center gap-3">
@@ -285,6 +286,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         </Card>
       )}
 
+      {/* Error */}
       {error && (
         <Card className="p-4 bg-red-50 border-red-300">
           <div className="flex items-center gap-3">
@@ -294,6 +296,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         </Card>
       )}
 
+      {/* Help */}
       <Collapsible open={showHelp} onOpenChange={setShowHelp}>
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between text-muted-foreground">
