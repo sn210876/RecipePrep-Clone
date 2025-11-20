@@ -135,14 +135,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
       <div className="max-w-lg mx-auto px-4 h-16 flex items-center justify-around">
-        <button
-          onClick={() => onNavigate('discover')}
-          className={`flex flex-col items-center gap-1 transition-colors ${
-            currentPage === 'discover' ? 'text-cyan-500' : 'text-gray-600 hover:text-cyan-500'
-          }`}
-        >
-          <UtensilsCrossed className="w-7 h-7" strokeWidth={currentPage === 'discover' ? 2.5 : 2} />
-        </button>
+       
 
         <button
           onClick={() => onNavigate('messages')}
