@@ -170,7 +170,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-           className={`h-11 w-11 rounded-full transition-all
+            className={`h-11 w-11 rounded-full transition-all
   ${
     isActive
       ? 'bg-orange-500 text-white shadow-lg'
@@ -179,6 +179,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
          data-[state=open]:bg-transparent
          ring-0 focus:ring-0 focus-visible:ring-0'
   }`}
+
 
 
 
