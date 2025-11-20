@@ -122,8 +122,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   }, []);
 
   // Fixed: Listen for shared post events and check URL
-  useEffect(() => {
-     // FIXED: Deep linking for /post/:id — works on direct open, back button, and shared links
+    // FIXED: Deep linking for /post/:id — works on direct open, back button, and shared links
   useEffect(() => {
     const openPostFromUrl = () => {
       const path = window.location.pathname;
