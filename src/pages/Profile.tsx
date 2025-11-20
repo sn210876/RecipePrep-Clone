@@ -3,6 +3,7 @@ import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
 import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
@@ -108,12 +109,14 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [editingPost, setEditingPost] = useState<{
-  id: string;
-  title: string;
-  caption: string;
-  recipeUrl: string;
-  photoUrl: string;
-} | null>(null);
+    id: string;
+    title: string;
+    caption: string;
+    recipeUrl: string;
+    photoUrl: string;
+  } | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -377,6 +380,92 @@ export function Profile({ username: targetUsername }: ProfileProps) {
 
   setEditingProfile(false);
 };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingPost) return;
+
+    setUploadingPhoto(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${currentUserId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('posts')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('posts')
+        .getPublicUrl(filePath);
+
+      setEditingPost(prev => prev ? { ...prev, photoUrl: publicUrl } : null);
+      toast.success('Photo uploaded!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleEditPost = async () => {
+    if (!editingPost) return;
+
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({
+          caption: editingPost.caption.trim() || null,
+          recipe_url: editingPost.recipeUrl.trim() || null,
+          image_url: editingPost.photoUrl.trim() || null,
+        })
+        .eq('id', editingPost.id);
+
+      if (error) throw error;
+
+      setPosts(prev =>
+        prev.map(p =>
+          p.id === editingPost.id
+            ? {
+                ...p,
+                caption: editingPost.caption.trim() || null,
+                image_url: editingPost.photoUrl.trim() || null,
+                recipe_url: editingPost.recipeUrl.trim() || null,
+              }
+            : p
+        )
+      );
+
+      toast.success('Post updated!');
+      setEditingPost(null);
+    } catch (error) {
+      console.error('Edit error:', error);
+      toast.error('Failed to update post');
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!deletePostId) return;
+
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', deletePostId);
+
+      if (error) throw error;
+
+      setPosts(prev => prev.filter(p => p.id !== deletePostId));
+      toast.success('Post deleted!');
+      setDeletePostId(null);
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete post');
+    }
+  };
 
   if (loading) {
     return (
@@ -697,82 +786,140 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         </DialogContent>
       </Dialog>
 {selectedPostId && (
-  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div className="bg-white rounded-xl max-w-lg w-full p-4 relative">
-
-      {/* EDIT BUTTON GOES HERE */}
-      {(isOwnProfile || isUserAdmin) && (
-        <button
-          onClick={() => {
-            const p = posts.find(x => x.id === selectedPostId);
-            if (!p) return;
-
-            setEditingPost({
-              id: p.id,
-              title: p.title || '',
-              caption: p.caption || '',
-              recipeUrl: p.recipe_url || '',
-              photoUrl: p.image_url || ''
-            });
-          }}
-          className="absolute top-3 right-3 p-2 bg-orange-600 text-white rounded-full shadow hover:bg-orange-700"
-        >
-          <Edit3 className="w-5 h-5" />
-        </button>
-      )}
-
-      {/* YOUR EXISTING COMMENT MODAL */}
-      <CommentModal
-        postId={selectedPostId}
-        onClose={() => setSelectedPostId(null)}
-      />
-    </div>
-  </div>
-)}
-
-  {selectedPostId && (
   <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
     <DialogContent className="max-w-lg p-0 overflow-hidden bg-black relative">
       <CommentModal
         postId={selectedPostId}
         isOpen={true}
         onClose={() => setSelectedPostId(null)}
-        onCommentPosted={() => window.location.reload()}
       />
-      
-      {/* Move buttons here, AFTER CommentModal */}
+
+      {/* Edit and Delete buttons - layered on top with high z-index */}
       <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
         <button
           onClick={() => setSelectedPostId(null)}
-          className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all"
+          className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all shadow-lg"
         >
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
 
-        {currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
-          <button
-            onClick={() => {
-              const post = posts.find(p => p.id === selectedPostId);
-              if (post) {
-                setEditingPost({
-                  id: post.id,
-                  title: post.title || '',
-                  caption: post.caption || '',
-                  recipeUrl: post.recipe_url || '',
-                  photoUrl: post.image_url || post.video_url || '',
-                });
-              }
-              setSelectedPostId(null);
-            }}
-            className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all"
-          >
-            <Edit3 className="w-6 h-6 text-white" />
-          </button>
+        {(isOwnProfile || isUserAdmin) && currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                const post = posts.find(p => p.id === selectedPostId);
+                if (post) {
+                  setEditingPost({
+                    id: post.id,
+                    title: post.title || '',
+                    caption: post.caption || '',
+                    recipeUrl: post.recipe_url || '',
+                    photoUrl: post.image_url || post.video_url || '',
+                  });
+                }
+                setSelectedPostId(null);
+              }}
+              className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
+              title="Edit post"
+            >
+              <Edit3 className="w-5 h-5 text-white" />
+            </button>
+
+            <button
+              onClick={() => {
+                setDeletePostId(selectedPostId);
+                setSelectedPostId(null);
+              }}
+              className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-red-600/70 rounded-full transition-all shadow-lg"
+              title="Delete post"
+            >
+              <Trash2 className="w-5 h-5 text-white" />
+            </button>
+          </div>
         )}
       </div>
     </DialogContent>
   </Dialog>
 )}
+
+{/* Edit Post Dialog */}
+<AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Edit post</AlertDialogTitle>
+      <AlertDialogDescription>
+        Update your caption and recipe link.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <div className="space-y-4 py-4">
+      <div>
+        <label className="text-sm font-medium mb-2 block">Caption</label>
+        <Textarea
+          value={editingPost?.caption || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, caption: e.target.value } : null)}
+          placeholder="Write a caption..."
+          className="resize-none"
+          rows={3}
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-2 block">Recipe URL</label>
+        <input
+          type="url"
+          value={editingPost?.recipeUrl || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, recipeUrl: e.target.value } : null)}
+          placeholder="https://..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-2 block">Change Photo/Video (Upload from device)</label>
+        <input
+          type="file"
+          accept="image/*,video/*"
+          onChange={handlePhotoUpload}
+          disabled={uploadingPhoto}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+        {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
+        {editingPost?.photoUrl && (
+          <img
+            src={editingPost.photoUrl}
+            alt="Preview"
+            className="mt-2 w-32 h-32 object-cover rounded-lg"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        )}
+      </div>
+    </div>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
+        Save changes
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+{/* Delete Post Confirmation Dialog */}
+<AlertDialog open={!!deletePostId} onOpenChange={(open) => !open && setDeletePostId(null)}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete post</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to delete this post? This action cannot be undone.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction onClick={handleDeletePost} className="bg-red-600 hover:bg-red-700">
+        Delete
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
     </div>
   );
 }

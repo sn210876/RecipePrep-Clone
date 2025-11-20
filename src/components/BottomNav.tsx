@@ -173,3 +173,4 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
       </div>
     </nav>
   );
+}

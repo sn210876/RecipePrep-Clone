@@ -10,7 +10,7 @@ import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image
 import { useRecipes } from '@/context/RecipeContext';
 import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
-import { extractRecipeFromUrl, isValidUrl, getPlatformFromUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
+import { extractRecipeFromUrl, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -221,8 +221,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   }
 
   setIsExtracting(true);
-  const platform = getPlatformFromUrl(urlInput);
-  
+
   try {
     toast.loading('Extracting recipe...', { id: 'extract' });
     const data = await extractRecipeFromUrl(urlInput);

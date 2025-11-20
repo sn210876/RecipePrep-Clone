@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
-import { Upload, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -18,11 +17,8 @@ interface ReviewFormProps {
 export function ReviewForm({ recipe, open, onOpenChange, onReviewSubmitted }: ReviewFormProps) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [existingReviewId, setExistingReviewId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -39,27 +35,15 @@ export function ReviewForm({ recipe, open, onOpenChange, onReviewSubmitted }: Re
         setRating(existingReview.rating);
         setComment(existingReview.comment || '');
         setExistingReviewId(existingReview.id);
-        // If your backend already returns images, you’d load them here — we’re just leaving it empty
-        setSelectedImages([]);
-        setPreviews([]);
       } else {
         setRating(0);
         setComment('');
         setExistingReviewId(null);
-        setSelectedImages([]);
-        setPreviews([]);
       }
     } catch (error) {
       console.error('Failed to load existing review:', error);
     }
   };
-
-  // ──────────────────────────────────────────────────────
-  // THESE TWO FUNCTIONS ARE STILL HERE (so no errors)
-  // but they do nothing now because the button is gone
-  // ──────────────────────────────────────────────────────
-  const handleImageSelect = () => {};
-  const removeImage = () => {};
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -69,18 +53,16 @@ export function ReviewForm({ recipe, open, onOpenChange, onReviewSubmitted }: Re
     setLoading(true);
     try {
       if (existingReviewId) {
-        await updateReview(existingReviewId, rating, comment);
+        await updateReview(existingReviewId, rating, comment, []);
         toast.success('Review updated successfully!');
       } else {
-        await createReview(recipe.id, rating, comment);
+        await createReview(recipe.id, rating, comment, []);
         toast.success('Review submitted successfully!');
       }
       onReviewSubmitted?.();
       onOpenChange(false);
       setRating(0);
       setComment('');
-      setSelectedImages([]);
-      setPreviews([]);
     } catch (error) {
       console.error('Failed to submit review:', error);
       toast.error('Failed to submit review. Please try again.');
