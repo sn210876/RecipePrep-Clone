@@ -155,7 +155,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     }
   };
 
- const FloatingNavIcons = () => (
+const FloatingNavIcons = () => (
   <div className="pointer-events-none fixed inset-0 z-[500]">
     <div className="pointer-events-auto fixed top-4 right-4">
       <TooltipProvider>
@@ -172,27 +172,19 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      // THIS IS THE MAGIC LINE → kills every possible outline/ring/focus
                       className={`
-                        group relative h-11 w-11 rounded-full
+                        group h-11 w-11 rounded-full
                         ${isActive ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-700'}
-                        hover:bg-transparent
-                        focus:bg-transparent
-                        focus:outline-none
-                        focus:ring-0
-                        focus-visible:ring-0
-                        focus-visible:ring-offset-0
-                        active:bg-transparent
-                        disabled:opacity-100
+                        hover:bg-transparent focus:outline-none focus:ring-0
                       `}
                       onClick={() => onNavigate(item.id)}
                     >
                       <Icon
                         className={`
-                          h-5 w-5 transition-opacity duration-300 ease-out
+                          h-5 w-5 transition-opacity duration-300
                           ${isActive
                             ? 'opacity-100'
-                            : 'opacity-70 group-hover:opacity-30'
+                            : 'opacity-80 group-hover:opacity-60'
                           }
                         `}
                       />
