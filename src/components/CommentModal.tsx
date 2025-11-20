@@ -267,20 +267,14 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 // ADD THIS FUNCTION near the top with your other handlers
 const handleDeleteComment = async (commentId: string) => {
   if (!currentUserId) return;
-
-  // Optimistic delete
   setComments(prev => prev.filter(c => c.id !== commentId));
-
   const { error } = await supabase
     .from('comments')
     .delete()
     .eq('id', commentId)
-    .eq('user_id', currentUserId); // Security: only delete your own
-
+    .eq('user_id', currentUserId);
   if (error) {
-    console.error('Failed to delete comment:', error);
-    toast.error('Could not delete comment');
-    // Re-fetch comments if delete fails
+    toast.error('Failed to delete comment');
     loadComments();
   } else {
     toast.success('Comment deleted');
