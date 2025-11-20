@@ -457,8 +457,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     <h1 className="text-4xl font-bold text-slate-900 text-center">
       Create New Recipe
     </h1>
-  </div>
-</div>
+
           <p className="text-slate-600">See a recipe online you like, add it here for the community</p>
         </div>
 
