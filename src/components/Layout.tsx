@@ -241,7 +241,15 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     isActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                <Icon
+  className={`
+    h-5 w-5 transition-opacity duration-300 ease-out
+    ${isActive
+      ? 'opacity-100'
+      : 'opacity-80 group-hover:opacity-60'
+    }
+  `}
+/>
                   <span className="font-medium">{item.label}</span>
                 </button>
               );
