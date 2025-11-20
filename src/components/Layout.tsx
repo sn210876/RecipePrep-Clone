@@ -162,8 +162,12 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         </main>
 
         {socialPages.includes(currentPage) && (
-          <BottomNav currentPage={currentPage} onNavigate={onNavigate} />
-        )}
+  <BottomNav 
+    currentPage={currentPage} 
+    onNavigate={onNavigate}
+    hideDiscover={true}  {/* ← This removes only the Discover icon */}
+  />
+)}
 
        {/* Floating Social Feed Button – visible on every page, icon perfectly centered */}
 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
