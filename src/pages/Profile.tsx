@@ -107,6 +107,13 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [editingPost, setEditingPost] = useState<{
+  id: string;
+  title: string;
+  caption: string;
+  recipeUrl: string;
+  photoUrl: string;
+} | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
