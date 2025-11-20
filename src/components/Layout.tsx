@@ -170,13 +170,13 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-             className={`h-11 w-11 rounded-full transition-all
-  hover:ring-1 hover:ring-blue-300
+            className={`h-11 w-11 rounded-full transition-all
   ${
     isActive
       ? 'bg-orange-500 text-white shadow-lg'
-      : 'text-gray-700 hover:text-gray-700 opacity-70 hover:opacity-100 hover:scale-110'
+      : 'text-gray-700 hover:text-gray-700 opacity-70 hover:opacity-100 hover:scale-110 focus:outline-none focus:ring-0 focus-visible:ring-0 hover:ring-1 hover:ring-blue-300'
   }`}
+
 
 
                         onClick={() => onNavigate(item.id)}
