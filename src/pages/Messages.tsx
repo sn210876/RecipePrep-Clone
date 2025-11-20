@@ -387,7 +387,10 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     {messages.map((message) => (
       <div
         key={message.id}
-        className={`flex ${message.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
+       <div
+  key={message.id}
+  className={`flex justify-end`}
+>
       >
         {/* Message container with hover/long-press support */}
         <div
