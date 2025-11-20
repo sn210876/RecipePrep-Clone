@@ -14,7 +14,7 @@ import {
   User
 } from 'lucide-react';
 import { Button } from './ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip36';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { supabase } from '../lib/supabase';
 
 interface LayoutProps {
@@ -40,6 +40,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const socialPages = ['discover', 'upload', 'profile', 'messages'];
 
+  // Load avatar
   useEffect(() => {
     const loadAvatar = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -95,10 +96,11 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Sidebar — unchanged */}
+      {/* Sidebar & mobile menu — unchanged */}
       <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
+        {/* ... your sidebar stays exactly the same ... */}
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 border-b border-gray-200 p-6">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
@@ -164,7 +166,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           {children}
         </main>
 
-        {/* Messages + Profile — always visible + tooltip + dim hover */}
+        {/* Messages + Profile — ALWAYS visible + tooltips + dim hover */}
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
           <div className="pointer-events-auto max-w-lg mx-auto px-6 pb-6 flex justify-between items-end">
             <TooltipProvider>
@@ -219,24 +221,15 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           </div>
         </div>
 
-        {/* Upload Button — 50% smaller + tooltip + dim hover — only on social pages */}
+        {/* Big Upload Button — only on social pages */}
         {socialPages.includes(currentPage) && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onNavigate('upload')}
-                    className="bg-gradient-to-r from-orange-500 to-red-500 rounded-full p-3.5 shadow-2xl hover:shadow-3xl transition-all hover:scale-110 opacity-80 hover:opacity-100"
-                  >
-                    <Camera className="w-8 h-8 text-white" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="bg-gray-900 text-white">
-                  <p className="font-semibold">Create Post</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <button
+              onClick={() => onNavigate('upload')}
+              className="bg-gradient-to-r from-orange-500 to-red-500 rounded-full p-5 shadow-2xl hover:shadow-3xl transition-all hover:scale-110"
+            >
+              <Camera className="w-12 h-12 text-white" />
+            </button>
           </div>
         )}
 
@@ -248,7 +241,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => onNavigate('discover')}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-110 flex items-center justify-center opacity-90 hover:opacity-100"
+                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-110 flex items-center justify-center"
                   >
                     <UtensilsCrossed className="w-8 h-8" />
                   </button>
