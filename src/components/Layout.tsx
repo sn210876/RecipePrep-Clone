@@ -202,3 +202,4 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     </div>
   </div>
 );
+}
