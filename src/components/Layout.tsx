@@ -37,35 +37,42 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       <div className="pointer-events-auto fixed top-4 right-4 p-2">
         <TooltipProvider>
           <div className="flex items-center gap-2 bg-white/80 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2">
-            {navItems
-              .filter(item => item.id !== 'discover' && item.id !== 'settings')
-              .map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.id;
-                return (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      <Button
-  variant="ghost"
-  size="icon"
-  className={`h-11 w-11 rounded-full transition-all duration-200 ${
-    isActive
-      ? 'bg-orange-500 text-white shadow-lg'
-      : 'text-gray-600 hover:bg-blue-500/10 hover:text-blue-600 hover:scale-110'
-  }`}
-  onClick={() => onNavigate(item.id)}
->
-  <Icon className={`h-5 w-5 transition-all duration-200 ${
-    isActive ? '' : 'group-hover:text-blue-600/50'
-  }`} />
-</Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>{item.label}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
+           {navItems
+  .filter(item => item.id !== 'discover' && item.id !== 'settings')
+  .map((item) => {
+    const Icon = item.icon;
+    const isActive = currentPage === item.id;
+
+    return (
+      <Tooltip key={item.id}>
+        <TooltipTrigger asChild>
+          <div className="group relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-11 w-11 rounded-full transition-all duration-200 ${
+                isActive
+                  ? 'bg-orange-500 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-blue-500/10 hover:scale-110'
+              }`}
+              onClick={() => onNavigate(item.id)}
+            >
+              <Icon
+                className={`h-5 w-5 transition-all duration-200 ${
+                  isActive
+                    ? 'text-white'
+                    : 'text-gray-600 group-hover:text-blue-600 group-hover:opacity-50'
+                }`}
+              />
+            </Button>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>{item.label}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  })}
           </div>
         </TooltipProvider>
       </div>
