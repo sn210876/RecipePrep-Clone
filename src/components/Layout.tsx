@@ -37,42 +37,33 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       <div className="pointer-events-auto fixed top-4 right-4 p-2">
         <TooltipProvider>
           <div className="flex items-center gap-2 bg-white/80 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2">
-           {navItems
-  .filter(item => item.id !== 'discover' && item.id !== 'settings')
-  .map((item) => {
-    const Icon = item.icon;
-    const isActive = currentPage === item.id;
-
-    return (
-      <Tooltip key={item.id}>
-        <TooltipTrigger asChild>
-          <div className="group relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-11 w-11 rounded-full transition-all duration-200 ${
-                isActive
-                  ? 'bg-orange-500 text-white shadow-lg'
-                  : 'text-gray-600 hover:bg-blue-500/10 hover:scale-110'
-              }`}
-              onClick={() => onNavigate(item.id)}
-            >
-              <Icon
-                className={`h-5 w-5 transition-all duration-200 ${
-                  isActive
-                    ? 'text-white'
-                    : 'text-gray-600 group-hover:text-blue-600 group-hover:opacity-50'
-                }`}
-              />
-            </Button>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <p>{item.label}</p>
-        </TooltipContent>
-      </Tooltip>
-    );
-  })}
+            {navItems
+              .filter(item => item.id !== 'discover' && item.id !== 'settings')
+              .map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPage === item.id;
+                return (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-11 w-11 rounded-full transition-all ${
+                          isActive
+                            ? 'bg-orange-500 text-white shadow-lg'
+                            : 'text-gray-700 hover:bg-gray-100 hover:scale-110'
+                        }`}
+                        onClick={() => onNavigate(item.id)}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
           </div>
         </TooltipProvider>
       </div>
@@ -162,32 +153,17 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         </main>
 
         {socialPages.includes(currentPage) && (
-  <BottomNav 
-    currentPage={currentPage} 
-    onNavigate={onNavigate}
-    hideDiscover={true}  {/* ← This removes only the Discover icon */}
-  />
-)}
+          <BottomNav currentPage={currentPage} onNavigate={onNavigate} />
+        )}
 
-       {/* Floating Social Feed Button – visible on every page, icon perfectly centered */}
-<div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          onClick={() => onNavigate('discover')}
-          className="flex items-center justify-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-          aria-label="Go to Social Feed"
-        >
-          <UtensilsCrossed className="h-6 w-6" />
-        </button>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="bg-gray-900 text-white">
-        <p className="font-medium">Social Feed</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-</div>
+        {!socialPages.includes(currentPage) && (
+          <button
+            onClick={() => onNavigate('discover')}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
+          >
+            <UtensilsCrossed className="w-6 h-6" />
+          </button>
+        )}
       </div>
     </div>
   );
