@@ -194,7 +194,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
 These recipes have been selected from all over <span className="font-bold text-blue-600">Social Media</span> & the <span className="font-bold text-blue-600"> Web</span>
 </p> 
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-So participate by <span className="font-bold text-blue-600" cooking, <span className="font-bold text-blue-600" commenting, or <span className="font-bold text-blue-600" adding your own! <span 
+So participate by <span className="font-bold text-blue-600" cooking, <span className="font-bold text-blue-600" commenting, or <span className="font-bold text-blue-600" adding your own! </span> & the <span className="font-bold text-blue-600"> Web</span>
 </p> 
         </div>
 
