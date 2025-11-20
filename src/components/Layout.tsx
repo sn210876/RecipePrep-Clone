@@ -172,19 +172,21 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`group h-11 w-11 rounded-full transition-all ${
-                        isActive
+                      className={`
+                        group relative h-11 w-11 rounded-full transition-all duration-200
+                        ${isActive
                           ? 'bg-orange-500 text-white shadow-lg'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                          : 'text-gray-600 hover:bg-white/40'
+                        }
+                      `}
                       onClick={() => onNavigate(item.id)}
                     >
                       <Icon
-                        className={`h-5 w-5 transition-opacity ${
-                          isActive
+                        className={`h-5 w-5 transition-opacity duration-200
+                          ${isActive
                             ? 'opacity-100'
                             : 'opacity-70 group-hover:opacity-100'
-                        }`}
+                          }`}
                       />
                     </Button>
                   </TooltipTrigger>
