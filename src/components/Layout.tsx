@@ -172,16 +172,18 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     <Button
                       variant="ghost"
                       size="icon"
+                      // THIS IS THE MAGIC LINE → kills every possible outline/ring/focus
                       className={`
                         group relative h-11 w-11 rounded-full
-                        ${isActive
-                          ? 'bg-orange-500 text-white shadow-lg'
-                          : 'text-gray-700 hover:text-gray-900'
-                        }
-                        hover:bg-transparent               /* ← blocks any background */
-                        focus:bg-transparent               /* ← blocks focus ring too */
-                        focus:ring-0 focus-visible:ring-0  /* ← kills any outline/ring */
+                        ${isActive ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-700'}
+                        hover:bg-transparent
+                        focus:bg-transparent
                         focus:outline-none
+                        focus:ring-0
+                        focus-visible:ring-0
+                        focus-visible:ring-offset-0
+                        active:bg-transparent
+                        disabled:opacity-100
                       `}
                       onClick={() => onNavigate(item.id)}
                     >
