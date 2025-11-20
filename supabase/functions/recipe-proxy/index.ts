@@ -91,17 +91,14 @@ async function extractYouTubeDescription(url: string) {
     const title = titleMatch ? titleMatch[1].replace(' - YouTube', '').trim() : 'YouTube Recipe';
     console.log('[YouTube] Title:', title);
 
-    // Try multiple patterns for description
     let description = '';
 
-    // Pattern 1: simpleText
     const simpleTextMatch = html.match(/"description":\{"simpleText":"([^"]+)"\}/);
     if (simpleTextMatch) {
       description = simpleTextMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
       console.log('[YouTube] Found description (simpleText):', description.substring(0, 100));
     }
 
-    // Pattern 2: attributedDescriptionBodyText
     if (!description) {
       const attrDescMatch = html.match(/"attributedDescriptionBodyText":\{"content":"([^"]+)"\}/);
       if (attrDescMatch) {
@@ -110,7 +107,6 @@ async function extractYouTubeDescription(url: string) {
       }
     }
 
-    // Pattern 3: Find any description field
     if (!description) {
       const anyDescMatch = html.match(/"description":"([^"]+)"/);
       if (anyDescMatch) {
@@ -171,7 +167,6 @@ async function scrapeRecipeSite(url: string) {
 
     let structuredData: any = null;
 
-    // Extract JSON-LD structured data - use a more robust regex that handles multiline content
     const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
     const recipeMatches = html.matchAll(scriptRegex);
 
@@ -182,7 +177,6 @@ async function scrapeRecipeSite(url: string) {
         const recipes = Array.isArray(json) ? json : [json];
 
         for (const item of recipes) {
-          // Check if this item is a Recipe or contains Recipe in @type array
           const isRecipe = item['@type'] === 'Recipe' ||
                           (Array.isArray(item['@type']) && item['@type'].includes('Recipe'));
 
@@ -223,7 +217,6 @@ async function scrapeRecipeSite(url: string) {
                 return 0;
               };
 
-              // Handle yield - can be string, number, or array
               let yieldValue = '';
               if (recipe.recipeYield) {
                 if (Array.isArray(recipe.recipeYield)) {
@@ -260,10 +253,8 @@ async function scrapeRecipeSite(url: string) {
     const firstImgMatch = html.match(/<img[^>]+src="([^"]+)"/i);
     const imageUrl = ogImageMatch?.[1] || twitterImageMatch?.[1] || firstImgMatch?.[1] || '';
 
-    // Always try AI parsing as well
     const aiResult = await parseWithAI(html);
 
-    // If we have both, check for conflicts
     if (structuredData && aiResult.ingredients.length > 0) {
       const hasConflict = checkForConflicts(structuredData, aiResult);
 
@@ -285,7 +276,6 @@ async function scrapeRecipeSite(url: string) {
             time: aiResult.prep_time + aiResult.cook_time || 0,
             notes: 'AI parsed from blog content',
           },
-          // Default to structured data
           ingredients: structuredData.ingredients,
           instructions: structuredData.instructions,
           yield: structuredData.yield,
@@ -297,7 +287,6 @@ async function scrapeRecipeSite(url: string) {
       }
     }
 
-    // Return whichever version we have
     if (structuredData) {
       return structuredData;
     }
@@ -324,7 +313,6 @@ async function scrapeRecipeSite(url: string) {
 }
 
 function checkForConflicts(structured: any, ai: any): boolean {
-  // Check if yield differs significantly
   const structuredYield = String(structured.yield || '').match(/\d+/)?.[0];
   const aiYield = String(ai.yield || '').match(/\d+/)?.[0];
 
@@ -333,20 +321,17 @@ function checkForConflicts(structured: any, ai: any): boolean {
     return true;
   }
 
-  // Check if ingredient counts differ significantly
   const ingredientDiff = Math.abs(structured.ingredients.length - ai.ingredients.length);
   if (ingredientDiff > 2) {
     console.log(`[Conflict] Ingredient count: ${structured.ingredients.length} vs ${ai.ingredients.length}`);
     return true;
   }
 
-  // Check if key ingredients have different quantities
   for (const structIng of structured.ingredients.slice(0, 5)) {
     const structQty = structIng.match(/(\d+(?:\.\d+)?)\s*(?:g|kg|ml|l|cup|tbsp|tsp)/)?.[1];
     if (!structQty) continue;
 
     for (const aiIng of ai.ingredients) {
-      // Check if it's roughly the same ingredient
       const structName = structIng.replace(/[\d\s.,]+(?:g|kg|ml|l|cup|tbsp|tsp|oz|lb)\s*/gi, '').trim().toLowerCase();
       const aiName = aiIng.replace(/[\d\s.,]+(?:g|kg|ml|l|cup|tbsp|tsp|oz|lb)\s*/gi, '').trim().toLowerCase();
 
