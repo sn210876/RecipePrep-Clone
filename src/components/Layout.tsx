@@ -40,7 +40,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const socialPages = ['discover', 'upload', 'profile', 'messages'];
 
-  // Load user avatar
+  // Load avatar
   useEffect(() => {
     const loadAvatar = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -96,10 +96,11 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* LEFT SIDEBAR */}
+      {/* Sidebar & mobile menu — unchanged */}
       <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
+        {/* ... your sidebar stays exactly the same ... */}
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 border-b border-gray-200 p-6">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
@@ -165,32 +166,62 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           {children}
         </main>
 
-        {/* Messages + Profile — visible on EVERY page */}
+        {/* Messages + Profile — ALWAYS visible + tooltips + dim hover */}
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-          <div className="pointer-events-auto max-w-lg mx-auto px-6 pb-6 flex justify-between">
-            {/* Messages */}
-            <button
-              onClick={() => onNavigate('messages')}
-              className={`transition-colors ${currentPage === 'messages' ? 'text-cyan-500' : 'text-gray-600 hover:text-cyan-500'}`}
-            >
-              <MessageCircle className="w-9 h-9" strokeWidth={currentPage === 'messages' ? 2.8 : 2} />
-            </button>
+          <div className="pointer-events-auto max-w-lg mx-auto px-6 pb-6 flex justify-between items-end">
+            <TooltipProvider>
+              {/* Messages */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => onNavigate('messages')}
+                    className={`transition-all duration-200 ${
+                      currentPage === 'messages'
+                        ? 'text-cyan-500 scale-110'
+                        : 'text-gray-500 hover:text-cyan-500 hover:scale-110 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <MessageCircle className="w-10 h-10" strokeWidth={currentPage === 'messages' ? 2.8 : 2} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-gray-900 text-white">
+                  <p className="font-medium">Messages</p>
+                </TooltipContent>
+              </Tooltip>
 
-            {/* Profile */}
-            <button
-              onClick={() => onNavigate('profile')}
-              className={`transition-colors ${currentPage === 'profile' ? 'text-orange-600' : 'text-gray-600 hover:text-gray-900'}`}
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" className={`w-10 h-10 rounded-full object-cover border-2 ${currentPage === 'profile' ? 'border-orange-600' : 'border-gray-300'}`} />
-              ) : (
-                <User className="w-9 h-9" strokeWidth={currentPage === 'profile' ? 2.8 : 2} />
-              )}
-            </button>
+              {/* Profile */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => onNavigate('profile')}
+                    className={`transition-all duration-200 ${
+                      currentPage === 'profile'
+                        ? 'text-orange-600 scale-110 ring-4 ring-orange-200'
+                        : 'text-gray-500 hover:text-orange-600 hover:scale-110 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Profile"
+                        className={`w-11 h-11 rounded-full object-cover border-3 ${
+                          currentPage === 'profile' ? 'border-orange-600' : 'border-gray-300'
+                        }`}
+                      />
+                    ) : (
+                      <User className="w-10 h-10" strokeWidth={currentPage === 'profile' ? 2.8 : 2} />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-gray-900 text-white">
+                  <p className="font-medium">Profile</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
-        {/* Big Upload Button — ONLY on social pages */}
+        {/* Big Upload Button — only on social pages */}
         {socialPages.includes(currentPage) && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
             <button
@@ -202,7 +233,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           </div>
         )}
 
-        {/* Social Feed Button — only on NON-social pages */}
+        {/* Social Feed Button — only outside social pages */}
         {!socialPages.includes(currentPage) && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
             <TooltipProvider>
