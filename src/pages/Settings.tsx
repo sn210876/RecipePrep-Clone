@@ -340,7 +340,7 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                 <div>
                   <CardTitle className="text-2xl text-slate-900">Your Forwarding Email</CardTitle>
                   <CardDescription className="text-slate-600">
-                    Email recipes directly to your personal recipe inbox
+                   This functiion is coming soon... You will be able to email recipes directly to your personal recipe inbox
                   </CardDescription>
                 </div>
               </div>
