@@ -172,7 +172,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-11 w-11 rounded-full transition-all duration-200 ${
+                      className={`group h-11 w-11 rounded-full transition-all ${
                         isActive
                           ? 'bg-orange-500 text-white shadow-lg'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -180,12 +180,11 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                       onClick={() => onNavigate(item.id)}
                     >
                       <Icon
-                        className="h-5 w-5 transition-opacity duration-200"
-                        style={{
-                          opacity: isActive ? 1 : 0.7,
-                        }}
-                        onMouseEnter={(e) => !isActive && (e.currentTarget.style.opacity = '1')}
-                        onMouseLeave={(e) => !isActive && (e.currentTarget.style.opacity = '0.7')}
+                        className={`h-5 w-5 transition-opacity ${
+                          isActive
+                            ? 'opacity-100'
+                            : 'opacity-70 group-hover:opacity-100'
+                        }`}
                       />
                     </Button>
                   </TooltipTrigger>
