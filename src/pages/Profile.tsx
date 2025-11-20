@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
-// PostDetailModal removed - using CommentModal instead
+import { CommentModal } from '../components/CommentModal';
 
 // AUTO-RESIZE IMAGE FUNCTION — WORKS EVERYWHERE (PHONE + COMPUTER)
 const resizeImage = (
@@ -92,7 +92,7 @@ export function Profile() {
   const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
   const [newLink, setNewLink] = useState('');
-  // const [selectedPost, setSelectedPost] = useState<Post | null>(null); // Removed - not used
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
   useEffect(() => {
@@ -449,11 +449,15 @@ export function Profile() {
       }
 
       return (
-        <div key={post.id} className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative">
+        <div
+          key={post.id}
+          className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative"
+          onClick={() => setSelectedPostId(post.id)}
+        >
           {displayImageUrl ? (
-            <img 
-              src={displayImageUrl} 
-              alt={post.title || 'Post'} 
+            <img
+              src={displayImageUrl}
+              alt={post.title || 'Post'}
               className="w-full h-full object-cover"
               onError={(e) => {
                 console.error('[Profile] Image failed to load:', displayImageUrl);
@@ -540,7 +544,14 @@ export function Profile() {
         </DialogContent>
       </Dialog>
 
-      {/* PostDetailModal removed - view full posts on Discover page */}
+      {selectedPostId && (
+        <CommentModal
+          postId={selectedPostId}
+          isOpen={!!selectedPostId}
+          onClose={() => setSelectedPostId(null)}
+          onCommentPosted={() => loadProfile()}
+        />
+      )}
     </div>
   );
 }
