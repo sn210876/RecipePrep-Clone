@@ -420,6 +420,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
   Go to Grocery List
 </Button>
                 <div className="flex items-center gap-3">
+  {/* Go to Grocery List Button */}
   <Button
     onClick={() => onNavigate?.('grocery-list')}
     className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg"
@@ -428,6 +429,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     Go to Grocery List
   </Button>
 
+  {/* Clear All Button */}
   <Button
     variant="destructive"
     size="sm"
@@ -443,6 +445,7 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
     Clear All
   </Button>
 
+  {/* 1 Week / 4 Weeks toggle */}
   <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
     <Button
       variant={weeksToShow === 1 ? 'default' : 'ghost'}
