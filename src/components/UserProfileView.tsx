@@ -438,7 +438,7 @@ const handleDeleteComment = async (commentId: string) => {
 )}
 
       {/* DELETE POST BUTTON */}
-      {currentUserId === userId && (
+{currentUserId === postOwnerId && (
         <button
           onClick={async () => {
             const confirmed = confirm("Delete this post?");
