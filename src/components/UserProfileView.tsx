@@ -413,14 +413,14 @@ const handleDeleteComment = async (commentId: string) => {
       const selectedPost = userPosts.find(p => p.id === selectedPostId);
 
       return (
-        <div className="fixed inset-0 bg-black/60 z-9999 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
           <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full">
 
             {/* EDIT BUTTON - only show for the post owner */}
             {selectedPost && currentUserId === selectedPost.user_id && (
               <button
                 onClick={() => {
-                  const newCaption = prompt("Edit your caption:");
+                  const newCaption =d\ prompt("Edit your caption:");
                   if (!newCaption) return;
 
                   supabase
