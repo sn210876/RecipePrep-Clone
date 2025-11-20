@@ -283,7 +283,7 @@ const FloatingNavIcons = () => (
 
         {/* Messages + Profile — 20% smaller icon + badge disappears on click */}
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
-          <div className="pointer-events-auto max-w-lg mx-auto px-6 pb-6 flex justify-center items-end gap-32">
+          <div className="pointer-events-auto max-w-lg mx-auto px-6 pb-6 flex justify-center items-end gap-64">
 
             <TooltipProvider>
               {/* Messages */}
