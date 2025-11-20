@@ -46,17 +46,19 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                   <Tooltip key={item.id}>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`h-11 w-11 rounded-full transition-all ${
-                          isActive
-                            ? 'bg-orange-500 text-white shadow-lg'
-                            : 'text-gray-700 hover:bg-gray-100 hover:scale-110'
-                        }`}
-                        onClick={() => onNavigate(item.id)}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </Button>
+  variant="ghost"
+  size="icon"
+  className={`h-11 w-11 rounded-full transition-all duration-200 ${
+    isActive
+      ? 'bg-orange-500 text-white shadow-lg'
+      : 'text-gray-600 hover:bg-blue-500/10 hover:text-blue-600 hover:scale-110'
+  }`}
+  onClick={() => onNavigate(item.id)}
+>
+  <Icon className={`h-5 w-5 transition-all duration-200 ${
+    isActive ? '' : 'group-hover:text-blue-600/50'
+  }`} />
+</Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
                       <p>{item.label}</p>
