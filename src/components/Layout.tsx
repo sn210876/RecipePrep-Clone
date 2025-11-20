@@ -161,7 +161,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       <TooltipProvider>
         <div className="flex items-center gap-3 bg-white/80 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-4 py-3">
           {navItems
-            .filter(item => item.id !== 'discover' && item.id !== 'settings')
+            .filter((item) => item.id !== 'discover' && item.id !== 'settings')
             .map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -172,17 +172,21 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`
-                        h-11 w-11 rounded-full transition-all duration-200
-                        ${isActive
+                      className={`h-11 w-11 rounded-full transition-all duration-200 ${
+                        isActive
                           ? 'bg-orange-500 text-white shadow-lg'
                           : 'text-gray-700 hover:bg-gray-100'
-                      `}
+                      }`}
                       onClick={() => onNavigate(item.id)}
                     >
-                      <Icon className={`h-5 w-5 transition-opacity duration-200 ${
-                        isActive ? 'opacity-100' : 'opacity-70 hover:opacity-100'
-                      }`} />
+                      <Icon
+                        className="h-5 w-5 transition-opacity duration-200"
+                        style={{
+                          opacity: isActive ? 1 : 0.7,
+                        }}
+                        onMouseEnter={(e) => !isActive && (e.currentTarget.style.opacity = '1')}
+                        onMouseLeave={(e) => !isActive && (e.currentTarget.style.opacity = '0.7')}
+                      />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -193,8 +197,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
             })}
         </div>
       </TooltipProvider>
-    div>
-  div>
+    </div>
+  </div>
 );
 
   return (
