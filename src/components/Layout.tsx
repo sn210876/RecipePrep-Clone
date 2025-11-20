@@ -165,17 +165,17 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           <BottomNav currentPage={currentPage} onNavigate={onNavigate} />
         )}
 
-       {/* Floating Social Feed Button – Now visible on EVERY page with tooltip */}
+       {/* Floating Social Feed Button – visible on every page, icon perfectly centered */}
 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
   <TooltipProvider>
     <Tooltip>
       <TooltipTrigger asChild>
         <button
           onClick={() => onNavigate('discover')}
-          className="flex items-center justify之心 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="flex items-center justify-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           aria-label="Go to Social Feed"
         >
-          <UtensilsCrossed className="w-6 h-6" />
+          <UtensilsCrossed className="h-6 w-6" />
         </button>
       </TooltipTrigger>
       <TooltipContent side="top" className="bg-gray-900 text-white">
