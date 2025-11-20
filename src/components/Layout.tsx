@@ -159,7 +159,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   <div className="pointer-events-none fixed inset-0 z-[500]">
     <div className="pointer-events-auto fixed top-4 right-4">
       <TooltipProvider>
-        <div className="flex items-center gap-3 bg-white/90 backdrop-blur-md rounded-full shadow-2xl border border-white/30 px-5 py-3.5">
+        <div className="flex items-center gap-3 bg-white/85 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/40 px-4 py-3">
           {navItems
             .filter((item) => item.id !== 'discover' && item.id !== 'settings')
             .map((item) => {
@@ -173,29 +173,27 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                       variant="ghost"
                       size="icon"
                       className={`
-                        group relative h-12 w-12 rounded-full transition-all duration-300
+                        group relative h-11 w-11 rounded-full
                         ${isActive
-                          ? 'bg-orange-500 text-white shadow-lg ring-4 ring-orange-200/50'
-                          : 'text-gray-700 hover:text-gray-900'
+                          ? 'bg-orange-500 text-white shadow-lg'
+                          : 'text-gray-700'
                         }
                       `}
                       onClick={() => onNavigate(item.id)}
                     >
-                      {/* Subtle background on hover only for inactive items */}
-                      {!isActive && (
-                        <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/30 transition-colors duration-300" />
-                      )}
-
                       <Icon
-                        className={`relative z-10 h-5.5 w-5.5 transition-opacity duration-300
-                          ${isActive ? 'opacity-100' : 'opacity-65 group-hover:opacity-100'}
+                        className={`
+                          h-5 w-5 transition-opacity duration-300 ease-out
+                          ${isActive
+                            ? 'opacity-100'
+                            : 'opacity-70 group-hover:opacity-30'
+                          }
                         `}
-                        strokeWidth={2.2}
                       />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="bg-gray-900 text-white">
-                    <p className="font-medium">{item.label}</p>
+                  <TooltipContent side="bottom">
+                    <p>{item.label}</p>
                   </TooltipContent>
                 </Tooltip>
               );
