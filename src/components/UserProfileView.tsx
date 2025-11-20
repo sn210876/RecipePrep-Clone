@@ -406,21 +406,48 @@ const handleDeleteComment = async (commentId: string) => {
           })}
         </div>
       )}
-{selectedPostId && (
-  <CommentModal
-    postId={selectedPostId}
-    isOpen={true}
-    onClose={() => setSelectedPostId(null)}
-  />
+
+     {selectedPostId && (
+  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+    <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full">
+
+      {/* DELETE POST BUTTON */}
+      {currentUserId === userId && (
+        <button
+          onClick={async () => {
+            const confirmed = confirm("Delete this post?");
+            if (!confirmed) return;
+
+            const { error } = await supabase
+              .from("posts")
+              .delete()
+              .eq("id", selectedPostId)
+              .eq("user_id", currentUserId);
+
+            if (error) {
+              toast.error("Failed to delete post");
+            } else {
+              toast.success("Post deleted");
+              setSelectedPostId(null);
+              if (onRefresh) onRefresh();
+            }
+          }}
+          className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* EXISTING COMMENT MODAL */}
+      <CommentModal
+        postId={selectedPostId}
+        isOpen={true}
+        onClose={() => setSelectedPostId(null)}
+      />
+    </div>
+  </div>
 )}
 
-      {selectedPostId && (
-        <CommentModal
-          postId={selectedPostId}
-          isOpen={true}
-          onClose={() => setSelectedPostId(null)}
-        />
-      )}
 
       <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
         <DialogContent>
