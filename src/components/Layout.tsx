@@ -10,9 +10,8 @@ import {
   X,
   UtensilsCrossed,
   MessageCircle,
-  Pig,
   Camera,
- 
+  Pig,
   User
 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -38,7 +37,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     { id: 'add-recipe', label: 'Add Recipe', icon: Plus },
     { id: 'meal-planner', label: 'Meal Planner', icon: Calendar },
     { id: 'grocery-list', label: 'Grocery List', icon: ShoppingCart },
-   { id: 'cart', label: 'Cart', icon: Pig },   // Correct, Pig is now imported       // fixed       // fixed    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'cart', label: 'Cart', icon: Pig },        // fixed    
+    { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   const socialPages = ['discover', 'upload', 'profile', 'messages'];
