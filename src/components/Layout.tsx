@@ -11,6 +11,7 @@ import {
   UtensilsCrossed,
   MessageCircle,
   Camera,
+  Pig,
   User
 } from 'lucide-react';
 import { Button } from './ui/button';
