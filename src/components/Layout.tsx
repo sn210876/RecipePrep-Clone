@@ -152,9 +152,8 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           {children}
         </main>
 
-        {socialPages.includes(currentPage) && (
-          <BottomNav currentPage={currentPage} onNavigate={onNavigate} />
-        )}
+       {/* BottomNav with Messages + Upload + Profile — now visible on EVERY page */}
+<BottomNav currentPage={currentPage} onNavigate={onNavigate} />
 
         {!socialPages.includes(currentPage) && (
           <button
