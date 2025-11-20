@@ -26,6 +26,8 @@ interface LayoutProps {
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const navItems = [
     { id: 'discover-recipes', label: 'Discover Recipes', icon: ChefHat },
@@ -40,21 +42,64 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   const socialPages = ['discover', 'upload', 'profile', 'messages'];
 
-  // Load avatar
+  // Load user + avatar
   useEffect(() => {
-    const loadAvatar = async () => {
+    const loadUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', user.id)
-          .single();
+        setCurrentUserId(user.id);
+        const { data } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single();
         setAvatarUrl(data?.avatar_url || null);
+        loadUnreadCount(user.id);
       }
     };
-    loadAvatar();
+    loadUser();
   }, []);
+
+  // Load unread message count
+  const loadUnreadCount = async (userId: string) => {
+    const { count } = await supabase
+      .from('direct_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('read', false)
+      .neq('sender_id', userId)
+      .in('conversation_id', 
+        supabase
+          .from('conversations')
+          .select('id')
+          .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+      );
+    setUnreadCount(count || 0);
+  };
+
+  // Real-time listener for new messages
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel('direct-messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'direct_messages',
+      }, (payload: any) => {
+        if (payload.new.sender_id !== currentUserId && !payload.new.read) {
+          setUnreadCount(prev => prev + 1);
+        }
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'direct_messages',
+      }, (payload: any) => {
+        if (payload.new.read && payload.old.read === false && payload.new.sender_id !== currentUserId) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUserId]);
 
   const FloatingNavIcons = () => (
     <div className="pointer-events-none fixed z-[500]">
@@ -96,11 +141,10 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Sidebar & mobile menu — unchanged */}
+      {/* Sidebar */}
       <aside className={`fixed left-0 top-0 z-40 h-screen w-64 transform bg-white shadow-lg transition-transform duration-300 lg:translate-x-0 ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        {/* ... your sidebar stays exactly the same ... */}
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 border-b border-gray-200 p-6">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
@@ -166,22 +210,27 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           {children}
         </main>
 
-        {/* Messages + Profile — ALWAYS visible + tooltips + dim hover */}
+        {/* Messages + Profile + Badge */}
         <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
           <div className="pointer-events-auto max-w-lg mx-auto px-6 pb-6 flex justify-between items-end">
             <TooltipProvider>
-              {/* Messages */}
+              {/* Messages with badge */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => onNavigate('messages')}
-                    className={`transition-all duration-200 ${
+                    className={`relative transition-all duration-200 ${
                       currentPage === 'messages'
                         ? 'text-cyan-500 scale-110'
                         : 'text-gray-500 hover:text-cyan-500 hover:scale-110 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <MessageCircle className="w-10 h-10" strokeWidth={currentPage === 'messages' ? 2.8 : 2} />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="bg-gray-900 text-white">
@@ -201,13 +250,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     }`}
                   >
                     {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="Profile"
-                        className={`w-11 h-11 rounded-full object-cover border-3 ${
-                          currentPage === 'profile' ? 'border-orange-600' : 'border-gray-300'
-                        }`}
-                      />
+                      <img src={avatarUrl} alt="Profile" className={`w-11 h-11 rounded-full object-cover border-3 ${currentPage === 'profile' ? 'border-orange-600' : 'border-gray-300'}`} />
                     ) : (
                       <User className="w-10 h-10" strokeWidth={currentPage === 'profile' ? 2.8 : 2} />
                     )}
@@ -221,19 +264,28 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           </div>
         </div>
 
-        {/* Big Upload Button — only on social pages */}
+        {/* Upload Button — 50% smaller + tooltip */}
         {socialPages.includes(currentPage) && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
-            <button
-              onClick={() => onNavigate('upload')}
-              className="bg-gradient-to-r from-orange-500 to-red-500 rounded-full p-5 shadow-2xl hover:shadow-3xl transition-all hover:scale-110"
-            >
-              <Camera className="w-12 h-12 text-white" />
-            </button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => onNavigate('upload')}
+                    className="bg-gradient-to-r from-orange-500 to-red-500 rounded-full p-3.5 shadow-2xl hover:shadow-3xl transition-all hover:scale-110 opacity-85 hover:opacity-100"
+                  >
+                    <Camera className="w-8 h-8 text-white" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-gray-900 text-white">
+                  <p className="font-semibold">Create Post</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         )}
 
-        {/* Social Feed Button — only outside social pages */}
+        {/* Social Feed Button */}
         {!socialPages.includes(currentPage) && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
             <TooltipProvider>
@@ -241,7 +293,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => onNavigate('discover')}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-110 flex items-center justify-center"
+                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-16 h-16 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-110 flex items-center justify-center opacity-90 hover:opacity-100"
                   >
                     <UtensilsCrossed className="w-8 h-8" />
                   </button>
