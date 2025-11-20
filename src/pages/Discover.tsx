@@ -980,9 +980,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const isOwnPost = post.user_id === currentUserId;
 
   return (
-    <div key={post.id} className="flex flex-col min-h-0">
-      <div className="bg-white border-b border-gray-200 mb-2 flex flex-col">
-        {/* ← Only these two classes added — fixes cutoff forever */}
+    <div key={post.id} className="bg-white border-b border-gray-200 mb-2 flex flex-col min-h-0">
 
         {/* Header */}
         <div className="px-4 py-3 flex items-center justify-between">
@@ -1198,7 +1196,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           </div>
         </div>
       </div>
-    </div>
   );
 })}
 
