@@ -736,9 +736,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
       isOpen={true}
       onClose={() => setSelectedPostId(null)}
       onCommentPosted={() => window.location.reload()}
-    />
-  </>
-)}
+    
       />
       
       {/* Move buttons here, AFTER CommentModal */}
