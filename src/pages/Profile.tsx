@@ -8,7 +8,15 @@ import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { CommentModal } from '../components/CommentModal';
-
+const validateUsername = (username: string): string | null => {
+  const trimmed = username.trim();
+  if (trimmed.length === 0) return 'Username required';
+  if (trimmed.length > 10) return 'Max 10 characters';
+  if (trimmed.includes(' ')) return 'No spaces allowed';
+  if (!/^[a-zA-Z0-9._]+$/.test(trimmed)) return 'Only letters, numbers, _ . allowed';
+  if (/^[._]/.test(trimmed) || /[._]$/.test(trimmed)) return 'Cannot start or end with _ or .';
+  return null; // valid
+};
 const resizeImage = (
   file: File,
   maxWidth: number,
