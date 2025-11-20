@@ -411,7 +411,13 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                     <p className="text-slate-600">Select a recipe, then click a meal slot to assign it</p>
                   </div>
                 </div>
-
+<Button
+  onClick={() => onNavigate?.('grocery-list')}
+  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg"
+>
+  <ShoppingCart className="w-4 h-4 mr-2" />
+  Go to Grocery List
+</Button>
                 <div className="flex items-center gap-3">
                   <Button
                     variant="destructive"
