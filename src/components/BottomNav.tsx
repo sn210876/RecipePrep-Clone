@@ -126,7 +126,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
-      <div className="max-w-lg mx-auto px-4 h-16 flex items-center justify-center gap-8">
+      <div className="max-w-lg mx-auto px-4 h-16 flex items-center justify-center gap-4">
 
         {/* Messages — WITH WORKING RED BADGE */}
         <button
