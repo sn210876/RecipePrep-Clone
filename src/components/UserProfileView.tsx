@@ -125,7 +125,22 @@ export function UserProfileView({
     setSupporting(data || []);
     setShowSupporting(true);
   };
+const handleDeleteComment = async (commentId: string) => {
+  if (!currentUserId) return;
 
+  const { error } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', commentId)
+    .eq('user_id', currentUserId); // only delete your own
+
+  if (error) {
+    toast.error('Failed to delete comment');
+  } else {
+    toast.success('Comment deleted');
+    // Optional: refresh posts or just let CommentModal will update when reopened
+  }
+};
   const toggleLike = async (postId: string) => {
     if (!currentUserId) return;
 
