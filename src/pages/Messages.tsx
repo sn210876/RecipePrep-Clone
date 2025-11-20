@@ -444,7 +444,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                 z-10
               `}
             >
-              Trash
+              🗑️ 
             </button>
           )}
         </div>
