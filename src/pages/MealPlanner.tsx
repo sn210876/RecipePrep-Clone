@@ -25,6 +25,7 @@ import {
   Layers,
   Plus,
   Check,
+  PiggyBank
   Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
