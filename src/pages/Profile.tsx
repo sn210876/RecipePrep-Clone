@@ -696,6 +696,39 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+{selectedPostId && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl max-w-lg w-full p-4 relative">
+
+      {/* EDIT BUTTON GOES HERE */}
+      {(isOwnProfile || isUserAdmin) && (
+        <button
+          onClick={() => {
+            const p = posts.find(x => x.id === selectedPostId);
+            if (!p) return;
+
+            setEditingPost({
+              id: p.id,
+              title: p.title || '',
+              caption: p.caption || '',
+              recipeUrl: p.recipe_url || '',
+              photoUrl: p.image_url || ''
+            });
+          }}
+          className="absolute top-3 right-3 p-2 bg-orange-600 text-white rounded-full shadow hover:bg-orange-700"
+        >
+          <Edit3 className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* YOUR EXISTING COMMENT MODAL */}
+      <CommentModal
+        postId={selectedPostId}
+        onClose={() => setSelectedPostId(null)}
+      />
+    </div>
+  </div>
+)}
 
   {selectedPostId && (
   <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
