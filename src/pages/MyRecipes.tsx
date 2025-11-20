@@ -51,22 +51,22 @@ export function MyRecipes() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {state.savedRecipes.map((recipe) => (
-            <RecipeCard
-              key={recipe.id}
-              recipe={recipe}
-              showReviewButton={true}
-              onCook={(recipeId) => {
-                const recipe = state.savedRecipes.find(r => r.id === recipeId);
-                if (recipe) {
-                  console.log('Cook clicked for:', recipe.title);
-                  setCookingRecipe(recipe);
-                }
-              }}
-            />
-          ))}
-        </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-0 [&>*]:flex">
+  {state.savedRecipes.map((recipe) => (
+    <RecipeCard
+      key={recipe.id}
+      recipe={recipe}
+      showReviewButton={true}
+      onCook={(recipeId) => {
+        const recipe = state.savedRecipes.find(r => r.id === recipeId);
+        if (recipe) {
+          console.log('Cook clicked for:', recipe.title);
+          setCookingRecipe(recipe);
+        }
+      }}
+    />
+  ))}
+</div>
       </div>
       {cookingRecipe && (
         <CookMode
