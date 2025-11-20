@@ -44,6 +44,7 @@ interface UserProfileViewProps {
   onBack: () => void;
   onToggleFollow: (userId: string) => void;
   onMessage?: (userId: string, username: string) => void;
+  onRefresh?: () => void;
 }
 
 export function UserProfileView({
@@ -54,6 +55,7 @@ export function UserProfileView({
   onBack,
   onToggleFollow,
   onMessage,
+  onRefresh,
 }: UserProfileViewProps) {
   const userPosts = posts.filter(p => p.user_id === userId);
   const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null; bio?: string; banner_url?: string | null } | null>(null);
@@ -140,13 +142,15 @@ const handleDeleteComment = async (commentId: string) => {
     .from('comments')
     .delete()
     .eq('id', commentId)
-    .eq('user_id', currentUserId); // only delete your own
+    .eq('user_id', currentUserId);
 
   if (error) {
     toast.error('Failed to delete comment');
   } else {
     toast.success('Comment deleted');
-    // Optional: refresh posts or just let CommentModal will update when reopened
+    if (onRefresh) {
+      onRefresh();
+    }
   }
 };
   const toggleLike = async (postId: string) => {

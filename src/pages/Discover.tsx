@@ -1014,6 +1014,7 @@ const fallbackCopy = (url: string) => {
                 onNavigateToMessages(userId, username);
               }
             }}
+            onRefresh={() => fetchPosts(0, true)}
           />
         ) : posts.length === 0 ? (
           <div className="text-center py-12">
