@@ -352,7 +352,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
               className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Send List To Cart
+              Send List To Cart "Coming Soon"
             </Button>
           )}
           <Button
