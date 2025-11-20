@@ -58,12 +58,20 @@ export default {
       },
       keyframes: {
         'accordion-down': {
-          from: { height: '0' },
-          to: { height: 'var(--radix-accordion-content-height)' },
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-accordion-content-height)',
+          },
         },
         'accordion-up': {
-          from: { height: 'var(--radix-accordion-content-height)' },
-          to: { height: '0' },
+          from: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+          to: {
+            height: '0',
+          },
         },
       },
       animation: {
@@ -72,11 +80,5 @@ export default {
       },
     },
   },
-  plugins: [
-    require('tailwindcss-animate'),
-    // THIS IS THE MAGIC LINE THAT FIXES DELETE BUTTON
-    require('tailwindcss/plugin')(({ addVariant }) => {
-      addVariant('group-show-delete', ':merge(.group).show-delete &');
-    }),
-  ],
+  plugins: [require('tailwindcss-animate')],
 };
