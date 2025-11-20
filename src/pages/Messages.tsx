@@ -286,6 +286,29 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     }
   };
 
+  const renderMessageContent = (content: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:opacity-80"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   // *** DELETE MESSAGE ***
   const handleDeleteMessage = async (messageId: string) => {
     if (!currentUserId) return;
@@ -371,7 +394,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             }`}
           >
             <p className="whitespace-pre-wrap break-words text-sm leading-tight">
-              {message.content}
+              {renderMessageContent(message.content)}
             </p>
             <span className="text-xs opacity-70 mt-1 block">
               {new Date(message.created_at).toLocaleTimeString([], {
