@@ -175,7 +175,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   ${
     isActive
       ? 'bg-orange-500 text-white shadow-lg'
-      : 'text-gray-700 hover:bg-gray-100/50 hover:scale-110'
+      : 'text-gray-700 opacity-70 hover:opacity-100'
   }`}
 
                         onClick={() => onNavigate(item.id)}
