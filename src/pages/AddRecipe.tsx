@@ -505,10 +505,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     NOW WORKS: All Recipes, Blogs.
   </p>
   <p className="text-xs text-orange-600 font-normal">
-    Instagram → If video has no ingredients in description, then please manually update
+    Instagram/Tiktok → If video has no ingredients in description, then please manually update
   </p>
-  <p className="text-xs text-orange-600 font-normal">
-    TikTok → If video has no ingredients in description, then please manually update
+      TikTok → If video has no ingredients in description, then please manually update
   </p>
   <p className="text-xs text-orange-600 font-normal">
     YouTube → Coming Soon...
