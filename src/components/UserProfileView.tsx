@@ -58,7 +58,7 @@ export function UserProfileView({
   const [showSupporting, setShowSupporting] = useState(false);
   const [supporters, setSupporters] = useState<any[]>([]);
   const [supporting, setSupporting] = useState<any[]>([]);
-
+  const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null);
   useEffect(() => {
     const fetchProfile = async () => {
       const { data } = await supabase
