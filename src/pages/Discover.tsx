@@ -729,7 +729,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     const username = post.profiles?.username || 'user';
     const shareUrl = `https://mealscrape.com/${username}?post=${postId}`;
     const shareData = {
-      title: post.title || 'Check out this recipe!',
+      title: post.title || '',
       text: post.caption || 'Found this amazing recipe on MealScrape!',
       url: shareUrl
     };
