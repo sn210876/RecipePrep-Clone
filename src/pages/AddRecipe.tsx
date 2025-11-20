@@ -923,7 +923,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Notes</CardTitle>
-              <CardDescription>Any additional tips or variations</CardDescription>
+              <CardDescription> </CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea
