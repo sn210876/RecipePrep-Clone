@@ -268,7 +268,12 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
             className="w-full border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-500 transition-all"
             onClick={(e) => {
               e.stopPropagation();
-              window.location.href = `/post/${socialPost.id}`;
+              const event = new CustomEvent('open-shared-post', { detail: socialPost.id });
+              window.dispatchEvent(event);
+              window.history.pushState({}, '', '/discover');
+              if (window.location.pathname !== '/discover') {
+                window.location.href = `/post/${socialPost.id}`;
+              }
             }}
           >
             <span className="text-base mr-2">💬</span>

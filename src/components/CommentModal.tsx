@@ -34,9 +34,12 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [averageRating, setAverageRating] = useState<number>(0);
   const [totalRatings, setTotalRatings] = useState<number>(0);
+  const [post, setPost] = useState<any>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (isOpen && postId) {
+      loadPost();
       loadComments();
       loadRatings();
       supabase.auth.getUser().then(({ data }) => {
@@ -47,6 +50,34 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       });
     }
   }, [isOpen, postId]);
+
+  const loadPost = async () => {
+    if (!postId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('id', postId)
+        .maybeSingle();
+
+      if (error) throw error;
+      setPost(data);
+
+      // Auto-play music if available
+      if (data?.spotify_preview_url) {
+        setTimeout(() => {
+          const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
+          if (audio) {
+            audio.play().catch(err => console.log('Auto-play prevented:', err));
+            setIsPlaying(true);
+          }
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error loading post:', error);
+    }
+  };
 
   const loadComments = async () => {
     if (!postId) return;
@@ -234,13 +265,68 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     }
   };
 
+  const togglePlay = () => {
+    const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
+    if (audio) {
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        audio.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-<DialogContent className="max-w-lg h-[80vh] flex flex-col p-0 z-[9999]">
+<DialogContent className="max-w-lg h-[90vh] flex flex-col p-0 z-[9999]">
         <DialogHeader className="px-4 py-3 border-b">
-          <DialogTitle>Comments & Ratings</DialogTitle>
+          <DialogTitle>Post Details</DialogTitle>
+        </DialogHeader>
 
-          <div className="mt-3 space-y-2">
+        {/* Post Image */}
+        {post?.image_url && (
+          <div className="relative w-full aspect-square bg-gray-100">
+            <img
+              src={post.image_url}
+              alt={post.title || 'Post'}
+              className="w-full h-full object-cover"
+            />
+            {post.title && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
+                <h3 className="text-white text-sm font-semibold">{post.title}</h3>
+              </div>
+            )}
+            {post.spotify_preview_url && (
+              <div className="absolute top-4 right-4 z-10">
+                <button
+                  onClick={togglePlay}
+                  className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-full shadow-lg transition-all flex items-center gap-2"
+                >
+                  <span className="text-xl">{isPlaying ? '⏸️' : '▶️'}</span>
+                  <div className="text-left text-xs max-w-32">
+                    <div className="font-semibold truncate">{post.spotify_track_name}</div>
+                    <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
+                  </div>
+                </button>
+                <audio id={`modal-audio-${postId}`} src={post.spotify_preview_url} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Caption */}
+        {post?.caption && (
+          <div className="px-4 py-2 border-b">
+            <p className="text-sm text-gray-700">{post.caption}</p>
+          </div>
+        )}
+
+        {/* Ratings Section */}
+        <div className="px-4 py-3 border-b">
+          <h3 className="font-semibold mb-2">Ratings</h3>
+
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="flex items-center">
                 {[1, 2, 3, 4, 5].map((fire) => (
@@ -284,7 +370,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               </div>
             </div>
           </div>
-        </DialogHeader>
+        </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
           {loading ? (
