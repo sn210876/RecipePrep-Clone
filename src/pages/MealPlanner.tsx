@@ -426,6 +426,13 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
                   >
                     <Trash2 className="w-4 h-4" />
                     Clear All
+                    <Button
+  onClick={() => onNavigate?.('grocery-list')}
+  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg"
+>
+  <ShoppingCart className="w-4 h-4 mr-2" />
+  Go to Grocery List
+</Button>
                   </Button>
                   <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
                     <Button
