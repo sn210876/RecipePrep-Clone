@@ -420,38 +420,48 @@ export function MealPlanner({ onNavigate: _onNavigate }: MealPlannerProps = {}) 
   Go to Grocery List
 </Button>
                 <div className="flex items-center gap-3">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      if (confirm('Clear all meal plans? This cannot be undone.')) {
-                        dispatch({ type: 'CLEAR_MEAL_PLAN' });
-                        toast.success('All meals cleared');
-                      }
-                    }}
-                    className="gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Clear All
-                  </Button>
-                  <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-                    <Button
-                      variant={weeksToShow === 1 ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setWeeksToShow(1)}
-                      className="h-8"
-                    >
-                      1 Week
-                    </Button>
-                    <Button
-                      variant={weeksToShow === 4 ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setWeeksToShow(4)}
-                      className="h-8"
-                    >
-                      4 Weeks
-                    </Button>
-                    <Button
+  <Button
+    onClick={() => onNavigate?.('grocery-list')}
+    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg"
+  >
+    <ShoppingCart className="w-5 h-5 mr-2" />
+    Go to Grocery List
+  </Button>
+
+  <Button
+    variant="destructive"
+    size="sm"
+    onClick={() => {
+      if (confirm('Clear all meal plans? This cannot be undone.')) {
+        dispatch({ type: 'CLEAR_MEAL_PLAN' });
+        toast.success('All meals cleared');
+      }
+    }}
+    className="gap-2"
+  >
+    <Trash2 className="w-4 h-4" />
+    Clear All
+  </Button>
+
+  <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+    <Button
+      variant={weeksToShow === 1 ? 'default' : 'ghost'}
+      size="sm"
+      onClick={() => setWeeksToShow(1)}
+      className="h-8"
+    >
+      1 Week
+    </Button>
+    <Button
+      variant={weeksToShow === 4 ? 'default' : 'ghost'}
+      size="sm"
+      onClick={() => setWeeksToShow(4)}
+      className="h-8"
+    >
+      4 Weeks
+    </Button>
+  </div>
+</div>
   onClick={() => onNavigate?.('grocery-list')}
   className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg"
 >
