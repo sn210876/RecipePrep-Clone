@@ -1,10 +1,21 @@
+// src/components/VoiceControls.tsx
 import { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Mic, MicOff, Volume2, HelpCircle, Check, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+
+// Fix for TypeScript + Web Speech API (works everywhere)
+declare global {
+  interface Window {
+    SpeechRecognition?: any;
+    webkitSpeechRecognition?: any;
+  }
+}
+
 const SpeechRecognitionAPI =
   (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
 interface VoiceControlsProps {
   onCommand: (command: VoiceCommand) => void;
   isActive: boolean;
@@ -50,22 +61,18 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
   const [error, setError] = useState('');
   const [showHelp, setShowHelp] = useState(false);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const isManuallyStoppedRef = useRef(false);
 
   // Initialize SpeechRecognition once
   useEffect(() => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionAPI) {
       setIsSupported(false);
       return;
     }
 
     setIsSupported(true);
-
-    const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognitionAPI();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
@@ -79,11 +86,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       setIsListening(false);
       if (isActive && !isManuallyStoppedRef.current) {
         setTimeout(() => {
-          try {
-            recognition.start();
-          } catch {
-            /* ignore */
-          }
+          try { recognition.start(); } catch {}
         }, 300);
       }
     };
@@ -101,12 +104,10 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
     recognition.onresult = (event: any) => {
       const results = Array.from(event.results);
-
       const final = results
         .filter((r: any) => r.isFinal)
         .map((r: any) => r[0].transcript)
         .join(' ');
-
       const interim = results
         .filter((r: any) => !r.isFinal)
         .map((r: any) => r[0].transcript)
@@ -139,9 +140,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
         recognitionRef.current.start();
         setShowHelp(true);
         setTimeout(() => setShowHelp(false), 10000);
-      } catch {
-        /* already starting */
-      }
+      } catch {}
     } else {
       isManuallyStoppedRef.current = true;
       recognitionRef.current.stop();
@@ -153,7 +152,6 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
   const processCommand = (text: string) => {
     const lower = text.toLowerCase().trim();
-
     let command: VoiceCommand | null = null;
 
     if (/next|next step/.test(lower)) command = { type: 'next' };
@@ -170,7 +168,6 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       return;
     }
 
-    // Jump to specific step
     const match = lower.match(/(?:show|step|go to)\s+(\d+)/);
     if (match) {
       const num = parseInt(match[1]) - 1;
@@ -187,16 +184,13 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
 
   const speak = (text: string) => {
     if (!('speechSynthesis' in window)) return;
-
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = voiceSettings.speechRate;
-
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0 && voiceSettings.voiceIndex < voices.length) {
       utterance.voice = voices[voiceSettings.voiceIndex];
     }
-
     window.speechSynthesis.speak(utterance);
   };
 
@@ -249,7 +243,6 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
             </>
           )}
         </Button>
-
         <Button variant="outline" size="icon" onClick={() => setShowHelp(!showHelp)}>
           <HelpCircle className="w-5 h-5" />
         </Button>
