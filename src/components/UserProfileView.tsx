@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle, Crown } from 'lucide-react';
+import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle, Crown, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { CommentModal } from './CommentModal';
@@ -25,6 +25,14 @@ interface Post {
   _count?: {
     likes: number;
     comments: number;
+  };
+  latest_comment?: {
+    id: string;
+    user_id: string;
+    text: string;
+    profiles?: {
+      username: string;
+    };
   };
 }
 
@@ -350,9 +358,9 @@ const handleDeleteComment = async (commentId: string) => {
                   {post.latest_comment && (
                     <div
                       className="mt-3 relative"
-                      onMouseEnter={() => post.latest_comment.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
+                      onMouseEnter={() => post.latest_comment?.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
                       onMouseLeave={() => setHoveredCommentId(null)}
-                      onTouchStart={() => post.latest_comment.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
+                      onTouchStart={() => post.latest_comment?.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
                       onTouchEnd={() => setHoveredCommentId(null)}
                     >
                       <div className="flex items-start gap-2">
@@ -369,11 +377,12 @@ const handleDeleteComment = async (commentId: string) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteComment(post.latest_comment.id);
+                            handleDeleteComment(post.latest_comment!.id);
                           }}
-                          className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-lg shadow-lg hover:bg-red-600 active:scale-95 z-10"
+                          className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 active:scale-95 z-10"
+                          title="Delete comment"
                         >
-                          Trash
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>

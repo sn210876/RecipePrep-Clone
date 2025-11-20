@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import { Send } from 'lucide-react';
+import { Send, Trash2 } from 'lucide-react';
 
 interface Comment {
   id: string;
@@ -36,7 +36,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   const [totalRatings, setTotalRatings] = useState<number>(0);
   const [post, setPost] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null);
   useEffect(() => {
     if (isOpen && postId) {
       loadPost();
@@ -414,7 +413,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                 </div>
               ) : (
                 comments.map(comment => (
-                  <div key={comment.id} className="flex gap-2">
+                  <div key={comment.id} className="flex gap-2 relative group">
                     {comment.profiles?.avatar_url ? (
                       <img
                         src={comment.profiles.avatar_url}
@@ -440,6 +439,16 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                         {new Date(comment.created_at).toLocaleDateString()}
                       </p>
                     </div>
+
+                    {comment.user_id === currentUserId && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="absolute top-0 right-0 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-opacity"
+                        title="Delete comment"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))
               )}

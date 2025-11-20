@@ -395,9 +395,9 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           // Mobile: long-press (300ms) shows delete button
           onTouchStart={(e) => {
             if (message.sender_id !== currentUserId) return;
-            const touch = e.touches[0];
             const timer = setTimeout(() => {
-              e.target.closest('.group')?.classList.add('show-delete');
+              const target = e.target as HTMLElement;
+              target.closest('.group')?.classList.add('show-delete');
             }, 400);
             const end = () => {
               clearTimeout(timer);
