@@ -438,6 +438,8 @@ const handleDeleteComment = async (commentId: string) => {
 )}
 
       {/* DELETE POST BUTTON */}
+      const selectedPost = userPosts.find(p => p.id === selectedPostId);
+
 {selectedPost && currentUserId === selectedPost.user_id && (
         <button
           onClick={async () => {
