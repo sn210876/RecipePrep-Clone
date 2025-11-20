@@ -407,17 +407,19 @@ const handleDeleteComment = async (commentId: string) => {
         </div>
       )}
 
-   {selectedPostId && (
+  {selectedPostId && (
   <>
     {(() => {
       const selectedPost = userPosts.find(p => p.id === selectedPostId);
 
+      if (!selectedPost) return null;
+
       return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full">
+          <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full z-[60]">
 
-            {/* EDIT BUTTON - only show for the post owner */}
-            {selectedPost && currentUserId === selectedPost.user_id && (
+            {/* EDIT BUTTON - only for post owner */}
+            {currentUserId === selectedPost.user_id && (
               <button
                 onClick={() => {
                   const newCaption = prompt("Edit your caption:");
@@ -436,14 +438,15 @@ const handleDeleteComment = async (commentId: string) => {
                       }
                     });
                 }}
-                className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700"
+                className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700 z-[70]"
+                title="Edit post"
               >
                 ✏️
               </button>
             )}
 
-            {/* DELETE BUTTON - only show for the post owner */}
-            {selectedPost && currentUserId === selectedPost.user_id && (
+            {/* DELETE BUTTON - only for post owner */}
+            {currentUserId === selectedPost.user_id && (
               <button
                 onClick={async () => {
                   if (!confirm("Delete this post?")) return;
@@ -462,24 +465,29 @@ const handleDeleteComment = async (commentId: string) => {
                     if (onRefresh) onRefresh();
                   }
                 }}
-                className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700"
+                className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 z-[70]"
+                title="Delete post"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
             )}
 
             {/* COMMENT MODAL */}
-            <CommentModal
-              postId={selectedPostId}
-              isOpen={true}
-              onClose={() => setSelectedPostId(null)}
-            />
+            <div className="relative z-[50]">
+              <CommentModal
+                postId={selectedPostId}
+                isOpen
+                onClose={() => setSelectedPostId(null)}
+              />
+            </div>
+
           </div>
         </div>
       );
     })()}
   </>
 )}
+
 
      <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
   <DialogContent>
