@@ -400,61 +400,88 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="border-b border-slate-200 bg-white shadow-sm">
-            <div className="p-6">
-             <div className="flex items-center justify-between mb-4">
-  <div className="flex items-center gap-3">
-    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-      <Calendar className="w-6 h-6 text-white" />
-    </div>
-    <div>
-      <h1 className="text-3xl font-bold text-slate-900">Meal Planner</h1>
-      <p className="text-slate-600">Select a recipe, then click a meal slot to assign it</p>
+           <div className="p-6">
+  {/* Top row: Title + main buttons */}
+  <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center gap-3">
+      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
+        <Calendar className="w-6 h-6 text-white" />
+      </div>
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900">Meal Planner</h1>
+        <p className="text-slate-600">Select a recipe, then click a meal slot to assign it</p>
+      </div>
     </div>
   </div>
 
-  <div className="flex items-center gap-3">
-    <Button
-  onClick={() => onNavigate?.('grocery-list')}
-  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg"
->
-  <ShoppingCart className="w-5 h-5 mr-2" />
-  Go to Grocery List
-</Button>
+  {/* Bottom row: Clear All, Week toggle, and Grocery List button BELOW them */}
+  <div className="flex items-center justify-between">
+    {/* Left side: Clear All + 1 Week / 4 Weeks */}
+    <div className="flex items-center gap-3">
+      <Button
+        variant="destructive"
+        size="sm"
+        onClick={() => {
+          if (confirm('Clear all meal plans? This cannot be undone.')) {
+            dispatch({ type: 'CLEAR_MEAL_PLAN' });
+            toast.success('All meals cleared');
+          }
+        }}
+        className="gap-2"
+      >
+        <Trash2 className="w-4 h-4" />
+        Clear All
+      </Button>
 
+      <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+        <Button
+          variant={weeksToShow === 1 ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setWeeksToShow(1)}
+          className="h-8"
+        >
+          1 Week
+        </Button>
+        <Button
+          variant={weeksToShow === 4 ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setWeeksToShow(4)}
+          className="h-8"
+        >
+          4 Weeks
+        </Button>
+      </div>
+    </div>
+
+    {/* Right side: Grocery List button — now on the same row, below the title */}
     <Button
-      variant="destructive"
-      size="sm"
-      onClick={() => {
-        if (confirm('Clear all meal plans? This cannot be undone.')) {
-          dispatch({ type: 'CLEAR_MEAL_PLAN' });
-          toast.success('All meals cleared');
-        }
-      }}
-      className="gap-2"
+      onClick={() => onNavigate?.('grocery-list')}
+      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg"
     >
-      <Trash2 className="w-4 h-4" />
-      Clear All
+      <ShoppingCart className="w-5 h-5 mr-2" />
+      Go to Grocery List
     </Button>
+  </div>
 
-    <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-      <Button
-        variant={weeksToShow === 1 ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => setWeeksToShow(1)}
-        className="h-8"
-      >
-        1 Week
+  {/* Week navigation (Previous / Today / Next) */}
+  <div className="flex items-center justify-between mt-6">
+    <div className="flex items-center gap-3">
+      <Button variant="outline" size="sm" onClick={handlePreviousWeek}>
+        <ChevronLeft className="w-4 h-4" />
       </Button>
-      <Button
-        variant={weeksToShow === 4 ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => setWeeksToShow(4)}
-        className="h-8"
-      >
-        4 Weeks
+      <Button variant="outline" size="sm" onClick={handleToday}>
+        Today
+      </Button>
+      <Button variant="outline" size="sm" onClick={handleNextWeek}>
+        <ChevronRight className="w-4 h-4" />
       </Button>
     </div>
+    <h2 className="text-lg font-semibold text-slate-700">
+      {format(currentWeekStart, 'MMM d')} -{' '}
+      {format(addDays(currentWeekStart, weeksToShow * 7 - 1), 'MMM d, yyyy')}
+    </h2>
   </div>
+</div>
 </div>
 
               <div className="flex items-center justify-between">
