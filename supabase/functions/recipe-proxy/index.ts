@@ -169,6 +169,8 @@ async function scrapeRecipeSite(url: string) {
     const rawTitle = ogTitleMatch?.[1] || twitterTitleMatch?.[1] || (titleMatch ? titleMatch[1] : 'Recipe');
     const title = rawTitle.split('|')[0].split('-')[0].split('•')[0].split(':')[0].trim();
 
+    let structuredData: any = null;
+
     // Extract JSON-LD structured data - use a more robust regex that handles multiline content
     const scriptRegex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
     const recipeMatches = html.matchAll(scriptRegex);
@@ -231,7 +233,7 @@ async function scrapeRecipeSite(url: string) {
                 }
               }
 
-              return {
+              structuredData = {
                 title: recipe.name || title,
                 ingredients: recipe.recipeIngredient || [],
                 instructions,
@@ -242,9 +244,11 @@ async function scrapeRecipeSite(url: string) {
                 time: parseTime(recipe.totalTime) || (parseTime(recipe.prepTime) + parseTime(recipe.cookTime)),
                 notes: 'Extracted from structured data',
               };
+              break;
             }
           }
         }
+        if (structuredData) break;
       } catch (e) {
         console.error("JSON parse error:", e);
         continue;
@@ -256,7 +260,48 @@ async function scrapeRecipeSite(url: string) {
     const firstImgMatch = html.match(/<img[^>]+src="([^"]+)"/i);
     const imageUrl = ogImageMatch?.[1] || twitterImageMatch?.[1] || firstImgMatch?.[1] || '';
 
+    // Always try AI parsing as well
     const aiResult = await parseWithAI(html);
+
+    // If we have both, check for conflicts
+    if (structuredData && aiResult.ingredients.length > 0) {
+      const hasConflict = checkForConflicts(structuredData, aiResult);
+
+      if (hasConflict) {
+        console.log('[Conflict detected] Structured vs AI-parsed data differ');
+        return {
+          title: structuredData.title,
+          image: structuredData.image || imageUrl,
+          hasConflict: true,
+          structuredVersion: structuredData,
+          aiVersion: {
+            title: title,
+            ingredients: aiResult.ingredients,
+            instructions: aiResult.instructions,
+            image: imageUrl,
+            yield: aiResult.yield || '',
+            prep_time: aiResult.prep_time || 0,
+            cook_time: aiResult.cook_time || 0,
+            time: aiResult.prep_time + aiResult.cook_time || 0,
+            notes: 'AI parsed from blog content',
+          },
+          // Default to structured data
+          ingredients: structuredData.ingredients,
+          instructions: structuredData.instructions,
+          yield: structuredData.yield,
+          prep_time: structuredData.prep_time,
+          cook_time: structuredData.cook_time,
+          time: structuredData.time,
+          notes: 'CONFLICT: Recipe card and blog content differ. Review both versions.',
+        };
+      }
+    }
+
+    // Return whichever version we have
+    if (structuredData) {
+      return structuredData;
+    }
+
     if (aiResult.ingredients.length > 0) {
       return {
         title,
@@ -276,6 +321,46 @@ async function scrapeRecipeSite(url: string) {
     console.error("Scrape error:", e);
     return null;
   }
+}
+
+function checkForConflicts(structured: any, ai: any): boolean {
+  // Check if yield differs significantly
+  const structuredYield = String(structured.yield || '').match(/\d+/)?.[0];
+  const aiYield = String(ai.yield || '').match(/\d+/)?.[0];
+
+  if (structuredYield && aiYield && structuredYield !== aiYield) {
+    console.log(`[Conflict] Yield: ${structuredYield} vs ${aiYield}`);
+    return true;
+  }
+
+  // Check if ingredient counts differ significantly
+  const ingredientDiff = Math.abs(structured.ingredients.length - ai.ingredients.length);
+  if (ingredientDiff > 2) {
+    console.log(`[Conflict] Ingredient count: ${structured.ingredients.length} vs ${ai.ingredients.length}`);
+    return true;
+  }
+
+  // Check if key ingredients have different quantities
+  for (const structIng of structured.ingredients.slice(0, 5)) {
+    const structQty = structIng.match(/(\d+(?:\.\d+)?)\s*(?:g|kg|ml|l|cup|tbsp|tsp)/)?.[1];
+    if (!structQty) continue;
+
+    for (const aiIng of ai.ingredients) {
+      // Check if it's roughly the same ingredient
+      const structName = structIng.replace(/[\d\s.,]+(?:g|kg|ml|l|cup|tbsp|tsp|oz|lb)\s*/gi, '').trim().toLowerCase();
+      const aiName = aiIng.replace(/[\d\s.,]+(?:g|kg|ml|l|cup|tbsp|tsp|oz|lb)\s*/gi, '').trim().toLowerCase();
+
+      if (structName.includes(aiName.split(' ')[0]) || aiName.includes(structName.split(' ')[0])) {
+        const aiQty = aiIng.match(/(\d+(?:\.\d+)?)\s*(?:g|kg|ml|l|cup|tbsp|tsp)/)?.[1];
+        if (aiQty && Math.abs(parseFloat(structQty) - parseFloat(aiQty)) > parseFloat(structQty) * 0.2) {
+          console.log(`[Conflict] Ingredient quantity: ${structIng} vs ${aiIng}`);
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 Deno.serve(async (req: Request) => {

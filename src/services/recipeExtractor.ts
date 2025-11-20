@@ -25,6 +25,9 @@ export interface ExtractedRecipeData {
   videoUrl?: string;
   notes: string;
   sourceUrl: string;
+  hasConflict?: boolean;
+  structuredVersion?: any;
+  aiVersion?: any;
 }
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
@@ -187,7 +190,8 @@ if (isSocial) {
 
   const data = await response.json();
 
-  const ingredients = (data.ingredients || []).map((ing: string) => {
+  const parseIngredients = (ingredientList: string[]) => {
+    return ingredientList.map((ing: string) => {
     const cleaned = decodeHtmlEntities(ing.trim());
 
     const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
@@ -228,14 +232,17 @@ if (isSocial) {
       unit = quantity ? 'piece' : '';
     }
 
-    return {
-      quantity,
-      unit,
-      name: rest || cleaned
-    };
-  });
+      return {
+        quantity,
+        unit,
+        name: rest || cleaned
+      };
+    });
+  };
 
-  return {
+  const ingredients = parseIngredients(data.ingredients || []);
+
+  const result: ExtractedRecipeData = {
     title: decodeHtmlEntities(data.title || 'Untitled Recipe'),
     description: 'Extracted recipe',
     creator: decodeHtmlEntities(data.author || 'Unknown'),
@@ -253,6 +260,30 @@ if (isSocial) {
     notes: data.notes || '',
     sourceUrl: url,
   };
+
+  if (data.hasConflict) {
+    result.hasConflict = true;
+    result.structuredVersion = {
+      ...result,
+      ingredients: parseIngredients(data.structuredVersion?.ingredients || []),
+      instructions: (data.structuredVersion?.instructions || []).map(decodeHtmlEntities),
+      prepTime: data.structuredVersion?.prep_time ? `${data.structuredVersion.prep_time} mins` : '30 mins',
+      cookTime: data.structuredVersion?.cook_time ? `${data.structuredVersion.cook_time} mins` : '45 mins',
+      servings: String(data.structuredVersion?.yield || '4'),
+      notes: 'From recipe card (structured data)',
+    };
+    result.aiVersion = {
+      ...result,
+      ingredients: parseIngredients(data.aiVersion?.ingredients || []),
+      instructions: (data.aiVersion?.instructions || []).map(decodeHtmlEntities),
+      prepTime: data.aiVersion?.prep_time ? `${data.aiVersion.prep_time} mins` : '30 mins',
+      cookTime: data.aiVersion?.cook_time ? `${data.aiVersion.cook_time} mins` : '45 mins',
+      servings: String(data.aiVersion?.yield || '4'),
+      notes: 'From blog content (AI extracted)',
+    };
+  }
+
+  return result;
 }
 
 export function isValidUrl(url: string): boolean {

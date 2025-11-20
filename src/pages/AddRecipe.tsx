@@ -86,6 +86,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [uploadedImageFile, setUploadedImageFile] = useState<File | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showConflictDialog, setShowConflictDialog] = useState(false);
 
   const addIngredient = () => {
     setIngredients([...ingredients, { quantity: '', unit: 'cup', name: '' }]);
@@ -226,8 +227,14 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     toast.loading('Extracting recipe...', { id: 'extract' });
     const data = await extractRecipeFromUrl(urlInput);
     setExtractedData(data);
-    setShowPreview(true);
-    toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`, { id: 'extract' });
+
+    if (data.hasConflict) {
+      setShowConflictDialog(true);
+      toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract' });
+    } else {
+      setShowPreview(true);
+      toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`, { id: 'extract' });
+    }
     setIsExtracting(false);
   } catch (error: any) {
     console.error('Extract error:', error);
@@ -1105,6 +1112,95 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Review and Edit
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showConflictDialog} onOpenChange={setShowConflictDialog}>
+          <DialogContent className="max-w-5xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle>Multiple Recipe Versions Found</DialogTitle>
+              <DialogDescription>
+                This website has different recipe data in its recipe card vs blog content. Choose which version to use:
+              </DialogDescription>
+            </DialogHeader>
+
+            <ScrollArea className="h-[60vh] pr-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                {extractedData?.structuredVersion && (
+                  <Card className="cursor-pointer hover:border-blue-500 transition-colors" onClick={() => {
+                    if (extractedData.structuredVersion) {
+                      setExtractedData(extractedData.structuredVersion);
+                      setShowConflictDialog(false);
+                      setShowPreview(true);
+                      toast.success('Using recipe card version');
+                    }
+                  }}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Recipe Card Version</CardTitle>
+                      <CardDescription>From structured data (usually smaller servings)</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex gap-2 text-sm">
+                        <Badge variant="secondary">{extractedData.structuredVersion.servings} servings</Badge>
+                        <Badge variant="secondary">{extractedData.structuredVersion.prepTime}</Badge>
+                        <Badge variant="secondary">{extractedData.structuredVersion.cookTime}</Badge>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm mb-2">Ingredients ({extractedData.structuredVersion.ingredients.length}):</p>
+                        <ul className="space-y-1 text-xs text-slate-600 max-h-40 overflow-y-auto">
+                          {extractedData.structuredVersion.ingredients.slice(0, 8).map((ing: Ingredient, idx: number) => (
+                            <li key={idx}>• {ing.quantity} {ing.unit} {ing.name}</li>
+                          ))}
+                          {extractedData.structuredVersion.ingredients.length > 8 && (
+                            <li className="text-slate-400">+ {extractedData.structuredVersion.ingredients.length - 8} more...</li>
+                          )}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {extractedData?.aiVersion && (
+                  <Card className="cursor-pointer hover:border-green-500 transition-colors" onClick={() => {
+                    if (extractedData.aiVersion) {
+                      setExtractedData(extractedData.aiVersion);
+                      setShowConflictDialog(false);
+                      setShowPreview(true);
+                      toast.success('Using blog content version');
+                    }
+                  }}>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Blog Content Version</CardTitle>
+                      <CardDescription>From blog post (usually more detailed)</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex gap-2 text-sm">
+                        <Badge variant="secondary">{extractedData.aiVersion.servings} servings</Badge>
+                        <Badge variant="secondary">{extractedData.aiVersion.prepTime}</Badge>
+                        <Badge variant="secondary">{extractedData.aiVersion.cookTime}</Badge>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm mb-2">Ingredients ({extractedData.aiVersion.ingredients.length}):</p>
+                        <ul className="space-y-1 text-xs text-slate-600 max-h-40 overflow-y-auto">
+                          {extractedData.aiVersion.ingredients.slice(0, 8).map((ing: Ingredient, idx: number) => (
+                            <li key={idx}>• {ing.quantity} {ing.unit} {ing.name}</li>
+                          ))}
+                          {extractedData.aiVersion.ingredients.length > 8 && (
+                            <li className="text-slate-400">+ {extractedData.aiVersion.ingredients.length - 8} more...</li>
+                          )}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </ScrollArea>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowConflictDialog(false)}>
+                Cancel
               </Button>
             </DialogFooter>
           </DialogContent>
