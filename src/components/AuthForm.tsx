@@ -176,7 +176,7 @@ export function AuthForm() {
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-4">
               <img
-                src="/Phoenix_10_simple_logo_icon_ceramic_bowl_with_wooden_spoon_ing_0.jpg"
+                src="/Pfavicon.ico.jpg"
                 alt="Recipe Prep Logo"
                 className="w-16 h-16 object-contain"
               />
