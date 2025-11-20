@@ -5,7 +5,7 @@ import { Card } from './ui/card';
 import { Mic, MicOff, Volume2, HelpCircle, Check, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
-// Fix for TypeScript + Web Speech API (works everywhere)
+// Global type augmentation – clean & only once
 declare global {
   interface Window {
     SpeechRecognition?: any;
@@ -13,8 +13,10 @@ declare global {
   }
 }
 
+// This line is intentionally used – it creates the API reference we need
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const SpeechRecognitionAPI =
-  (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
 interface VoiceControlsProps {
   onCommand: (command: VoiceCommand) => void;
@@ -53,7 +55,7 @@ const commandExamples = [
 ];
 
 export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: VoiceControlsProps) {
-  const [isSupported, setIsSupported] = useState(false);
+  const [isSupported, setIsSupported] = useState(!!SpeechRecognitionAPI);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [lastCommand, setLastCommand] = useState('');
@@ -64,14 +66,10 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
   const recognitionRef = useRef<any>(null);
   const isManuallyStoppedRef = useRef(false);
 
-  // Initialize SpeechRecognition once
+  // Setup recognition only once
   useEffect(() => {
-    if (!SpeechRecognitionAPI) {
-      setIsSupported(false);
-      return;
-    }
+    if (!SpeechRecognitionAPI) return;
 
-    setIsSupported(true);
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = true;
     recognition.interimResults = true;
@@ -103,15 +101,14 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
     };
 
     recognition.onresult = (event: any) => {
-      const results = Array.from(event.results);
-      const final = results
-        .filter((r: any) => r.isFinal)
-        .map((r: any) => r[0].transcript)
-        .join(' ');
-      const interim = results
-        .filter((r: any) => !r.isFinal)
-        .map((r: any) => r[0].transcript)
-        .join(' ');
+      let final = '';
+      let interim = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i][0].transcript;
+        if (event.results[i].isFinal) final += res;
+        else interim += res;
+      }
 
       if (final) {
         setTranscript(final);
@@ -128,11 +125,11 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       isManuallyStoppedRef.current = true;
       recognition.stop();
     };
-  }, []);
+  }, [isActive, onToggle]);
 
   // React to isActive toggle
   useEffect(() => {
-    if (!recognitionRef.current || !isSupported) return;
+    if (!recognitionRef.current) return;
 
     if (isActive) {
       isManuallyStoppedRef.current = false;
@@ -148,7 +145,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
       setTranscript('');
       setError('');
     }
-  }, [isActive, isSupported]);
+  }, [isActive]);
 
   const processCommand = (text: string) => {
     const lower = text.toLowerCase().trim();
@@ -188,7 +185,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = voiceSettings.speechRate;
     const voices = window.speechSynthesis.getVoices();
-    if (voices.length > 0 && voiceSettings.voiceIndex < voices.length) {
+    if (voices.length && voiceSettings.voiceIndex < voices.length) {
       utterance.voice = voices[voiceSettings.voiceIndex];
     }
     window.speechSynthesis.speak(utterance);
@@ -201,9 +198,7 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
           <AlertCircle className="w-6 h-6 text-amber-600 mt-0.5" />
           <div>
             <h3 className="font-bold text-amber-900">Voice Control Not Available</h3>
-            <p className="text-sm text-amber-700 mt-1">
-              Please use Chrome, Edge, or Safari.
-            </p>
+            <p className="text-sm text-amber-700 mt-1">Please use Chrome, Edge, or Safari.</p>
           </div>
         </div>
       </Card>
