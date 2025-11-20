@@ -807,7 +807,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           console.log('Created new conversation:', conversationId);
         }
 
-        const { error: messageError } = await supabase.from('messages').insert({
+        const { error: messageError } = await supabase.from('direct_messages').insert({
           conversation_id: conversationId,
           sender_id: currentUserId,
           content: messageContent,
