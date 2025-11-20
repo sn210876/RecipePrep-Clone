@@ -997,12 +997,15 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
               </div>
             )}
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => window.location.href = `/${post.profiles?.username}`}
-                className="font-semibold text-sm hover:underline"
-              >
-                {post.profiles?.username}
-              </button>
+             <button
+  onClick={() => {
+    // This instantly opens their profile without full reload
+    window.location.href = `/profile/${post.profiles?.username}`;
+  }}
+  className="font-semibold text-sm hover:underline cursor-pointer"
+>
+  {post.profiles?.username}
+</button>
               {post.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                 <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
               )}
