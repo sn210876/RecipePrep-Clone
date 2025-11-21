@@ -57,14 +57,7 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
   };
 
   // Simulate real-time unread updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.8 && currentPage !== 'messages') {
-        setUnreadCount(prev => Math.min(prev + 1, 9));
-      }
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [currentPage]);
+ 
 
   return (
     <div className="min-h-screen bg-white">
