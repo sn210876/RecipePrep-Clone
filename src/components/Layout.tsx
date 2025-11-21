@@ -16,10 +16,16 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function Layout() {
-  const [currentPage, setCurrentPage] = useState('discover');
+interface LayoutProps {
+  currentPage: string;
+  onNavigate: (page: string) => void;
+  children: React.ReactNode;
+}
+
+export default function Layout({ currentPage: propCurrentPage, onNavigate, children }: LayoutProps) {
+  const [currentPage, setCurrentPage] = useState(propCurrentPage);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(3);
 
   const navItems = [
@@ -35,10 +41,11 @@ export default function Layout() {
 
   const socialPages = ['discover', 'upload', 'profile', 'messages'];
 
-  const handleNavigate = (page) => {
+  const handleNavigate = (page: string) => {
     setCurrentPage(page);
+    onNavigate(page);
     setIsMobileMenuOpen(false);
-    
+
     // Clear unread when navigating to messages
     if (page === 'messages') {
       setUnreadCount(0);
@@ -195,38 +202,7 @@ export default function Layout() {
 
         {/* Main Content */}
         <main className={socialPages.includes(currentPage) ? '' : 'p-3 sm:p-4 md:p-6 pb-24'}>
-          {/* Demo Content */}
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 sm:p-8 border border-orange-200">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Current Page: {navItems.find(item => item.id === currentPage)?.label}
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600">
-                This is the main content area. Navigation works on both mobile and desktop.
-              </p>
-              
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <h4 className="font-semibold text-sm mb-2">Mobile Features</h4>
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    <li>✓ Slide-out navigation</li>
-                    <li>✓ Bottom floating buttons</li>
-                    <li>✓ Touch-optimized targets</li>
-                    <li>✓ Responsive spacing</li>
-                  </ul>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <h4 className="font-semibold text-sm mb-2">Desktop Features</h4>
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    <li>✓ Fixed sidebar</li>
-                    <li>✓ Quick access toolbar</li>
-                    <li>✓ Hover states</li>
-                    <li>✓ Tooltips</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
+          {children}
         </main>
 
         {/* Bottom Navigation - Mobile Only */}
@@ -259,13 +235,13 @@ export default function Layout() {
               </button>
 
               {/* Upload Button - Elevated */}
-              <button
-                onClick={() => handleNavigate('upload')}
-                className="relative -mt-6 flex flex-col items-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95"
-                style={{ width: '56px', height: '56px' }}
-              >
-                <Camera className="w-7 h-7 text-white" strokeWidth={2.5} />
-              </button>
+            <button
+  onClick={() => handleNavigate('upload')}
+  className="relative -mt-6 grid place-items-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95"
+  style={{ width: '56px', height: '56px' }}
+>
+  <Camera className="w-8 h-8 text-white" strokeWidth={2.75} />
+</button>
 
               {/* Profile */}
               <button
