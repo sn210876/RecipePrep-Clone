@@ -623,8 +623,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </Dialog>
-    </div>  {/* ← closes max-w-2xl */}
-  </div>    {/* ← closes min-h-screen + MOBILE_SAFE */}
-);
+    </div>
+  );
 }
