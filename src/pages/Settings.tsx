@@ -17,7 +17,11 @@ const COMMON_TIMEZONES = [
   { label: 'Pacific Time (PT)', value: 'America/Los_Angeles' },
 ];
 
-export default function Settings() {
+interface SettingsProps {
+  onNavigate: (page: string) => void;
+}
+
+export default function Settings({ onNavigate }: SettingsProps) {
   const [forwardingEmail, setForwardingEmail] = useState('user-demo123@mealscrape.app');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -25,7 +29,7 @@ export default function Settings() {
   const [recipeText, setRecipeText] = useState('');
   const [importing, setImporting] = useState(false);
   const [voiceSettings, setVoiceSettings] = useState({ speechRate: 1.0, voiceIndex: 0, autoRead: true });
-  const [availableVoices, setAvailableVoices] = useState([]);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [testingVoice, setTestingVoice] = useState(false);
   const [timezone, setTimezone] = useState('America/New_York');
   const [savingTimezone, setSavingTimezone] = useState(false);

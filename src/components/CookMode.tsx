@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Recipe } from '../types/recipe';
 
 import {
   ChevronLeft,
@@ -21,7 +22,12 @@ import {
   MicOff,
 } from 'lucide-react';
 
-export default function CookMode() {
+interface CookModeProps {
+  recipe: Recipe;
+  onClose: () => void;
+}
+
+export function CookMode({ recipe, onClose }: CookModeProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [checkedIngredients, setCheckedIngredients] = useState(new Set());
   const [checkedSteps, setCheckedSteps] = useState(new Set());
@@ -30,38 +36,11 @@ export default function CookMode() {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [voiceModeActive, setVoiceModeActive] = useState(false);
-  const [servings, setServings] = useState(4);
+  const [servings, setServings] = useState(recipe.servings || 4);
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
 
-  const recipe = {
-    title: 'Chocolate Chip Cookies',
-    imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&h=600&fit=crop',
-    prepTime: 15,
-    cookTime: 12,
-    servings: 4,
-    ingredients: [
-      { quantity: '2', unit: 'cups', name: 'all-purpose flour' },
-      { quantity: '1', unit: 'tsp', name: 'baking soda' },
-      { quantity: '1', unit: 'cup', name: 'butter, softened' },
-      { quantity: '¾', unit: 'cup', name: 'granulated sugar' },
-      { quantity: '¾', unit: 'cup', name: 'brown sugar' },
-      { quantity: '2', unit: '', name: 'large eggs' },
-      { quantity: '2', unit: 'tsp', name: 'vanilla extract' },
-      { quantity: '2', unit: 'cups', name: 'chocolate chips' },
-    ],
-  };
-
-  const steps = [
-    { stepNumber: 1, instruction: 'Preheat oven to 375°F (190°C). Line baking sheets with parchment paper.', duration: '5 min' },
-    { stepNumber: 2, instruction: 'In a medium bowl, whisk together flour and baking soda. Set aside.', duration: null },
-    { stepNumber: 3, instruction: 'In a large bowl, cream together butter and both sugars until light and fluffy, about 3-4 minutes.', duration: '4 min' },
-    { stepNumber: 4, instruction: 'Beat in eggs one at a time, then stir in vanilla extract.', duration: null },
-    { stepNumber: 5, instruction: 'Gradually blend in the flour mixture. Fold in chocolate chips.', duration: null },
-    { stepNumber: 6, instruction: 'Drop rounded tablespoons of dough onto prepared baking sheets, spacing 2 inches apart.', duration: null },
-    { stepNumber: 7, instruction: 'Bake for 10-12 minutes or until golden brown around edges. Cool on baking sheets for 5 minutes.', duration: '12 min' },
-    { stepNumber: 8, instruction: 'Transfer cookies to a wire rack to cool completely. Enjoy!', duration: null },
-  ];
+  const steps = recipe.steps || [];
 
   // Timer effect
   useEffect(() => {
@@ -84,7 +63,7 @@ export default function CookMode() {
   }, [timerActive, timerPaused, timeRemaining, soundEnabled]);
 
   const playTimerSound = () => {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     oscillator.connect(gainNode);
@@ -236,7 +215,7 @@ export default function CookMode() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => console.log('Close')}
+              onClick={onClose}
               className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
             >
               <X className="w-4 h-4 sm:w-5 sm:h-5" />

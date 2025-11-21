@@ -5,7 +5,7 @@ import { Heart, MessageCircle, ExternalLink, MoreVertical, Trash2, Edit3, Search
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import { makeHashtagsClickable } from '../lib/hashtags';
-import { CommentModal } from '../components/CommentModal';
+import CommentModal from '../components/CommentModal';
 import { RecipeDetailModal } from '../components/RecipeDetailModal';
 import { UserProfileView } from '../components/UserProfileView';
 import { Recipe } from '../types/recipe';

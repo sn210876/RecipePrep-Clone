@@ -4,7 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Trash2, X, Play, Pause } from 'lucide-react';
 
-export default function CommentModal() {
+interface CommentModalProps {
+  postId: string | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onCommentPosted?: () => void | Promise<void>;
+}
+
+export default function CommentModal({ postId: _postId, isOpen: propIsOpen, onClose, onCommentPosted: _onCommentPosted }: CommentModalProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [comments, setComments] = useState([
     {

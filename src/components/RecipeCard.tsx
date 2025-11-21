@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter } from './ui/card';
 import { Recipe } from '../types/recipe';
 import { RecipeDetailModal } from './RecipeDetailModal';
 import { useRecipes } from '../context/RecipeContext';
-import { RatingDisplay } from './RatingDisplay';
+import RatingDisplay from './RatingDisplay';
 import { getRecipeReviews, getAverageRating } from '../services/reviewService';
 import { ReviewForm } from './ReviewForm';
 import { supabase } from '../lib/supabase';

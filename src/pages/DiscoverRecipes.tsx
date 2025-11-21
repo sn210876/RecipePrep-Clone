@@ -10,7 +10,7 @@ import { Recipe } from '../types/recipe';
 import { getAllPublicRecipes, deleteRecipe } from '../services/recipeService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
-import { CommentModal } from '../components/CommentModal';
+import CommentModal from '../components/CommentModal';
 
 interface DiscoverProps {
   onNavigate: (page: string) => void;

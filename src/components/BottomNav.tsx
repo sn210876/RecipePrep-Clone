@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 export default function BottomNav() {
   const [currentPage, setCurrentPage] = useState('messages');
-  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(3);
 
   // Simulate avatar loading

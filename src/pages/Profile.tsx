@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
-import { CommentModal } from '../components/CommentModal';
+import CommentModal from '../components/CommentModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 
 const validateUsername = (username: string): string | null => {

@@ -14,7 +14,7 @@ import {
 import { CookMode } from './CookMode';
 import { ReviewForm } from './ReviewForm';
 import { ReviewCard } from './ReviewCard';
-import { RatingDisplay } from './RatingDisplay';
+import RatingDisplay from './RatingDisplay';
 import {
   getRecipeReviews,
   getUserReview,

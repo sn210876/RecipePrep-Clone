@@ -1,22 +1,32 @@
-import { Component } from 'react';
+import { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 
-class ErrorBoundary extends Component {
-  constructor(props) {
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: { componentStack: string } | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { 
-      hasError: false, 
+    this.state = {
+      hasError: false,
       error: null,
-      errorInfo: null 
+      errorInfo: null
     };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: Error) {
     console.error('ErrorBoundary caught error:', error);
     return { hasError: true, error };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
     console.error('ErrorBoundary componentDidCatch:', error, errorInfo);
     this.setState({ errorInfo });
   }
@@ -197,51 +207,4 @@ class ErrorBoundary extends Component {
   }
 }
 
-// Demo Component to test ErrorBoundary
-function DemoApp() {
-  const [shouldError, setShouldError] = useState(false);
-
-  if (shouldError) {
-    throw new Error('This is a test error to demonstrate the ErrorBoundary!');
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 flex items-center justify-center">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-6 space-y-4">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-            <span className="text-3xl">🍳</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Error Boundary Demo
-          </h1>
-          <p className="text-sm text-gray-600">
-            Click the button below to trigger an error and see the ErrorBoundary in action
-          </p>
-        </div>
-
-        <button
-          onClick={() => setShouldError(true)}
-          className="w-full bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white font-semibold rounded-lg px-6 py-3 transition-all hover:scale-105 active:scale-95 shadow-lg"
-        >
-          Trigger Error
-        </button>
-
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <p className="text-xs text-gray-600">
-            <strong>Note:</strong> This demo shows how errors are caught and displayed in a user-friendly way on mobile devices.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Export with ErrorBoundary wrapper
-export default function App() {
-  return (
-    <ErrorBoundary>
-      <DemoApp />
-    </ErrorBoundary>
-  );
-}
+export default ErrorBoundary;

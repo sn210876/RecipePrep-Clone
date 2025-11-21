@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { RatingDisplay } from './RatingDisplay';
+import RatingDisplay from './RatingDisplay';
 import { Recipe } from '../types/recipe';
 import { createReview, updateReview, getUserReview } from '../services/reviewService';
 import { toast } from 'sonner';

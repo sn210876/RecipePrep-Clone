@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle, Crown, Trash2, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
-import { CommentModal } from './CommentModal';
+import CommentModal from './CommentModal';
 import {
   Dialog,
   DialogContent,

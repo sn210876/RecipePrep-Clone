@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Layout } from './components/Layout';
+import Layout from './components/Layout';
 import { Discover as DiscoverRecipes } from './pages/DiscoverRecipes';
 import { Discover } from './pages/Discover';
 import { MyRecipes } from './pages/MyRecipes';
@@ -9,13 +9,13 @@ import { AddRecipe } from './pages/AddRecipe';
 import { MealPlanner } from './pages/MealPlanner';
 import { GroceryList } from './pages/GroceryList';
 import { Cart } from './pages/Cart';
-import { Settings } from './pages/Settings';
+import Settings from './pages/Settings';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
-import { AuthForm } from './components/AuthForm';
+import AuthForm from './components/AuthForm';
 import { Home } from './pages/Home';
 
 // Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
@@ -147,7 +147,7 @@ function AppContent() {
           <p className="mt-8 text-lg font-medium text-orange-800">Preparing your kitchen…</p>
         </div>
 
-        <style jsx>{`
+        <style>{`
           @keyframes sand {
             0%, 100% { height: 0; opacity: 1; }
             50% { height: 40px; opacity: 1; }
