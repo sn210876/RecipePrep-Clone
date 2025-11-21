@@ -121,7 +121,124 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
-   }, [targetUsername]);
+     useEffect(() => {
+    // ←←← THIS IS THE ONLY NEW LINE YOU NEED
+    if (!window.location.pathname.startsWith('/profile/')) return;
+
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      if (!isMounted) return;
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !isMounted) return;
+
+        setCurrentUserId(user.id);
+
+        let profileToLoad: ProfileData | null = null;
+        let userIdToLoad: string | null = null;
+
+        if (targetUsername) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, banner_url, bio, link')
+            .ilike('username', targetUsername)
+            .single();
+
+          if (!isMounted) return;
+
+          if (error || !data) {
+            if (isMounted) toast.error('User not found');
+            if (isMounted) window.history.pushState({}, '', '/discover');
+            if (isMounted) setLoading(false);
+            return;
+          }
+
+          profileToLoad = data;
+          userIdToLoad = data.id;
+        } else {
+          const { data } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, banner_url, bio, link')
+            .eq('id', user.id)
+            .single();
+
+          if (!isMounted) return;
+
+          if (!data) {
+            const defaultUsername = user.email?.split('@')[0] || 'user';
+            await supabase.from('profiles').insert({
+              id: user.id,
+              username: defaultUsername,
+            });
+            profileToLoad = { id: user.id, username: defaultUsername, avatar_url: null };
+          } else {
+            profileToLoad = data;
+          }
+          userIdToLoad = user.id;
+        }
+
+        if (!isMounted) return;
+
+        setTargetUserId(userIdToLoad);
+        setIsOwnProfile(user.id === userIdToLoad);
+
+        // follower counts
+        const { count: followersCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', userIdToLoad);
+
+        const { count: followingCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', userIdToLoad);
+
+        if (user.id !== userIdToLoad) {
+          const { data: followData } = await supabase
+            .from('follows')
+            .select('id')
+            .eq('follower_id', user.id)
+            .eq('following_id', userIdToLoad)
+            .maybeSingle();
+          if (isMounted) setIsFollowing(!!followData);
+        }
+
+        if (isMounted) {
+          setProfile({
+            ...profileToLoad,
+            followers_count: followersCount || 0,
+            following_count: followingCount || 0,
+          });
+        }
+
+        const { data: postsData } = await supabase
+          .from('posts')
+          .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
+          .eq('user_id', userIdToLoad)
+          .order('created_at', { ascending: false });
+
+        if (isMounted) setPosts(postsData || []);
+
+        if (!targetUsername && profileToLoad?.username) {
+          window.history.replaceState({}, '', `/profile/${profileToLoad.username}`);
+        }
+
+        if (isMounted) setIsUserAdmin(await isAdmin());
+      } catch (err) {
+        if (isMounted) toast.error('Failed to load profile');
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [targetUsername]);
 
   // Check for ?post= query parameter to open a specific post
   useEffect(() => {
