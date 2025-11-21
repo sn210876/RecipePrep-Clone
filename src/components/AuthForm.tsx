@@ -177,7 +177,7 @@ export function AuthForm() {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-4">
               <img
                 src="/favicon.ico.jpg"
-                alt="Recipe Prep Logo"
+                alt="Meal Scrape Logo"
                 className="w-16 h-16 object-contain"
               />
             </div>
