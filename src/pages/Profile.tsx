@@ -121,13 +121,8 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
-      useEffect(() => {
-    // ←←← ADD THESE TWO LINES — this instantly kills 99% of flashes
-    if (!targetUsername && !window.location.pathname.includes('/profile/')) return;
-    if (targetUsername && !window.location.pathname.includes(`/profile/${targetUsername}`)) return;
-
+    useEffect(() => {
     let isMounted = true;
-    // ... rest of your effect exactly as you have it now ...
 
     const loadProfile = async () => {
       if (!isMounted) return; // ← This stops the flash when you press back
