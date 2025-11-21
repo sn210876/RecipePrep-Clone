@@ -195,16 +195,20 @@ export function UserProfileView({
   };
 
   return (
-    <div className="p-4">
-      <Button
-        onClick={onBack}
-        variant="outline"
-        className="mb-4"
-      >
-        ← Back to Feed
-      </Button>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Back Button - Sticky */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
+        <Button
+          onClick={onBack}
+          variant="ghost"
+          className="min-h-[44px] gap-2 touch-manipulation active:scale-95 transition-all"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Feed
+        </Button>
+      </div>
 
-      <div className="bg-white border-b border-gray-200 mb-4">
+      <div className="bg-white border-b border-gray-200">
         {/* Banner */}
         <div className="relative h-32">
           {userProfile?.banner_url ? (
@@ -212,16 +216,17 @@ export function UserProfileView({
               src={userProfile.banner_url}
               alt="Banner"
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100" />
           )}
         </div>
 
-        {/* Avatar + Username + Bio section - Instagram style left-aligned */}
+        {/* Profile Info */}
         <div className="relative px-4 pb-3">
           <div className="flex items-start gap-3 -mt-10">
-            {/* Avatar overlapping banner */}
+            {/* Avatar */}
             <div className="relative flex-shrink-0">
               {userProfile?.avatar_url ? (
                 <img
@@ -236,10 +241,10 @@ export function UserProfileView({
               )}
             </div>
 
-            {/* Bio aligned to right of avatar, vertically centered */}
+            {/* Bio */}
             <div className="flex-1 pt-10 min-w-0">
               {userProfile?.bio ? (
-                <p className="text-sm text-gray-700 line-clamp-1 overflow-hidden text-ellipsis">
+                <p className="text-sm text-gray-700 line-clamp-2 break-words">
                   {userProfile.bio}
                 </p>
               ) : (
@@ -248,15 +253,15 @@ export function UserProfileView({
             </div>
           </div>
 
-          {/* Username directly under avatar with minimal gap */}
+          {/* Username */}
           <div className="mt-2 flex items-center gap-2">
-            <h2 className="text-lg font-bold text-gray-900">{userProfile?.username || 'Loading...'}</h2>
+            <h2 className="text-lg font-bold text-gray-900 truncate">{userProfile?.username || 'Loading...'}</h2>
             {userId === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
-              <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+              <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0" />
             )}
           </div>
 
-          {/* Follow/Message buttons */}
+          {/* Action Buttons */}
           {userId !== currentUserId && (
             <div className="flex gap-2 mt-3">
               <Button
@@ -267,26 +272,28 @@ export function UserProfileView({
                 }}
                 variant="outline"
                 size="sm"
-                className="flex-1"
+                className="flex-1 min-h-[44px] touch-manipulation active:scale-95 transition-all"
               >
-                <Send className="w-4 h-4 mr-2" />
-                Message
+                <Send className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Message</span>
               </Button>
               <Button
                 onClick={() => onToggleFollow(userId)}
                 variant={isFollowing ? 'outline' : 'default'}
                 size="sm"
-                className={isFollowing ? 'flex-1' : 'flex-1 bg-orange-500 hover:bg-orange-600'}
+                className={`flex-1 min-h-[44px] touch-manipulation active:scale-95 transition-all ${
+                  isFollowing ? '' : 'bg-orange-500 hover:bg-orange-600'
+                }`}
               >
                 {isFollowing ? (
                   <>
-                    <UserCheck className="w-4 h-4 mr-2" />
-                    Supporting
+                    <UserCheck className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">Supporting</span>
                   </>
                 ) : (
                   <>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Support
+                    <UserPlus className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">Support</span>
                   </>
                 )}
               </Button>
@@ -294,257 +301,264 @@ export function UserProfileView({
           )}
         </div>
 
-        {/* Stats section - centered with reduced gaps */}
+        {/* Stats */}
         <div className="px-4 py-3 border-t border-gray-200">
-          <div className="flex items-center justify-center gap-8">
+          <div className="flex items-center justify-center gap-6">
             <div className="text-center">
-              <div className="text-lg font-bold">{userPosts.length}</div>
+              <div className="text-base font-bold">{userPosts.length}</div>
               <div className="text-xs text-gray-500">posts</div>
             </div>
-            <button onClick={loadSupporters} className="text-center hover:bg-gray-50 px-3 py-1 rounded-lg transition">
-              <div className="text-lg font-bold">{supportersCount}</div>
+            <button 
+              onClick={loadSupporters} 
+              className="text-center hover:bg-gray-50 px-3 py-1 rounded-lg transition-colors min-h-[44px] touch-manipulation active:scale-95"
+            >
+              <div className="text-base font-bold">{supportersCount}</div>
               <div className="text-xs text-gray-500">supporters</div>
             </button>
-            <button onClick={loadSupporting} className="text-center hover:bg-gray-50 px-3 py-1 rounded-lg transition">
-              <div className="text-lg font-bold">{supportingCount}</div>
+            <button 
+              onClick={loadSupporting} 
+              className="text-center hover:bg-gray-50 px-3 py-1 rounded-lg transition-colors min-h-[44px] touch-manipulation active:scale-95"
+            >
+              <div className="text-base font-bold">{supportingCount}</div>
               <div className="text-xs text-gray-500">supporting</div>
             </button>
           </div>
         </div>
       </div>
 
-      {userPosts.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          No posts yet
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {userPosts.map(post => {
-            const isLiked = likedPosts.has(post.id);
-            return (
-              <div key={post.id} className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="relative">
-                  {post.image_url ? (
-                    <img
-                      src={post.image_url}
-                      alt={post.title || 'Post'}
-                      className="w-full aspect-square object-cover"
-                    />
-                  ) : post.video_url ? (
-                    <video
-                      src={post.video_url}
-                      controls
-                      className="w-full aspect-square object-cover"
-                    />
-                  ) : null}
-                  {post.title && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-                      <h3 className="text-white text-sm font-semibold">{post.title}</h3>
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex gap-4 mb-3">
-                    <button onClick={() => toggleLike(post.id)} className="transition-transform hover:scale-110">
-                      <Heart
-                        className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+      {/* Posts Grid */}
+      <div className="p-4">
+        {userPosts.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            No posts yet
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {userPosts.map(post => {
+              const isLiked = likedPosts.has(post.id);
+              return (
+                <div key={post.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  <div className="relative">
+                    {post.image_url ? (
+                      <img
+                        src={post.image_url}
+                        alt={post.title || 'Post'}
+                        className="w-full aspect-square object-cover"
+                        loading="lazy"
                       />
-                    </button>
-                    <button onClick={() => setSelectedPostId(post.id)} className="transition-transform hover:scale-110">
-                      <MessageCircle className="w-6 h-6 text-gray-600" />
-                    </button>
-                  </div>
-                  <div className="text-sm text-gray-600 mb-2">
-                    {post._count?.likes || 0} likes
-                  </div>
-                  {post.caption && (
-                    <p className="text-sm">{post.caption}</p>
-                  )}
-
-                  {/* Show latest comment with delete button for your own */}
-                  {post.latest_comment && (
-                    <div
-                      className="mt-3 relative"
-                      onMouseEnter={() => post.latest_comment?.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
-                      onMouseLeave={() => setHoveredCommentId(null)}
-                      onTouchStart={() => post.latest_comment?.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
-                      onTouchEnd={() => setHoveredCommentId(null)}
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="font-semibold text-sm">
-                          {post.latest_comment.profiles?.username}
-                        </span>
-                        <span className="text-sm text-gray-700">
-                          {post.latest_comment.text}
-                        </span>
+                    ) : post.video_url ? (
+                      <video
+                        src={post.video_url}
+                        controls
+                        className="w-full aspect-square object-cover"
+                      />
+                    ) : null}
+                    {post.title && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2">
+                        <h3 className="text-white text-sm font-semibold line-clamp-2">{post.title}</h3>
                       </div>
-
-                      {/* DELETE BUTTON – only on your comment */}
-                      {post.latest_comment.user_id === currentUserId && hoveredCommentId === post.latest_comment.id && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteComment(post.latest_comment!.id);
-                          }}
-                          className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 active:scale-95 z-10"
-                          title="Delete comment"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                    )}
+                  </div>
+                  
+                  <div className="p-3">
+                    <div className="flex gap-4 mb-2">
+                      <button 
+                        onClick={() => toggleLike(post.id)} 
+                        className="transition-transform hover:scale-110 active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 touch-manipulation"
+                      >
+                        <Heart
+                          className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+                        />
+                      </button>
+                      <button 
+                        onClick={() => setSelectedPostId(post.id)} 
+                        className="transition-transform hover:scale-110 active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 touch-manipulation"
+                      >
+                        <MessageCircle className="w-6 h-6 text-gray-600" />
+                      </button>
                     </div>
-                  )}
+                    
+                    <div className="text-sm text-gray-600 mb-2">
+                      {post._count?.likes || 0} {post._count?.likes === 1 ? 'like' : 'likes'}
+                    </div>
+                    
+                    {post.caption && (
+                      <p className="text-sm leading-relaxed break-words">{post.caption}</p>
+                    )}
 
-                  {post._count && post._count.comments > 0 && (
-                    <button
-                      onClick={() => setSelectedPostId(post.id)}
-                      className="text-sm text-gray-500 mt-2 hover:text-gray-700 block"
-                    >
-                      View all {post._count.comments} {post._count.comments === 1 ? 'comment' : 'comments'}
-                    </button>
-                  )}
+                    {/* Latest Comment */}
+                    {post.latest_comment && (
+                      <div
+                        className="mt-3 relative"
+                        onTouchStart={() => post.latest_comment?.user_id === currentUserId && setHoveredCommentId(post.latest_comment.id)}
+                        onTouchEnd={() => setTimeout(() => setHoveredCommentId(null), 3000)}
+                      >
+                        <div className="flex items-start gap-2 pr-10">
+                          <span className="font-semibold text-sm flex-shrink-0">
+                            {post.latest_comment.profiles?.username}
+                          </span>
+                          <span className="text-sm text-gray-700 break-words">
+                            {post.latest_comment.text}
+                          </span>
+                        </div>
+
+                        {post.latest_comment.user_id === currentUserId && hoveredCommentId === post.latest_comment.id && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteComment(post.latest_comment!.id);
+                            }}
+                            className="absolute top-0 right-0 w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 active:scale-90 z-10 touch-manipulation"
+                            title="Delete comment"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {post._count && post._count.comments > 0 && (
+                      <button
+                        onClick={() => setSelectedPostId(post.id)}
+                        className="text-sm text-gray-500 mt-2 hover:text-gray-700 block min-h-[36px] touch-manipulation"
+                      >
+                        View all {post._count.comments} {post._count.comments === 1 ? 'comment' : 'comments'}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-      {/* POST MODAL WITH EDIT/DELETE BUTTONS */}
+      {/* Post Modal */}
       {selectedPostId && (() => {
         const selectedPost = userPosts.find(p => p.id === selectedPostId);
-        const canEdit = selectedPost && currentUserId && (
-          currentUserId === selectedPost.user_id
-        );
+        const canEdit = selectedPost && currentUserId && (currentUserId === selectedPost.user_id);
 
         if (!selectedPost) return null;
 
         return (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-            <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full z-[60]">
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden">
               
-              {/* COMMENT MODAL */}
-              <div className="relative z-[50]">
-                <CommentModal
-                  postId={selectedPostId}
-                  isOpen
-                  onClose={() => setSelectedPostId(null)}
-                />
-              </div>
+              <CommentModal
+                postId={selectedPostId}
+                isOpen
+                onClose={() => setSelectedPostId(null)}
+              />
 
-              {/* Back Arrow - Always visible */}
               <button
                 onClick={() => setSelectedPostId(null)}
-                className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full shadow hover:bg-black/70 z-[100]"
+                className="absolute top-3 left-3 bg-black/50 backdrop-blur-md text-white p-2.5 rounded-full shadow hover:bg-black/70 z-[100] min-h-[44px] min-w-[44px] touch-manipulation active:scale-95"
                 title="Close"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
 
-              {/* EDIT BUTTON - only for post owner */}
               {canEdit && (
-                <button
-                  onClick={() => {
-                    const newCaption = prompt("Edit your caption:");
-                    if (!newCaption) return;
+                <>
+                  <button
+                    onClick={() => {
+                      const newCaption = prompt("Edit your caption:");
+                      if (!newCaption) return;
 
-                    supabase
-                      .from("posts")
-                      .update({ caption: newCaption })
-                      .eq("id", selectedPostId)
-                      .eq("user_id", currentUserId)
-                      .then(({ error }) => {
-                        if (error) toast.error("Failed to update post");
-                        else {
-                          toast.success("Post updated");
-                          if (onRefresh) onRefresh();
-                        }
-                      });
-                  }}
-                  className="absolute top-3 right-14 bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700 z-[100]"
-                  title="Edit post"
-                >
-                  ✏️
-                </button>
+                      supabase
+                        .from("posts")
+                        .update({ caption: newCaption })
+                        .eq("id", selectedPostId)
+                        .eq("user_id", currentUserId)
+                        .then(({ error }) => {
+                          if (error) toast.error("Failed to update post");
+                          else {
+                            toast.success("Post updated");
+                            if (onRefresh) onRefresh();
+                          }
+                        });
+                    }}
+                    className="absolute top-3 right-14 bg-blue-600 text-white p-2.5 rounded-full shadow hover:bg-blue-700 z-[100] min-h-[44px] min-w-[44px] touch-manipulation active:scale-95"
+                    title="Edit post"
+                  >
+                    ✏️
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Delete this post?")) return;
+
+                      const { error } = await supabase
+                        .from("posts")
+                        .delete()
+                        .eq("id", selectedPostId)
+                        .eq("user_id", currentUserId);
+
+                      if (error) {
+                        toast.error("Failed to delete post");
+                      } else {
+                        toast.success("Post deleted");
+                        setSelectedPostId(null);
+                        if (onRefresh) onRefresh();
+                      }
+                    }}
+                    className="absolute top-3 right-3 bg-red-600 text-white p-2.5 rounded-full shadow hover:bg-red-700 z-[100] min-h-[44px] min-w-[44px] touch-manipulation active:scale-95"
+                    title="Delete post"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </>
               )}
-
-              {/* DELETE BUTTON - only for post owner */}
-              {canEdit && (
-                <button
-                  onClick={async () => {
-                    if (!confirm("Delete this post?")) return;
-
-                    const { error } = await supabase
-                      .from("posts")
-                      .delete()
-                      .eq("id", selectedPostId)
-                      .eq("user_id", currentUserId);
-
-                    if (error) {
-                      toast.error("Failed to delete post");
-                    } else {
-                      toast.success("Post deleted");
-                      setSelectedPostId(null);
-                      if (onRefresh) onRefresh();
-                    }
-                  }}
-                  className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 z-[100]"
-                  title="Delete post"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              )}
-
             </div>
           </div>
         );
       })()}
 
-      {/* SUPPORTERS DIALOG */}
+      {/* Supporters Dialog */}
       <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Supporters</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {supporters.map((supporter) => (
-              <div key={supporter.follower_id} className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold">
+              <div key={supporter.follower_id} className="flex items-center gap-3 min-h-[44px]">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold flex-shrink-0">
                   {supporter.profiles?.username?.[0]?.toUpperCase() || (
                     <PiggyBank className="w-5 h-5" />
                   )}
                 </div>
-                <span className="font-medium">
+                <span className="font-medium truncate">
                   {supporter.profiles?.username || 'User'}
                 </span>
               </div>
             ))}
 
             {supporters.length === 0 && (
-              <p className="text-center text-gray-500 py-4">No supporters yet</p>
+              <p className="text-center text-gray-500 py-8">No supporters yet</p>
             )}
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* SUPPORTING DIALOG */}
+      {/* Supporting Dialog */}
       <Dialog open={showSupporting} onOpenChange={setShowSupporting}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Supporting</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {supporting.map((followed) => (
-              <div key={followed.following_id} className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold">
+              <div key={followed.following_id} className="flex items-center gap-3 min-h-[44px]">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold flex-shrink-0">
                   {followed.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-5 h-5" />}
                 </div>
-                <span className="font-medium">{followed.profiles?.username || 'User'}</span>
+                <span className="font-medium truncate">{followed.profiles?.username || 'User'}</span>
               </div>
             ))}
             {supporting.length === 0 && (
-              <p className="text-center text-gray-500 py-4">Not supporting anyone yet</p>
+              <p className="text-center text-gray-500 py-8">Not supporting anyone yet</p>
             )}
           </div>
         </DialogContent>
