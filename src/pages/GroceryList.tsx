@@ -623,7 +623,11 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-    </div>
+             </Dialog>
+        <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
+          {/* ... your second dialog content ... */}
+        </Dialog>
+      </div>   {/* ← this closes max-w-2xl */}
+    </div>     {/* ← this closes min-h-screen */}
   );
 }
