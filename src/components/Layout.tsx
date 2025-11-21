@@ -187,27 +187,57 @@ const loadUnreadCount = async (userId: string) => {
         <div className="flex h-full flex-col">
           
           {/* Logo/Brand */}
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-  {/* Logo with Orange Border */}
-  <div className="relative flex-shrink-0">
-    {/* Outer orange ring */}
-    <div className="absolute inset-0 rounded-xl ring-4 ring-orange-500 shadow-xl"></div>
-    
-    {/* Inner logo container */}
-    <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-white to-orange-50 overflow-hidden">
-      <img 
-        src="/Woodenspoon.png" 
-        alt="Meal Scrape" 
-        className="w-full h-full object-contain p-2 drop-shadow-sm"
-      />
-    </div>
-  </div>
+                {/* Sidebar - Mobile Optimized */}
+      <aside className={`fixed left-0 top-0 z-50 h-screen w-64 sm:w-72 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
+        <div className="flex h-full flex-col">
+         
+          {/* Logo/Brand */}
+          <div className="flex items-center justify-between gap-3 border-b border-gray-200 p-4 sm:p-6">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              {/* ← Your new logo with orange border */}
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 rounded-xl ring-4 ring-orange-500 shadow-xl"></div>
+                <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-white to-orange-50 overflow-hidden">
+                  <img 
+                    src="/Woodenspoon.png" 
+                    alt="Meal57 Scrape" 
+                    className="w-full h-full object-contain p-2 drop-shadow-sm"
+                  />
+                </div>
+              </div>
 
-  <div className="flex-1 min-w-0">
-    <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
-    <p className="text-[10px] sm:text-xs text-gray-500 truncate">E-Recipe Book & Social Media</p>
-  </div>
-</div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
+                <p className="text-[10px] sm:text-xs text-gray-500 truncate">E-Recipe Book & Social Media</p>
+              </div>
+            </div>
+           
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="lg:hidden h-8 w-8 flex-shrink-0"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Navigation Items */}
+          <nav className="flex-1 space-y-1 p-3 sm:p-4 overflow-y-auto">
+            {/* ... your nav items ... */}
+          </nav>
+
+          {/* Footer Card */}
+          <div className="border-t border-gray-200 p-3 sm:p-4 flex-shrink-0">
+            <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-3 sm:p-4 border border-orange-200">
+              <p className="text-xs sm:text-sm font-semibold text-gray-900">Discover, Save, Plan, Shop</p>
+              <p className="mt-1 text-[10px] sm:text-xs text-gray-600">All in One Place</p>
+            </div>
+          </div>
+        </div>
+      </aside>   {/* ← ONLY THIS </aside> — no extra </div> before it */}
             
             {/* Close button - mobile only */}
             <Button
