@@ -121,40 +121,41 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
-     useEffect(() => {
-    // ←←← THIS IS THE ONLY NEW LINE YOU NEED
-    if (!window.location.pathname.startsWith('/profile/')) return;
-
+    useEffect(() => {
     let isMounted = true;
 
     const loadProfile = async () => {
-      if (!isMounted) return;
+      if (!isMounted) return; // ← This stops the flash when you press back
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user || !isMounted) return;
+        if (!user) {
+          if (isMounted) toast.error('Please log in');
+          if (isMounted) window.history.pushState({}, '', '/');
+          return;
+        }
+
+        if (!isMounted) return;
 
         setCurrentUserId(user.id);
-
         let profileToLoad: ProfileData | null = null;
         let userIdToLoad: string | null = null;
 
-        if (targetUsername) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url, banner_url, bio, link')
-            .ilike('username', targetUsername)
-            .single();
+       if (targetUsername) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, banner_url, bio, link')
+    .ilike('username', targetUsername)
+    .single();
 
-          if (!isMounted) return;
+  if (!isMounted) return; // ← ADD THIS
 
-          if (error || !data) {
-            if (isMounted) toast.error('User not found');
-            if (isMounted) window.history.pushState({}, '', '/discover');
-            if (isMounted) setLoading(false);
-            return;
-          }
-
+  if (error || !data) {
+    if (isMounted) toast.error('User not found'); // ← now safe
+    if (isMounted) window.history.pushState({}, '', '/discover');
+    if (isMounted) setLoading(false);
+    return;
+  }
           profileToLoad = data;
           userIdToLoad = data.id;
         } else {
@@ -163,8 +164,6 @@ export function Profile({ username: targetUsername }: ProfileProps) {
             .select('id, username, avatar_url, banner_url, bio, link')
             .eq('id', user.id)
             .single();
-
-          if (!isMounted) return;
 
           if (!data) {
             const defaultUsername = user.email?.split('@')[0] || 'user';
@@ -184,7 +183,6 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         setTargetUserId(userIdToLoad);
         setIsOwnProfile(user.id === userIdToLoad);
 
-        // follower counts
         const { count: followersCount } = await supabase
           .from('follows')
           .select('*', { count: 'exact', head: true })
