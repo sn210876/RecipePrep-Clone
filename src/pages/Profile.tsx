@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
-import { PostDetailModal } from '../components/PostDetailModal';
+import { CommentModal } from '../components/CommentModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 
 const validateUsername = (username: string): string | null => {
@@ -833,7 +833,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
       </Dialog>
 
       {selectedPostId && (
-        <PostDetailModal
+        <CommentModal
           postId={selectedPostId}
           onClose={() => setSelectedPostId(null)}
         />
