@@ -141,19 +141,21 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         let profileToLoad: ProfileData | null = null;
         let userIdToLoad: string | null = null;
 
-        if (targetUsername) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url, banner_url, bio, link')
-            .ilike('username', targetUsername)
-            .single();
+       if (targetUsername) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, banner_url, bio, link')
+    .ilike('username', targetUsername)
+    .single();
 
-          if (error || !data) {
-            if (isMounted) toast.error('User not found');
-            if (isMounted) window.history.pushState({}, '', '/discover');
-            if (isMounted) setLoading(false);
-            return;
-          }
+  if (!isMounted) return; // ← ADD THIS
+
+  if (error || !data) {
+    if (isMounted) toast.error('User not found'); // ← now safe
+    if (isMounted) window.history.pushState({}, '', '/discover');
+    if (isMounted) setLoading(false);
+    return;
+  }
           profileToLoad = data;
           userIdToLoad = data.id;
         } else {
