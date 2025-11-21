@@ -228,30 +228,41 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Settings</h1>
-          <p className="text-slate-600">Manage your account and preferences</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 pt-safe pb-safe">
+      <div className="max-w-5xl mx-auto pb-28">
+        {/* Header - mobile optimized */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-1 sm:mb-2 leading-tight">
+            Settings
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600">
+            Manage your account and preferences
+          </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
+          {/* Account Card - mobile optimized */}
           <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-orange-50 to-red-50 border-b border-orange-100">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-orange-600 flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="text-2xl text-slate-900">Account</CardTitle>
-                  <CardDescription className="text-slate-600">
-                    {user?.email || 'Your account information'}
-                  </CardDescription>
+            <CardHeader className="bg-gradient-to-br from-orange-50 to-red-50 border-b border-orange-100 p-4 sm:p-6">
+              <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-600 flex items-center justify-center shrink-0">
+                    <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-lg sm:text-2xl text-slate-900 truncate">
+                      Account
+                    </CardTitle>
+                    <CardDescription className="text-xs sm:text-sm text-slate-600 truncate">
+                      {user?.email || 'Your account information'}
+                    </CardDescription>
+                  </div>
                 </div>
                 <Button
                   onClick={handleLogout}
                   variant="outline"
-                  className="border-red-300 text-red-700 hover:bg-red-50"
+                  size="sm"
+                  className="border-red-300 text-red-700 hover:bg-red-50 h-9 text-sm w-full sm:w-auto"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Log Out
@@ -260,28 +271,31 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
             </CardHeader>
           </Card>
 
+          {/* Timezone Card - mobile optimized */}
           <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-100">
+            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-100 p-4 sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
-                  <Globe className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-600 flex items-center justify-center shrink-0">
+                  <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <div>
-                  <CardTitle className="text-2xl text-slate-900">Timezone</CardTitle>
-                  <CardDescription className="text-slate-600">
-                    Set your timezone for accurate meal planning
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-2xl text-slate-900">
+                    Timezone
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm text-slate-600">
+                    Set your timezone for meal planning
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
                   <Label htmlFor="timezone-select" className="text-sm font-medium text-slate-700 mb-2 block">
                     Select Timezone
                   </Label>
                   <Select value={timezone} onValueChange={handleTimezoneChange} disabled={savingTimezone}>
-                    <SelectTrigger id="timezone-select" className="w-full">
+                    <SelectTrigger id="timezone-select" className="w-full h-11 text-base">
                       <SelectValue placeholder="Select your timezone" />
                     </SelectTrigger>
                     <SelectContent>
@@ -292,11 +306,11 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-sm text-slate-500 mt-2">
-                    Current timezone: <span className="font-medium text-slate-700">{timezone}</span>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-2 break-words">
+                    Current: <span className="font-medium text-slate-700">{timezone}</span>
                   </p>
                   {savingTimezone && (
-                    <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
+                    <p className="text-xs sm:text-sm text-emerald-600 mt-2 flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Saving...
                     </p>
@@ -306,24 +320,27 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
             </CardContent>
           </Card>
 
+          {/* Change Password Card - mobile optimized */}
           <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 border-b border-purple-100">
+            <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 border-b border-purple-100 p-4 sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
-                  <Lock className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                  <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <div>
-                  <CardTitle className="text-2xl text-slate-900">Change Password</CardTitle>
-                  <CardDescription className="text-slate-600">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-2xl text-slate-900">
+                    Change Password
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm text-slate-600">
                     Update your account password
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <Button
                 onClick={() => setShowPasswordModal(true)}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full h-11 bg-purple-600 hover:bg-purple-700 text-base"
               >
                 <Lock className="w-4 h-4 mr-2" />
                 Change Password
@@ -331,60 +348,63 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
             </CardContent>
           </Card>
 
+          {/* Forwarding Email Card - mobile optimized */}
           <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-blue-50 to-cyan-50 border-b border-blue-100">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-white" />
+            <CardHeader className="bg-gradient-to-br from-blue-50 to-cyan-50 border-b border-blue-100 p-4 sm:p-6">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                  <Mail className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <div>
-                  <CardTitle className="text-2xl text-slate-900">Your Forwarding Email</CardTitle>
-                  <CardDescription className="text-slate-600">
-                   This functiion is coming soon... You will be able to email recipes directly to your personal recipe inbox
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-2xl text-slate-900 leading-tight">
+                    Your Forwarding Email
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                    Coming soon... Email recipes directly to your inbox
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="p-4 sm:pt-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                 </div>
               ) : (
                 <>
-                  <div className="bg-slate-50 rounded-lg p-4 border-2 border-slate-200">
+                  <div className="bg-slate-50 rounded-lg p-3 sm:p-4 border-2 border-slate-200">
                     <Label className="text-xs font-medium text-slate-600 uppercase tracking-wide mb-2 block">
                       Your Unique Email Address
                     </Label>
-                    <div className="flex items-center gap-3">
-                      <code className="flex-1 text-lg font-mono font-semibold text-slate-900 bg-white px-4 py-3 rounded-md border border-slate-200">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <code className="flex-1 text-sm sm:text-base font-mono font-semibold text-slate-900 bg-white px-3 py-2 sm:px-4 sm:py-3 rounded-md border border-slate-200 break-all">
                         {forwardingEmail}
                       </code>
                       <Button
                         onClick={copyToClipboard}
                         variant="outline"
                         size="icon"
-                        className="h-12 w-12 shrink-0"
+                        className="h-10 w-10 sm:h-12 sm:w-12 shrink-0"
                       >
                         {copied ? (
-                          <Check className="w-5 h-5 text-green-600" />
+                          <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                         ) : (
-                          <Copy className="w-5 h-5" />
+                          <Copy className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
                       </Button>
                     </div>
                   </div>
 
-                  <div className="mt-6 space-y-3">
-                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                      <p className="text-sm text-slate-700">
-                        <span className="font-semibold">How it works:</span> Forward any recipe (from Instagram DMs, websites, or photos) to this email address, and it will automatically be saved to your recipe collection.
+                  <div className="mt-4 sm:mt-6 space-y-3">
+                    <div className="p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-100">
+                      <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                        <span className="font-semibold">How it works:</span> Forward any recipe to this email and it will automatically be saved.
                       </p>
                     </div>
                     <Button
                       onClick={() => setShowTestModal(true)}
                       variant="outline"
-                      className="w-full border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                      className="w-full h-11 border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-base"
                     >
                       <TestTube className="w-4 h-4 mr-2" />
                       Test Email Import
@@ -395,142 +415,155 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
             </CardContent>
           </Card>
 
+          {/* How to Save Recipes Card - mobile optimized with collapsible sections */}
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-2xl text-slate-900">How to Save Recipes</CardTitle>
-              <CardDescription className="text-slate-600">
-                Multiple ways to add recipes to your collection automatically
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-2xl text-slate-900">
+                How to Save Recipes
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm text-slate-600">
+                Multiple ways to add recipes automatically
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
-                      <Instagram className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900">From Instagram DMs - Feature Coming Soon...</h3>
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+              {/* Instagram Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shrink-0">
+                    <Instagram className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                    <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-md flex items-center justify-center mb-3">
-                      <div className="text-center space-y-2">
-                        <MessageSquare className="w-12 h-12 text-purple-600 mx-auto" />
-                        <p className="text-sm text-slate-600 px-4">
-                          Long-press recipe post → Forward → Email
-                        </p>
-                      </div>
-                    </div>
-                    <ol className="space-y-2 text-sm text-slate-700">
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">1.</span>
-                        <span>Long-press on any recipe post in Instagram</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">2.</span>
-                        <span>Tap "Forward" and select "Email"</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">3.</span>
-                        <span>Paste your forwarding email address</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">4.</span>
-                        <span>Send and the recipe saves automatically!</span>
-                      </li>
-                    </ol>
-                  </div>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 leading-tight">
+                    Instagram DMs - Coming Soon
+                  </h3>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-                      <Camera className="w-5 h-5 text-white" />
+                <div className="bg-slate-50 rounded-lg p-3 sm:p-4 border border-slate-200">
+                  <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-md flex items-center justify-center mb-3">
+                    <div className="text-center space-y-2 p-4">
+                      <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 text-purple-600 mx-auto" />
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        Long-press → Forward → Email
+                      </p>
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-900">From Photos - Feature Coming Soon...</h3>
                   </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                    <div className="aspect-video bg-gradient-to-br from-blue-100 to-cyan-100 rounded-md flex items-center justify-center mb-3">
-                      <div className="text-center space-y-2">
-                        <Camera className="w-12 h-12 text-cyan-600 mx-auto" />
-                        <p className="text-sm text-slate-600 px-4">
-                          Screenshot → Share → Email
-                        </p>
-                      </div>
-                    </div>
-                    <ol className="space-y-2 text-sm text-slate-700">
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">1.</span>
-                        <span>Take a screenshot of any recipe</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">2.</span>
-                        <span>Open your photos and select the screenshot</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">3.</span>
-                        <span>Tap share and choose "Mail"</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">4.</span>
-                        <span>Send to your forwarding email address</span>
-                      </li>
-                    </ol>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                      <Copy className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900">Copy & Paste Link</h3>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                    <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 rounded-md flex items-center justify-center mb-3">
-                      <div className="text-center space-y-2">
-                        <Copy className="w-12 h-12 text-orange-600 mx-auto" />
-                        <p className="text-sm text-slate-600 px-4">
-                          Copy recipe URL → Paste in Add Recipe
-                        </p>
-                      </div>
-                    </div>
-                    <ol className="space-y-2 text-sm text-slate-700">
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">1.</span>
-                        <span>Copy the recipe link from any website</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">2.</span>
-                        <span>Click the button below to go to Add Recipe page</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-600 shrink-0">3.</span>
-                        <span>Paste the link and let AI extract the recipe!</span>
-                      </li>
-                    </ol>
-                    <Button
-                      onClick={() => onNavigate?.('add-recipe')}
-                      className="w-full mt-4 bg-orange-600 hover:bg-orange-700"
-                    >
-                      <ArrowRight className="w-4 h-4 mr-2" />
-                      Go to Add Recipe
-                    </Button>
-                  </div>
+                  <ol className="space-y-2 text-xs sm:text-sm text-slate-700">
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">1.</span>
+                      <span>Long-press on recipe post</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">2.</span>
+                      <span>Tap "Forward" and select "Email"</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">3.</span>
+                      <span>Paste your forwarding email</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">4.</span>
+                      <span>Send and it saves automatically!</span>
+                    </li>
+                  </ol>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-5 border-2 border-blue-200">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
-                    <ArrowRight className="w-5 h-5 text-white" />
+              {/* Photos Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shrink-0">
+                    <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-2">Pro Tip</h4>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      Save your forwarding email as a contact in your phone for quick access. You can also set up auto-forwarding rules in your email app to automatically send recipes from specific senders or subjects to your Meal Scrape inbox.
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 leading-tight">
+                    From Photos - Coming Soon
+                  </h3>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-3 sm:p-4 border border-slate-200">
+                  <div className="aspect-video bg-gradient-to-br from-blue-100 to-cyan-100 rounded-md flex items-center justify-center mb-3">
+                    <div className="text-center space-y-2 p-4">
+                      <Camera className="w-10 h-10 sm:w-12 sm:h-12 text-cyan-600 mx-auto" />
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        Screenshot → Share → Email
+                      </p>
+                    </div>
+                  </div>
+                  <ol className="space-y-2 text-xs sm:text-sm text-slate-700">
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">1.</span>
+                      <span>Take a screenshot of any recipe</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">2.</span>
+                      <span>Open photos and select screenshot</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">3.</span>
+                      <span>Tap share and choose "Mail"</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">4.</span>
+                      <span>Send to your forwarding email</span>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* Copy & Paste Section */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shrink-0">
+                    <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 leading-tight">
+                    Copy & Paste Link
+                  </h3>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-3 sm:p-4 border border-slate-200">
+                  <div className="aspect-video bg-gradient-to-br from-orange-100 to-red-100 rounded-md flex items-center justify-center mb-3">
+                    <div className="text-center space-y-2 p-4">
+                      <Copy className="w-10 h-10 sm:w-12 sm:h-12 text-orange-600 mx-auto" />
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        Copy URL → Paste in Add Recipe
+                      </p>
+                    </div>
+                  </div>
+                  <ol className="space-y-2 text-xs sm:text-sm text-slate-700 mb-3">
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">1.</span>
+                      <span>Copy the recipe link from any website</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">2.</span>
+                      <span>Click the button below to go to Add Recipe</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold text-blue-600 shrink-0">3.</span>
+                      <span>Paste the link and let AI extract it!</span>
+                    </li>
+                  </ol>
+                  <Button
+                    onClick={() => onNavigate?.('add-recipe')}
+                    className="w-full h-11 bg-orange-600 hover:bg-orange-700 text-base"
+                  >
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Go to Add Recipe
+                  </Button>
+                </div>
+              </div>
+
+              {/* Pro Tip */}
+              <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-semibold text-slate-900 mb-1 sm:mb-2 text-sm sm:text-base">
+                      Pro Tip
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                      Save your forwarding email as a contact in your phone for quick access.
                     </p>
                   </div>
                 </div>
@@ -538,275 +571,31 @@ export function Settings({ onNavigate }: SettingsProps = {}) {
             </CardContent>
           </Card>
 
+          {/* Voice Control Card - mobile optimized */}
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50">
+            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
-                  <Mic className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-600 flex items-center justify-center shrink-0">
+                  <Mic className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <div>
-                  <CardTitle className="text-2xl text-slate-900">Voice Control Settings</CardTitle>
-                  <CardDescription className="text-slate-600">
-                    Customize how voice commands work in Cook Mode
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-lg sm:text-2xl text-slate-900">
+                    Voice Control Settings
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm text-slate-600">
+                    Customize voice commands in Cook Mode
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="p-4 sm:pt-6">
               {'speechSynthesis' in window ? (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
-                    <div className="flex-1">
-                      <Label htmlFor="auto-read" className="text-base font-semibold text-slate-900 cursor-pointer">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border border-emerald-200 gap-3">
+                    <div className="flex-1 min-w-0">
+                      <Label htmlFor="auto-read" className="text-sm sm:text-base font-semibold text-slate-900 cursor-pointer">
                         Auto-Read Steps
                       </Label>
-                      <p className="text-sm text-slate-600 mt-1">
-                        Automatically read each step aloud when you navigate to it
+                      <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                        Automatically read each step aloud
                       </p>
-                    </div>
-                    <Switch
-                      id="auto-read"
-                      checked={voiceSettings.autoRead}
-                      onCheckedChange={handleAutoReadChange}
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold text-slate-900">
-                      Speech Rate: {voiceSettings.speechRate.toFixed(1)}x
-                    </Label>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-slate-600 w-12">Slow</span>
-                      <Slider
-                        value={[voiceSettings.speechRate]}
-                        onValueChange={handleSpeechRateChange}
-                        min={0.5}
-                        max={2.0}
-                        step={0.1}
-                        className="flex-1"
-                      />
-                      <span className="text-sm text-slate-600 w-12 text-right">Fast</span>
-                    </div>
-                  </div>
-
-                  {availableVoices.length > 0 && (
-                    <div className="space-y-3">
-                      <Label className="text-base font-semibold text-slate-900">
-                        Voice Selection
-                      </Label>
-                      <Select
-                        value={voiceSettings.voiceIndex.toString()}
-                        onValueChange={handleVoiceChange}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableVoices.map((voice, index) => (
-                            <SelectItem key={index} value={index.toString()}>
-                              {voice.name} ({voice.lang})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={testVoice}
-                    disabled={testingVoice}
-                    variant="outline"
-                    className="w-full border-emerald-300 hover:bg-emerald-50"
-                  >
-                    <Volume2 className="w-4 h-4 mr-2" />
-                    {testingVoice ? 'Playing...' : 'Test Voice Settings'}
-                  </Button>
-
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-slate-700">
-                      <span className="font-semibold">Voice commands available in Cook Mode:</span>
-                      <br />"Next", "Previous", "Repeat", "Read ingredients", "How long", "Start timer", and more.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-300">
-                  <p className="text-sm text-amber-900">
-                    Voice control is not supported in your browser. Try using Chrome, Edge, or Safari.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-        </div>
-      </div>
-
-      <Dialog open={showTestModal} onOpenChange={setShowTestModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <TestTube className="w-6 h-6 text-blue-600" />
-              Test Email Import
-            </DialogTitle>
-            <DialogDescription>
-              Paste recipe text below to simulate receiving it via email. The app will parse and save it to your collection.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 mt-4">
-            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <p className="text-sm text-slate-600 mb-2">
-                <span className="font-semibold">Example format:</span>
-              </p>
-              <pre className="text-xs text-slate-700 bg-white p-3 rounded border border-slate-200 overflow-x-auto">
-{`Chocolate Chip Cookies
-
-Ingredients:
-2 cups all-purpose flour
-1 tsp baking soda
-1 cup butter
-2 eggs
-2 cups chocolate chips
-
-Instructions:
-1. Preheat oven to 375°F
-2. Mix dry ingredients
-3. Cream butter and sugar
-4. Combine everything and fold in chips
-5. Bake for 10-12 minutes`}
-              </pre>
-            </div>
-
-            <div>
-              <Label htmlFor="recipe-text" className="text-base font-semibold mb-2 block">
-                Paste Recipe Text
-              </Label>
-              <Textarea
-                id="recipe-text"
-                placeholder="Paste your recipe here..."
-                value={recipeText}
-                onChange={(e) => setRecipeText(e.target.value)}
-                className="min-h-[300px] font-mono text-sm"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={handleTestImport}
-                disabled={importing || !recipeText.trim()}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                {importing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  'Import Recipe'
-                )}
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowTestModal(false);
-                  setRecipeText('');
-                }}
-                variant="outline"
-                disabled={importing}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Change Password</DialogTitle>
-            <DialogDescription>
-              Enter your new password. Must be at least 6 characters.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="new-password">New Password</Label>
-              <input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Enter new password"
-              />
-            </div>
-            <div>
-              <Label htmlFor="confirm-password">Confirm Password</Label>
-              <input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Confirm new password"
-              />
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={async () => {
-                  if (newPassword !== confirmPassword) {
-                    toast.error('Passwords do not match');
-                    return;
-                  }
-                  if (newPassword.length < 6) {
-                    toast.error('Password must be at least 6 characters');
-                    return;
-                  }
-                  setChangingPassword(true);
-                  try {
-                    const { error } = await supabase.auth.updateUser({
-                      password: newPassword
-                    });
-                    if (error) throw error;
-                    toast.success('Password updated successfully');
-                    setShowPasswordModal(false);
-                    setNewPassword('');
-                    setConfirmPassword('');
-                  } catch (error: any) {
-                    console.error('Error changing password:', error);
-                    toast.error(error.message || 'Failed to change password');
-                  } finally {
-                    setChangingPassword(false);
-                  }
-                }}
-                disabled={changingPassword || !newPassword || !confirmPassword}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
-              >
-                {changingPassword ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  'Update Password'
-                )}
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowPasswordModal(false);
-                  setNewPassword('');
-                  setConfirmPassword('');
-                }}
-                variant="outline"
-                disabled={changingPassword}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
