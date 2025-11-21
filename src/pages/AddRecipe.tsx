@@ -479,7 +479,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       </li>
       <li className="flex items-start gap-2">
         <span className="font-bold text-orange-600 min-w-[14px]">2</span>
-        <span>Click <span className="font-bold text-Blue-600">“Extract Recipe”</span></span>
+        <span>Click <span className="font-bold text-emerald-100">“Extract Recipe”</span></span>
       </li>
       <li className="flex items-start gap-2">
         <span className="font-bold text-orange-600 min-w-[14px]">3</span>
