@@ -498,7 +498,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   </div>
 </CardDescription>
           </CardHeader>
-          <div className="flex gap-2">
+          <CardContent className="space-y-3">
+           <div className="flex gap-2">
   <div className="relative flex-1">
     <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
     <Input
