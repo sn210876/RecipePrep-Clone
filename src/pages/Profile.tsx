@@ -9,7 +9,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { CommentModal } from '../components/CommentModal';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../componentsd=/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
   if (trimmed.length === 0) return 'Username required';
