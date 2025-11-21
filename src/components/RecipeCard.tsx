@@ -205,7 +205,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
               {recipe.cuisineType}
             </Badge>
 
-           <h3 className="font-bold text-gray-900 line-clamp-2 leading-tight text-base sm:text-lg md:text-xl">
+         <h3 className="font-bold text-gray-900 leading-tight text-sm sm:text-base lg:text-lg xl:text-xl hyphens-auto break-words">
   {decodeHtmlEntities(recipe.title)}
 </h3>
           </div>
