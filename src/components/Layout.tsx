@@ -403,21 +403,7 @@ const loadUnreadCount = async (userId: string) => {
           </div>
         )}
 
-        {/* Settings FAB - Mobile, for social pages */}
-        {socialPages.includes(currentPage) && (
-          <div className="lg:hidden fixed bottom-24 right-4 z-40">
-            <button
-              onClick={() => handleNavigate('settings')}
-              className={`w-12 h-12 rounded-full shadow-xl transition-all flex items-center justify-center ${
-                currentPage === 'settings'
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white text-gray-600 border-2 border-gray-200'
-              }`}
-            >
-              <Settings className="w-6 h-6" />
-            </button>
-          </div>
-        )}
+       
       </div>
 
       {/* Demo: Avatar Toggle Button */}
