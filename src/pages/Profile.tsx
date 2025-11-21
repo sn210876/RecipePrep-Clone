@@ -568,7 +568,6 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                   </p>
                 )}
                {profile.link && (
-  
     href={profile.link}
     target="_blank"
     rel="noopener noreferrer"
