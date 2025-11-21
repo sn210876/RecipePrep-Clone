@@ -267,7 +267,14 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   };
 
   const handleToday = () => {
-    setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }));
+    const today = startOfWeek(new Date(), { weekStartsOn: 0 });
+    setCurrentWeekStart(today);
+    setSelectedDateForView(new Date());
+  };
+
+  const handleWeekToggle = (weeks: 1 | 4) => {
+    setWeeksToShow(weeks);
+    setSelectedDateForView(currentWeekStart);
   };
 
   const RecipesSidebar = () => (
@@ -437,7 +444,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                   <Button
                     variant={weeksToShow === 1 ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setWeeksToShow(1)}
+                    onClick={() => handleWeekToggle(1)}
                     className="h-8 text-xs"
                   >
                     1W
@@ -445,7 +452,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                   <Button
                     variant={weeksToShow === 4 ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setWeeksToShow(4)}
+                    onClick={() => handleWeekToggle(4)}
                     className="h-8 text-xs"
                   >
                     4W
@@ -508,26 +515,30 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                 {/* Day Selector Carousel */}
                 <div className="overflow-x-auto -mx-4 px-4">
                   <div className="flex gap-2 pb-2">
-                    {getDaysToShow().map((day) => (
-                      <button
-                        key={day.toISOString()}
-                        onClick={() => setSelectedDateForView(day)}
-                        className={`flex-shrink-0 rounded-lg p-3 transition-all ${
-                          isSameDay(day, selectedDateForView)
-                            ? 'bg-blue-600 text-white shadow-lg'
-                            : isSameDay(day, new Date())
-                            ? 'bg-blue-100 text-blue-600 border-2 border-blue-300'
-                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
-                      >
-                        <div className="text-xs font-medium text-center">
-                          {format(day, 'EEE')}
-                        </div>
-                        <div className="text-lg font-bold text-center">
-                          {format(day, 'd')}
-                        </div>
-                      </button>
-                    ))}
+                    {getDaysToShow().length > 0 ? (
+                      getDaysToShow().map((day) => (
+                        <button
+                          key={day.toISOString()}
+                          onClick={() => setSelectedDateForView(day)}
+                          className={`flex-shrink-0 rounded-lg p-3 transition-all ${
+                            isSameDay(day, selectedDateForView)
+                              ? 'bg-blue-600 text-white shadow-lg'
+                              : isSameDay(day, new Date())
+                              ? 'bg-blue-100 text-blue-600 border-2 border-blue-300'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          }`}
+                        >
+                          <div className="text-xs font-medium text-center">
+                            {format(day, 'EEE')}
+                          </div>
+                          <div className="text-lg font-bold text-center">
+                            {format(day, 'd')}
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-sm text-slate-500">Loading dates...</div>
+                    )}
                   </div>
                 </div>
 
