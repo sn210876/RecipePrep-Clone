@@ -510,6 +510,30 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
               />
             </div>
+
+{/* PASTE BUTTON – works everywhere, no toast, no errors */}
+<Button
+  variant="outline"
+  size="sm"
+  onClick={async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const cleaned = text.trim();
+      if (cleaned) {
+        setUrlInput(cleaned);
+        // Optional tiny feedback without toast
+        // (you’ll see the input fill instantly — users love this)
+      }
+    } catch (err) {
+      // On iOS Safariily fails silently → user can still long-press paste
+      // No crash, no error, no toast needed
+    }
+  }}
+  className="w-full mb-3 border-dashed border-2 hover:bg-slate-50"
+>
+  <Copy className="w-4 h-4 mr-2" />
+  Paste from Clipboard
+</Button>
             
             <Button
               type="button"
