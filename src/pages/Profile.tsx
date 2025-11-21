@@ -566,15 +566,16 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                   <p className="text-xs sm:text-sm text-gray-400 italic font-light mt-3">
                     {isOwnProfile ? 'Tap Edit Profile to add a bio' : 'No bio yet'}
                   </p>
-                )}
-               {profile.link && (
-                href={profile.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline                       break-all"
-                      >
-                        {profile.link}
-                 </a>
+              )}
+                {profile.link && (
+                  <a
+                    href={profile.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline break-all"
+                  >
+                    {profile.link}
+                  </a>
                 )}
               </div>
             </div>
