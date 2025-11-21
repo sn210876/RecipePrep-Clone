@@ -496,26 +496,40 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   <p className="text-slate-500">Coming Soon: YouTube videos</p>
 </div>
   </div>
-</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-           <div className="flex gap-2">
-  <div className="relative flex-1">
-    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
-    <Input
-      value={urlInput}
-      onChange={(e) => setUrlInput(e.target.value)}
-      placeholder="Paste recipe link here"
-      className="pl-10 text-base"
-      disabled={isExtracting}
-      onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-    />
+</<CardHeader className="pb-3">
+  <CardTitle className="text-lg">Add from URL</CardTitle>
+  <CardDescription className="text-xs text-slate-500">
+    Paste any recipe link (Allrecipes, NYT, BBC, etc.)
+  </CardDescription>
+</CardHeader>
+
+<CardContent className="pt-0">
+  <div className="flex gap-2">
+    <div className="relative flex-1">
+      <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+      <Input
+        value={urlInput}
+        onChange={(e) => setUrlInput(e.target.value)}
+        placeholder="Paste recipe link..."
+        className="pl-10 h-10 text-sm placeholder:text-slate-400"
+        disabled={isExtracting}
+        onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+      />
+    </div>
+
+    <Button
+      onClick={handleUrlExtract}
+      disabled={!urlInput.trim() || isExtracting}
+      className="h-10 px-4"
+    >
+      {isExtracting ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        "Add"
+      )}
+    </Button>
   </div>
-  <Button
-    type="button"
-    onClick={async () => {
-      try {
-        const text = await navigator.clipboard.readText();
+</CardContent>
         setUrlInput(text);
         toast.success('Pasted!');
       } catch (err) {
