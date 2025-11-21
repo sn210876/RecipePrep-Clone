@@ -311,6 +311,113 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
             </button>
           </div>
         )}
+
+        {/* Recipe Page FABs - For non-social pages */}
+        {!socialPages.includes(currentPage) && (
+          <>
+            {/* Mobile - Left side */}
+            <div className="lg:hidden fixed bottom-24 left-4 z-40 flex flex-col gap-3">
+              <button
+                onClick={() => handleNavigate('my-recipes')}
+                className={`w-14 h-14 rounded-full shadow-xl transition-all flex items-center justify-center ${
+                  currentPage === 'my-recipes'
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white scale-110'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="My Recipes"
+              >
+                <BookMarked className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={() => handleNavigate('meal-planner')}
+                className={`w-14 h-14 rounded-full shadow-xl transition-all flex items-center justify-center ${
+                  currentPage === 'meal-planner'
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white scale-110'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Meal Planner"
+              >
+                <Calendar className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={() => handleNavigate('grocery-list')}
+                className={`w-14 h-14 rounded-full shadow-xl transition-all flex items-center justify-center ${
+                  currentPage === 'grocery-list'
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white scale-110'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Grocery List"
+              >
+                <ShoppingCart className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={() => handleNavigate('cart')}
+                className={`w-14 h-14 rounded-full shadow-xl transition-all flex items-center justify-center ${
+                  currentPage === 'cart'
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white scale-110'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Cart"
+              >
+                <PiggyBank className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Desktop - Right side */}
+            <div className="hidden lg:flex fixed bottom-6 right-6 z-40 flex-col gap-3">
+              <button
+                onClick={() => handleNavigate('my-recipes')}
+                className={`w-14 h-14 rounded-full shadow-xl transition-all flex items-center justify-center hover:scale-110 ${
+                  currentPage === 'my-recipes'
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="My Recipes"
+              >
+                <BookMarked className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={() => handleNavigate('meal-planner')}
+                className={`w-14 h-14 rounded-full shadow-xl transition-all flex items-center justify-center hover:scale-110 ${
+                  currentPage === 'meal-planner'
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Meal Planner"
+              >
+                <Calendar className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={() => handleNavigate('grocery-list')}
+                className={`w-14 h-14 rounded-full shadow-xl transition-all flex items-center justify-center hover:scale-110 ${
+                  currentPage === 'grocery-list'
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Grocery List"
+              >
+                <ShoppingCart className="w-6 h-6" />
+              </button>
+
+              <button
+                onClick={() => handleNavigate('cart')}
+                className={`w-14 h-14 rounded-full shadow-xl transition-all flex items-center justify-center hover:scale-110 ${
+                  currentPage === 'cart'
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Cart"
+              >
+                <PiggyBank className="w-6 h-6" />
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Demo: Avatar Toggle Button */}
