@@ -12,6 +12,7 @@ import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
 import { extractRecipeFromUrl, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { downloadAndStoreImage } from '@/lib/imageStorage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 function parseTimeValue(value: string | number): number {
