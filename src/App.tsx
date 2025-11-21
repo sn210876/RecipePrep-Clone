@@ -13,26 +13,24 @@ import { Settings } from './pages/Settings';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
-import { Verifying } from './pages/Verifying';
 import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 import { Home } from './pages/Home';
 
-function AppContent() {
-  const { user, loading, isEmailVerified, showVerifying } = useAuth();
-  const [completedVerifying, setCompletedVerifying] = useState(false);
+// Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
+const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] bg-gradient-to-br from-orange-50 to-amber-50">
+    {children}
+  </div>
+);
 
-  // ──────────────────────────────
-  // INITIAL PAGE + /post/ HANDLING
-  // ──────────────────────────────
+function AppContent() {
+  const { user, loading, isEmailVerified } = useAuth();
+
   const [currentPage, setCurrentPage] = useState<string>(() => {
     const path = window.location.pathname;
-
-    // Deep-link to a post → force Discover + modal
     if (path.match(/^\/post\/[a-f0-9]{36}$/)) return 'discover';
-
-    // Existing routes (check these first before username catch-all)
     if (path === '/' || path === '/discover-recipes') return 'discover-recipes';
     if (path === '/discover') return 'discover';
     if (path === '/recipes' || path === '/my-recipes') return 'my-recipes';
@@ -45,25 +43,18 @@ function AppContent() {
     if (path === '/messages') return 'messages';
     if (path === '/settings') return 'settings';
     if (path === '/onboarding') return 'onboarding';
-
-    // /profile/username format
     if (path.startsWith('/profile/') && path !== '/profile') {
       const username = path.split('/profile/')[1];
       if (username) return `profile:${username}`;
     }
-
-    // /:username format (catch-all for user profiles)
     if (path !== '/' && path.length > 1 && !path.includes('.')) {
-      const username = path.substring(1); // Remove leading slash
+      const username = path.substring(1);
       if (username && !username.includes('/')) return `profile:${username}`;
     }
-
     return 'discover-recipes';
   });
 
-  // ─────────────────────
-  // HANDLE /post/ links
-  // ─────────────────────
+  // Handle /post/ deep links
   useEffect(() => {
     const path = window.location.pathname;
     const match = path.match(/^\/post\/([a-f0-9]{36})$/);
@@ -71,15 +62,11 @@ function AppContent() {
       const postId = match[1];
       setCurrentPage('discover');
       window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
-      (window as any).__pendingSharedPostId = postId;
-      setTimeout(() => delete (window as any).__pendingSharedPostId, 2000);
       window.history.replaceState({}, '', '/discover');
     }
   }, []);
 
-  // ─────────────────────
-  // Sync URL changes
-  // ─────────────────────
+  // Sync back/forward buttons
   useEffect(() => {
     const handlePop = () => {
       const path = window.location.pathname;
@@ -91,7 +78,6 @@ function AppContent() {
         const username = path.split('/profile/')[1];
         if (username) setCurrentPage(`profile:${username}`);
       }
-      // /:username format
       else if (path !== '/' && path.length > 1 && !path.includes('.')) {
         const username = path.substring(1);
         if (username && !username.includes('/')) setCurrentPage(`profile:${username}`);
@@ -101,9 +87,6 @@ function AppContent() {
     return () => window.removeEventListener('popstate', handlePop);
   }, []);
 
-  // ─────────────────────
-  // Navigation helper
-  // ─────────────────────
   const handleNavigate = (page: string) => {
     const routes: Record<string, string> = {
       'discover-recipes': '/',
@@ -119,30 +102,22 @@ function AppContent() {
       'settings': '/settings',
       'onboarding': '/onboarding',
     };
-
-    // Handle profile navigation
     if (page.startsWith('profile:')) {
       const username = page.split('profile:')[1];
       window.history.pushState({}, '', `/${username}`);
       setCurrentPage(page);
       return;
     }
-
     const url = routes[page] || '/';
     window.history.pushState({}, '', url);
     setCurrentPage(page);
   };
 
-  // ─────────────────────
-  // Render correct page
-  // ──────────────────────
   const renderPage = () => {
-    // Dynamic profile
     if (currentPage.startsWith('profile:')) {
       const username = currentPage.split('profile:')[1];
       return <Profile username={username} />;
     }
-
     switch (currentPage) {
       case 'discover-recipes': return <DiscoverRecipes onNavigate={handleNavigate} />;
       case 'discover': return <Discover onNavigate={handleNavigate} />;
@@ -159,26 +134,41 @@ function AppContent() {
     }
   };
 
-  if (loading) {
+  // Beautiful hourglass while loading or checking email
+  if (loading || (user && isEmailVerified === undefined)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-          <p className="mt-4 text-gray-600">Loading MealScrape...</p>
+          <div className="relative w-20 h-28">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-12 border-8 border-orange-300 rounded-t-full"></div>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-12 border-8 border-orange-300 rounded-b-full"></div>
+            <div className="absolute top-10 left-1/2 -translate-x-1/2 w-1 bg-orange-600 origin-top animate-sand"></div>
+          </div>
+          <p className="mt-8 text-lg font-medium text-orange-800">Preparing your kitchen…</p>
         </div>
+
+        <style jsx>{`
+          @keyframes sand {
+            0%, 100% { height: 0; opacity: 1; }
+            50% { height: 40px; opacity: 1; }
+          }
+          .animate-sand { animation: sand 2.4s infinite ease-in-out; }
+        `}</style>
       </div>
     );
   }
 
   if (!user) return <AuthForm />;
-  if (showVerifying && !completedVerifying) return <Verifying onComplete={() => setCompletedVerifying(true)} />;
   if (!isEmailVerified) return <VerifyEmail />;
 
+  // Main app with mobile-safe padding
   return (
-    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
-      {renderPage()}
-      <Toaster />
-    </Layout>
+    <MobileSafeWrapper>
+      <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+        {renderPage()}
+        <Toaster />
+      </Layout>
+    </MobileSafeWrapper>
   );
 }
 
