@@ -261,9 +261,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           )}
         </CardContent>
 
-       // Replace the CardFooter section in RecipeCard.tsx (around line 180-240)
-
-<CardFooter className="p-3 sm:p-4 pt-0 flex flex-col gap-2">
+       <CardFooter className="p-3 sm:p-4 pt-0 flex flex-col gap-2">
   <Button
     variant={isSaved ? "default" : "outline"}
     size="sm"
