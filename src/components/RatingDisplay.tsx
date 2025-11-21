@@ -7,8 +7,17 @@ interface RatingDisplayProps {
   onRate?: (rating: number) => void;
 }
 
-function RatingDisplay({ rating, size = 'md', interactive = false, onRate }: RatingDisplayProps) {
-  const [hoverRating, setHoverRating] = useState(0);
+// This component now does NOTHING — it renders absolutely nothing
+// We keep it only so imports don't break
+function RatingDisplay({ rating, size, interactive, onRate }: RatingDisplayProps) {
+  // Intentionally return null — no fires, no stars, nothing
+  return null;
+}
+
+export default RatingDisplay;
+
+
+
   
   const sizeClasses = {
     sm: {
