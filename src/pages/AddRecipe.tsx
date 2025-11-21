@@ -475,7 +475,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     <ol className="space-y-1.5 text-black ml-0.5">
       <li className="flex items-start gap-2">
         <span className="font-bold text-black-600 min-w-[14px]">1.</span>
-        <span>Copy and paste a link from online or social media</span>
+        <span>Copy a link from online/social media & paste below</span>
       </li>
       <li className="flex items-start gap-2">
         <span className="font-bold text-black-600 min-w-[14px]">2.</span>
