@@ -474,8 +474,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     {/* Numbered steps — same tiny font, each on its own line */}
     <ol className="space-y-1.5 text-black ml-0.5">
       <li className="flex items-start gap-2">
-        <span className="font-bold text-black-600 min-w-[14px]">1.</span>
-        <span>Copy a link from online/social media & paste below</span>
+       <span>
+  <span className="font-bold text-black">COPY</span> a link from online/social media &amp;{' '}
+  <span className="font-bold text-black">PASTE</span> below
+</span>
       </li>
       <li className="flex items-start gap-2">
         <span className="font-bold text-black-600 min-w-[14px]">2.</span>
