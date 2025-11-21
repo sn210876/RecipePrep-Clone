@@ -15,6 +15,8 @@ import {
   User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { supabase } from '../lib/supabase';
 
 interface LayoutProps {
   currentPage: string;
