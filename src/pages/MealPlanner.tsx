@@ -492,6 +492,19 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
             ) : isMobile ? (
               // MOBILE VIEW - Day Picker + Single Day List
               <div className="space-y-4">
+                {/* Week Navigation for Mobile */}
+                <div className="flex items-center justify-between gap-2 -mx-4 px-4">
+                  <Button variant="outline" size="sm" onClick={handlePreviousWeek} className="h-8">
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
+                    {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, weeksToShow * 7 - 1), 'MMM d')}
+                  </span>
+                  <Button variant="outline" size="sm" onClick={handleNextWeek} className="h-8">
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+
                 {/* Day Selector Carousel */}
                 <div className="overflow-x-auto -mx-4 px-4">
                   <div className="flex gap-2 pb-2">
