@@ -63,6 +63,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   const [selectedRecipeForAssignment, setSelectedRecipeForAssignment] = useState<Recipe | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [selectedDateForView, setSelectedDateForView] = useState<Date>(new Date());
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -481,28 +482,146 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
           </div>
         </div>
 
-        {/* Calendar Grid */}
+        {/* Calendar - Mobile vs Desktop View */}
         <ScrollArea className="flex-1">
           <div className="p-4 md:p-6">
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               </div>
+            ) : isMobile ? (
+              // MOBILE VIEW - Day Picker + Single Day List
+              <div className="space-y-4">
+                {/* Day Selector Carousel */}
+                <div className="overflow-x-auto -mx-4 px-4">
+                  <div className="flex gap-2 pb-2">
+                    {getDaysToShow().map((day) => (
+                      <button
+                        key={day.toISOString()}
+                        onClick={() => setSelectedDateForView(day)}
+                        className={`flex-shrink-0 rounded-lg p-3 transition-all ${
+                          isSameDay(day, selectedDateForView)
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : isSameDay(day, new Date())
+                            ? 'bg-blue-100 text-blue-600 border-2 border-blue-300'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        }`}
+                      >
+                        <div className="text-xs font-medium text-center">
+                          {format(day, 'EEE')}
+                        </div>
+                        <div className="text-lg font-bold text-center">
+                          {format(day, 'd')}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Single Day Full View */}
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {format(selectedDateForView, 'EEEE, MMMM d')}
+                  </h3>
+
+                  {MEAL_TYPES.map((mealType) => {
+                    const meal = getMealForSlot(selectedDateForView, mealType);
+
+                    return (
+                      <div
+                        key={mealType}
+                        onClick={() => {
+                          if (selectedRecipeForAssignment && !meal) {
+                            handleSlotClick(selectedDateForView, mealType);
+                          }
+                        }}
+                        className={`rounded-lg border-2 overflow-hidden transition-all ${
+                          meal
+                            ? 'bg-white border-slate-200 shadow-sm'
+                            : selectedRecipeForAssignment
+                            ? 'border-orange-400 bg-orange-50 border-dashed cursor-pointer active:bg-orange-100'
+                            : 'border-slate-200 bg-slate-50 border-dashed'
+                        }`}
+                      >
+                        {meal && meal.recipe ? (
+                          <div className="group">
+                            {meal.recipe.imageUrl && (
+                              <div className="w-full h-48 overflow-hidden bg-slate-100 relative">
+                                <img
+                                  src={meal.recipe.imageUrl?.includes('instagram.com') || meal.recipe.imageUrl?.includes('cdninstagram.com')
+                                    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(meal.recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                                    : meal.recipe.imageUrl}
+                                  alt={meal.recipe.title}
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveMeal(meal.id);
+                                  }}
+                                  className="absolute top-2 right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
+                            <div className="p-4">
+                              <div className="text-sm font-medium text-slate-500 mb-2">
+                                {mealType}
+                              </div>
+                              <h4 className="text-lg font-semibold text-slate-900 mb-2">
+                                {meal.recipe.title}
+                              </h4>
+                              <div className="flex items-center gap-4 text-sm text-slate-600">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  <span>{meal.recipe.prepTime + meal.recipe.cookTime}m</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Users className="w-4 h-4" />
+                                  <span>{meal.recipe.servings} servings</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-8 text-center">
+                            <div className="text-sm font-medium text-slate-500 mb-2">
+                              {mealType}
+                            </div>
+                            <p className="text-sm text-slate-400 mb-4">No meal planned</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenSlotDropdown(selectedDateForView, mealType)}
+                              className="gap-2"
+                            >
+                              <Plus className="w-4 h-4" />
+                              Add Meal
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ) : (
-              <div className={`grid gap-2 md:gap-4 ${weeksToShow === 4 && !isMobile ? 'grid-cols-7' : isMobile ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3 lg:grid-cols-7'}`}>
+              // DESKTOP VIEW - Grid Calendar
+              <div className={`grid gap-4 ${weeksToShow === 4 ? 'grid-cols-7' : 'grid-cols-7'}`}>
                 {getDaysToShow().map((day, dayIndex) => (
                   <div key={dayIndex} className="space-y-2">
-                    {/* Day Header */}
                     <div className="text-center pb-2 border-b-2 border-slate-200">
                       <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                         {format(day, 'EEE')}
                       </div>
-                      <div className={`text-lg font-bold ${isSameDay(day, new Date()) ? 'text-blue-600' : 'text-slate-900'}`}>
+                      <div className={`text-lg font-bold ${
+                        isSameDay(day, new Date()) ? 'text-blue-600' : 'text-slate-900'
+                      }`}>
                         {format(day, 'd')}
                       </div>
                     </div>
 
-                    {/* Meals */}
                     <div className="space-y-2">
                       {MEAL_TYPES.map(mealType => {
                         const meal = getMealForSlot(day, mealType);
@@ -515,7 +634,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                               }
                             }}
                             className={`
-                              min-h-[80px] md:min-h-[100px] rounded-lg border-2 p-2
+                              min-h-[100px] rounded-lg border-2 p-2
                               transition-all relative group
                               ${selectedRecipeForAssignment && !meal
                                 ? 'border-orange-400 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-500 border-dashed'
@@ -537,7 +656,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                                 </button>
 
                                 {meal.recipe.imageUrl && (
-                                  <div className="w-full h-14 md:h-16 rounded-md overflow-hidden mb-2 bg-slate-100">
+                                  <div className="w-full h-16 rounded-md overflow-hidden mb-2 bg-slate-100">
                                     <img
                                       src={meal.recipe.imageUrl?.includes('instagram.com') || meal.recipe.imageUrl?.includes('cdninstagram.com')
                                         ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(meal.recipe.imageUrl.replace(/&amp;/g, '&'))}`
@@ -549,7 +668,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                                 )}
 
                                 <div className="text-xs">
-                                  <div className="font-medium text-slate-500 mb-1 text-xs">
+                                  <div className="font-medium text-slate-500 mb-1">
                                     {mealType}
                                   </div>
                                   <div className="font-semibold text-slate-900 line-clamp-2 text-xs">
@@ -566,14 +685,11 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                                 <div className="text-xs font-medium text-slate-400">
                                   {mealType}
                                 </div>
-                                <div className="text-xs text-slate-400">
-                                  Drop here
-                                </div>
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleOpenSlotDropdown(day, mealType)}
-                                  className="h-6 text-xs px-2 gap-1 hover:bg-blue-50 hover:text-blue-600 transition-colors mt-1"
+                                  className="h-6 text-xs px-2 gap-1 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                                 >
                                   <Plus className="w-3 h-3" />
                                   Add
