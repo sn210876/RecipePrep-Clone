@@ -28,7 +28,7 @@ import { supabase } from '../lib/supabase';
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
 }
-
+const MOBILE_SAFE = "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pb-32";
 export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const { state, dispatch } = useRecipes();
   const [categories, setCategories] = useState<GroceryListCategory[]>(getDefaultCategories());
