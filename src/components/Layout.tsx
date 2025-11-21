@@ -43,7 +43,7 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
-  const socialPages = ['discover', 'upload', 'profile', 'messages'];
+  const socialPages = ['discover', 'upload', 'profile', 'messages', 'add-recipe'];
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
