@@ -13,20 +13,16 @@ import { Settings } from './pages/Settings';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
+import { Verifying } from './pages/Verifying';
 import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 import { Home } from './pages/Home';
-// Mobile-safe layout fix – works everywhere
-const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="min-h-screen pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] bg-gradient-to-br from-orange-50 to-amber-50">
-    {children}
-  </div>
-);
+
 function AppContent() {
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
-html, body, #root { height: 100%; margin: 0; padding: 0; overflow-x: hidden; }
-body { -webkit-tap-highlight-color: transparent; }
+  const [completedVerifying, setCompletedVerifying] = useState(false);
+
   // ──────────────────────────────
   // INITIAL PAGE + /post/ HANDLING
   // ──────────────────────────────
@@ -163,40 +159,26 @@ body { -webkit-tap-highlight-color: transparent; }
     }
   };
 
-    // Beautiful hourglass while loading OR checking email verification
-  if (loading || (user && isEmailVerified === undefined)) {
+  if (loading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative w-20 h-28">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-12 border-8 border-orange-300 rounded-t-full"></div>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-12 border-8 border-orange-300 rounded-b-full"></div>
-            <div className="absolute top-10 left-1/2 -translate-x-1/2 w-1 bg-orange-600 origin-top animate-sand"></div>
-          </div>
-          <p className="mt-8 text-lg font-medium text-orange-800">Preparing your kitchen…</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+          <p className="mt-4 text-gray-600">Loading MealScrape...</p>
         </div>
-
-        <style jsx>{`
-          @keyframes sand {
-            0%, 100% { height: 0; opacity: 1; }
-            50%      { height: 40px; opacity: 1; }
-          }
-          .animate-sand { animation: sand 2.4s infinite ease-in-out; }
-        `}</style>
       </div>
     );
   }
 
   if (!user) return <AuthForm />;
+  if (showVerifying && !completedVerifying) return <Verifying onComplete={() => setCompletedVerifying(true)} />;
   if (!isEmailVerified) return <VerifyEmail />;
 
-   return (
-    <MobileSafeWrapper>
-      <Layout currentPage={currentPage} onNavigate={handleNavigate}>
-        {renderPage()}
-        <Toaster />
-      </Layout>
-    </MobileSafeWrapper>
+  return (
+    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+      {renderPage()}
+      <Toaster />
+    </Layout>
   );
 }
 
