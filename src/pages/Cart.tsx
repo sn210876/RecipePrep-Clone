@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { ShoppingCart, Trash2, Plus, Minus, ExternalLink, CreditCard } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ExternalLink, CreditCard, Menu, X as XClose } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CartItem {
@@ -26,6 +26,13 @@ export function Cart({ onNavigate }: CartProps = {}) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     loadCart();
@@ -118,70 +125,103 @@ export function Cart({ onNavigate }: CartProps = {}) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 pb-24">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <ShoppingCart className="w-8 h-8 text-orange-600" />
-          <h1 className="text-3xl font-bold">Your Cart</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
+      {/* Header */}
+      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+        <div className="p-4 md:p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
+                <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-3xl font-bold text-slate-900">Your Cart</h1>
+                <p className="text-xs md:text-sm text-slate-600">
+                  {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
+                </p>
+              </div>
+            </div>
+            {cartItems.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearCart}
+                className="text-xs md:text-sm hover:bg-red-50 hover:text-red-600"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
-        {cartItems.length > 0 && (
-          <Button variant="outline" onClick={clearCart}>
-            Clear Cart
-          </Button>
-        )}
       </div>
 
       {cartItems.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg mb-4">"Your cart is empty" Soon you will be able to order your ingredients and get it delivered to your door!</p>
-            <Button onClick={() => onNavigate?.('meal-planner')}>
-              Add items from Meal Planner
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="p-4 md:p-6 flex items-center justify-center min-h-[calc(100vh-200px)]">
+          <Card className="w-full max-w-sm">
+            <CardContent className="flex flex-col items-center justify-center py-12 px-6">
+              <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" />
+              <p className="text-gray-500 text-center mb-4 text-sm md:text-base">
+                Your cart is empty. Soon you will be able to order your ingredients and get them delivered!
+              </p>
+              <Button 
+                onClick={() => onNavigate?.('meal-planner')}
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                Add Items from Meal Planner
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       ) : (
-        <>
-          <div className="space-y-4 mb-6">
+        <div className="p-4 md:p-6 pb-32 md:pb-24">
+          {/* Cart Items */}
+          <div className="space-y-3 md:space-y-4 mb-6 max-w-4xl mx-auto">
             {cartItems.map(item => (
-              <Card key={item.id}>
-                <CardContent className="p-4">
-                  <div className="flex gap-4">
+              <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                <CardContent className="p-3 md:p-4">
+                  <div className="flex gap-3 md:gap-4">
+                    {/* Image */}
                     {item.image_url && (
-                      <img
-                        src={item.image_url}
-                        alt={item.amazon_product_name || item.ingredient_name}
-                        className="w-24 h-24 object-cover rounded-lg"
-                      />
+                      <div className="shrink-0">
+                        <img
+                          src={item.image_url}
+                          alt={item.amazon_product_name || item.ingredient_name}
+                          className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg bg-slate-100"
+                        />
+                      </div>
                     )}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm md:text-lg text-slate-900 line-clamp-2 mb-1">
                         {item.amazon_product_name || item.ingredient_name}
                       </h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {item.ingredient_name !== item.amazon_product_name && (
-                          <span className="italic">{item.ingredient_name}</span>
-                        )}
-                      </p>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
+                      {item.ingredient_name !== item.amazon_product_name && (
+                        <p className="text-xs md:text-sm text-gray-600 italic mb-2 line-clamp-1">
+                          {item.ingredient_name}
+                        </p>
+                      )}
+
+                      {/* Quantity Controls */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <div className="flex items-center gap-2 bg-slate-100 rounded-lg w-fit p-1">
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => {
                               const current = parseFloat(item.quantity) || 1;
                               if (current > 1) {
                                 updateQuantity(item.id, (current - 1).toString());
                               }
                             }}
+                            className="h-7 w-7 p-0 hover:bg-slate-200"
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
@@ -189,48 +229,60 @@ export function Cart({ onNavigate }: CartProps = {}) {
                             type="text"
                             value={item.quantity}
                             onChange={e => updateQuantity(item.id, e.target.value)}
-                            className="w-16 text-center"
+                            className="w-12 md:w-16 text-center text-sm h-7 border-0 bg-transparent"
                           />
-                          <span className="text-sm text-gray-600">{item.unit}</span>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => {
                               const current = parseFloat(item.quantity) || 1;
                               updateQuantity(item.id, (current + 1).toString());
                             }}
+                            className="h-7 w-7 p-0 hover:bg-slate-200"
                           >
                             <Plus className="w-3 h-3" />
                           </Button>
                         </div>
-                        {item.price && (
-                          <div className="text-lg font-semibold text-orange-600">
-                            ${(item.price * (parseFloat(item.quantity) || 1)).toFixed(2)}
-                          </div>
-                        )}
+                        <span className="text-xs md:text-sm text-gray-600">{item.unit}</span>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      {item.amazon_product_url && (
-                        <a
-                          href={item.amazon_product_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          View on Amazon
-                        </a>
+
+                    {/* Price & Actions */}
+                    <div className="flex flex-col items-end gap-2 justify-between">
+                      {item.price && (
+                        <div className="text-right">
+                          <div className="text-sm md:text-lg font-semibold text-orange-600">
+                            ${(item.price * (parseFloat(item.quantity) || 1)).toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            ${item.price.toFixed(2)} each
+                          </div>
+                        </div>
                       )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => removeItem(item.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Remove
-                      </Button>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-1 flex-col">
+                        {item.amazon_product_url && (
+                          <a
+                            href={item.amazon_product_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-1 text-xs md:text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded px-2 py-1 transition-colors"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            <span className="hidden sm:inline">View</span>
+                          </a>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeItem(item.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs md:text-sm h-7 px-2"
+                        >
+                          <Trash2 className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                          <span className="hidden sm:inline">Remove</span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -238,28 +290,39 @@ export function Cart({ onNavigate }: CartProps = {}) {
             ))}
           </div>
 
-          <Card className="sticky bottom-20 bg-white shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xl font-semibold">Total:</span>
-                <span className="text-3xl font-bold text-orange-600">
-                  ${getTotalPrice().toFixed(2)}
-                </span>
-              </div>
+          {/* Summary Section */}
+          <div className="max-w-4xl mx-auto">
+            {/* Item Count & Subtotal */}
+            <Card className="mb-4 bg-slate-50 border-slate-200">
+              <CardContent className="p-4 md:p-6">
+                <div className="space-y-2 text-sm md:text-base">
+                  <div className="flex justify-between text-slate-700">
+                    <span>Subtotal ({cartItems.length} items)</span>
+                    <span className="font-medium">${getTotalPrice().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-xs md:text-sm">
+                    <span>Shipping & taxes calculated at checkout</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Checkout Button - Sticky on Mobile */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 md:relative md:p-0 bg-white md:bg-transparent border-t md:border-t-0 border-slate-200">
               <Button
-                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium text-sm md:text-base h-12 md:h-14"
                 size="lg"
                 onClick={handleCheckout}
               >
-                <CreditCard className="w-5 h-5 mr-2" />
+                <CreditCard className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 Proceed to Checkout
               </Button>
               <p className="text-xs text-center text-gray-500 mt-2">
                 Stripe checkout integration coming soon
               </p>
-            </CardContent>
-          </Card>
-        </>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
