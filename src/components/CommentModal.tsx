@@ -280,12 +280,10 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   if (!post && loading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] sm:h-[85vh] p-0 gap-0 z-[9999] overflow-hidden">
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-              <p className="mt-4 text-gray-600">Loading post...</p>
-            </div>
+        <DialogContent className="max-w-lg w-[95vw] h-[90vh] flex items-center justify-center p-0 gap-0 z-[9999] overflow-hidden">
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+            <p className="mt-4 text-gray-600">Loading post...</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -294,17 +292,17 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] sm:h-[85vh] p-0 gap-0 overflow-hidden">
-        {/* Mobile: Stack vertically, Desktop: Side by side */}
-        <div className="flex flex-col md:flex-row h-full">
+      <DialogContent className="max-w-lg w-[95vw] h-[90vh] p-0 gap-0 overflow-hidden z-[9999]">
+        {/* STACKED LAYOUT - Photo on top, comments below (both mobile & desktop) */}
+        <div className="flex flex-col h-full">
           
-          {/* Left Side - Image (now smaller) */}
-          <div className="w-full md:w-[45%] h-[35vh] md:h-full bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
+          {/* Image Section - Top */}
+          <div className="w-full h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
             {post?.image_url ? (
               <img
                 src={post.image_url}
                 alt={post.title || 'Post'}
-                className="w-full h-full object-cover md:object-contain"
+                className="w-full h-full object-contain"
               />
             ) : (
               <div className="text-white text-center">
@@ -312,19 +310,20 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               </div>
             )}
 
-            {/* Close button - visible on mobile */}
+            {/* Close button - top right */}
             <button
               onClick={onClose}
-              className="absolute top-2 right-2 md:hidden w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90"
+              className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10"
             >
               <X className="w-5 h-5" />
             </button>
 
+            {/* Music Player - bottom */}
             {post?.spotify_preview_url && (
-              <div className="absolute bottom-2 left-2 right-2 md:top-4 md:right-4 md:left-auto md:bottom-auto z-10">
+              <div className="absolute bottom-2 left-2 right-2 z-10">
                 <button
                   onClick={togglePlay}
-                  className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-2 w-full md:w-auto"
+                  className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-2 w-full"
                 >
                   {isPlaying ? (
                     <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -341,28 +340,17 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             )}
           </div>
 
-          {/* Right Side - Details, Ratings, Comments (now larger) */}
+          {/* Content Section - Bottom */}
           <div className="flex-1 flex flex-col bg-white min-h-0">
-            {/* Header - more compact */}
+            {/* Header with title - compact */}
             <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-sm sm:text-base truncate">{post?.title || 'Post'}</h3>
-                  {post?.caption && (
-                    <p className="text-xs sm:text-sm text-gray-600 mt-0.5 line-clamp-2">{post.caption}</p>
-                  )}
-                </div>
-                {/* Close button - desktop only */}
-                <button
-                  onClick={onClose}
-                  className="hidden md:flex w-8 h-8 items-center justify-center text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 flex-shrink-0"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+              <h3 className="font-bold text-sm sm:text-base truncate">{post?.title || 'Post'}</h3>
+              {post?.caption && (
+                <p className="text-xs sm:text-sm text-gray-600 mt-0.5 line-clamp-2">{post.caption}</p>
+              )}
             </div>
 
-            {/* Ratings Section - more compact */}
+            {/* Ratings Section - compact */}
             <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
               <div className="space-y-1.5 sm:space-y-2">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -410,7 +398,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               </div>
             </div>
 
-            {/* Comments Section - larger scrollable area */}
+            {/* Comments Section - scrollable */}
             <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-0">
               {loading ? (
                 <div className="text-center py-8">
@@ -453,7 +441,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               )}
             </div>
 
-            {/* Comment Input - fixed at bottom, always visible */}
+            {/* Comment Input - fixed at bottom */}
             <form onSubmit={handleSubmitComment} className="border-t px-3 py-2 sm:px-4 sm:py-3 bg-white flex-shrink-0">
               <div className="flex gap-2">
                 <Input
