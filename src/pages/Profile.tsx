@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3, MoreVertical } from 'lucide-react';
+import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { Input } from '../components/ui/input';
@@ -9,7 +9,6 @@ import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { CommentModal } from '../components/CommentModal';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
   if (trimmed.length === 0) return 'Username required';
@@ -676,62 +675,25 @@ export function Profile({ username: targetUsername }: ProfileProps) {
               return (
                 <div
                   key={post.id}
-                  className="aspect-square bg-gray-100 overflow-hidden relative group"
+                  className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative"
+                  onClick={() => setSelectedPostId(post.id)}
                 >
-                  <div onClick={() => setSelectedPostId(post.id)} className="cursor-pointer hover:opacity-90 w-full h-full">
-                    {displayImageUrl ? (
-                      <img
-                        src={displayImageUrl}
-                        alt={post.title || 'Post'}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error('[Profile] Image failed to load:', displayImageUrl);
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
-                        }}
-                      />
-                    ) : post.video_url ? (
-                      <video src={post.video_url} className="w-full h-full object-cover" />
-                    ) : null}
-                    {post.title && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                        <p className="text-white text-xs font-semibold truncate">{post.title}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {(isOwnProfile || isUserAdmin) && (
-                    <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 bg-black/50 hover:bg-black/70 rounded-full backdrop-blur-sm">
-                            <MoreVertical className="w-4 h-4 text-white" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditingPost({
-                                id: post.id,
-                                title: post.title || '',
-                                caption: post.caption || '',
-                                recipeUrl: post.recipe_url || '',
-                                photoUrl: post.image_url || post.video_url || ''
-                              });
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <Edit3 className="w-4 h-4 mr-2" />
-                            Edit post
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setDeletePostId(post.id)}
-                            className="cursor-pointer text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete post
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                  {displayImageUrl ? (
+                    <img
+                      src={displayImageUrl}
+                      alt={post.title || 'Post'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('[Profile] Image failed to load:', displayImageUrl);
+                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
+                      }}
+                    />
+                  ) : post.video_url ? (
+                    <video src={post.video_url} className="w-full h-full object-cover" />
+                  ) : null}
+                  {post.title && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                      <p className="text-white text-xs font-semibold truncate">{post.title}</p>
                     </div>
                   )}
                 </div>
@@ -823,62 +785,68 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-{selectedPostId && (
-  <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
-    <DialogContent className="max-w-lg p-0 overflow-hidden bg-black relative">
-      <CommentModal
-        postId={selectedPostId}
-        isOpen={true}
-        onClose={() => setSelectedPostId(null)}
-      />
+{selectedPostId && (() => {
+  const selectedPost = posts.find(p => p.id === selectedPostId);
+  const canEdit = selectedPost && currentUserId && (
+    currentUserId === selectedPost.user_id || isUserAdmin
+  );
 
-      {/* Edit and Delete buttons - layered on top with high z-index */}
-      <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
-        <button
-          onClick={() => setSelectedPostId(null)}
-          className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all shadow-lg"
-        >
-          <ArrowLeft className="w-6 h-6 text-white" />
-        </button>
+  return (
+    <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
+      <DialogContent className="max-w-lg p-0 overflow-hidden bg-black relative">
+        <CommentModal
+          postId={selectedPostId}
+          isOpen={true}
+          onClose={() => setSelectedPostId(null)}
+        />
 
-        {(isOwnProfile || isUserAdmin) && currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const post = posts.find(p => p.id === selectedPostId);
-                if (post) {
-                  setEditingPost({
-                    id: post.id,
-                    title: post.title || '',
-                    caption: post.caption || '',
-                    recipeUrl: post.recipe_url || '',
-                    photoUrl: post.image_url || post.video_url || '',
-                  });
-                }
-                setSelectedPostId(null);
-              }}
-              className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
-              title="Edit post"
-            >
-              <Edit3 className="w-5 h-5 text-white" />
-            </button>
+        {/* Edit and Delete buttons - layered on top with high z-index */}
+        <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
+          <button
+            onClick={() => setSelectedPostId(null)}
+            className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all shadow-lg"
+          >
+            <ArrowLeft className="w-6 h-6 text-white" />
+          </button>
 
-            <button
-              onClick={() => {
-                setDeletePostId(selectedPostId);
-                setSelectedPostId(null);
-              }}
-              className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-red-600/70 rounded-full transition-all shadow-lg"
-              title="Delete post"
-            >
-              <Trash2 className="w-5 h-5 text-white" />
-            </button>
-          </div>
-        )}
-      </div>
-    </DialogContent>
-  </Dialog>
-)}
+          {canEdit && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (selectedPost) {
+                    setEditingPost({
+                      id: selectedPost.id,
+                      title: selectedPost.title || '',
+                      caption: selectedPost.caption || '',
+                      recipeUrl: selectedPost.recipe_url || '',
+                      photoUrl: selectedPost.image_url || selectedPost.video_url || '',
+                    });
+                  }
+                  setSelectedPostId(null);
+                }}
+                className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
+                title="Edit post"
+              >
+                <Edit3 className="w-5 h-5 text-white" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setDeletePostId(selectedPostId);
+                  setSelectedPostId(null);
+                }}
+                className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-red-600/70 rounded-full transition-all shadow-lg"
+                title="Delete post"
+              >
+                <Trash2 className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+})()}
 {/* Edit Post Dialog */}
 <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
   <AlertDialogContent>
