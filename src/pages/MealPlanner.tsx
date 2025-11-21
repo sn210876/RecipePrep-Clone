@@ -26,7 +26,9 @@ import {
   Plus,
   Check,
   Trash2,
-  ShoppingCart,   // ← comma was missing here!
+  ShoppingCart,
+  Menu,
+  X as XClose,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
@@ -44,7 +46,8 @@ interface MealPlannerProps {
   onNavigate?: (page: string) => void;
 }
 
-export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { state, dispatch } = useRecipes();
+export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
+  const { state, dispatch } = useRecipes();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [weeksToShow, setWeeksToShow] = useState<1 | 4>(1);
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>([]);
@@ -58,13 +61,20 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
   const [slotDate, setSlotDate] = useState<Date | null>(null);
   const [slotMealType, setSlotMealType] = useState<MealType | null>(null);
   const [selectedRecipeForAssignment, setSelectedRecipeForAssignment] = useState<Recipe | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
     if (storedUserId) {
       setUserId(storedUserId);
     } else {
-      // If no userId, still load meal plans
       setLoading(false);
     }
   }, []);
@@ -75,7 +85,6 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
 
   const recipesByCuisine = useMemo(() => {
     const grouped: Record<string, Recipe[]> = {};
-
     state.savedRecipes.forEach(recipe => {
       const cuisine = recipe.cuisineType || 'Other';
       if (!grouped[cuisine]) {
@@ -83,7 +92,6 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
       }
       grouped[cuisine].push(recipe);
     });
-
     return Object.entries(grouped)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([cuisine, recipes]) => ({ cuisine, recipes }));
@@ -94,12 +102,8 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
     try {
       const plansWithRecipes: MealPlanWithRecipe[] = state.mealPlan.map(plan => {
         const recipe = state.savedRecipes.find(r => r.id === plan.recipeId);
-        return {
-          ...plan,
-          recipe
-        };
+        return { ...plan, recipe };
       });
-
       setMealPlans(plansWithRecipes);
     } catch (error) {
       console.error('Error loading meal plans:', error);
@@ -115,14 +119,8 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
         recipeId: plan.recipeId,
         servings: plan.servings || 2,
       }));
-
       const items = consolidateGroceryListItems(mealPlansWithServings, state.savedRecipes);
-
-      dispatch({
-        type: 'UPDATE_GROCERY_LIST',
-        payload: items
-      });
-
+      dispatch({ type: 'UPDATE_GROCERY_LIST', payload: items });
       toast.success('Grocery list updated!');
     } catch (error) {
       console.error('Error syncing grocery list:', error);
@@ -143,13 +141,13 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
     } else {
       setSelectedRecipeForAssignment(recipe);
       toast.success('Recipe selected - now click a meal slot to assign');
+      if (isMobile) setSidebarOpen(false);
     }
   };
 
   const addMealToSlot = async (date: Date, mealType: MealType, recipe: Recipe) => {
     const dateString = formatDateInTimezone(date, 'local');
     const existingMeal = getMealForSlot(date, mealType);
-
     try {
       if (existingMeal) {
         dispatch({
@@ -174,7 +172,6 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
           }
         });
       }
-
       await loadMealPlans();
       await syncGroceryList();
     } catch (error) {
@@ -186,7 +183,6 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
   const handleSlotClick = async (date: Date, mealType: MealType) => {
     const recipeToAdd = selectedRecipeForAssignment;
     if (!recipeToAdd) return;
-
     try {
       await addMealToSlot(date, mealType, recipeToAdd);
       toast.success('Meal assigned to calendar');
@@ -198,11 +194,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
 
   const handleRemoveMeal = async (mealPlanId: string) => {
     try {
-      dispatch({
-        type: 'REMOVE_MEAL_PLAN',
-        payload: mealPlanId
-      });
-
+      dispatch({ type: 'REMOVE_MEAL_PLAN', payload: mealPlanId });
       toast.success('Meal removed');
       await loadMealPlans();
       await syncGroceryList();
@@ -230,7 +222,6 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
       toast.error('Please select both date and meal type');
       return;
     }
-
     const date = new Date(selectedDate);
     try {
       await addMealToSlot(date, selectedMealType as MealType, selectedRecipe);
@@ -252,10 +243,8 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
 
   const handleAddRecipeToSlot = async (recipeId: string) => {
     if (!slotDate || !slotMealType) return;
-
     const recipe = state.savedRecipes.find(r => r.id === recipeId);
     if (!recipe) return;
-
     try {
       await addMealToSlot(slotDate, slotMealType, recipe);
       toast.success('Meal added to calendar');
@@ -280,330 +269,332 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
     setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }));
   };
 
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <div className="flex h-screen">
-        <div className="w-80 border-r border-slate-200 bg-white shadow-sm flex flex-col">
-          <div className="p-6 border-b border-slate-200 bg-gradient-to-br from-blue-50 to-cyan-50">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                <Layers className="w-5 h-5 text-white" />
-              </div>
+  const RecipesSidebar = () => (
+    <div className={`${isMobile ? 'fixed inset-0 z-40 bg-black/50' : ''}`} onClick={() => isMobile && setSidebarOpen(false)}>
+      <div className={`${isMobile ? 'fixed left-0 top-0 bottom-0 w-80 bg-white shadow-lg' : 'w-80 border-r border-slate-200 bg-white shadow-sm'} flex flex-col`} onClick={(e) => e.stopPropagation()}>
+        <div className="p-6 border-b border-slate-200 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+              <Layers className="w-5 h-5 text-white" />
+            </div>
+            <div>
               <h2 className="text-xl font-bold text-slate-900">My Recipes</h2>
+              <p className="text-xs text-slate-600">Select & click slot</p>
             </div>
-            <p className="text-sm text-slate-600">
-              "Select" By single clicking recipe and "Click" calendar date
-            </p>
           </div>
-
-          <ScrollArea className="flex-1">
-            <div className="p-4">
-              {state.savedRecipes.length === 0 ? (
-                <div className="text-center py-8 px-4">
-                  <Layers className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-sm text-slate-500">
-                    No saved recipes yet. Save recipes from the Discover page to add them to your meal plan.
-                  </p>
-                </div>
-              ) : (
-                <Accordion type="multiple" defaultValue={recipesByCuisine.map(g => g.cuisine)} className="space-y-2">
-                  {recipesByCuisine.map(({ cuisine, recipes }) => (
-                    <AccordionItem key={cuisine} value={cuisine} className="border rounded-lg px-4 bg-slate-50">
-                      <AccordionTrigger className="hover:no-underline py-3">
-                        <div className="flex items-center justify-between w-full pr-2">
-                          <span className="font-semibold text-slate-900">{cuisine}</span>
-                          <Badge variant="secondary">{recipes.length}</Badge>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-3">
-                        <div className="space-y-3 pt-2">
-                          {recipes.map(recipe => (
-                  <div
-                    key={recipe.id}
-                    className="group"
-                  >
-                    <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 ${selectedRecipeForAssignment?.id === recipe.id ? 'border-2 border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-blue-300 bg-white'}`}>
-                      <CardContent className="p-0">
-                        <div
-                          onClick={() => handleRecipeClick(recipe)}
-                          className="flex gap-3 p-3 cursor-pointer"
-                        >
-                          {recipe.imageUrl && (
-                            <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
-                              <img
-                                src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                                  ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-                                  : recipe.imageUrl}
-                                alt={recipe.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <h3 className="font-semibold text-sm text-slate-900 line-clamp-2">
-                                {recipe.title}
-                              </h3>
-                              {selectedRecipeForAssignment?.id === recipe.id && (
-                                <Check className="w-4 h-4 text-orange-600 shrink-0" />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                <span>{recipe.prepTime + recipe.cookTime}m</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Users className="w-3 h-3" />
-                                <span>{recipe.servings}</span>
-                              </div>
-                            </div>
-                            {recipe.mealType.length > 0 && (
-                              <div className="flex gap-1 mt-2 flex-wrap">
-                                {recipe.mealType.slice(0, 2).map(type => (
-                                  <Badge key={type} variant="secondary" className="text-xs">
-                                    {type}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="px-3 pb-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenAddMealDialog(recipe);
-                            }}
-                          >
-                            <Plus className="w-4 h-4 mr-1" />
-                            Add to Plan
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              )}
-            </div>
-          </ScrollArea>
+          {isMobile && (
+            <button onClick={() => setSidebarOpen(false)} className="p-1">
+              <XClose className="w-6 h-6" />
+            </button>
+          )}
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="border-b border-slate-200 bg-white shadow-sm">
-           <div className="p-6">
-  {/* Top row: Title + main buttons */}
-  <div className="flex items-center justify-between mb-6">
-    <div className="flex items-center gap-3">
-      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-        <Calendar className="w-6 h-6 text-white" />
-      </div>
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Meal Planner</h1>
-        <p className="text-slate-600">Select a recipe, then click a meal slot to assign it</p>
-      </div>
-    </div>
-  </div>
-
-  {/* Bottom row: Clear All, Week toggle, and Grocery List button BELOW them */}
-  <div className="flex items-center justify-between">
-    {/* Left side: Clear All + 1 Week / 4 Weeks */}
-    <div className="flex items-center gap-3">
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={() => {
-          if (confirm('Clear all meal plans? This cannot be undone.')) {
-            dispatch({ type: 'CLEAR_MEAL_PLAN' });
-            toast.success('All meals cleared');
-          }
-        }}
-        className="gap-2"
-      >
-        <Trash2 className="w-4 h-4" />
-        Clear All
-      </Button>
-
-      <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
-        <Button
-          variant={weeksToShow === 1 ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setWeeksToShow(1)}
-          className="h-8"
-        >
-          1 Week
-        </Button>
-        <Button
-          variant={weeksToShow === 4 ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setWeeksToShow(4)}
-          className="h-8"
-        >
-          4 Weeks
-        </Button>
-      </div>
-    </div>
-
-    {/* Right side: Grocery List button — now on the same row, below the title */}
-    <Button
-      onClick={() => onNavigate?.('grocery-list')}
-      className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg"
-    >
-      <ShoppingCart className="w-5 h-5 mr-2" />
-      Go to Grocery List
-    </Button>
-  </div>
-
-  {/* Week navigation (Previous / Today / Next) */}
-  <div className="flex items-center justify-between mt-6">
-    <div className="flex items-center gap-3">
-      <Button variant="outline" size="sm" onClick={handlePreviousWeek}>
-        <ChevronLeft className="w-4 h-4" />
-      </Button>
-      <Button variant="outline" size="sm" onClick={handleToday}>
-        Today
-      </Button>
-      <Button variant="outline" size="sm" onClick={handleNextWeek}>
-        <ChevronRight className="w-4 h-4" />
-      </Button>
-    </div>
-    <h2 className="text-lg font-semibold text-slate-700">
-      {format(currentWeekStart, 'MMM d')} -{' '}
-      {format(addDays(currentWeekStart, weeksToShow * 7 - 1), 'MMM d, yyyy')}
-    </h2>
-  </div>
-</div>
-          </div>
-
-          <ScrollArea className="flex-1">
-            <div className="p-6">
-              {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-              ) : (
-                <div className={`grid gap-4 ${weeksToShow === 4 ? 'grid-cols-7' : 'grid-cols-7'}`}>
-                  {getDaysToShow().map((day, dayIndex) => (
-                    <div key={dayIndex} className="space-y-2">
-                      <div className="text-center pb-2 border-b-2 border-slate-200">
-                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                          {format(day, 'EEE')}
-                        </div>
-                        <div className={`text-lg font-bold ${
-                          isSameDay(day, new Date())
-                            ? 'text-blue-600'
-                            : 'text-slate-900'
-                        }`}>
-                          {format(day, 'd')}
-                        </div>
+        <ScrollArea className="flex-1">
+          <div className="p-4">
+            {state.savedRecipes.length === 0 ? (
+              <div className="text-center py-8 px-4">
+                <Layers className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm text-slate-500">
+                  No saved recipes yet. Save recipes from the Discover page.
+                </p>
+              </div>
+            ) : (
+              <Accordion type="multiple" defaultValue={recipesByCuisine.map(g => g.cuisine)} className="space-y-2">
+                {recipesByCuisine.map(({ cuisine, recipes }) => (
+                  <AccordionItem key={cuisine} value={cuisine} className="border rounded-lg px-4 bg-slate-50">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center justify-between w-full pr-2">
+                        <span className="font-semibold text-slate-900">{cuisine}</span>
+                        <Badge variant="secondary">{recipes.length}</Badge>
                       </div>
-
-                      <div className="space-y-2">
-                        {MEAL_TYPES.map(mealType => {
-                          const meal = getMealForSlot(day, mealType);
-
-                          return (
-                            <div
-                              key={`${dayIndex}-${mealType}`}
-                              onClick={() => {
-                                if (selectedRecipeForAssignment) {
-                                  handleSlotClick(day, mealType);
-                                }
-                              }}
-                              className={`
-                                min-h-[100px] rounded-lg border-2 border-dashed p-2
-                                transition-all relative group
-                                ${selectedRecipeForAssignment && !meal
-                                  ? 'border-orange-400 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-500'
-                                  : 'border-slate-200 bg-slate-50/50'
-                                }
-                                ${meal ? 'border-solid bg-white hover:shadow-md' : ''}
-                              `}
-                            >
-                              {meal && meal.recipe ? (
-                                <div className="relative">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRemoveMeal(meal.id);
-                                    }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
-                                  >
-                                    <X className="w-3 h-3" />
-                                  </button>
-
-                                  {meal.recipe.imageUrl && (
-                                    <div className="w-full h-16 rounded-md overflow-hidden mb-2 bg-slate-100">
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-3">
+                      <div className="space-y-3 pt-2">
+                        {recipes.map(recipe => (
+                          <div key={recipe.id} className="group">
+                            <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 ${selectedRecipeForAssignment?.id === recipe.id ? 'border-2 border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-blue-300 bg-white'}`}>
+                              <CardContent className="p-0">
+                                <div onClick={() => handleRecipeClick(recipe)} className="flex gap-3 p-3 cursor-pointer">
+                                  {recipe.imageUrl && (
+                                    <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100">
                                       <img
-                                        src={meal.recipe.imageUrl?.includes('instagram.com') || meal.recipe.imageUrl?.includes('cdninstagram.com')
-                                          ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(meal.recipe.imageUrl.replace(/&amp;/g, '&'))}`
-                                          : meal.recipe.imageUrl}
-                                        alt={meal.recipe.title}
+                                        src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+                                          ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                                          : recipe.imageUrl}
+                                        alt={recipe.title}
                                         className="w-full h-full object-cover"
                                       />
                                     </div>
                                   )}
-
-                                  <div className="text-xs">
-                                    <div className="font-medium text-slate-500 mb-1">
-                                      {mealType}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                      <h3 className="font-semibold text-sm text-slate-900 line-clamp-2">
+                                        {recipe.title}
+                                      </h3>
+                                      {selectedRecipeForAssignment?.id === recipe.id && (
+                                        <Check className="w-4 h-4 text-orange-600 shrink-0" />
+                                      )}
                                     </div>
-                                    <div className="font-semibold text-slate-900 line-clamp-2 text-xs">
-                                      {meal.recipe.title}
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-1 text-slate-500">
+                                    <div className="flex items-center gap-2 text-xs text-slate-500">
                                       <div className="flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
-                                        <span>{meal.recipe.prepTime + meal.recipe.cookTime}m</span>
+                                        <span>{recipe.prepTime + recipe.cookTime}m</span>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Users className="w-3 h-3" />
+                                        <span>{recipe.servings}</span>
                                       </div>
                                     </div>
+                                    {recipe.mealType.length > 0 && (
+                                      <div className="flex gap-1 mt-2 flex-wrap">
+                                        {recipe.mealType.slice(0, 2).map(type => (
+                                          <Badge key={type} variant="secondary" className="text-xs">
+                                            {type}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
-                              ) : (
-                                <div className="flex flex-col items-center justify-center h-full text-center gap-2">
-                                  <div className="text-xs font-medium text-slate-400 mb-1">
-                                    {mealType}
-                                  </div>
-                                  <div className="text-xs text-slate-400">
-                                    Drop here
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleOpenSlotDropdown(day, mealType)}
-                                      className="h-7 text-xs px-2 gap-1 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                    >
-                                      <Plus className="w-3 h-3" />
-                                      Add
-                                    </Button>
-                                  </div>
+                                <div className="px-3 pb-3">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenAddMealDialog(recipe);
+                                    }}
+                                  >
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    Add to Plan
+                                  </Button>
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                              </CardContent>
+                            </Card>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col md:flex-row">
+      {/* Sidebar - hidden on mobile by default */}
+      {!isMobile && <RecipesSidebar />}
+      {isMobile && sidebarOpen && <RecipesSidebar />}
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="border-b border-slate-200 bg-white shadow-sm">
+          <div className="p-4 md:p-6 space-y-4">
+            {/* Title + Mobile Menu */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
+                  <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Meal Planner</h1>
+                  <p className="text-xs md:text-sm text-slate-600">Select recipe, click slot</p>
+                </div>
+              </div>
+              {isMobile && (
+                <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg">
+                  <Menu className="w-6 h-6" />
+                </button>
               )}
             </div>
-          </ScrollArea>
+
+            {/* Controls */}
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm('Clear all meal plans?')) {
+                      dispatch({ type: 'CLEAR_MEAL_PLAN' });
+                      toast.success('All meals cleared');
+                    }
+                  }}
+                  className="gap-2 text-xs md:text-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Clear
+                </Button>
+
+                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                  <Button
+                    variant={weeksToShow === 1 ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setWeeksToShow(1)}
+                    className="h-8 text-xs"
+                  >
+                    1W
+                  </Button>
+                  <Button
+                    variant={weeksToShow === 4 ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setWeeksToShow(4)}
+                    className="h-8 text-xs"
+                  >
+                    4W
+                  </Button>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => onNavigate?.('grocery-list')}
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg text-xs md:text-sm"
+              >
+                <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                Grocery List
+              </Button>
+            </div>
+
+            {/* Week Navigation */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={handlePreviousWeek} className="h-8 w-8 p-0">
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleToday} className="h-8 text-xs px-2">
+                  Today
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleNextWeek} className="h-8 w-8 p-0">
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              <h2 className="text-sm md:text-lg font-semibold text-slate-700 whitespace-nowrap">
+                {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, weeksToShow * 7 - 1), 'MMM d')}
+              </h2>
+            </div>
+          </div>
         </div>
+
+        {/* Calendar Grid */}
+        <ScrollArea className="flex-1">
+          <div className="p-4 md:p-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className={`grid gap-2 md:gap-4 ${weeksToShow === 4 && !isMobile ? 'grid-cols-7' : isMobile ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3 lg:grid-cols-7'}`}>
+                {getDaysToShow().map((day, dayIndex) => (
+                  <div key={dayIndex} className="space-y-2">
+                    {/* Day Header */}
+                    <div className="text-center pb-2 border-b-2 border-slate-200">
+                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        {format(day, 'EEE')}
+                      </div>
+                      <div className={`text-lg font-bold ${isSameDay(day, new Date()) ? 'text-blue-600' : 'text-slate-900'}`}>
+                        {format(day, 'd')}
+                      </div>
+                    </div>
+
+                    {/* Meals */}
+                    <div className="space-y-2">
+                      {MEAL_TYPES.map(mealType => {
+                        const meal = getMealForSlot(day, mealType);
+                        return (
+                          <div
+                            key={`${dayIndex}-${mealType}`}
+                            onClick={() => {
+                              if (selectedRecipeForAssignment) {
+                                handleSlotClick(day, mealType);
+                              }
+                            }}
+                            className={`
+                              min-h-[80px] md:min-h-[100px] rounded-lg border-2 p-2
+                              transition-all relative group
+                              ${selectedRecipeForAssignment && !meal
+                                ? 'border-orange-400 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-500 border-dashed'
+                                : 'border-slate-200 bg-slate-50/50'
+                              }
+                              ${meal ? 'border-solid bg-white hover:shadow-md' : 'border-dashed'}
+                            `}
+                          >
+                            {meal && meal.recipe ? (
+                              <div className="relative h-full">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveMeal(meal.id);
+                                  }}
+                                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+
+                                {meal.recipe.imageUrl && (
+                                  <div className="w-full h-14 md:h-16 rounded-md overflow-hidden mb-2 bg-slate-100">
+                                    <img
+                                      src={meal.recipe.imageUrl?.includes('instagram.com') || meal.recipe.imageUrl?.includes('cdninstagram.com')
+                                        ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(meal.recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                                        : meal.recipe.imageUrl}
+                                      alt={meal.recipe.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+
+                                <div className="text-xs">
+                                  <div className="font-medium text-slate-500 mb-1 text-xs">
+                                    {mealType}
+                                  </div>
+                                  <div className="font-semibold text-slate-900 line-clamp-2 text-xs">
+                                    {meal.recipe.title}
+                                  </div>
+                                  <div className="flex items-center gap-1 mt-1 text-slate-500 text-xs">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{meal.recipe.prepTime + meal.recipe.cookTime}m</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center h-full text-center gap-1">
+                                <div className="text-xs font-medium text-slate-400">
+                                  {mealType}
+                                </div>
+                                <div className="text-xs text-slate-400">
+                                  Drop here
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleOpenSlotDropdown(day, mealType)}
+                                  className="h-6 text-xs px-2 gap-1 hover:bg-blue-50 hover:text-blue-600 transition-colors mt-1"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  Add
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </div>
 
+      {/* Add Meal Dialog */}
       <Dialog open={showAddMealDialog} onOpenChange={setShowAddMealDialog}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-sm">
           <DialogHeader>
             <DialogTitle>Add Meal to Plan</DialogTitle>
             <DialogDescription>
@@ -620,7 +611,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
                 <SelectContent>
                   {getDaysToShow().map((day) => (
                     <SelectItem key={day.toISOString()} value={format(day, 'yyyy-MM-dd')}>
-                      {format(day, 'EEE, MMM d, yyyy')}
+                      {format(day, 'EEE, MMM d')}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -642,7 +633,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
               </Select>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex gap-2">
             <Button
               variant="outline"
               onClick={() => {
@@ -658,14 +649,15 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
               onClick={handleAddMealViaDialog}
               disabled={!selectedDate || !selectedMealType}
             >
-              Add to Plan
+              Add
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Recipe Selection Dialog */}
       <Dialog open={showSlotDropdown} onOpenChange={setShowSlotDropdown}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Select Recipe</DialogTitle>
             <DialogDescription>
@@ -673,7 +665,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {  const { st
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[50vh]">
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 pr-4">
               {recipesByCuisine.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
                   No saved recipes. Save recipes from the Discover page first.
