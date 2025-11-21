@@ -620,8 +620,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <Button onClick={handleAddRecipe} disabled={!selectedRecipeId}>
               Add Ingredients
             </Button>
-                    </DialogFooter>
-        </DialogContent>
+     </DialogFooter>
+          </DialogContent>
       </Dialog>
 
     </div>  {/* ← closes max-w-2xl mx-auto px-4 pt-6 */}
