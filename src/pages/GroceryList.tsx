@@ -25,8 +25,6 @@ import { useRecipes } from '../context/RecipeContext';
 import { formatQuantity } from '../lib/unitConversion';
 import { supabase } from '../lib/supabase';
 
-const MOBILE_SAFE = "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pb-32";
-
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
 }
@@ -338,8 +336,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }
 
   return (
-  <div className={`min-h-screen ${MOBILE_SAFE} bg-gradient-to-br from-orange-50 to-amber-50`}>
-    <div className="max-w-2xl mx-auto px-4 pt-6">
+    <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -517,7 +514,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </div>
       )}
 
-            <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
+      <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Item</DialogTitle>
@@ -573,7 +570,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddItemDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowAddItemDialog(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleAddItem} disabled={!newItemName.trim() || !newItemCategory}>
@@ -609,7 +609,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddRecipeDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowAddRecipeDialog(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleAddRecipe} disabled={!selectedRecipeId}>
@@ -618,8 +621,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-    </div> {/* ← closes max-w-2xl mx-auto px-4 pt-6 */}
-  </div>   {/* ← closes min-h-screen with MOBILE_SAFE */}
-);
+    </div>
+  );
 }
