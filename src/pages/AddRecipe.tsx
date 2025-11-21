@@ -486,6 +486,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         <span>Update as needed — AI does its best, some recipes may need manual editing</span>
       </li>
     </ol>
+    <div className="mt-3 pt-2 border-t border-slate-200 space-y-1 text-xs">
+  <p className="text-emerald-600 font-semibold">Supported: All recipe websites & most blogs</p>
+  <p className="text-orange-600">Warning: Instagram & TikTok (may take 30–60 seconds)</p>
+  <p className="text-slate-500">Coming Soon: YouTube videos</p>
+</div>
   </div>
 </CardDescription>
           </CardHeader>
