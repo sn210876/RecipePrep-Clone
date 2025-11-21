@@ -28,7 +28,7 @@ function RatingDisplay({ rating, size = 'md', interactive = false, onRate }: Rat
     }
   }[size];
 
-  const handleRate = (fire: number) => {
+  const handleRate = (fire) => {
     if (interactive && onRate) {
       onRate(fire);
     }
@@ -55,11 +55,18 @@ function RatingDisplay({ rating, size = 'md', interactive = false, onRate }: Rat
               }
               ${interactive ? 'hover:bg-orange-50' : ''}
               ${sizeClasses.text}
-              ${isActive ? 'bg-orange-100' : 'bg-gray-100'}
             `}
             aria-label={`Rate ${fire} out of 5`}
           >
-            {isActive && <span className="transition-all duration-200">🔥</span>}
+            <span 
+              className={`transition-all duration-200 ${
+                isActive 
+                  ? 'opacity-100 scale-100' 
+                  : 'opacity-20 grayscale scale-90'
+              }`}
+            >
+              🔥
+            </span>
           </button>
         );
       })}
