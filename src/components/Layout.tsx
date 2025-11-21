@@ -189,7 +189,7 @@ const loadUnreadCount = async (userId: string) => {
           {/* Logo/Brand */}
           <div className="flex items-center justify-between gap-3 border-b border-gray-200 p-4 sm:p-6">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600 shadow-lg flex-shrink-0 overflow-hidden">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-white-500 to-red-600 shadow-lg flex-shrink-0 overflow-hidden">
   <img 
     src="/Woodenspoon.png" 
     alt="Meal Scrape" 
