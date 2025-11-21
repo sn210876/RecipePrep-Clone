@@ -599,7 +599,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
 
           {/* Support Button */}
         {/* Action Buttons for visiting other profiles */}
-{!isOwnProfile && (
+
   <div className="px-4 py-3 border-t border-gray-200">
     <div className="flex gap-2">
       <Button
