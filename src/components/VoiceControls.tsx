@@ -5,7 +5,6 @@ import { Card } from './ui/card';
 import { Mic, MicOff, Volume2, HelpCircle, Check, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
-// Only one global declaration — no conflicts, no unused vars
 declare global {
   interface Window {
     SpeechRecognition?: any;
@@ -13,7 +12,6 @@ declare global {
   }
 }
 
-// This line is used indirectly — eslint + TS are happy
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 interface VoiceControlsProps {
@@ -53,7 +51,7 @@ const commandExamples = [
 ];
 
 export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: VoiceControlsProps) {
-  const [isSupported] = useState(!!SpeechRecognitionAPI); // ← only read, never set again
+  const [isSupported] = useState(!!SpeechRecognitionAPI);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [lastCommand, setLastCommand] = useState('');
@@ -148,7 +146,6 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
     }
   };
 
-    // Text-to-speech — actually used, and TypeScript now knows it
   const speak = (text: string) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -159,17 +156,16 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
     window.speechSynthesis.speak(utterance);
   };
 
-  // Tell TypeScript: "yes, this is used" — 100% safe
   void speak;
 
   if (!isSupported) {
     return (
-      <Card className="p-5 bg-amber-50 border-amber-300">
+      <Card className="p-4 bg-amber-50 border-amber-300">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-6 h-6 text-amber-600 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
           <div>
-            <h3 className="font-bold text-amber-900">Voice Control Not Available</h3>
-            <p className="text-sm text-amber-700 mt-1">Use Chrome, Edge, or Safari.</p>
+            <h3 className="font-bold text-amber-900 text-sm">Voice Control Not Available</h3>
+            <p className="text-xs text-amber-700 mt-1">Use Chrome, Edge, or Safari.</p>
           </div>
         </div>
       </Card>
@@ -177,21 +173,21 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
         <Button
           onClick={onToggle}
           size="lg"
-          className={`flex-1 gap-4 h-14 rounded-xl font-medium transition-all ${
+          className={`flex-1 gap-3 min-h-[56px] rounded-xl font-medium transition-all touch-manipulation active:scale-95 ${
             isActive
-              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-xl shadow-orange-500/30'
+              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/30'
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
           }`}
         >
           {isActive ? (
             <>
-              <div className="relative">
-                <Mic className="w-6 h-6" />
+              <div className="relative flex-shrink-0">
+                <Mic className="w-5 h-5" />
                 {isListening && (
                   <span className="absolute -top-1 -right-1 flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -199,71 +195,91 @@ export function VoiceControls({ onCommand, isActive, onToggle, voiceSettings }: 
                   </span>
                 )}
               </div>
-              Voice Mode Active
+              <span className="text-sm">Voice Mode Active</span>
             </>
           ) : (
             <>
-              <MicOff className="w-6 h-6" />
-              Enable Voice Mode
+              <MicOff className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">Enable Voice Mode</span>
             </>
           )}
         </Button>
-        <Button variant="outline" size="icon" onClick={() => setShowHelp(!showHelp)}>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => setShowHelp(!showHelp)}
+          className="min-h-[56px] min-w-[56px] touch-manipulation active:scale-95"
+        >
           <HelpCircle className="w-5 h-5" />
         </Button>
       </div>
 
       {isActive && isListening && (
-        <Card className="p-5 bg-gradient-to-br from-orange-50 to-red-50 border-orange-300">
-          <div className="flex items-center gap-4">
-            <div className="flex gap-1.5">
+        <Card className="p-4 bg-gradient-to-br from-orange-50 to-red-50 border-orange-300">
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1 flex-shrink-0">
               {[0, 0.1, 0.2, 0.3].map((d, i) => (
-                <span key={i} className="w-1.5 h-10 bg-orange-500 rounded-full animate-pulse" style={{ animationDelay: `${d}s` }} />
+                <span 
+                  key={i} 
+                  className="w-1 h-8 bg-orange-500 rounded-full animate-pulse" 
+                  style={{ animationDelay: `${d}s` }} 
+                />
               ))}
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-orange-900">Listening...</p>
-              {transcript && <p className="text-lg mt-2 text-orange-800">"{transcript}"</p>}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-orange-900 text-sm">Listening...</p>
+              {transcript && (
+                <p className="text-base mt-1 text-orange-800 truncate">"{transcript}"</p>
+              )}
             </div>
-            <Volume2 className="w-6 h-6 text-orange-600" />
+            <Volume2 className="w-5 h-5 text-orange-600 flex-shrink-0" />
           </div>
         </Card>
       )}
 
       {showCommandFeedback && lastCommand && (
-        <Card className="p-4 bg-green-50 border-green-300">
-          <div className="flex items-center gap-3">
-            <Check className="w-6 h-6 text-green-600" />
-            <p className="font-medium text-green-900">Command: "{lastCommand}"</p>
+        <Card className="p-3 bg-green-50 border-green-300">
+          <div className="flex items-center gap-2">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <p className="font-medium text-green-900 text-sm truncate">
+              Command: "{lastCommand}"
+            </p>
           </div>
         </Card>
       )}
 
       {error && (
-        <Card className="p-4 bg-red-50 border-red-300">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600" />
-            <p className="text-sm text-red-700">{error}</p>
+        <Card className="p-3 bg-red-50 border-red-300">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+            <p className="text-xs text-red-700">{error}</p>
           </div>
         </Card>
       )}
 
       <Collapsible open={showHelp} onOpenChange={setShowHelp}>
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between text-muted-foreground">
-            {showHelp ? 'Hide' : 'Show'} Voice Commands
+          <Button 
+            variant="ghost" 
+            className="w-full justify-between text-muted-foreground min-h-[44px] touch-manipulation active:scale-95"
+          >
+            <span className="text-sm">{showHelp ? 'Hide' : 'Show'} Voice Commands</span>
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <Card className="p-5 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
-            <h3 className="font-bold text-lg mb-4 text-indigo-900">Voice Commands</h3>
-            <div className="space-y-3">
+          <Card className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+            <h3 className="font-bold text-base mb-3 text-indigo-900">Voice Commands</h3>
+            <div className="space-y-2">
               {commandExamples.map((cmd, i) => (
-                <div key={i} className="flex gap-3">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500 mt-2.5 shrink-0" />
-                  <div>
-                    <code className="text-indigo-900 font-medium">{cmd.text}</code>
-                    <p className="text-sm text-indigo-700">{cmd.description}</p>
+                <div key={i} className="flex gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <code className="text-indigo-900 font-medium text-xs break-words">
+                      {cmd.text}
+                    </code>
+                    <p className="text-xs text-indigo-700 leading-relaxed">
+                      {cmd.description}
+                    </p>
                   </div>
                 </div>
               ))}
