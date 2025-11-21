@@ -509,23 +509,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
               />
             </div>
-            <Button
-  variant="outline"
-  size="sm"
-  onClick={async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      setUrlInput(text.trim());
-    } catch (err) {
-      // Silently fail – user can still paste manually
-      console.log("Clipboard access denied or empty");
-    }
-  }}
-  className="w-full mb-3 border-dashed border-2 hover:bg-slate-50"
->
-  <Copy className="w-4 h-4 mr-2" />
-  Paste from Clipboard
-</Button>
+            
             <Button
               type="button"
               onClick={handleUrlExtract}
