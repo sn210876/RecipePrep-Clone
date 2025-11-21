@@ -474,15 +474,15 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     {/* Numbered steps — same tiny font, each on its own line */}
     <ol className="space-y-1.5 text-black ml-0.5">
       <li className="flex items-start gap-2">
-        <span className="font-bold text-orange-600 min-w-[14px]">1</span>
+        <span className="font-bold text-black-600 min-w-[14px]">1</span>
         <span>Copy and paste a link from online or social media</span>
       </li>
       <li className="flex items-start gap-2">
-        <span className="font-bold text-orange-600 min-w-[14px]">2</span>
+        <span className="font-bold text-black-600 min-w-[14px]">2</span>
         <span>Click <span className="font-bold text-blue-600">“Extract Recipe”</span></span>
       </li>
       <li className="flex items-start gap-2">
-        <span className="font-bold text-orange-600 min-w-[14px]">3</span>
+        <span className="font-bold text-black-600 min-w-[14px]">3</span>
         <span>Update as needed — AI does its best, some recipes may need manual editing</span>
       </li>
     </ol>
