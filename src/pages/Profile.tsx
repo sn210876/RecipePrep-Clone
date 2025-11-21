@@ -122,12 +122,12 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   useEffect(() => {
-  // Add this to prevent flash "User not found" when leaving the page
-  const isMounted = { current: true };
-  
+  let isMounted = true; // <-- no ref needed, just a simple let
+
   const loadProfile = async () => {
-    if (!isMounted.current) return;   // ← ADD THIS LINE
-    
+    // Prevent any state updates / toasts if component is already unmounted
+    if (!isMounted) return;
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -136,22 +136,21 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         return;
       }
 
-      // ← ADD THIS LINE too
-      if (!isMounted.current) return;
+      // Your entire existing loadProfile logic goes here (unchanged)
+      // ... all the code you already have inside the try block ...
 
-      // ... rest of your existing code stays exactly the same
     } catch (err) {
-      if (!isMounted.current) return;
-      toast.error('Failed to load profile');
+      if (isMounted) toast.error('Failed to load profile');
     } finally {
-      if (isMounted.current) setLoading(false);
+      if (isMounted) setLoading(false);
     }
   };
 
   loadProfile();
 
+  // Cleanup: when component unmounts (e.g. you press back), flip the flag
   return () => {
-    isMounted.current = false;   // ← ADD THIS cleanup
+    isMounted = false;
   };
 }, [targetUsername]);}, [targetUsername]);
 
