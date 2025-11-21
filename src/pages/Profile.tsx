@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3, MoreVertical } from 'lucide-react';
+import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
-import CommentModal from '../components/CommentModal';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
-
+import { CommentModal } from '../components/CommentModal';
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
   if (trimmed.length === 0) return 'Username required';
@@ -20,7 +18,6 @@ const validateUsername = (username: string): string | null => {
   if (/^[._]/.test(trimmed) || /[._]$/.test(trimmed)) return 'Cannot start or end with _ or .';
   return null; // valid
 };
-
 const resizeImage = (
   file: File,
   maxWidth: number,
@@ -323,66 +320,66 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   };
 
   const handleEditProfile = async () => {
-    if (!currentUserId) return;
+  if (!currentUserId) return;
 
-    // Validate username
-    const usernameValidationError = validateUsername(newUsername);
-    if (usernameValidationError) {
-      setUsernameError(usernameValidationError);
-      toast.error(usernameValidationError);
-      return;
-    }
-    setUsernameError(null);
+  // Validate username
+  const usernameValidationError = validateUsername(newUsername);
+  if (usernameValidationError) {
+    setUsernameError(usernameValidationError);
+    toast.error(usernameValidationError);
+    return;
+  }
+  setUsernameError(null);
 
-    // Bio validation
-    const lines = newBio.trim().split('\n');
-    if (lines.length > 3) {
-      toast.error('Maximum 3 lines allowed');
-      return;
-    }
-    if (lines.some(line => line.length > 40)) {
-      toast.error('Maximum 40 characters per line');
-      return;
-    }
+  // Bio validation
+  const lines = newBio.trim().split('\n');
+  if (lines.length > 3) {
+    toast.error('Maximum 3 lines allowed');
+    return;
+  }
+  if (lines.some(line => line.length > 40)) {
+    toast.error('Maximum 40 characters per line');
+    return;
+  }
 
-    const updates: any = {};
-    const trimmedUsername = newUsername.trim();
+  const updates: any = {};
+  const trimmedUsername = newUsername.trim();
 
-    if (trimmedUsername !== profile?.username) {
-      updates.username = trimmedUsername;
-    }
-    if (newBio.trim() !== (profile?.bio || '').trim()) {
-      updates.bio = newBio.trim() || null;
-    }
-    if (newLink.trim() !== (profile?.link || '').trim()) {
-      updates.link = newLink.trim() || null;
-    }
+  if (trimmedUsername !== profile?.username) {
+    updates.username = trimmedUsername;
+  }
+  if (newBio.trim() !== (profile?.bio || '').trim()) {
+    updates.bio = newBio.trim() || null;
+  }
+  if (newLink.trim() !== (profile?.link || '').trim()) {
+    updates.link = newLink.trim() || null;
+  }
 
-    if (Object.keys(updates).length > 0) {
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', currentUserId);
+  if (Object.keys(updates).length > 0) {
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', currentUserId);
 
-      if (error) {
-        if (error.message.includes('profiles_username_key')) {
-          toast.error('Username already taken');
-        } else {
-          toast.error('Failed to update profile');
-        }
-        return;
+    if (error) {
+      if (error.message.includes('profiles_username_key')) {
+        toast.error('Username already taken');
+      } else {
+        toast.error('Failed to update profile');
       }
-
-      setProfile(prev => prev ? { ...prev, ...updates } : null);
-      toast.success('Profile updated!');
-
-      if (updates.username) {
-        window.history.replaceState({}, '', `/profile/${updates.username}`);
-      }
+      return;
     }
 
-    setEditingProfile(false);
-  };
+    setProfile(prev => prev ? { ...prev, ...updates } : null);
+    toast.success('Profile updated!');
+
+    if (updates.username) {
+      window.history.replaceState({}, '', `/profile/${updates.username}`);
+    }
+  }
+
+  setEditingProfile(false);
+};
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -472,7 +469,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-32">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-20">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
           <p className="mt-4 text-gray-600">Loading profile...</p>
@@ -486,16 +483,10 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   }
 
   return (
-    <div 
-      className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden"
-      style={{ paddingBottom: 'max(8rem, env(safe-area-inset-bottom))' }}
-    >
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Back Button + Username Header */}
       {!isOwnProfile && (
-        <div 
-          className="sticky top-0 bg-white border-b border-gray-200 z-40"
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
-        >
+        <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
           <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
             <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full">
               <ArrowLeft className="w-6 h-6" />
@@ -505,10 +496,10 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         </div>
       )}
 
-      <div className="max-w-lg mx-auto w-full">
+      <div className="max-w-lg mx-auto">
         <div className="bg-white border-b border-gray-200">
           {/* Banner */}
-          <div className="relative h-28 sm:h-32">
+          <div className="relative h-32">
             {profile.banner_url ? (
               <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover" />
             ) : (
@@ -526,47 +517,47 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           <div className="relative px-4 pb-3">
             <div className="flex items-start gap-3 -mt-10">
               <div className="flex-shrink-0">
-                <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20">
+                <div className="relative z-10 w-20 h-20">
                   {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt={profile.username} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-white shadow-lg" />
+                    <img src={profile.avatar_url} alt={profile.username} className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg" />
                   ) : (
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-xl sm:text-2xl font-bold border-4 border-white shadow-lg">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-2xl font-bold border-4 border-white shadow-lg">
                       {profile.username[0].toUpperCase()}
                     </div>
                   )}
                   {isOwnProfile && (
                     <label className="absolute -bottom-1 -right-1 bg-white rounded-full p-1.5 shadow-md cursor-pointer hover:bg-gray-50 z-20">
                       <input type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} className="hidden" />
-                      <Camera className="w-3 h-3 sm:w-4 sm:h-4 text-gray-700" />
+                      <Camera className="w-4 h-4 text-gray-700" />
                     </label>
                   )}
                 </div>
                 <div className="mt-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">{profile.username}</h2>
-                    {isUserAdmin && <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 fill-yellow-500" />}
+                    <h2 className="text-xl font-bold text-gray-900">{profile.username}</h2>
+                    {isUserAdmin && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500" />}
                   </div>
                 </div>
               </div>
 
               {/* CENTERED 3-LINE BIO */}
-              <div className="flex-1 pt-8 sm:pt-11 text-center min-w-0 max-w-[60%]">
+              <div className="flex-1 pt-11 text-center min-w-0 max-w-[60%]">
                 {profile.bio ? (
-                  <div className="space-y-1 sm:space-y-2 mt-2">
+                  <div className="space-y-2 mt-2">
                     {profile.bio
                       .split('\n')
                       .slice(0, 3)
                       .map((line, i) => (
-                        <p key={i} className="text-xs sm:text-sm font-medium text-gray-800 italic tracking-wide leading-snug" style={{ wordBreak: 'break-word' }}>
+                        <p key={i} className="text-sm font-medium text-gray-800 italic tracking-wide leading-snug" style={{ wordBreak: 'break-word' }}>
                           {line.slice(0, 40)}
                         </p>
                       ))}
                   </div>
                 ) : (
-                  <p className="text-xs sm:text-sm text-gray-400 italic font-light mt-3">
+                  <p className="text-sm text-gray-400 italic font-light mt-3">
                     {isOwnProfile ? 'Tap Edit Profile to add a bio' : 'No bio yet'}
                   </p>
-              )}
+                )}
                 {profile.link && (
                   <a
                     href={profile.link}
@@ -581,7 +572,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
             </div>
 
             {isOwnProfile && (
-              <div className="mt-4 flex justify-center px-2">
+              <div className="mt-4 flex justify-center">
                 <button
                   onClick={() => {
                     setNewUsername(profile.username || '');
@@ -589,7 +580,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                     setNewLink(profile.link || '');
                     setEditingProfile(true);
                   }}
-                  className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-orange-600 text-white text-sm sm:text-base font-medium rounded-full hover:bg-orange-700 shadow-md"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-600 text-white font-medium rounded-full hover:bg-orange-700 shadow-md"
                 >
                   <Edit2 className="w-4 h-4" />
                   Edit Profile
@@ -635,18 +626,18 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           )}
 
           {/* Stats */}
-          <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
-            <div className="flex justify-center gap-8 sm:gap-10">
+          <div className="px-4 py-4 border-t border-gray-200">
+            <div className="flex justify-center gap-10">
               <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold">{posts.length}</div>
+                <div className="text-xl font-bold">{posts.length}</div>
                 <div className="text-xs text-gray-500">posts</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold">{profile.followers_count || 0}</div>
+                <div className="text-xl font-bold">{profile.followers_count || 0}</div>
                 <div className="text-xs text-gray-500">supporters</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold">{profile.following_count || 0}</div>
+                <div className="text-xl font-bold">{profile.following_count || 0}</div>
                 <div className="text-xs text-gray-500">supporting</div>
               </div>
             </div>
@@ -662,15 +653,15 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         </div>
 
         {posts.length === 0 ? (
-          <div className="text-center py-12 sm:py-16 px-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg mb-4">
-              <UploadIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+          <div className="text-center py-16 px-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg mb-4">
+              <UploadIcon className="w-10 h-10 text-white" />
             </div>
-            <p className="text-gray-900 font-semibold text-base sm:text-lg mb-2">No posts yet</p>
-            <p className="text-sm sm:text-base text-gray-500">Share your first recipe!</p>
+            <p className="text-gray-900 font-semibold text-lg mb-2">No posts yet</p>
+            <p className="text-gray-500">Share your first recipe!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-0.5 sm:gap-1">
+          <div className="grid grid-cols-3 gap-1">
             {posts.map(post => {
               let displayImageUrl = post.image_url;
               if (displayImageUrl && !displayImageUrl.includes('image-proxy')) {
@@ -684,62 +675,25 @@ export function Profile({ username: targetUsername }: ProfileProps) {
               return (
                 <div
                   key={post.id}
-                  className="aspect-square bg-gray-100 overflow-hidden relative group"
+                  className="aspect-square bg-gray-100 overflow-hidden cursor-pointer hover:opacity-90 relative"
+                  onClick={() => setSelectedPostId(post.id)}
                 >
-                  <div onClick={() => setSelectedPostId(post.id)} className="cursor-pointer hover:opacity-90 w-full h-full">
-                    {displayImageUrl ? (
-                      <img
-                        src={displayImageUrl}
-                        alt={post.title || 'Post'}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error('[Profile] Image failed to load:', displayImageUrl);
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
-                        }}
-                      />
-                    ) : post.video_url ? (
-                      <video src={post.video_url} className="w-full h-full object-cover" />
-                    ) : null}
-                    {post.title && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                        <p className="text-white text-xs font-semibold truncate">{post.title}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {(isOwnProfile || isUserAdmin) && (
-                    <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 bg-black/50 hover:bg-black/70 rounded-full backdrop-blur-sm">
-                            <MoreVertical className="w-4 h-4 text-white" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditingPost({
-                                id: post.id,
-                                title: post.title || '',
-                                caption: post.caption || '',
-                                recipeUrl: post.recipe_url || '',
-                                photoUrl: post.image_url || post.video_url || ''
-                              });
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <Edit3 className="w-4 h-4 mr-2" />
-                            Edit post
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setDeletePostId(post.id)}
-                            className="cursor-pointer text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete post
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                  {displayImageUrl ? (
+                    <img
+                      src={displayImageUrl}
+                      alt={post.title || 'Post'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error('[Profile] Image failed to load:', displayImageUrl);
+                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
+                      }}
+                    />
+                  ) : post.video_url ? (
+                    <video src={post.video_url} className="w-full h-full object-cover" />
+                  ) : null}
+                  {post.title && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                      <p className="text-white text-xs font-semibold truncate">{post.title}</p>
                     </div>
                   )}
                 </div>
@@ -751,33 +705,33 @@ export function Profile({ username: targetUsername }: ProfileProps) {
 
       {/* EDIT DIALOG */}
       <Dialog open={editingProfile} onOpenChange={setEditingProfile}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
             <DialogDescription>Max 40 characters per line • Max 3 lines</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 sm:space-y-5 py-4">
+          <div className="space-y-5 py-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <div className="space-y-1">
-                <Input
-                  id="username"
-                  value={newUsername}
-                  onChange={(e) => {
-                    setNewUsername(e.target.value);
-                    setUsernameError(null);
-                  }}
-                  placeholder="max 20 chars, no spaces"
-                  maxLength={20}
-                  className={usernameError ? 'border-red-500' : ''}
-                />
-                {usernameError && (
-                  <p className="text-xs text-red-600 font-medium">{usernameError}</p>
-                )}
-                <p className="text-xs text-gray-500">
-                  {newUsername.length}/20 • letters, numbers, _ .
-                </p>
-              </div>
+             <div className="space-y-1">
+  <Input
+    id="username"
+    value={newUsername}
+    onChange={(e) => {
+      setNewUsername(e.target.value);
+      setUsernameError(null);
+    }}
+    placeholder="max 20 chars, no spaces"
+    maxLength={20}
+    className={usernameError ? 'border-red-500' : ''}
+  />
+  {usernameError && (
+    <p className="text-xs text-red-600 font-medium">{usernameError}</p>
+  )}
+  <p className="text-xs text-gray-500">
+    {newUsername.length}/20 • letters, numbers, _ .
+  </p>
+</div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -831,142 +785,146 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+{selectedPostId && (() => {
+  const selectedPost = posts.find(p => p.id === selectedPostId);
+  const canEdit = selectedPost && currentUserId && (
+    currentUserId === selectedPost.user_id || isUserAdmin
+  );
 
-      {selectedPostId && (
-        <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
-          <DialogContent className="max-w-lg p-0 overflow-hidden bg-black relative max-h-[90vh]">
-            <CommentModal
-              postId={selectedPostId}
-              isOpen={true}
-              onClose={() => setSelectedPostId(null)}
-            />
+  return (
+    <Dialog open={!!selectedPostId} onOpenChange={() => setSelectedPostId(null)}>
+      <DialogContent className="max-w-lg p-0 overflow-hidden bg-black relative">
+        <CommentModal
+          postId={selectedPostId}
+          isOpen={true}
+          onClose={() => setSelectedPostId(null)}
+        />
 
-            {/* Edit and Delete buttons - layered on top with high z-index */}
-            <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
+        {/* Edit and Delete buttons - layered on top with high z-index */}
+        <div className="absolute inset-x-0 top-0 z-[100] flex items-center justify-between px-4 pt-4 pb-6 pointer-events-none">
+          <button
+            onClick={() => setSelectedPostId(null)}
+            className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all shadow-lg"
+          >
+            <ArrowLeft className="w-6 h-6 text-white" />
+          </button>
+
+          {canEdit && (
+            <div className="flex gap-2">
               <button
-                onClick={() => setSelectedPostId(null)}
-                className="pointer-events-auto p-2 sm:p-3 bg-black/50 backdrop-blur-md hover:bg-black/70 rounded-full transition-all shadow-lg"
+                onClick={() => {
+                  if (selectedPost) {
+                    setEditingPost({
+                      id: selectedPost.id,
+                      title: selectedPost.title || '',
+                      caption: selectedPost.caption || '',
+                      recipeUrl: selectedPost.recipe_url || '',
+                      photoUrl: selectedPost.image_url || selectedPost.video_url || '',
+                    });
+                  }
+                  setSelectedPostId(null);
+                }}
+                className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
+                title="Edit post"
               >
-                <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <Edit3 className="w-5 h-5 text-white" />
               </button>
 
-              {(isOwnProfile || isUserAdmin) && currentUserId === posts.find(p => p.id === selectedPostId)?.user_id && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      const post = posts.find(p => p.id === selectedPostId);
-                      if (post) {
-                        setEditingPost({
-                          id: post.id,
-                          title: post.title || '',
-                          caption: post.caption || '',
-                          recipeUrl: post.recipe_url || '',
-                          photoUrl: post.image_url || post.video_url || '',
-                        });
-                      }
-                      setSelectedPostId(null);
-                    }}
-                    className="pointer-events-auto p-2 sm:p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
-                    title="Edit post"
-                  >
-                    <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  </button>
+              <button
+                onClick={() => {
+                  setDeletePostId(selectedPostId);
+                  setSelectedPostId(null);
+                }}
+                className="pointer-events-auto p-3 bg-black/50 backdrop-blur-md hover:bg-red-600/70 rounded-full transition-all shadow-lg"
+                title="Delete post"
+              >
+                <Trash2 className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+})()}
+{/* Edit Post Dialog */}
+<AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Edit post</AlertDialogTitle>
+      <AlertDialogDescription>
+        Update your caption and recipe link.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <div className="space-y-4 py-4">
+      <div>
+        <label className="text-sm font-medium mb-2 block">Caption</label>
+        <Textarea
+          value={editingPost?.caption || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, caption: e.target.value } : null)}
+          placeholder="Write a caption..."
+          className="resize-none"
+          rows={3}
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-2 block">Recipe URL</label>
+        <input
+          type="url"
+          value={editingPost?.recipeUrl || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, recipeUrl: e.target.value } : null)}
+          placeholder="https://..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-2 block">Change Photo/Video (Upload from device)</label>
+        <input
+          type="file"
+          accept="image/*,video/*"
+          onChange={handlePhotoUpload}
+          disabled={uploadingPhoto}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+        {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
+        {editingPost?.photoUrl && (
+          <img
+            src={editingPost.photoUrl}
+            alt="Preview"
+            className="mt-2 w-32 h-32 object-cover rounded-lg"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        )}
+      </div>
+    </div>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
+        Save changes
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
 
-                  <button
-                    onClick={() => {
-                      setDeletePostId(selectedPostId);
-                      setSelectedPostId(null);
-                    }}
-                    className="pointer-events-auto p-2 sm:p-3 bg-black/50 backdrop-blur-md hover:bg-red-600/70 rounded-full transition-all shadow-lg"
-                    title="Delete post"
-                  >
-                    <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Edit Post Dialog */}
-      <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
-        <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Edit post</AlertDialogTitle>
-            <AlertDialogDescription>
-              Update your caption and recipe link.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Caption</label>
-              <Textarea
-                value={editingPost?.caption || ''}
-                onChange={(e) => setEditingPost(prev => prev ? { ...prev, caption: e.target.value } : null)}
-                placeholder="Write a caption..."
-                className="resize-none"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Recipe URL</label>
-              <input
-                type="url"
-                value={editingPost?.recipeUrl || ''}
-                onChange={(e) => setEditingPost(prev => prev ? { ...prev, recipeUrl: e.target.value } : null)}
-                placeholder="https://..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Change Photo/Video (Upload from device)</label>
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={handlePhotoUpload}
-                disabled={uploadingPhoto}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
-              {editingPost?.photoUrl && (
-                <img
-                  src={editingPost.photoUrl}
-                  alt="Preview"
-                  className="mt-2 w-32 h-32 object-cover rounded-lg"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              )}
-            </div>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
-              Save changes
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete Post Confirmation Dialog */}
-      <AlertDialog open={!!deletePostId} onOpenChange={(open) => !open && setDeletePostId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete post</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this post? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePost} className="bg-red-600 hover:bg-red-700">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+{/* Delete Post Confirmation Dialog */}
+<AlertDialog open={!!deletePostId} onOpenChange={(open) => !open && setDeletePostId(null)}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete post</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to delete this post? This action cannot be undone.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction onClick={handleDeletePost} className="bg-red-600 hover:bg-red-700">
+        Delete
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
     </div>
   );
 }
