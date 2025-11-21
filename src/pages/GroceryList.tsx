@@ -338,6 +338,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   return (
   <div className={`min-h-screen ${MOBILE_SAFE} bg-gradient-to-br from-orange-50 to-amber-50`}>
     <div className="max-w-2xl mx-auto px-4 pt-6">
+      
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -622,6 +623,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+      </Dialog>
+    </div>  {/* ← closes max-w-2xl */}
+  </div>    {/* ← closes min-h-screen + MOBILE_SAFE */}
+);
 }
