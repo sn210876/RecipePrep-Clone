@@ -13,7 +13,6 @@ import { Settings } from './pages/Settings';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
-import { Verifying } from './pages/Verifying';
 import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
@@ -21,7 +20,6 @@ import { Home } from './pages/Home';
 
 function AppContent() {
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
-  const [completedVerifying, setCompletedVerifying] = useState(false);
 
   // ──────────────────────────────
   // INITIAL PAGE + /post/ HANDLING
