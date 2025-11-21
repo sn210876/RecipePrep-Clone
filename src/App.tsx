@@ -20,7 +20,8 @@ import { Home } from './pages/Home';
 
 function AppContent() {
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
-
+html, body, #root { height: 100%; margin: 0; padding: 0; overflow-x: hidden; }
+body { -webkit-tap-highlight-color: transparent; }
   // ──────────────────────────────
   // INITIAL PAGE + /post/ HANDLING
   // ──────────────────────────────
