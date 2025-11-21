@@ -193,13 +193,13 @@ const loadUnreadCount = async (userId: string) => {
               {/* Your WoodenSpoon with Orange Border */}
               <div className="relative flex-shrink-0">
                 <div className="absolute inset-0 rounded-xl ring-4 ring-orange-500 shadow-xl -z-10"></div>
-                <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-white overflow-hidden shadow-lg">
-                  <img
-                    src="/Woodenspoon.png"
-                    alt="Meal Scrape"
-                    className="w-full h-full object-contain p-2 drop-shadow-md"
-                  />
-                </div>
+               <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-white overflow-hidden shadow-lg">
+  <img
+    src="/Woodenspoon.png"
+    alt="Meal Scrape"
+    className="w-full h-full object-cover scale-110"
+  />
+</div>
               </div>
 
               <div className="flex-1 min-w-0">
