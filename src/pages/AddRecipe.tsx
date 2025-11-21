@@ -502,14 +502,14 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
            <div className="flex gap-2">
   <div className="relative flex-1">
     <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
-    <Input
-      value={urlInput}
-      onChange={(e) => setUrlInput(e.target.value)}
-      placeholder="Paste recipe link here"
-      className="pl-10 text-base"
-      disabled={isExtracting}
-      onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-    />
+   <Input
+  value={urlInput}
+  onChange={(e) => setUrlInput(e.target.value)}
+  placeholder="Paste recipe link..."
+  className="pl-10 h-10 text-sm placeholder:text-slate-400"
+  disabled={isExtracting}
+  onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+/>
   </div>
   <Button
     type="button"
