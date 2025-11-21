@@ -317,8 +317,7 @@ const loadUnreadCount = async (userId: string) => {
         </div>
 
         {/* Main Content */}
-        <main className={socialPages.includes(currentPage) ? '' : 'p-3 sm:p-4 md:p-6 pb-24'}>
-          {children}
+<main className={socialPages.includes(currentPage) ? 'pt-16' : 'pt-16 lg:pt-0'}>          {children}
         </main>
 
         {/* Bottom Navigation - Mobile Only */}
