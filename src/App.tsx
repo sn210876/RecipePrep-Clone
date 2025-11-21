@@ -21,6 +21,7 @@ import { Home } from './pages/Home';
 
 function AppContent() {
   const { user, loading, isEmailVerified } = useAuth();
+
   const [currentPage, setCurrentPage] = useState<string>(() => {
     const path = window.location.pathname;
     if (path.match(/^\/post\/[a-f0-9]{36}$/)) return 'discover';
@@ -46,7 +47,7 @@ function AppContent() {
     return 'discover-recipes';
   });
 
-  // Handle /post/ deep links
+  // Handle deep links /post/xxxx
   useEffect(() => {
     const path = window.location.pathname;
     const match = path.match(/^\/post\/([a-f0-9]{36})$/);
@@ -56,13 +57,6 @@ function AppContent() {
       window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
       window.history.replaceState({}, '', '/discover');
     }
-  }, []);
-
-  // Sync URL back/forward buttons
-  useEffect(() => {
-    const handlePop = () => { /* your existing popstate logic */ };
-    window.addEventListener('popstate', handlePop);
-    return () => window.removeEventListener('popstate', handlePop);
   }, []);
 
   const handleNavigate = (page: string) => {
@@ -111,33 +105,36 @@ function AppContent() {
     }
   };
 
-  // ──────────────────────────────
-  // LOADING + VERIFICATION STATES
-  // ──────────────────────────────
+  // LOADING OR STILL CHECKING EMAIL VERIFICATION
   if (loading || (user && isEmailVerified === undefined)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center">
         <div className="text-center">
-          {/* Beautiful hourglass animation */}
-          <div className="relative w-20 h-28 mx-auto">
-            <div className="absolute inset-0 border-8 border-orange-200 rounded-full"></div>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-12 bg-orange-500 animate-hourglass"></div>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-12 bg-orange-400 animate-hourglass-delay"></div>
+          {/* Beautiful flowing hourglass */}
+          <div className="relative w-24 h-32 mx-auto">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 border-t-8 border-r-8 border-orange-300 rounded-full"></div>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 border-b-8 border-l-8 border-orange-300 rounded-full"></div>
+            
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-1 bg-orange-600 origin-top animate-sand-fall"></div>
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-1 h-8 bg-orange-500 origin-bottom animate-sand-rise"></div>
           </div>
-          <p className="mt-8 text-lg font-medium text-orange-700">Preparing your kitchen...</p>
+
+          <p className="mt-10 text-xl font-medium text-orange-800">Preparing your kitchen…</p>
         </div>
 
         <style jsx>{`
-          @keyframes hourglass {
-            0%, 100% { transform: translateY(-36px) scaleY(0); }
-            50% { transform: translateY(0) scaleY(1); }
+          @keyframes sand-fall {
+            0%   { height: 0; opacity: 1; }
+            50%  { height: 48px; opacity: 1; }
+            100% { height: 0; opacity: 0; }
           }
-          @keyframes hourglass-delay {
-            0%, 50%, 100% { transform: translateY(36px) scaleY(0); }
-            100% { transform: translateY(0) scaleY(1); }
+          @keyframes sand-rise {
+            0%   { height: 0; }
+            50%  { height: 32px; }
+            100% { height: 0; }
           }
-          .animate-hourglass { animation: hourglass 2s infinite ease-in-out; }
-          .animate-hourglass-delay { animation: hourglass-delay 2s infinite ease-in-out; }
+          .animate-sand-fall { animation: sand-fall 2.5s infinite ease-in; }
+          .animate-sand-rise  { animation: sand-rise 2.5s infinite ease-out; }
         `}</style>
       </div>
     );
