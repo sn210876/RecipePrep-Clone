@@ -121,109 +121,58 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
-    useEffect(() => {
+     useEffect(() => {
+    // ←←← THIS IS THE KEY: abort everything if no targetUsername AND we're not on our own profile page
+    if (!targetUsername && window.location.pathname !== '/profile/me' && !window.location.pathname.startsWith('/profile/')) {
+      return;
+    }
+
     let isMounted = true;
 
     const loadProfile = async () => {
-      if (!isMounted) return; // ← This stops the flash when you press back
+      if (!isMounted) return;
 
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          if (isMounted) toast.error('Please log in');
-          if (isMounted) window.history.pushState({}, '', '/');
+        if (!user || !isMounted) return;
+
+        // ←←← ADD THIS EARLY RETURN — this is the nuclear fix
+        if (!targetUsername && !document.URL.includes('/profile/')) {
           return;
         }
 
-        if (!isMounted) return;
-
         setCurrentUserId(user.id);
+
+        // ... rest of your existing code exactly as before ...
+        // (keep everything from "let profileToLoad" down to setLoading(false))
+
         let profileToLoad: ProfileData | null = null;
         let userIdToLoad: string | null = null;
 
-       if (targetUsername) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, username, avatar_url, banner_url, bio, link')
-    .ilike('username', targetUsername)
-    .single();
+        if (targetUsername) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, banner_url, bio, link')
+            .ilike('username', targetUsername)
+            .single();
 
-  if (!isMounted) return; // ← ADD THIS
+          if (!isMounted) return;
 
-  if (error || !data) {
-    if (isMounted) toast.error('User not found'); // ← now safe
-    if (isMounted) window.history.pushState({}, '', '/discover');
-    if (isMounted) setLoading(false);
-    return;
-  }
+          if (error || !data) {
+            if (isMounted) toast.error('User not found');
+            if (isMounted) window.history.pushState({}, '', '/discover');
+            if (isMounted) setLoading(false);
+            return;
+          }
           profileToLoad = data;
           userIdToLoad = data.id;
         } else {
-          const { data } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url, banner_url, bio, link')
-            .eq('id', user.id)
-            .single();
-
-          if (!data) {
-            const defaultUsername = user.email?.split('@')[0] || 'user';
-            await supabase.from('profiles').insert({
-              id: user.id,
-              username: defaultUsername,
-            });
-            profileToLoad = { id: user.id, username: defaultUsername, avatar_url: null };
-          } else {
-            profileToLoad = data;
-          }
-          userIdToLoad = user.id;
+          // ... your own profile loading code ...
         }
 
-        if (!isMounted) return;
+        // ... rest of your code (follower counts, posts, etc.) ...
+        // just keep it all — only wrapped with if (!isMounted) return; where needed
 
-        setTargetUserId(userIdToLoad);
-        setIsOwnProfile(user.id === userIdToLoad);
-
-        const { count: followersCount } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('following_id', userIdToLoad);
-
-        const { count: followingCount } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('follower_id', userIdToLoad);
-
-        if (user.id !== userIdToLoad) {
-          const { data: followData } = await supabase
-            .from('follows')
-            .select('id')
-            .eq('follower_id', user.id)
-            .eq('following_id', userIdToLoad)
-            .maybeSingle();
-          if (isMounted) setIsFollowing(!!followData);
-        }
-
-        if (isMounted) {
-          setProfile({
-            ...profileToLoad,
-            followers_count: followersCount || 0,
-            following_count: followingCount || 0,
-          });
-        }
-
-        const { data: postsData } = await supabase
-          .from('posts')
-          .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
-          .eq('user_id', userIdToLoad)
-          .order('created_at', { ascending: false });
-
-        if (isMounted) setPosts(postsData || []);
-
-        if (!targetUsername && profileToLoad?.username) {
-          window.history.replaceState({}, '', `/profile/${profileToLoad.username}`);
-        }
-
-        if (isMounted) setIsUserAdmin(await isAdmin());
       } catch (err) {
         if (isMounted) toast.error('Failed to load profile');
       } finally {
