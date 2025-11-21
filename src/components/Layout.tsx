@@ -398,7 +398,7 @@ const loadUnreadCount = async (userId: string) => {
             </div>
           </div>
         </div>
-      </div>
+      
     )}
         {/* Social Feed FAB - For non-social pages, Desktop */}
         {!socialPages.includes(currentPage) && (
