@@ -334,10 +334,13 @@ export default function Settings({ onNavigate }: SettingsProps) {
                         <span>Paste link and let AI extract!</span>
                       </li>
                     </ol>
-                    <Button className="w-full bg-orange-600 hover:bg-orange-700 h-10 sm:h-11 text-sm sm:text-base">
-                      <ArrowRight className="w-4 h-4 mr-2" />
-                      Go to Add Recipe
-                    </Button>
+                   <Button 
+  onClick={() => onNavigate('add-recipe')}
+  className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 font-semibold shadow-lg h-12 text-base"
+>
+  <Camera className="w-5 h-5 mr-3" />
+  Go to Add Recipe
+</Button>
                   </div>
                 </div>
               </div>
