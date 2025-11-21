@@ -28,7 +28,7 @@ function RatingDisplay({ rating, size = 'md', interactive = false, onRate }: Rat
     }
   }[size];
 
-  const handleRate = (fire) => {
+  const handleRate = (star) => {
     if (interactive && onRate) {
       onRate(fire);
     }
