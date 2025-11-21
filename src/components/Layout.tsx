@@ -181,15 +181,9 @@ const loadUnreadCount = async (userId: string) => {
       )}
 
       {/* Sidebar - Mobile Optimized */}
-           {/* Mobile Sidebar — Now 100% fixed when open, no scrolling */}
-      <aside className={`fixed inset-0 z-50 lg:inset-auto lg:left-0 lg:top-0 lg:bottom-0 lg:w-64 lg:sm:w-72 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <aside className={`fixed left-0 top-0 z-50 h-screen w-64 sm:w-72 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
-        <div className="relative z-10 h-full w-64 sm:w-72 bg-white flex flex-col overflow-hidden">
-          {/* Your existing sidebar content stays 100% the same */}
-          <div className="flex h-full flex-col">
-            {/* Logo */}
         <div className="flex h-full flex-col">
 
           {/* Logo/Brand */}
@@ -260,8 +254,6 @@ const loadUnreadCount = async (userId: string) => {
               <p className="mt-1 text-[10px] sm:text-xs text-gray-600">All in One Place</p>
             </div>
           </div>
-        </div>
-            </div>
         </div>
       </aside>
 
