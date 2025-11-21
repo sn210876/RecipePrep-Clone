@@ -511,30 +511,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               />
             </div>
 
-{/* ←←← THIS ONE NEVER CRASHES ←←← */}
-<Button
-  variant="outline"
-  size="sm"
-  onClick={() => {
-    // This works everywhere, even when clipboard API is blocked
-    navigator.clipboard
-      .readText()
-      .then((text) => {
-        const cleaned = text.trim();
-        if (cleaned) {
-          setUrlInput(cleaned);
-        }
-      })
-      .catch(() => {
-        // Do absolutely nothing on error → no crash, no toast, no problem
-        // On mobile, users can still long-press paste manually
-      });
-  }}
-  className="w-full mb-3 border-dashed border-2 hover:bg-slate-50 transition-colors"
->
-  <Copy className="w-4 h-4 mr-2" />
-  Paste from Clipboard
-</Button>
+
             
             <Button
               type="button"
