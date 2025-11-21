@@ -160,13 +160,10 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
 
   return (
     <>
-      <Card
-       <Card
+     <Card
   className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white cursor-pointer active:scale-[0.98] flex flex-col h-full"
   onClick={() => setShowDetail(true)}
 >
-        onClick={() => setShowDetail(true)}
-      >
         <div className="relative overflow-hidden aspect-square">
           <img
             src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
