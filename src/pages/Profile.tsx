@@ -599,40 +599,50 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           </div>
 
           {/* Support Button */}
-          {!isOwnProfile && (
-            <div className="px-4 py-3 border-t border-gray-200">
-              <Button
-                onClick={async () => {
-                  if (!currentUserId || !targetUserId) return;
-                  try {
-                    if (isFollowing) {
-                      await supabase
-                        .from('follows')
-                        .delete()
-                        .eq('follower_id', currentUserId)
-                        .eq('following_id', targetUserId);
-                      setIsFollowing(false);
-                      setProfile(prev => prev ? { ...prev, followers_count: (prev.followers_count || 0) - 1 } : null);
-                      toast.success('Unsupported');
-                    } else {
-                      await supabase
-                        .from('follows')
-                        .insert({ follower_id: currentUserId, following_id: targetUserId });
-                      setIsFollowing(true);
-                      setProfile(prev => prev ? { ...prev, followers_count: (prev.followers_count || 0) + 1 } : null);
-                      toast.success('Supporting!');
-                    }
-                  } catch (error) {
-                    console.error('Error toggling follow:', error);
-                    toast.error('Failed to update');
-                  }
-                }}
-                className={`w-full ${isFollowing ? 'bg-gray-200 text-gray-900 hover:bg-gray-300' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600'}`}
-              >
-                {isFollowing ? 'Supporting' : 'Support'}
-              </Button>
-            </div>
-          )}
+        {/* Action Buttons for visiting other profiles */}
+{!isOwnProfile && (
+  <div className="px-4 py-3 border-t border-gray-200">
+    <div className="flex gap-2">
+      <Button
+        onClick={async () => {
+          if (!currentUserId || !targetUserId) return;
+          try {
+            if (isFollowing) {
+              await supabase
+                .from('follows')
+                .delete()
+                .eq('follower_id', currentUserId)
+                .eq('following_id', targetUserId);
+              setIsFollowing(false);
+              setProfile(prev => prev ? { ...prev, followers_count: (prev.followers_count || 0) - 1 } : null);
+              toast.success('Unsupported');
+            } else {
+              await supabase
+                .from('follows')
+                .insert({ follower_id: currentUserId, following_id: targetUserId });
+              setIsFollowing(true);
+              setProfile(prev => prev ? { ...prev, followers_count: (prev.followers_count || 0) + 1 } : null);
+              toast.success('Supporting!');
+            }
+          } catch (error) {
+            console.error('Error toggling follow:', error);
+            toast.error('Failed to update');
+          }
+        }}
+        className={`flex-1 h-10 text-sm ${isFollowing ? 'bg-gray-200 text-gray-900 hover:bg-gray-300' : 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600'}`}
+      >
+        {isFollowing ? 'Supporting' : 'Support'}
+      </Button>
+      
+      <Button
+        onClick={handleSendMessage}
+        className="flex-1 h-10 text-sm bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50"
+      >
+        Message
+      </Button>
+    </div>
+  </div>
+)}
 
           {/* Stats */}
           <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
