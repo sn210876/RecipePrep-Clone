@@ -336,8 +336,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
+return (
+  <div className="min-h-screen pt-safe pb-safe px-4 bg-gradient-to-br from-orange-50 to-amber-50">
+    <div className="max-w-2xl mx-auto">      <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Grocery List</h1>
