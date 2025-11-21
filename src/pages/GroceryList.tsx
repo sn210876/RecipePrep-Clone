@@ -517,7 +517,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </div>
       )}
 
-      <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
+            <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Item</DialogTitle>
@@ -573,10 +573,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowAddItemDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowAddItemDialog(false)}>
               Cancel
             </Button>
             <Button onClick={handleAddItem} disabled={!newItemName.trim() || !newItemCategory}>
@@ -586,6 +583,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </DialogContent>
       </Dialog>
 
+      {/* ← THIS IS THE ONLY "Add Recipe" DIALOG — KEEP ONLY ONE */}
       <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
         <DialogContent>
           <DialogHeader>
@@ -612,10 +610,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowAddRecipeDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowAddRecipeDialog(false)}>
               Cancel
             </Button>
             <Button onClick={handleAddRecipe} disabled={!selectedRecipeId}>
@@ -623,11 +618,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             </Button>
           </DialogFooter>
         </DialogContent>
-             </Dialog>
-        <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
-          {/* ... your second dialog content ... */}
-        </Dialog>
-      </div>   {/* ← this closes max-w-2xl */}
-    </div>     {/* ← this closes min-h-screen */}
-  );
+      </Dialog>
+
+    </div> {/* ← closes max-w-2xl mx-auto */}
+  </div>   {/* ← closes min-h-screen with MOBILE_SAFE */}
+);
 }
