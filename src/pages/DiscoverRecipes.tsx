@@ -208,7 +208,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
    <div className={`grid gap-4 md:gap-5 auto-rows-fr ${
   isMobile 
     ? 'grid-cols-2' 
-    : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+    : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'
 }`}>
 
       {recipes.map((recipe: Recipe) => (
