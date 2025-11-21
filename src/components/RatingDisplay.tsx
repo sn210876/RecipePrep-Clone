@@ -36,7 +36,7 @@ function RatingDisplay({ rating, size = 'md', interactive = false, onRate }: Rat
 
   return (
     <div className={`flex ${sizeClasses.gap}`}>
-      {[1, 2, 3, 4, 5].map((fire) => {
+      {[1, 2, 3, 4, 5].map((star) => {
         const isActive = fire <= (hoverRating || rating);
         
         return (
