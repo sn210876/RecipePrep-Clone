@@ -606,6 +606,8 @@ export function Profile({ username: targetUsername }: ProfileProps) {
 
                  {/* Action Buttons for visiting other profiles */}
           {!isOwnProfile && (
+                      {/* Action Buttons for visiting other profiles */}
+          {!isOwnProfile && (
             <div className="px-4 py-3 border-t border-gray-200">
               <div className="flex gap-2">
                 <Button
@@ -630,7 +632,6 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                         toast.success('Supporting!');
                       }
                     } catch (error) {
-                      console.error('Error toggling follow:', error);
                       toast.error('Failed to update');
                     }
                   }}
