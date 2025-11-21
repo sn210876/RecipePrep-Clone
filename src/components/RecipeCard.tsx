@@ -261,77 +261,83 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
           )}
         </CardContent>
 
-        <CardFooter className="p-4 pt-0 flex flex-col gap-2">
-          <Button
-            variant={isSaved ? "default" : "outline"}
-            size="sm"
-            className={`w-full min-h-[44px] touch-manipulation active:scale-95 transition-all ${
-              isSaved 
-                ? "bg-secondary hover:bg-secondary/90 text-white" 
-                : "border-gray-300 hover:bg-primary hover:text-white"
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSave?.(recipe.id);
-            }}
-          >
-            <Bookmark className={`w-4 h-4 mr-2 flex-shrink-0 ${isSaved ? 'fill-white' : ''}`} />
-            <span className="truncate">{isSaved ? 'Saved' : 'Save to "My 🔖 Recipes"'}</span>
-          </Button>
-          
-          <Button
-            size="sm"
-            className="w-full min-h-[44px] bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg active:scale-95 transition-all touch-manipulation"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCook?.(recipe.id);
-            }}
-          >
-            <Flame className="w-4 h-4 mr-2 flex-shrink-0" />
-            Cook
-          </Button>
-          
-          {showReviewButton && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full min-h-[44px] border-gray-300 hover:bg-orange-50 hover:border-primary active:scale-95 transition-all touch-manipulation"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowReviewForm(true);
-              }}
-            >
-              <span className="text-base mr-2 flex-shrink-0">🔥</span>
-              {reviewCount > 0 ? (
-                <span className="flex items-center gap-2 truncate">
-                  <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                  <span className="text-gray-500 truncate">({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span>
-                </span>
-              ) : (
-                'Write Review'
-              )}
-            </Button>
-          )}
-          
-          {showReviewButton && socialPost && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full min-h-[44px] border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-500 active:scale-95 transition-all touch-manipulation"
-              onClick={handleSeeReviews}
-            >
-              <span className="text-base mr-2 flex-shrink-0">💬</span>
-              <span className="flex items-center gap-2 truncate">
-                <span>See Reviews</span>
-                {socialPost._count?.comments > 0 && (
-                  <span className="text-xs bg-orange-100 px-2 py-0.5 rounded-full font-semibold flex-shrink-0">
-                    {socialPost._count.comments}
-                  </span>
-                )}
-              </span>
-            </Button>
-          )}
-        </CardFooter>
+       // Replace the CardFooter section in RecipeCard.tsx (around line 180-240)
+
+<CardFooter className="p-3 sm:p-4 pt-0 flex flex-col gap-2">
+  <Button
+    variant={isSaved ? "default" : "outline"}
+    size="sm"
+    className={`w-full min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm ${
+      isSaved 
+        ? "bg-secondary hover:bg-secondary/90 text-white" 
+        : "border-gray-300 hover:bg-primary hover:text-white"
+    }`}
+    onClick={(e) => {
+      e.stopPropagation();
+      onSave?.(recipe.id);
+    }}
+  >
+    <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isSaved ? 'fill-white' : ''}`} />
+    <span className="truncate text-xs sm:text-sm leading-tight">
+      {isSaved ? 'Saved' : 'Save Recipe'}
+    </span>
+  </Button>
+  
+  <Button
+    size="sm"
+    className="w-full min-h-[44px] bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
+    onClick={(e) => {
+      e.stopPropagation();
+      onCook?.(recipe.id);
+    }}
+  >
+    <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+    <span className="leading-tight">Cook</span>
+  </Button>
+  
+  {showReviewButton && (
+    <Button
+      variant="outline"
+      size="sm"
+      className="w-full min-h-[44px] border-gray-300 hover:bg-orange-50 hover:border-primary active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowReviewForm(true);
+      }}
+    >
+      <span className="text-sm sm:text-base mr-1.5 sm:mr-2 flex-shrink-0">🔥</span>
+      {reviewCount > 0 ? (
+        <span className="flex items-center gap-1.5 sm:gap-2 truncate min-w-0 leading-tight">
+          <span className="font-semibold">{averageRating.toFixed(1)}</span>
+          <span className="text-gray-500 truncate text-xs sm:text-sm">
+            ({reviewCount})
+          </span>
+        </span>
+      ) : (
+        <span className="leading-tight">Write Review</span>
+      )}
+    </Button>
+  )}
+  
+  {showReviewButton && socialPost && (
+    <Button
+      variant="outline"
+      size="sm"
+      className="w-full min-h-[44px] border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-500 active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
+      onClick={handleSeeReviews}
+    >
+      <span className="text-sm sm:text-base mr-1.5 sm:mr-2 flex-shrink-0">💬</span>
+      <span className="flex items-center gap-1.5 sm:gap-2 truncate min-w-0 leading-tight">
+        <span>See Reviews</span>
+        {socialPost._count?.comments > 0 && (
+          <span className="text-xs bg-orange-100 px-1.5 sm:px-2 py-0.5 rounded-full font-semibold flex-shrink-0">
+            {socialPost._count.comments}
+          </span>
+        )}
+      </span>
+    </Button>
+  )}
+</CardFooter>
       </Card>
 
       <RecipeDetailModal
