@@ -17,7 +17,7 @@ export function Home({ onNavigate }: HomeProps) {
           <div className="mb-12">
             <div className="inline-flex items-center justify-center w-44 h-44 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-6 p-0">
               <img
-                src="favicon.ico.jpg"
+                src="/Pfavicon.ico.jpg"
                 alt="Recipe Prep Logo"
                 className="w-64 h-64 object-contain"
               />
