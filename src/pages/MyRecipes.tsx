@@ -11,25 +11,46 @@ export function MyRecipes() {
 
   if (state.savedRecipes.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pt-safe pb-safe">
         {/* Mobile-optimized empty state */}
-        <div className="max-w-7xl mx-auto px-4 py-8 pb-24">
-          <div className="mb-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">My Recipes</h1>
-            <p className="text-lg md:text-xl text-gray-600">Your saved recipes collection</p>
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 pb-28 sm:pb-24">
+          {/* Header - responsive sizing */}
+          <div className="mb-8 sm:mb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
+              My Recipes
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600">
+              Your saved recipes collection
+            </p>
           </div>
           
-          <div className="flex flex-col items-center justify-center py-12 md:py-20">
-            <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-6 md:p-8 rounded-full mb-6">
-              <BookmarkCheck className="w-16 h-16 md:w-20 md:h-20 text-emerald-600" />
+          {/* Empty state - centered and responsive */}
+          <div className="flex flex-col items-center justify-center py-16 sm:py-12 md:py-20 px-4">
+            {/* Icon container - responsive sizing */}
+            <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-8 sm:p-6 md:p-8 rounded-full mb-6 shadow-lg">
+              <BookmarkCheck className="w-20 h-20 sm:w-16 sm:h-16 md:w-20 md:h-20 text-emerald-600" />
             </div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 text-center px-4">
+            
+            {/* Heading - responsive text */}
+            <h2 className="text-xl sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 text-center px-4 leading-tight">
               No Saved Recipes Yet
             </h2>
-            <p className="text-gray-600 text-center max-w-md mb-6 px-4 text-sm md:text-base">
+            
+            {/* Description - responsive and readable */}
+            <p className="text-gray-600 text-center max-w-md mb-6 px-4 text-base sm:text-sm md:text-base leading-relaxed">
               Start building your recipe collection by exploring and saving your
               favorite recipes from the Discover page.
             </p>
+
+            {/* Optional: Add a call-to-action button */}
+            <div className="mt-2">
+              <div className="inline-flex items-center gap-2 text-sm text-emerald-600 font-medium bg-emerald-50 px-4 py-2 rounded-full">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                <span>Explore recipes to get started</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -37,28 +58,36 @@ export function MyRecipes() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pt-safe pb-safe">
       {/* Mobile-optimized header with proper spacing */}
-      <div className="max-w-7xl mx-auto px-4 py-6 pb-24">
-        <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 pb-28 sm:pb-24">
+        {/* Header section - improved mobile layout */}
+        <div className="mb-6 sm:mb-6 flex items-start sm:items-center justify-between gap-3 sm:gap-4">
+          {/* Text content - flexible and responsive */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2 truncate">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 leading-tight">
               My Recipes
             </h1>
-            <p className="text-base md:text-xl text-gray-600">
-              {state.savedRecipes.length} saved recipe
-              {state.savedRecipes.length !== 1 ? 's' : ''}
+            <p className="text-sm sm:text-base md:text-xl text-gray-600 flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-emerald-600">
+                {state.savedRecipes.length}
+              </span>
+              <span>
+                saved recipe{state.savedRecipes.length !== 1 ? 's' : ''}
+              </span>
             </p>
           </div>
-          <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-3 md:p-4 rounded-full shrink-0">
-            <ChefHat className="w-6 h-6 md:w-8 md:h-8 text-emerald-600" />
+          
+          {/* Icon badge - responsive sizing */}
+          <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-3 sm:p-3 md:p-4 rounded-2xl sm:rounded-full shadow-md shrink-0">
+            <ChefHat className="w-6 h-6 sm:w-6 sm:h-6 md:w-8 md:h-8 text-emerald-600" />
           </div>
         </div>
 
         {/* Mobile-responsive grid: 1 column on mobile, 2 on tablet, 3 on desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
           {state.savedRecipes.map((recipe) => (
-            <div key={recipe.id} className="flex">
+            <div key={recipe.id} className="flex w-full">
               <RecipeCard
                 recipe={recipe}
                 showReviewButton={true}
@@ -72,14 +101,27 @@ export function MyRecipes() {
             </div>
           ))}
         </div>
+
+        {/* Optional: Scroll indicator for long lists on mobile */}
+        {state.savedRecipes.length > 6 && (
+          <div className="mt-8 text-center">
+            <div className="inline-flex items-center gap-2 text-xs text-gray-400">
+              <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Cook Mode modal */}
+      {/* Cook Mode modal - already mobile-friendly but ensure proper z-index */}
       {cookingRecipe && (
-        <CookMode
-          recipe={cookingRecipe}
-          onClose={() => setCookingRecipe(null)}
-        />
+        <div className="fixed inset-0 z-50">
+          <CookMode
+            recipe={cookingRecipe}
+            onClose={() => setCookingRecipe(null)}
+          />
+        </div>
       )}
     </div>
   );
