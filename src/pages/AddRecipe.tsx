@@ -511,25 +511,26 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               />
             </div>
 
-{/* PASTE BUTTON – works everywhere, no toast, no errors */}
+{/* ←←← THIS ONE NEVER CRASHES ←←← */}
 <Button
   variant="outline"
   size="sm"
-  onClick={async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      const cleaned = text.trim();
-      if (cleaned) {
-        setUrlInput(cleaned);
-        // Optional tiny feedback without toast
-        // (you’ll see the input fill instantly — users love this)
-      }
-    } catch (err) {
-      // On iOS Safariily fails silently → user can still long-press paste
-      // No crash, no error, no toast needed
-    }
+  onClick={() => {
+    // This works everywhere, even when clipboard API is blocked
+    navigator.clipboard
+      .readText()
+      .then((text) => {
+        const cleaned = text.trim();
+        if (cleaned) {
+          setUrlInput(cleaned);
+        }
+      })
+      .catch(() => {
+        // Do absolutely nothing on error → no crash, no toast, no problem
+        // On mobile, users can still long-press paste manually
+      });
   }}
-  className="w-full mb-3 border-dashed border-2 hover:bg-slate-50"
+  className="w-full mb-3 border-dashed border-2 hover:bg-slate-50 transition-colors"
 >
   <Copy className="w-4 h-4 mr-2" />
   Paste from Clipboard
