@@ -466,6 +466,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </CardTitle>
             <CardDescription className="text-xs leading-relaxed">
               <div className="mt-2 space-y-1">
+                         <p className="text-emerald-600 font-semibold">✓ All Recipes,                             Some Blogs</p>
+
                 <p className="text-emerald-600 font-semibold">✓ All Recipes, Some Blogs</p>
                 <p className="text-orange-600">⚠ Instagram/TikTok may take up to a minute, please be patient</p>
                 <p className="text-slate-500">🚧 YouTube coming soon</p>
