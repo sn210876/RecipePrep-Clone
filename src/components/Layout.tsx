@@ -1,3 +1,6 @@
+import { supabase } from '../lib/supabase';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+
 import { useState, useEffect } from 'react';
 import {
   ChefHat,
