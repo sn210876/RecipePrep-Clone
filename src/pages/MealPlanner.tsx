@@ -440,24 +440,27 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                   Clear
                 </Button>
 
-                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-                  <Button
-                    variant={weeksToShow === 1 ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => handleWeekToggle(1)}
-                    className="h-8 text-xs"
-                  >
-                    1W
-                  </Button>
-                  <Button
-                    variant={weeksToShow === 4 ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => handleWeekToggle(4)}
-                    className="h-8 text-xs"
-                  >
-                    4W
-                  </Button>
-                </div>
+                {/* Only show week toggle on desktop */}
+                {!isMobile && (
+                  <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                    <Button
+                      variant={weeksToShow === 1 ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => handleWeekToggle(1)}
+                      className="h-8 text-xs"
+                    >
+                      1W
+                    </Button>
+                    <Button
+                      variant={weeksToShow === 4 ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => handleWeekToggle(4)}
+                      className="h-8 text-xs"
+                    >
+                      4W
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <Button
@@ -505,18 +508,19 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
                   <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
-                    {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, weeksToShow * 7 - 1), 'MMM d')}
+                    {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, 6), 'MMM d')}
                   </span>
                   <Button variant="outline" size="sm" onClick={handleNextWeek} className="h-8">
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
 
-                {/* Day Selector Carousel */}
+                {/* Day Selector Carousel - Always 7 days on mobile */}
                 <div className="overflow-x-auto -mx-4 px-4">
                   <div className="flex gap-2 pb-2">
-                    {getDaysToShow().length > 0 ? (
-                      getDaysToShow().map((day) => (
+                    {Array.from({ length: 7 }).map((_, i) => {
+                      const day = addDays(currentWeekStart, i);
+                      return (
                         <button
                           key={day.toISOString()}
                           onClick={() => setSelectedDateForView(day)}
@@ -535,10 +539,8 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                             {format(day, 'd')}
                           </div>
                         </button>
-                      ))
-                    ) : (
-                      <div className="text-sm text-slate-500">Loading dates...</div>
-                    )}
+                      );
+                    })}
                   </div>
                 </div>
 
