@@ -28,7 +28,7 @@ import { supabase } from '../lib/supabase';
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
 }
-const MOBILE_SAFE = "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pb-32";
+
 export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const { state, dispatch } = useRecipes();
   const [categories, setCategories] = useState<GroceryListCategory[]>(getDefaultCategories());
@@ -327,7 +327,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const checkedCount = items.filter(item => item.checked).length;
   const totalCount = items.length;
 
-   if (loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -335,14 +335,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     );
   }
 
-  (   ← THIS LINE NOW HAS NO "return" — PERFECT
-  <div className={`min-h-screen ${MOBILE_SAFE} bg-gradient-to-br from-orange-50 to-amber-50`}>
-    <div className="max-w-2xl mx-auto px-4 pt-6">
-
   return (
-  <div className={`min-h-screen ${MOBILE_SAFE} bg-gradient-to-br from-orange-50 to-amber-50`}>
-    <div className="max-w-2xl mx-auto px-4 pt-6">
-      
+    <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -624,11 +618,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <Button onClick={handleAddRecipe} disabled={!selectedRecipeId}>
               Add Ingredients
             </Button>
-     </DialogFooter>
-          </DialogContent>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
-
-    </div>  {/* ← closes max-w-2xl mx-auto px-4 pt-6 */}
-  </div>    {/* ← closes min-h-screen with MOBILE_SAFE */}
-);
+    </div>
+  );
 }
