@@ -583,7 +583,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </DialogContent>
       </Dialog>
 
-      {/* ← THIS IS THE ONLY "Add Recipe" DIALOG — KEEP ONLY ONE */}
       <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
         <DialogContent>
           <DialogHeader>
@@ -620,7 +619,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </DialogContent>
       </Dialog>
 
-    </div> {/* ← closes max-w-2xl mx-auto */}
+    </div> {/* ← closes max-w-2xl mx-auto px-4 pt-6 */}
   </div>   {/* ← closes min-h-screen with MOBILE_SAFE */}
 );
 }
