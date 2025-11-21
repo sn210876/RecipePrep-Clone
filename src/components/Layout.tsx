@@ -398,7 +398,7 @@ const loadUnreadCount = async (userId: string) => {
             </div>
           </div>
         </div>
-
+))}
         {/* Social Feed FAB - For non-social pages, Desktop */}
         {!socialPages.includes(currentPage) && (
           <div className="hidden lg:block fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
