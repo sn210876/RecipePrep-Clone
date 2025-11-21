@@ -327,7 +327,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const checkedCount = items.filter(item => item.checked).length;
   const totalCount = items.length;
 
-   if (loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -335,10 +335,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     );
   }
 
- 
-  <div className={`min-h-screen ${MOBILE_SAFE} bg-gradient-to-br from-orange-50 to-amber-50`}>
-    <div className="max-w-2xl mx-auto px-4 pt-6">
-      
+  // ← ONLY ONE RETURN IN THE WHOLE FILE — THIS IS CORRECT
+  return (
+    <div className={`min-h-screen ${MOBILE_SAFE} bg-gradient-to-br from-orange-50 to-amber-50`}>
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-32">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
