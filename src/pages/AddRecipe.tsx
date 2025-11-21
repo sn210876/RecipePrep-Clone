@@ -459,42 +459,97 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
         {/* URL Import Section - Mobile optimized */}
-                {/* Compact URL Import - Clean & Tiny */}
         <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Sparkles className="w-5 h-5 text-blue-600" />
-              Import from URL
+              <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <span className="leading-tight">Import from URL</span>
             </CardTitle>
-            <CardDescription className="text-xs text-slate-600">
-              Paste any recipe link • Works with Instagram, blogs, Allrecipes, etc.
-            </CardDescription>
+           <CardDescription className="text-xs leading-relaxed">
+  <div className="mt-2 space-y-2">
+    {/* Underlined solid black INSTRUCTIONS */}
+    <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
+      INSTRUCTIONS
+    </p>
+
+    {/* Numbered steps — same tiny font, each on its own line */}
+    <ol className="space-y-1.5 text-black ml-0.5">
+      <li className="flex items-start gap-2">
+        <span className="font-bold text-black-600 min-w-[14px]">1.</span>
+       <span>
+  <span className="font-bold text-black">COPY</span> a link from online/social media &amp;{' '}
+  <span className="font-bold text-black">PASTE</span> below
+</span>
+      </li>
+      <li className="flex items-start gap-2">
+        <span className="font-bold text-black-600 min-w-[14px]">2.</span>
+        <span>Click <span className="font-bold text-blue-600">“Extract Recipe”</span></span>
+      </li>
+      <li className="flex items-start gap-2">
+        <span className="font-bold text-black-600 min-w-[14px]">3.</span>
+        <span>Update as needed — AI does its best, some recipes may need manual editing</span>
+      </li>
+    </ol>
+    <div className="mt-3 pt-2 border-t border-slate-200 space-y-1 text-xs">
+  <p className="text-emerald-600 font-semibold">Supported: All recipe websites & most blogs</p>
+  <p className="text-orange-600">Warning: Instagram & TikTok (may take 30–60 seconds)</p>
+  <p className="text-slate-500">Coming Soon: YouTube videos</p>
+</div>
+  </div>
+</CardDescription>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Paste link..."
-                  className="pl-10 h-10 text-sm placeholder:text-slate-400"
-                  disabled={isExtracting}
-                  onKeyDown={(e) => e.key === 'Enter' && !isExtracting && handleUrlExtract()}
-                />
-              </div>
-              <Button
-                onClick={handleUrlExtract}
-                disabled={isExtracting || !urlInput.trim()}
-                className="h-10 px-5 font-medium"
-              >
-                {isExtracting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "Add"
-                )}
-              </Button>
-            </div>
+          <CardContent className="space-y-3">
+           <div className="flex gap-2">
+  <div className="relative flex-1">
+    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
+    <Input
+      value={urlInput}
+      onChange={(e) => setUrlInput(e.target.value)}
+      placeholder="Paste recipe link here"
+      className="pl-10 text-base"
+      disabled={isExtracting}
+      onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+    />
+  </div>
+  <Button
+    type="button"
+    onClick={async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        setUrlInput(text);
+        toast.success('Pasted!');
+      } catch (err) {
+        toast.error('Failed to paste. Copy a URL first.');
+      }
+    }}
+    disabled={isExtracting}
+    variant="outline"
+    className="h-10"
+  >
+    Paste
+  </Button>
+</div>
+
+
+            
+            <Button
+              type="button"
+              onClick={handleUrlExtract}
+              disabled={isExtracting || !urlInput.trim()}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
+            >
+              {isExtracting ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Extracting...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Extract Recipe
+                </>
+              )}
+            </Button>
           </CardContent>
         </Card>
 
