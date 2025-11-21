@@ -56,8 +56,118 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
     }
   };
 
-  // Simulate real-time unread updates
- 
+// Load avatar and messaging on mount
+useEffect(() => {
+  loadAvatar();
+  initializeMessaging();
+}, []);
+
+// Real-time message subscriptions
+useEffect(() => {
+  if (!currentUserId) return;
+
+  const channel = supabase
+    .channel('direct-message-notifications')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'direct_messages',
+      },
+      async (payload) => {
+        const newMessage = payload.new as any;
+        if (newMessage.sender_id !== currentUserId && !newMessage.read) {
+          const { data: convo } = await supabase
+            .from('conversations')
+            .select('id')
+            .eq('id', newMessage.conversation_id)
+            .or(`user1_id.eq.${currentUserId},user2_id.eq.${currentUserId}`)
+            .maybeSingle();
+          if (convo) {
+            setUnreadCount((prev) => prev + 1);
+          }
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'direct_messages',
+      },
+      (payload) => {
+        const updatedMessage = payload.new as any;
+        const oldMessage = payload.old as any;
+        if (updatedMessage.read && !oldMessage.read && updatedMessage.sender_id !== currentUserId) {
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [currentUserId]);
+
+const initializeMessaging = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    setCurrentUserId(user.id);
+    await loadUnreadCount(user.id);
+  } catch (error) {
+    console.error('Error initializing messaging:', error);
+  }
+};
+
+const loadAvatar = async () => {
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', userData.user.id)
+      .maybeSingle();
+    if (profileData?.avatar_url) {
+      setAvatarUrl(profileData.avatar_url);
+    }
+  } catch (error) {
+    console.error('Error loading avatar:', error);
+  }
+};
+
+const loadUnreadCount = async (userId: string) => {
+  try {
+    const { data: conversations } = await supabase
+      .from('conversations')
+      .select('id, user1_id, user2_id, last_message_at')
+      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+      .order('last_message_at', { ascending: false });
+
+    if (!conversations || conversations.length === 0) {
+      setUnreadCount(0);
+      return;
+    }
+
+    let totalUnread = 0;
+    for (const convo of conversations) {
+      const { count } = await supabase
+        .from('direct_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('conversation_id', convo.id)
+        .eq('read', false)
+        .neq('sender_id', userId);
+      totalUnread += count || 0;
+    }
+    setUnreadCount(totalUnread);
+  } catch (error) {
+    console.error('Error loading unread count:', error);
+  }
+}; 
 
   return (
     <div className="min-h-screen bg-white">
