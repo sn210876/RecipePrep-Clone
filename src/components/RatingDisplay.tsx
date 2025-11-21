@@ -7,80 +7,21 @@ interface RatingDisplayProps {
   onRate?: (rating: number) => void;
 }
 
-// This component now does NOTHING — it renders absolutely nothing
-// We keep it only so imports don't break
-function RatingDisplay({ rating, size, interactive, onRate }: RatingDisplayProps) {
-  // Intentionally return null — no fires, no stars, nothing
+/**
+ * This component is intentionally empty.
+ * We keep it only so imports don't break.
+ * It renders NOTHING — no stars, no fires, no text.
+ * This completely removes the 5-fire rating row from all recipe cards.
+ */
+function RatingDisplay({
+  rating,
+  size = 'md',
+  interactive = false,
+  onRate,
+}: RatingDisplayProps) {
+  // We don't need any state or logic anymore
+  // Just return null → invisible, takes zero space
   return null;
-}
-
-export default RatingDisplay;
-
-
-
-  
-  const sizeClasses = {
-    sm: {
-      text: 'text-base',
-      button: 'w-8 h-8',
-      gap: 'gap-1'
-    },
-    md: {
-      text: 'text-xl',
-      button: 'w-10 h-10',
-      gap: 'gap-1.5'
-    },
-    lg: {
-      text: 'text-2xl',
-      button: 'w-12 h-12',
-      gap: 'gap-2'
-    }
-  }[size];
-
-  const handleRate = (fire) => {
-    if (interactive && onRate) {
-      onRate(fire);
-    }
-  };
-
-  return (
-    <div className={`flex ${sizeClasses.gap}`}>
-      {[1, 2, 3, 4, 5].map((fire) => {
-        const isActive = fire <= (hoverRating || rating);
-        
-        return (
-          <button
-            key={fire}
-            onClick={() => handleRate(fire)}
-            onMouseEnter={() => interactive && setHoverRating(fire)}
-            onMouseLeave={() => interactive && setHoverRating(0)}
-            disabled={!interactive}
-            className={`
-              flex items-center justify-center rounded-lg transition-all duration-200
-              ${sizeClasses.button}
-              ${interactive 
-                ? 'cursor-pointer hover:scale-110 active:scale-95 touch-manipulation' 
-                : 'cursor-default'
-              }
-              ${interactive ? 'hover:bg-orange-50' : ''}
-              ${sizeClasses.text}
-            `}
-            aria-label={`Rate ${fire} out of 5`}
-          >
-            <span 
-              className={`transition-all duration-200 ${
-                isActive 
-                  ? 'opacity-100 scale-100' 
-                  : 'opacity-20 grayscale scale-90'
-              }`}
-            >
-              🔥
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 export default RatingDisplay;
