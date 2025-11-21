@@ -498,37 +498,38 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   </div>
 </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="relative">
-              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
-              <Input
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="Paste recipe link here"
-                className="pl-10 text-base"
-                disabled={isExtracting}
-                onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-              />
-            </div>
+          <div className="flex gap-2">
+  <div className="relative flex-1">
+    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
+    <Input
+      value={urlInput}
+      onChange={(e) => setUrlInput(e.target.value)}
+      placeholder="Paste recipe link here"
+      className="pl-10 text-base"
+      disabled={isExtracting}
+      onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+    />
+  </div>
+  <Button
+    type="button"
+    onClick={async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        setUrlInput(text);
+        toast.success('Pasted!');
+      } catch (err) {
+        toast.error('Failed to paste. Copy a URL first.');
+      }
+    }}
+    disabled={isExtracting}
+    variant="outline"
+    className="h-10"
+  >
+    Paste
+  </Button>
+</div>
 
-{/* ←←← THIS ONE CANNOT CRASH – GUARANTEED ←←← */}
-<Button
-  variant="outline"
-  size="sm"
-  onClick={() => {
-    // Focus the input first
-    const input = document.getElementById('recipe-url-input');
-    if (input) {
-      (input as HTMLInputElement).focus();
-    }
-    // Show native "Paste" popup on mobile
-    alert("Long-press in the box below and tap 'Paste' →");
-  }}
-  className="w-full mb-3 border-dashed border-2 hover:bg-slate-50"
->
-  <Copy className="w-4 h-4 mr-2" />
-  Tap to Paste (Mobile)
-</Button>
+
             
             <Button
               type="button"
