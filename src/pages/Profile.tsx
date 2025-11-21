@@ -598,8 +598,8 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           </div>
 
           {/* Support Button */}
-{/* Back Button + Username Header — ALWAYS visible */}
-            <div className="px-4 py-3 border-t border-gray-200">
+        {/* Action Buttons for visiting other profiles */}
+  <div className="px-4 py-3 border-t border-gray-200">
     <div className="flex gap-2">
       <Button
         onClick={async () => {
