@@ -327,13 +327,17 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const checkedCount = items.filter(item => item.checked).length;
   const totalCount = items.length;
 
-  if (loading) {
+   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
+
+  (   ← THIS LINE NOW HAS NO "return" — PERFECT
+  <div className={`min-h-screen ${MOBILE_SAFE} bg-gradient-to-br from-orange-50 to-amber-50`}>
+    <div className="max-w-2xl mx-auto px-4 pt-6">
 
   return (
   <div className={`min-h-screen ${MOBILE_SAFE} bg-gradient-to-br from-orange-50 to-amber-50`}>
