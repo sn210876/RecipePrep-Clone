@@ -264,7 +264,6 @@ const loadUnreadCount = async (userId: string) => {
             </div>
         </div>
       </aside>
-      </aside>
 
       {/* Main Content Area */}
       <div className="lg:ml-64">
