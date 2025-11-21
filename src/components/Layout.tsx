@@ -187,20 +187,27 @@ const loadUnreadCount = async (userId: string) => {
         <div className="flex h-full flex-col">
           
           {/* Logo/Brand */}
-          <div className="flex items-center justify-between gap-3 border-b border-gray-200 p-4 sm:p-6">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-white-500 to-red-600 shadow-lg flex-shrink-0 overflow-hidden">
-  <img 
-    src="/Woodenspoon.png" 
-    alt="Meal Scrape" 
-    className="w-full h-full object-cover"
-  />
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+  {/* Logo with Orange Border */}
+  <div className="relative flex-shrink-0">
+    {/* Outer orange ring */}
+    <div className="absolute inset-0 rounded-xl ring-4 ring-orange-500 shadow-xl"></div>
+    
+    {/* Inner logo container */}
+    <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-white to-orange-50 overflow-hidden">
+      <img 
+        src="/Woodenspoon.png" 
+        alt="Meal Scrape" 
+        className="w-full h-full object-contain p-2 drop-shadow-sm"
+      />
+    </div>
+  </div>
+
+  <div className="flex-1 min-w-0">
+    <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
+    <p className="text-[10px] sm:text-xs text-gray-500 truncate">E-Recipe Book & Social Media</p>
+  </div>
 </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
-                <p className="text-[10px] sm:text-xs text-gray-500 truncate">E-Recipe Book & Social Media</p>
-              </div>
-            </div>
             
             {/* Close button - mobile only */}
             <Button
