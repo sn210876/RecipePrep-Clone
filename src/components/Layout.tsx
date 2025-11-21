@@ -320,9 +320,9 @@ const loadUnreadCount = async (userId: string) => {
 <main className={socialPages.includes(currentPage) ? 'pt-16' : 'pt-16 lg:pt-0'}>          {children}
         </main>
 
-       {/* Bottom Navigation - Hidden on Add Recipe */}
-{currentPage !== 'add-recipe' && (
-  <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
+               {/* Bottom Navigation - Hidden on Add Recipe page */}
+        {currentPage !== 'add-recipe' && (
+          <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
           <div className="max-w-lg mx-auto px-4 py-3">
             <div className="flex items-center justify-around">
               
