@@ -190,11 +190,13 @@ body { -webkit-tap-highlight-color: transparent; }
   if (!user) return <AuthForm />;
   if (!isEmailVerified) return <VerifyEmail />;
 
-  return (
-    <Layout currentPage={currentPage} onNavigate={handleNavigate}>
-      {renderPage()}
-      <Toaster />
-    </Layout>
+   return (
+    <MobileSafeWrapper>
+      <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+        {renderPage()}
+        <Toaster />
+      </Layout>
+    </MobileSafeWrapper>
   );
 }
 
