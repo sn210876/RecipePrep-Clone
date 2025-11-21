@@ -864,16 +864,17 @@ const fallbackCopy = (url: string) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="max-w-sm mx-auto" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-        <div className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
+    <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden">
+      <div className="max-w-sm mx-auto w-full" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
+        <div className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-gray-200 p-4 max-w-sm mx-auto" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center gap-2">
-            <div className="relative" style={{ width: '70%' }}>
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => handleSearch(e.target.
+value)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="Search users..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -923,7 +924,7 @@ const fallbackCopy = (url: string) => {
                   setUnreadNotifications(0);
                 }
               }}
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
             >
               <Bell className="w-6 h-6 text-gray-700" />
               {unreadNotifications > 0 && (
@@ -981,7 +982,7 @@ const fallbackCopy = (url: string) => {
           )}
         </div>
 
-        <div className="pt-20">
+        <div className="pt-24" style={{ paddingTop: 'calc(5rem + env(safe-area-inset-top))' }}>
         {filterHashtag && (
           <div className="bg-blue-50 border-b border-blue-200 p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1145,7 +1146,7 @@ const fallbackCopy = (url: string) => {
                 <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
                 {postRatings[post.id] && postRatings[post.id].count > 0 && (
                   <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                    <span className="text-lg">Fire</span>
+                    <span className="text-lg">🔥</span>
                     <span className="text-white text-xs font-semibold">
                       {postRatings[post.id].average.toFixed(1)}
                     </span>
@@ -1287,7 +1288,7 @@ const fallbackCopy = (url: string) => {
       </AlertDialog>
 
       <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Edit post</AlertDialogTitle>
             <AlertDialogDescription>
@@ -1355,7 +1356,7 @@ const fallbackCopy = (url: string) => {
       )}
 
       <Dialog open={!!sharePostId} onOpenChange={(open) => !open && setSharePostId(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Share</DialogTitle>
           </DialogHeader>
