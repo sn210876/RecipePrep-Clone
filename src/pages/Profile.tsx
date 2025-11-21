@@ -491,7 +491,6 @@ export function Profile({ username: targetUsername }: ProfileProps) {
       style={{ paddingBottom: 'max(8rem, env(safe-area-inset-bottom))' }}
     >
       {/* Back Button + Username Header */}
-      {!isOwnProfile && (
         <div 
           className="sticky top-0 bg-white border-b border-gray-200 z-40"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
