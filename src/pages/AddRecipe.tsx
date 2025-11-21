@@ -510,6 +510,43 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               />
             </div>
             <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  setUrlInput(text.trim());
+                  toast.success("Pasted!");
+                } catch (err) {
+                  toast.error("Failed to paste — try pasting manually");
+                }
+              }}
+              className="w-full mb-3 border-dashed border-2 hover:bg-slate-50"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Paste from Clipboard
+            </Button>
+            {/* ←←← END OF NEW BUTTON ←←← */}
+
+            <Button
+              type="button"
+              onClick={handleUrlExtract}
+              disabled={isExtracting || !urlInput.trim()}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
+            >
+              {isExtracting ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Extracting...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Extract Recipe
+                </>
+              )}
+            </Button>
+            <Button
               type="button"
               onClick={handleUrlExtract}
               disabled={isExtracting || !urlInput.trim()}
