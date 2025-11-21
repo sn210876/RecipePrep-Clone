@@ -511,7 +511,24 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               />
             </div>
 
-
+{/* ←←← THIS ONE CANNOT CRASH – GUARANTEED ←←← */}
+<Button
+  variant="outline"
+  size="sm"
+  onClick={() => {
+    // Focus the input first
+    const input = document.getElementById('recipe-url-input');
+    if (input) {
+      (input as HTMLInputElement).focus();
+    }
+    // Show native "Paste" popup on mobile
+    alert("Long-press in the box below and tap 'Paste' →");
+  }}
+  className="w-full mb-3 border-dashed border-2 hover:bg-slate-50"
+>
+  <Copy className="w-4 h-4 mr-2" />
+  Tap to Paste (Mobile)
+</Button>
             
             <Button
               type="button"
