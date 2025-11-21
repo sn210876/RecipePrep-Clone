@@ -310,34 +310,36 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowErrors(true);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setShowErrors(true);
 
-    if (!validate()) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
+  if (!validate()) {
+    toast.error('Please fill in all required fields');
+    return;
+  }
 
-    const validIngredients = ingredients.filter(ing => ing.name.trim());
-    const validInstructions = instructions.filter(inst => inst.trim());
+  const validIngredients = ingredients.filter(ing => ing.name.trim());
+  const validInstructions = instructions.filter(inst => inst.trim());
 
-    let finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
-    let postImageUrl = null;
-    
-    if (finalImageUrl && !uploadedImageUrl) {
-      const needsProxy = finalImageUrl.includes('instagram.com') || 
+  // Determine the initial image URL
+  let finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
+  let postImageUrl = null;
+
+  // Check if it's an Instagram/external URL that needs to be stored permanently
+  const needsDownload = finalImageUrl && 
+                        !uploadedImageUrl && 
+                        (finalImageUrl.includes('instagram.com') || 
                          finalImageUrl.includes('cdninstagram.com') ||
-                         finalImageUrl.includes('fbcdn.net');
-      
-      if (needsProxy) {
-        const cleanUrl = finalImageUrl.replace(/&amp;/g, '&');
-        postImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
-        finalImageUrl = postImageUrl;
-      }
-    }
+                         finalImageUrl.includes('fbcdn.net'));
 
-    const newRecipe = {
+  try {
+    // Show loading toast
+    const loadingToastId = toast.loading('Creating recipe...');
+
+    // 1. First, create the recipe to get an ID
+    const { createRecipe } = await import('@/services/recipeService');
+    const tempRecipe = {
       title: title.trim(),
       ingredients: validIngredients,
       instructions: validInstructions,
@@ -349,56 +351,98 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       difficulty,
       dietaryTags: selectedDietaryTags,
       mealType: selectedMealTypes,
-      imageUrl: finalImageUrl,
+      imageUrl: finalImageUrl, // Temporary URL for now
       videoUrl: videoUrl.trim() || undefined,
       sourceUrl: urlInput.trim() || undefined,
       notes: notes.trim() || undefined,
       isSaved: true
     };
 
-    try {
-      const { createRecipe } = await import('@/services/recipeService');
-      const createdRecipe = await createRecipe(newRecipe);
+    const createdRecipe = await createRecipe(tempRecipe);
+    console.log('[AddRecipe] Recipe created with ID:', createdRecipe.id);
 
-      dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
-
+    // 2. If it's an Instagram URL, download and store it permanently
+    if (needsDownload && finalImageUrl) {
       try {
-        const { supabase } = await import('@/lib/supabase');
-        const { data: { user } } = await supabase.auth.getUser();
+        toast.loading('Downloading and storing image permanently...', { id: loadingToastId });
+        console.log('[AddRecipe] Downloading Instagram image:', finalImageUrl);
 
-        if (user) {
-          const finalPostImageUrl = postImageUrl || uploadedImageUrl || null;
+        const permanentUrl = await downloadAndStoreImage(
+          finalImageUrl,
+          createdRecipe.id
+        );
 
-          const { error: postError } = await supabase.from('posts').insert({
-            user_id: user.id,
-            title: title.trim(),
-            image_url: finalPostImageUrl,
-            video_url: videoUrl.trim() || null,
-            caption: notes.trim() || 'Check out my recipe!',
-            recipe_url: videoUrl.trim() || urlInput.trim() || null,
-            recipe_id: createdRecipe.id,
-          });
+        console.log('[AddRecipe] Permanent URL:', permanentUrl);
 
-          if (postError) {
-            toast.success('Recipe created successfully!');
+        // 3. Update the recipe with the permanent URL
+        if (permanentUrl !== finalImageUrl) {
+          const { supabase } = await import('@/lib/supabase');
+          const { error: updateError } = await supabase
+            .from('public_recipes')
+            .update({ image_url: permanentUrl })
+            .eq('id', createdRecipe.id);
+
+          if (updateError) {
+            console.error('[AddRecipe] Failed to update with permanent URL:', updateError);
           } else {
-            toast.success('Recipe created and posted to your profile!');
+            console.log('[AddRecipe] ✅ Updated recipe with permanent URL');
+            finalImageUrl = permanentUrl;
+            postImageUrl = permanentUrl;
           }
-        } else {
-          toast.success('Recipe created successfully!');
         }
-      } catch (postError) {
-        toast.success('Recipe created successfully!');
+      } catch (imageError) {
+        console.error('[AddRecipe] Image storage failed, using original URL:', imageError);
+        // Continue with original URL if download fails
       }
-
-      if (onNavigate) {
-        onNavigate('my-recipes');
-      }
-    } catch (error: any) {
-      const errorMessage = error?.message || 'Failed to create recipe. Please try again.';
-      toast.error(errorMessage);
     }
-  };
+
+    // 4. Create social post
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        // Use permanent URL if we got one, otherwise use the original
+        const finalPostImageUrl = postImageUrl || uploadedImageUrl || null;
+
+        const { error: postError } = await supabase.from('posts').insert({
+          user_id: user.id,
+          title: title.trim(),
+          image_url: finalPostImageUrl,
+          video_url: videoUrl.trim() || null,
+          caption: notes.trim() || 'Check out my recipe!',
+          recipe_url: videoUrl.trim() || urlInput.trim() || null,
+          recipe_id: createdRecipe.id,
+        });
+
+        if (postError) {
+          console.error('[AddRecipe] Post creation failed:', postError);
+          toast.success('Recipe created successfully!', { id: loadingToastId });
+        } else {
+          toast.success('Recipe created and posted to your profile!', { id: loadingToastId });
+        }
+      } else {
+        toast.success('Recipe created successfully!', { id: loadingToastId });
+      }
+    } catch (postError) {
+      console.error('[AddRecipe] Post creation error:', postError);
+      toast.success('Recipe created successfully!', { id: loadingToastId });
+    }
+
+    // 5. Add to local state
+    dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+
+    // 6. Navigate to my recipes
+    if (onNavigate) {
+      onNavigate('my-recipes');
+    }
+  } catch (error: any) {
+    console.error('[AddRecipe] Recipe creation failed:', error);
+    const errorMessage = error?.message || 'Failed to create recipe. Please try again.';
+    toast.error(errorMessage);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pb-32">
