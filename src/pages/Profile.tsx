@@ -122,112 +122,38 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          toast.error('Please log in');
-          window.history.pushState({}, '', '/');
-          return;
-        }
-        setCurrentUserId(user.id);
-
-        let profileToLoad: ProfileData | null = null;
-        let userIdToLoad: string | null = null;
-
-        if (targetUsername) {
-          // Load someone else's profile by username
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url, banner_url, bio, link')
-            .ilike('username', targetUsername)
-            .single();
-
-          if (error || !data) {
-            toast.error('User not found');
-            window.history.pushState({}, '', '/discover');
-            setLoading(false);
-            return;
-          }
-
-          profileToLoad = data;
-          userIdToLoad = data.id;
-        } else {
-          // Load current user's profile
-          const { data } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url, banner_url, bio, link')
-            .eq('id', user.id)
-            .single();
-
-          if (!data) {
-            const defaultUsername = user.email?.split('@')[0] || 'user';
-            await supabase.from('profiles').insert({
-              id: user.id,
-              username: defaultUsername,
-            });
-            profileToLoad = { id: user.id, username: defaultUsername, avatar_url: null };
-          } else {
-            profileToLoad = data;
-          }
-          userIdToLoad = user.id;
-        }
-
-        setTargetUserId(userIdToLoad);
-        setIsOwnProfile(user.id === userIdToLoad);
-
-        // Fetch follower counts
-        const { count: followersCount } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('following_id', userIdToLoad);
-
-        const { count: followingCount } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('follower_id', userIdToLoad);
-
-        // Check if current user is following this profile
-        if (user.id !== userIdToLoad) {
-          const { data: followData } = await supabase
-            .from('follows')
-            .select('id')
-            .eq('follower_id', user.id)
-            .eq('following_id', userIdToLoad)
-            .maybeSingle();
-          setIsFollowing(!!followData);
-        }
-
-        setProfile({
-          ...profileToLoad,
-          followers_count: followersCount || 0,
-          following_count: followingCount || 0,
-        });
-
-        // Load posts
-        const { data: postsData } = await supabase
-          .from('posts')
-          .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
-          .eq('user_id', userIdToLoad)
-          .order('created_at', { ascending: false });
-
-        setPosts(postsData || []);
-
-        // Update URL if needed (for own profile)
-        if (!targetUsername && profileToLoad?.username) {
-          window.history.replaceState({}, '', `/profile/${profileToLoad.username}`);
-        }
-
-        setIsUserAdmin(await isAdmin());
-      } catch (err) {
-        toast.error('Failed to load profile');
-      } finally {
-        setLoading(false);
+  // Add this to prevent flash "User not found" when leaving the page
+  const isMounted = { current: true };
+  
+  const loadProfile = async () => {
+    if (!isMounted.current) return;   // ← ADD THIS LINE
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please log in');
+        window.history.pushState({}, '', '/');
+        return;
       }
-    };
 
-    loadProfile();
-  }, [targetUsername]);
+      // ← ADD THIS LINE too
+      if (!isMounted.current) return;
+
+      // ... rest of your existing code stays exactly the same
+    } catch (err) {
+      if (!isMounted.current) return;
+      toast.error('Failed to load profile');
+    } finally {
+      if (isMounted.current) setLoading(false);
+    }
+  };
+
+  loadProfile();
+
+  return () => {
+    isMounted.current = false;   // ← ADD THIS cleanup
+  };
+}, [targetUsername]);}, [targetUsername]);
 
   // Check for ?post= query parameter to open a specific post
   useEffect(() => {
