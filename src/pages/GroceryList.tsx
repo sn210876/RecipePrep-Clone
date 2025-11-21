@@ -25,6 +25,8 @@ import { useRecipes } from '../context/RecipeContext';
 import { formatQuantity } from '../lib/unitConversion';
 import { supabase } from '../lib/supabase';
 
+const MOBILE_SAFE = "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pb-32";
+
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
 }
@@ -336,8 +338,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }
 
   return (
-  <div className="min-h-screen pt-safe pb-safe px-4 bg-gradient-to-br from-orange-50 to-amber-50">
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
