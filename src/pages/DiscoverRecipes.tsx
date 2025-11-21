@@ -190,48 +190,49 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   };
 
   const RecipeSection = ({ title, subtitle, icon: Icon, recipes, showAll, onToggle, allCount, buttonColor }: any) => (
-    <section>
-      <div className="flex items-center gap-3 mb-6">
-        <div className={`bg-gradient-to-r ${buttonColor} p-2 rounded-lg`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-            {title}
-          </h2>
-          <p className="text-sm md:text-base text-gray-600">
-            {subtitle}
-          </p>
-        </div>
+  <section>
+    <div className="flex items-center gap-3 mb-6">
+      <div className={`bg-gradient-to-r ${buttonColor} p-2 rounded-lg`}>
+        <Icon className="w-6 h-6 text-white" />
       </div>
-      <div className={`grid gap-4 md:gap-6 auto-rows-fr ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
+      <div>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+          {title}
+        </h2>
+        <p className="text-sm md:text-base text-gray-600">
+          {subtitle}
+        </p>
+      </div>
+    </div>
+    {/* ✅ ADDED: auto-rows-fr makes all rows same height */}
+    <div className={`grid gap-4 md:gap-6 auto-rows-fr ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
+      {recipes.map((recipe: Recipe) => (
+        <RecipeCard
+          key={recipe.id}
+          recipe={recipe}
+          onSave={handleSave}
+          onCook={handleCook}
+          onDelete={handleDeleteRecipe}
+          isAdmin={isAdmin}
+          showReviewButton={true}
+        />
+      ))}
+    </div>
+    {allCount > (isMobile ? 6 : 12) && (
+      <div className="text-center mt-8">
+        <Button
+          onClick={() => onToggle(!showAll)}
+          variant="outline"
+          size="lg"
+          className={`text-sm md:text-base`}
+        >
+          {showAll ? 'Show Less' : 'Show More'}
+        </Button>
+      </div>
+    )}
+  </section>
+);
 
-        {recipes.map((recipe: Recipe) => (
-          <RecipeCard
-            key={recipe.id}
-            recipe={recipe}
-            onSave={handleSave}
-            onCook={handleCook}
-            onDelete={handleDeleteRecipe}
-            isAdmin={isAdmin}
-            showReviewButton={true}
-          />
-        ))}
-      </div>
-      {allCount > (isMobile ? 6 : 12) && (
-        <div className="text-center mt-8">
-          <Button
-            onClick={() => onToggle(!showAll)}
-            variant="outline"
-            size="lg"
-            className={`text-sm md:text-base`}
-          >
-            {showAll ? 'Show Less' : 'Show More'}
-          </Button>
-        </div>
-      )}
-    </section>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
