@@ -1,11 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Recipe } from '../types/recipe';
-import { StepVisualizer } from './StepVisualizer';
-import { VoiceControls, VoiceCommand, VoiceSettings } from './VoiceControls';
-import { Button } from './ui/button';
-import { Checkbox } from './ui/checkbox';
-import { ScrollArea } from './ui/scroll-area';
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+
 import {
   ChevronLeft,
   ChevronRight,
@@ -18,160 +14,56 @@ import {
   Circle,
   Volume2,
   VolumeX,
-  Star,
   Users,
   Plus,
   Minus,
+  Mic,
+  MicOff,
 } from 'lucide-react';
-import NoSleep from 'nosleep.js';
-import { ReviewForm } from './ReviewForm';
-import { decodeHtmlEntities } from '@/lib/utils';
 
-interface CookModeProps {
-  recipe: Recipe;
-  onClose: () => void;
-}
-
-export function CookMode({ recipe, onClose }: CookModeProps) {
+export default function CookMode() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
-  const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
+  const [checkedIngredients, setCheckedIngredients] = useState(new Set());
+  const [checkedSteps, setCheckedSteps] = useState(new Set());
   const [timerActive, setTimerActive] = useState(false);
   const [timerPaused, setTimerPaused] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [voiceModeActive, setVoiceModeActive] = useState(false);
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [stepPhotos, setStepPhotos] = useState<Map<number, string[]>>(new Map());
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [servings, setServings] = useState(recipe.servings);
-  const [showServingsWarning, setShowServingsWarning] = useState(false);
-  const [voiceSettings] = useState<VoiceSettings>(() => {
-    const saved = localStorage.getItem('voiceSettings');
-    return saved ? JSON.parse(saved) : { speechRate: 1.0, voiceIndex: 0, autoRead: true };
-  });
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
-  const noSleepRef = useRef<NoSleep | null>(null);
-  const wakeLockRef = useRef<any>(null);
-  const prevStepRef = useRef<number>(0);
+  const [servings, setServings] = useState(4);
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
 
-  const steps = recipe.steps || recipe.instructions.map((instruction, index) => ({
-    stepNumber: index + 1,
-    instruction,
-    technique: 'mix',
-    diagramType: 'mix',
-    duration: undefined,
-    videoUrl: undefined
-  }));
-
-  const scaleQuantity = (quantityStr: string, scaleFactor: number): string => {
-    const fractionMap: { [key: string]: number } = {
-      '¼': 0.25, '½': 0.5, '¾': 0.75,
-      '⅓': 0.333, '⅔': 0.667,
-      '⅛': 0.125, '⅜': 0.375, '⅝': 0.625, '⅞': 0.875,
-      '1/4': 0.25, '1/2': 0.5, '3/4': 0.75,
-      '1/3': 0.333, '2/3': 0.667,
-      '1/8': 0.125, '3/8': 0.375, '5/8': 0.625, '7/8': 0.875
-    };
-
-    const numberPattern = /(\d+\.?\d*|\d*\.?\d+|[¼½¾⅓⅔⅛⅜⅝⅞]|1\/[2348]|[23]\/[34])/g;
-    const matches = quantityStr.match(numberPattern);
-
-    if (!matches) return quantityStr;
-
-    let scaled = quantityStr;
-    for (const match of matches) {
-      let value = 0;
-      if (fractionMap[match]) {
-        value = fractionMap[match];
-      } else if (match.includes('/')) {
-        const [num, den] = match.split('/').map(Number);
-        value = num / den;
-      } else {
-        value = parseFloat(match);
-      }
-
-      if (isNaN(value)) continue;
-
-      const newValue = value * scaleFactor;
-      let display = '';
-
-      if (Math.abs(newValue - Math.round(newValue)) < 0.01) {
-        display = Math.round(newValue).toString();
-      } else if (Math.abs(newValue - 0.25) < 0.01) {
-        display = '¼';
-      } else if (Math.abs(newValue - 0.33) < 0.05 || Math.abs(newValue - 0.333) < 0.05) {
-        display = '⅓';
-      } else if (Math.abs(newValue - 0.5) < 0.01) {
-        display = '½';
-      } else if (Math.abs(newValue - 0.67) < 0.05 || Math.abs(newValue - 0.667) < 0.05) {
-        display = '⅔';
-      } else if (Math.abs(newValue - 0.75) < 0.01) {
-        display = '¾';
-      } else {
-        display = newValue.toFixed(2).replace(/\.?0+$/, '');
-      }
-
-      scaled = scaled.replace(match, display);
-    }
-
-    return scaled;
+  const recipe = {
+    title: 'Chocolate Chip Cookies',
+    imageUrl: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800&h=600&fit=crop',
+    prepTime: 15,
+    cookTime: 12,
+    servings: 4,
+    ingredients: [
+      { quantity: '2', unit: 'cups', name: 'all-purpose flour' },
+      { quantity: '1', unit: 'tsp', name: 'baking soda' },
+      { quantity: '1', unit: 'cup', name: 'butter, softened' },
+      { quantity: '¾', unit: 'cup', name: 'granulated sugar' },
+      { quantity: '¾', unit: 'cup', name: 'brown sugar' },
+      { quantity: '2', unit: '', name: 'large eggs' },
+      { quantity: '2', unit: 'tsp', name: 'vanilla extract' },
+      { quantity: '2', unit: 'cups', name: 'chocolate chips' },
+    ],
   };
 
-  const scaleFactor = servings / recipe.servings;
-  const scaledIngredients = recipe.ingredients.map(ing => ({
-    ...ing,
-    quantity: scaleQuantity(ing.quantity, scaleFactor)
-  }));
+  const steps = [
+    { stepNumber: 1, instruction: 'Preheat oven to 375°F (190°C). Line baking sheets with parchment paper.', duration: '5 min' },
+    { stepNumber: 2, instruction: 'In a medium bowl, whisk together flour and baking soda. Set aside.', duration: null },
+    { stepNumber: 3, instruction: 'In a large bowl, cream together butter and both sugars until light and fluffy, about 3-4 minutes.', duration: '4 min' },
+    { stepNumber: 4, instruction: 'Beat in eggs one at a time, then stir in vanilla extract.', duration: null },
+    { stepNumber: 5, instruction: 'Gradually blend in the flour mixture. Fold in chocolate chips.', duration: null },
+    { stepNumber: 6, instruction: 'Drop rounded tablespoons of dough onto prepared baking sheets, spacing 2 inches apart.', duration: null },
+    { stepNumber: 7, instruction: 'Bake for 10-12 minutes or until golden brown around edges. Cool on baking sheets for 5 minutes.', duration: '12 min' },
+    { stepNumber: 8, instruction: 'Transfer cookies to a wire rack to cool completely. Enjoy!', duration: null },
+  ];
 
-  const handleServingsChange = (newServings: number) => {
-    if (newServings < 1) return;
-    if (newServings !== recipe.servings) {
-      setShowServingsWarning(true);
-    }
-    setServings(newServings);
-  };
-
-  useEffect(() => {
-    if (voiceModeActive && voiceSettings.autoRead && currentStep !== prevStepRef.current) {
-      prevStepRef.current = currentStep;
-      setTimeout(() => {
-        speakStep(currentStep);
-      }, 500);
-    }
-  }, [currentStep, voiceModeActive, voiceSettings.autoRead]);
-
-  useEffect(() => {
-    const enableWakeLock = async () => {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-          console.log('Wake Lock activated');
-        } else {
-          noSleepRef.current = new NoSleep();
-          noSleepRef.current.enable();
-          console.log('NoSleep.js activated');
-        }
-      } catch (err) {
-        console.log('Wake lock error, using NoSleep.js fallback');
-        noSleepRef.current = new NoSleep();
-        noSleepRef.current.enable();
-      }
-    };
-
-    enableWakeLock();
-
-    return () => {
-      if (wakeLockRef.current) {
-        wakeLockRef.current.release();
-      }
-      if (noSleepRef.current) {
-        noSleepRef.current.disable();
-      }
-    };
-  }, []);
-
+  // Timer effect
   useEffect(() => {
     if (timerActive && !timerPaused && timeRemaining > 0) {
       const interval = setInterval(() => {
@@ -192,37 +84,31 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   }, [timerActive, timerPaused, timeRemaining, soundEnabled]);
 
   const playTimerSound = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-
     oscillator.frequency.value = 800;
     oscillator.type = 'sine';
-
     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.5);
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e) => {
     touchEndX.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = () => {
-    if (touchStartX.current === null || touchEndX.current === null) return;
-
+    if (!touchStartX.current || !touchEndX.current) return;
     const diff = touchStartX.current - touchEndX.current;
     const threshold = 50;
-
     if (Math.abs(diff) > threshold) {
       if (diff > 0 && currentStep < steps.length - 1) {
         handleNextStep();
@@ -230,7 +116,6 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
         handlePrevStep();
       }
     }
-
     touchStartX.current = null;
     touchEndX.current = null;
   };
@@ -276,13 +161,13 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
     }
   };
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const toggleIngredient = (index: number) => {
+  const toggleIngredient = (index) => {
     setCheckedIngredients(prev => {
       const newSet = new Set(prev);
       if (newSet.has(index)) {
@@ -294,7 +179,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
     });
   };
 
-  const toggleStep = (index: number) => {
+  const toggleStep = (index) => {
     setCheckedSteps(prev => {
       const newSet = new Set(prev);
       if (newSet.has(index)) {
@@ -306,540 +191,339 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
     });
   };
 
-  const speakStep = (stepIndex: number) => {
-    if ('speechSynthesis' in window && steps[stepIndex]) {
-      window.speechSynthesis.cancel();
-
-      const step = steps[stepIndex];
-      let text = `Step ${stepIndex + 1}. ${decodeHtmlEntities(step.instruction)}`;
-
-      if (step.duration) {
-        text += `. This step takes ${step.duration}.`;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = voiceSettings.speechRate;
-
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0 && voiceSettings.voiceIndex < voices.length) {
-        utterance.voice = voices[voiceSettings.voiceIndex];
-      }
-
-      window.speechSynthesis.speak(utterance);
+  const getIngredientEmoji = (ingredientName) => {
+    const name = ingredientName.toLowerCase();
+    const emojiMap = {
+      flour: '🌾', sugar: '🍯', butter: '🧈', egg: '🥚',
+      chocolate: '🍫', vanilla: '🟫', baking: '🧂',
+    };
+    for (const [key, emoji] of Object.entries(emojiMap)) {
+      if (name.includes(key)) return emoji;
     }
-  };
-
-  const speakIngredients = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-
-      let text = 'Ingredients you need: ';
-      recipe.ingredients.forEach((ingredient, index) => {
-        text += `${decodeHtmlEntities(ingredient.quantity)} ${decodeHtmlEntities(ingredient.unit)} ${decodeHtmlEntities(ingredient.name)}`;
-        if (index < recipe.ingredients.length - 1) {
-          text += ', ';
-        }
-      });
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = voiceSettings.speechRate;
-
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0 && voiceSettings.voiceIndex < voices.length) {
-        utterance.voice = voices[voiceSettings.voiceIndex];
-      }
-
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  const speakDuration = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-
-      const step = steps[currentStep];
-      const text = step?.duration
-        ? `This step takes ${step.duration}`
-        : 'This step has no specific duration';
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = voiceSettings.speechRate;
-
-      const voices = window.speechSynthesis.getVoices();
-      if (voices.length > 0 && voiceSettings.voiceIndex < voices.length) {
-        utterance.voice = voices[voiceSettings.voiceIndex];
-      }
-
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  const handleVoiceCommand = (command: VoiceCommand) => {
-    switch (command.type) {
-      case 'next':
-        if (currentStep < steps.length - 1) {
-          handleNextStep();
-        }
-        break;
-      case 'previous':
-        if (currentStep > 0) {
-          handlePrevStep();
-        }
-        break;
-      case 'repeat':
-        speakStep(currentStep);
-        break;
-      case 'readIngredients':
-        speakIngredients();
-        break;
-      case 'howLong':
-        speakDuration();
-        break;
-      case 'startTimer':
-        if (steps[currentStep]?.duration) {
-          startTimer();
-        }
-        break;
-      case 'pause':
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-        }
-        break;
-      case 'resume':
-        speakStep(currentStep);
-        break;
-      case 'jumpTo':
-        if (command.stepNumber >= 0 && command.stepNumber < steps.length) {
-          setCurrentStep(command.stepNumber);
-          resetTimer();
-        }
-        break;
-    }
-  };
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      const newPhotos = files.map(file => URL.createObjectURL(file));
-      setStepPhotos(prev => {
-        const updated = new Map(prev);
-        const existing = updated.get(currentStep) || [];
-        updated.set(currentStep, [...existing, ...newPhotos]);
-        return updated;
-      });
-    }
+    return '🥘';
   };
 
   const allIngredientsChecked = checkedIngredients.size === recipe.ingredients.length;
   const progress = ((currentStep + 1) / steps.length) * 100;
-  const isCompleted = currentStep === steps.length - 1 && checkedSteps.has(currentStep);
-
-  const getIngredientEmoji = (ingredientName: string): string => {
-    const name = ingredientName.toLowerCase().trim();
-
-    const emojiMap: { [key: string]: string } = {
-      chicken: '🍗', beef: '🥩', pork: '🍖', lamb: '🐑', turkey: '🦃',
-      fish: '🐟', salmon: '🐠', shrimp: '🦐', crab: '🦀', lobster: '🦞',
-      eggs: '🥚', flour: '🌾', sugar: '🍯', salt: '🧂', egg: '🥚',
-      butter: '🧈', oil: '🫒', milk: '🥛', cheese: '🧀', cream: '🍶',
-      bread: '🍞', rice: '🍚', pasta: '🍝', noodles: '🍜', beans: '🫘',
-      potato: '🥔', carrot: '🥕', onion: '🧅', garlic: '🧄', tomato: '🍅',
-      lettuce: '🥬', spinach: '🥬', broccoli: '🥦', cauliflower: '🥦', bell_pepper: '🫑',
-      mushroom: '🍄', apple: '🍎', banana: '🍌', lemon: '🍋', orange: '🍊',
-      strawberry: '🍓', blueberry: '🫐', grape: '🍇', watermelon: '🍉', nuts: '🥜',
-      honey: '🍯', vinegar: '🍶', sauce: '🫙', ketchup: '🍅', mustard: '🟨',
-      soy: '🫙', sesame: '⚪', olive: '🫒', coconut: '🥥', avocado: '🥑',
-      basil: '🌿', parsley: '🌿', cilantro: '🌿', mint: '🌿', oregano: '🌿',
-      thyme: '🌿', rosemary: '🌿', chili: '🌶️', hot_pepper: '🌶️',
-      water: '💧', wine: '🍷', beer: '🍺', whiskey: '🥃', lime: '🟢',
-      ginger: '🟤', turmeric: '🟡', paprika: '🟠', cumin: '⚫', cinnamon: '🟤',
-      vanilla: '🟫', chocolate: '🍫', cocoa: '🟤', almond: '🥜', walnut: '🫘',
-      pine: '🌲', sunflower: '🌻', corn: '🌽', pea: '🟢', asparagus: '🥒',
-      lentil: '🫘', chickpea: '🌰', tofu: '🟫', tempeh: '🟪',
-      quiche: '🥧', pie: '🥧', cake: '🎂', cookie: '🍪', muffin: '🧁',
-      pancake: '🥞', waffle: '🧇', donut: '🍩', pretzel: '🥨', bagel: '🥯',
-      croissant: '🥐', bun: '🫓', pizza: '🍕', taco: '🌮',
-      burrito: '🌯', sandwich: '🥪', wrap: '🫔', kebab: '🍢', dumpling: '🥟',
-      sushi: '🍣', spring: '🥠', gyoza: '🥟', meatball: '🍖',
-      steak: '🥩', roast: '🍖', ham: '🍗', bacon: '🥓', sausage: '🌭',
-      hotdog: '🌭', burger: '🍔', fries: '🍟', chips: '🍟',
-      roll: '🍣', bean: '🫘'
-    };
-
-    for (const [key, emoji] of Object.entries(emojiMap)) {
-      if (name.includes(key)) {
-        return emoji;
-      }
-    }
-
-    return '🥘';
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-hidden">
       <div className="h-full flex flex-col">
-        <div className="bg-primary text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-lg">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg sm:text-2xl font-bold truncate">{recipe.title}</h2>
-            <p className="text-orange-100 text-xs sm:text-sm">
+        
+        {/* Header - Mobile Optimized */}
+        <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between shadow-lg flex-shrink-0">
+          <div className="flex-1 min-w-0 mr-2">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold truncate">
+              {recipe.title}
+            </h2>
+            <p className="text-orange-100 text-[10px] sm:text-xs">
               Step {currentStep + 1} of {steps.length}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
             >
               {soundEnabled ? (
-                <Volume2 className="w-3 h-3" />
+                <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <VolumeX className="w-3 h-3" />
+                <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              onClick={onClose}
-              className="text-white hover:bg-white/20"
+              onClick={() => console.log('Close')}
+              className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
             >
-              <X className="w-3 h-3 sm:w-4 sm:h-4" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
         </div>
 
-        <div className="w-full bg-gray-200 h-1 sm:h-2">
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 h-1 sm:h-1.5 flex-shrink-0">
           <div
-            className="bg-primary h-full transition-all duration-300"
+            className="bg-orange-600 h-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <ScrollArea className="flex-1">
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {recipe.imageUrl && (
-              <div className="relative w-full h-48 sm:h-64 rounded-xl overflow-hidden shadow-lg">
-                <img
-                  src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-                    : recipe.imageUrl}
-                  alt={recipe.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <h3 className="text-white text-xl sm:text-2xl font-bold drop-shadow-lg">
-                    {recipe.title}
-                  </h3>
-                  <p className="text-white/90 text-sm mt-1 drop-shadow">
-                    {recipe.prepTime + recipe.cookTime} min • {recipe.servings} servings
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {voiceModeActive && (
-              <div className="bg-orange-50 rounded-xl p-4 border-2 border-primary shadow-sm">
-                <VoiceControls
-                  onCommand={handleVoiceCommand}
-                  isActive={voiceModeActive}
-                  onToggle={() => setVoiceModeActive(!voiceModeActive)}
-                  voiceSettings={voiceSettings}
-                />
-              </div>
-            )}
-
-            {!voiceModeActive && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-300 shadow-sm">
-                <Button
-                  onClick={() => setVoiceModeActive(true)}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold"
-                  size="lg"
-                >
-                  Enable Voice Control for Hands-Free Cooking
-                </Button>
-                <p className="text-xs text-gray-600 text-center mt-2">
-                  Navigate recipes with voice commands while cooking
+        {/* Scrollable Content */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 pb-24">
+            
+            {/* Recipe Image */}
+            <div className="relative w-full h-40 sm:h-48 md:h-64 rounded-lg sm:rounded-xl overflow-hidden shadow-lg flex-shrink-0">
+              <img
+                src={recipe.imageUrl}
+                alt={recipe.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 md:bottom-4 md:left-4 md:right-4">
+                <h3 className="text-white text-base sm:text-lg md:text-xl font-bold drop-shadow-lg line-clamp-1">
+                  {recipe.title}
+                </h3>
+                <p className="text-white/90 text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 drop-shadow">
+                  {recipe.prepTime + recipe.cookTime} min • {recipe.servings} servings
                 </p>
               </div>
-            )}
+            </div>
 
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border-2 border-emerald-200 shadow-sm">
+            {/* Voice Control Toggle */}
+            <div className={`rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 shadow-sm ${
+              voiceModeActive 
+                ? 'bg-orange-50 border-orange-300' 
+                : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300'
+            }`}>
+              <Button
+                onClick={() => setVoiceModeActive(!voiceModeActive)}
+                className={`w-full font-semibold h-10 sm:h-11 text-sm sm:text-base ${
+                  voiceModeActive
+                    ? 'bg-orange-600 hover:bg-orange-700'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
+                }`}
+              >
+                {voiceModeActive ? (
+                  <>
+                    <MicOff className="w-4 h-4 mr-2" />
+                    Disable Voice Control
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4 mr-2" />
+                    Enable Voice Control
+                  </>
+                )}
+              </Button>
+              <p className="text-[10px] sm:text-xs text-gray-600 text-center mt-2">
+                {voiceModeActive 
+                  ? 'Say "Next", "Previous", "Repeat", or "Read ingredients"' 
+                  : 'Navigate recipes hands-free with voice commands'}
+              </p>
+            </div>
+
+            {/* Servings Adjuster */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-emerald-200 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-semibold text-gray-900">Servings</span>
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                  <span className="text-xs sm:text-sm font-semibold text-gray-900">Servings</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleServingsChange(servings - 1)}
-                    disabled={servings <= 1}
-                    className="h-8 w-8 p-0"
+                    onClick={() => setServings(Math.max(1, servings - 1))}
+                    className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                   >
-                    <Minus className="w-4 h-4" />
+                    <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
-                  <span className="text-lg font-bold text-gray-900 min-w-[2rem] text-center">
+                  <span className="text-base sm:text-lg font-bold text-gray-900 min-w-[1.5rem] sm:min-w-[2rem] text-center">
                     {servings}
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleServingsChange(servings + 1)}
-                    className="h-8 w-8 p-0"
+                    onClick={() => setServings(servings + 1)}
+                    className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                 </div>
               </div>
               {servings !== recipe.servings && (
-                <p className="text-xs text-emerald-700 mt-2 text-center">
+                <p className="text-[10px] sm:text-xs text-emerald-700 mt-2 text-center">
                   Scaled from original {recipe.servings} servings
                 </p>
               )}
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 sm:p-6 border-2 border-blue-200 shadow-sm">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+            {/* Ingredients List */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-blue-200 shadow-sm">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 flex items-center gap-2">
                   {allIngredientsChecked ? (
-                    <CheckCircle2 className="w-3 h-3 text-primary" />
+                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                   ) : (
-                    <Circle className="w-3 h-3 text-gray-400" />
+                    <Circle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   )}
                   Ingredients
                 </h3>
-                <span className="text-xs sm:text-sm text-gray-600">
-                  {checkedIngredients.size}/{recipe.ingredients.length} checked
+                <span className="text-[10px] sm:text-xs text-gray-600">
+                  {checkedIngredients.size}/{recipe.ingredients.length}
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                {scaledIngredients.map((ingredient, index) => (
+              <div className="space-y-2">
+                {recipe.ingredients.map((ingredient, index) => (
                   <div
                     key={index}
-                    className={`flex items-center gap-3 p-2 sm:p-3 rounded-lg transition-all ${
+                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg transition-all ${
                       checkedIngredients.has(index)
-                        ? 'bg-orange-100 border border-primary'
-                        : 'bg-white border border-gray-200 hover:border-gray-300'
+                        ? 'bg-orange-100 border border-orange-300'
+                        : 'bg-white border border-gray-200'
                     }`}
                   >
-                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-2xl flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
                       {getIngredientEmoji(ingredient.name)}
                     </div>
                     <Checkbox
                       id={`ingredient-${index}`}
                       checked={checkedIngredients.has(index)}
                       onCheckedChange={() => toggleIngredient(index)}
-                      className="mt-0.5 flex-shrink-0"
+                      className="flex-shrink-0"
                     />
                     <label
                       htmlFor={`ingredient-${index}`}
-                      className={`text-sm sm:text-base cursor-pointer flex-1 ${
+                      className={`text-xs sm:text-sm cursor-pointer flex-1 min-w-0 ${
                         checkedIngredients.has(index)
                           ? 'text-gray-500 line-through'
                           : 'text-gray-900'
                       }`}
                     >
                       <span className="font-semibold">
-                        {decodeHtmlEntities(ingredient.quantity)} {decodeHtmlEntities(ingredient.unit)}
+                        {ingredient.quantity} {ingredient.unit}
                       </span>{' '}
-                      {decodeHtmlEntities(ingredient.name)}
+                      {ingredient.name}
                     </label>
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* Current Step - Swipeable */}
             <div
               className="touch-pan-y select-none"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <div className={`bg-white rounded-xl shadow-lg border-2 transition-all scale-[0.8] origin-top ${
-                voiceModeActive
-                  ? 'p-6 sm:p-10'
-                  : 'p-4 sm:p-8'
-              } ${
+              <div className={`bg-white rounded-lg sm:rounded-xl shadow-lg border-2 p-4 sm:p-6 md:p-8 transition-all ${
                 checkedSteps.has(currentStep)
-                  ? 'border-primary bg-orange-50'
+                  ? 'border-orange-600 bg-orange-50'
                   : 'border-gray-200'
               }`}>
-                <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                     <Checkbox
                       id={`step-${currentStep}`}
                       checked={checkedSteps.has(currentStep)}
                       onCheckedChange={() => toggleStep(currentStep)}
-                      className="w-6 h-6"
+                      className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0"
                     />
-                    <h3 className={`font-bold ${
-                      voiceModeActive ? 'text-2xl sm:text-4xl' : 'text-xl sm:text-3xl'
-                    } ${
+                    <h3 className={`font-bold text-lg sm:text-xl md:text-2xl ${
                       checkedSteps.has(currentStep) ? 'text-gray-500 line-through' : 'text-gray-900'
                     }`}>
                       Step {currentStep + 1}
                     </h3>
                   </div>
                   {steps[currentStep]?.duration && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={toggleTimer}
-                        className={`gap-2 ${
+                        className={`gap-1 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${
                           timerActive && !timerPaused
-                            ? 'border-primary bg-orange-50 hover:bg-orange-100'
-                            : 'border-blue-300 hover:bg-blue-50'
+                            ? 'border-orange-600 bg-orange-50'
+                            : 'border-blue-300'
                         }`}
                       >
                         {timerActive && !timerPaused ? (
-                          <Pause className="w-3 h-3" />
+                          <Pause className="w-3 h-3 sm:w-4 sm:h-4" />
                         ) : (
-                          <Play className="w-3 h-3" />
+                          <Play className="w-3 h-3 sm:w-4 sm:h-4" />
                         )}
-                        {timerActive && !timerPaused ? 'Pause' : 'Start'}
+                        <span className="hidden sm:inline">
+                          {timerActive && !timerPaused ? 'Pause' : 'Start'}
+                        </span>
                       </Button>
                       {timerActive && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={resetTimer}
-                          className="border-gray-300"
+                          className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                         >
-                          <RotateCcw className="w-3 h-3" />
+                          <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                       )}
                     </div>
                   )}
                 </div>
 
+                {/* Timer Display */}
                 {timerActive && (
                   <div
-                    className={`mb-4 sm:mb-6 p-4 sm:p-6 rounded-xl text-center ${
+                    className={`mb-3 sm:mb-4 p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl text-center ${
                       timeRemaining <= 10
                         ? 'bg-red-100 border-2 border-red-300 animate-pulse'
-                        : 'bg-orange-100 border-2 border-primary'
+                        : 'bg-orange-100 border-2 border-orange-300'
                     }`}
                   >
-                    <div className="flex items-center justify-center gap-3">
-                      <Timer className={`w-4 h-4 sm:w-5 sm:h-5 ${timeRemaining <= 10 ? 'text-red-600' : 'text-primary'}`} />
-                      <span className={`font-mono text-4xl sm:text-6xl font-bold ${timeRemaining <= 10 ? 'text-red-600' : 'text-primary'}`}>
+                    <div className="flex items-center justify-center gap-2 sm:gap-3">
+                      <Timer className={`w-4 h-4 sm:w-5 sm:h-5 ${timeRemaining <= 10 ? 'text-red-600' : 'text-orange-600'}`} />
+                      <span className={`font-mono text-3xl sm:text-4xl md:text-5xl font-bold ${timeRemaining <= 10 ? 'text-red-600' : 'text-orange-600'}`}>
                         {formatTime(timeRemaining)}
                       </span>
                     </div>
                     {timerPaused && (
-                      <p className="text-sm text-gray-600 mt-2">Timer paused</p>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-2">Timer paused</p>
                     )}
                   </div>
                 )}
 
-                <StepVisualizer step={steps[currentStep]} />
+                {/* Step Instruction */}
+                <p className="text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed">
+                  {steps[currentStep].instruction}
+                </p>
+
+                {/* Swipe Hint */}
+                <p className="text-[10px] sm:text-xs text-gray-400 text-center mt-4 sm:mt-6">
+                  👆 Swipe left or right to navigate
+                </p>
               </div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
-        <div className="bg-white border-t-2 border-gray-200 px-4 sm:px-6 py-3 sm:py-4 shadow-lg">
-          <div className="flex items-center justify-between gap-2 sm:gap-4 max-w-4xl mx-auto">
+        {/* Bottom Navigation - Fixed */}
+        <div className="bg-white border-t-2 border-gray-200 px-3 py-2 sm:px-4 sm:py-3 shadow-lg flex-shrink-0 safe-area-bottom">
+          <div className="flex items-center justify-between gap-2 sm:gap-3 max-w-4xl mx-auto">
             <Button
               variant="outline"
               size="lg"
               onClick={handlePrevStep}
               disabled={currentStep === 0}
-              className="gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-6"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 h-10 sm:h-11"
             >
-              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Previous</span>
-              <span className="sm:hidden">Prev</span>
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Previous</span>
+              <span className="xs:hidden">Prev</span>
             </Button>
 
-            <div className="flex-1 text-center -mt-24">
-              <p className="text-xs sm:text-sm text-gray-600">
+            <div className="flex-1 text-center">
+              <p className="text-[10px] sm:text-xs text-gray-600">
                 {voiceModeActive ? 'Say "Next" or swipe' : 'Swipe to navigate'}
               </p>
             </div>
 
-            {!isCompleted ? (
-              <Button
-                size="lg"
-                onClick={handleNextStep}
-                disabled={currentStep === steps.length - 1}
-                className="bg-primary hover:bg-primary/90 gap-1 sm:gap-2 text-sm sm:text-base px-3 sm:px-6"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <span className="sm:hidden">Next</span>
-                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button
-                  size="lg"
-                  onClick={() => setShowReviewForm(true)}
-                  className="bg-accent hover:bg-accent/90 gap-2"
-                >
-                  <Star className="w-4 h-4" />
-                  <span>Review Recipe</span>
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {stepPhotos.get(currentStep) && stepPhotos.get(currentStep)!.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Step Photos</p>
-              <div className="flex gap-2 overflow-x-auto">
-                {stepPhotos.get(currentStep)!.map((photo, idx) => (
-                  <img
-                    key={idx}
-                    src={photo}
-                    alt={`Step ${currentStep + 1} photo ${idx + 1}`}
-                    className="w-24 h-24 object-cover rounded-lg"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handlePhotoUpload}
-          className="hidden"
-        />
-      </div>
-
-      <ReviewForm
-        recipe={recipe}
-        open={showReviewForm}
-        onOpenChange={setShowReviewForm}
-        onReviewSubmitted={() => {
-          setShowReviewForm(false);
-        }}
-      />
-
-      <AlertDialog open={showServingsWarning} onOpenChange={setShowServingsWarning}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cooking Time May Vary</AlertDialogTitle>
-            <AlertDialogDescription>
-              When adjusting servings, cooking times may need to increase or decrease accordingly.
-              <br /><br />
-              <strong>Important:</strong> Monitor your food closely and adjust cooking times as needed based on your batch size.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button onClick={() => setShowServingsWarning(false)}>
-              Got it
+            <Button
+              size="lg"
+              onClick={handleNextStep}
+              disabled={currentStep === steps.length - 1}
+              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 h-10 sm:h-11"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
