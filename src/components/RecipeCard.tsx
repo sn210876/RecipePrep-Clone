@@ -226,14 +226,11 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
             </div>
           </div>
 
-          {reviewCount > 0 && (
+        {reviewCount > 0 && (
   <div className="flex items-center gap-2 pt-2">
     <RatingDisplay rating={Math.round(averageRating)} size="sm" />
-    <span className="text-sm font-semibold text-gray-700">
-      {averageRating.toFixed(1)}
-    </span>
-    <span className="text-xs text-gray-500">
-      • {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+    <span className="text-sm font-medium text-gray-800">
+      {averageRating.toFixed(1)} ({reviewCount})
     </span>
   </div>
 )}
