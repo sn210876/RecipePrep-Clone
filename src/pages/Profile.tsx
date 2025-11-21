@@ -568,10 +568,10 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                   </p>
                 )}
                {profile.link && (
-    href={profile.link}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline break-all"
+                href={profile.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-800 mt-2 block underline                       break-all"
   >
     {profile.link}
   </a>
