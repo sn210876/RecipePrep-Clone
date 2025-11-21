@@ -1,5 +1,12 @@
+// Key mobile optimizations for GroceryList.tsx
+
+// 1. Replace drag-and-drop with long-press/tap for mobile
+// 2. Make buttons touch-friendly (bigger tap targets)
+// 3. Improve layout for small screens
+// 4. Add swipe-to-delete gesture
+
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, GripVertical, Loader2, Calendar, ChefHat, ShoppingCart } from 'lucide-react';
+import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -44,6 +51,11 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+  
+  // Mobile-specific states
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [itemToMove, setItemToMove] = useState<GroceryListItem | null>(null);
+  const [swipedItem, setSwipedItem] = useState<string | null>(null);
 
   const items = state.groceryList;
 
@@ -52,11 +64,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }, [startDate, endDate]);
 
   function loadMealPlannerItems() {
-    console.log('[GroceryList] Loading meal planner items');
-    console.log('[GroceryList] Date range:', startDate, 'to', endDate);
-    console.log('[GroceryList] Total meals in plan:', state.mealPlan.length);
-    console.log('[GroceryList] Meal plan data:', state.mealPlan);
-
     const start = new Date(startDate);
     start.setHours(0, 0, 0, 0);
     const end = new Date(endDate);
@@ -65,20 +72,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     const mealsInRange = state.mealPlan.filter(meal => {
       const mealDate = new Date(meal.date);
       mealDate.setHours(0, 0, 0, 0);
-      const inRange = mealDate >= start && mealDate <= end;
-      console.log('[GroceryList] Meal date:', meal.date, 'in range:', inRange);
-      return inRange;
+      return mealDate >= start && mealDate <= end;
     });
-
-    console.log('[GroceryList] Meals in range:', mealsInRange.length);
 
     const ingredientsToAdd: { [key: string]: GroceryListItem } = {};
 
     mealsInRange.forEach(meal => {
       const recipe = state.savedRecipes.find(r => r.id === meal.recipeId);
-      console.log('[GroceryList] Looking for recipe:', meal.recipeId, 'found:', !!recipe);
       if (recipe) {
-        console.log('[GroceryList] Recipe:', recipe.title, 'ingredients:', recipe.ingredients.length);
         recipe.ingredients.forEach(ing => {
           const key = `${ing.name.toLowerCase()}-${ing.unit}`;
           if (ingredientsToAdd[key]) {
@@ -102,14 +103,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       }
     });
 
-    console.log('[GroceryList] Total ingredients to add:', Object.keys(ingredientsToAdd).length);
-
     const existingItemKeys = new Set(items.map(item => `${item.name.toLowerCase()}-${item.unit}`));
     const newItems = Object.values(ingredientsToAdd).filter(
       item => !existingItemKeys.has(`${item.name.toLowerCase()}-${item.unit}`)
     );
-
-    console.log('[GroceryList] New items after filtering:', newItems.length);
 
     if (newItems.length > 0) {
       dispatch({
@@ -141,6 +138,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       type: 'REMOVE_GROCERY_ITEM',
       payload: itemId
     });
+    setSwipedItem(null);
   }
 
   function handleClearChecked() {
@@ -185,22 +183,13 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }
 
   function handleAddRecipe() {
-    if (!selectedRecipeId) {
-      console.log('[GroceryList] No recipe selected');
-      return;
-    }
-
-    console.log('[GroceryList] Looking for recipe:', selectedRecipeId);
-    console.log('[GroceryList] Available recipes:', state.savedRecipes.length);
+    if (!selectedRecipeId) return;
 
     const recipe = state.savedRecipes.find(r => r.id === selectedRecipeId);
     if (!recipe) {
-      console.log('[GroceryList] Recipe not found');
       toast.error('Recipe not found');
       return;
     }
-
-    console.log('[GroceryList] Found recipe:', recipe.title, 'ingredients:', recipe.ingredients.length);
 
     const newItems: GroceryListItem[] = recipe.ingredients.map((ing, idx) => {
       const categoryId = getCategoryForIngredient(ing.name);
@@ -214,8 +203,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         sourceRecipeIds: [recipe.id],
       };
     });
-
-    console.log('[GroceryList] Adding items:', newItems.length);
 
     dispatch({
       type: 'UPDATE_GROCERY_LIST',
@@ -237,6 +224,13 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     });
   }
 
+  // Mobile: Long press to show move dialog
+  function handleLongPress(item: GroceryListItem) {
+    setItemToMove(item);
+    setShowMoveDialog(true);
+  }
+
+  // Desktop: Drag and drop handlers
   function handleDragStart(itemId: string) {
     setDraggedItem(itemId);
   }
@@ -319,6 +313,26 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     }
   }
 
+  // Swipe gesture handlers for mobile
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  function handleTouchStart(e: React.TouchEvent, itemId: string) {
+    touchStartX = e.targetTouches[0].clientX;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent, itemId: string) {
+    touchEndX = e.changedTouches[0].clientX;
+    const swipeDistance = touchStartX - touchEndX;
+    
+    // Swipe left to delete (> 100px)
+    if (swipeDistance > 100) {
+      setSwipedItem(itemId);
+    } else if (swipeDistance < -50) {
+      setSwipedItem(null);
+    }
+  }
+
   const itemsByCategory = categories.reduce((acc, category) => {
     acc[category.id] = items.filter(item => item.categoryId === category.id);
     return acc;
@@ -336,83 +350,100 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-4 pb-24">
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col gap-4 mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Grocery List</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grocery List</h1>
             <p className="text-sm text-gray-500 mt-1">
               {checkedCount} of {totalCount} items checked
             </p>
           </div>
-          <div className="flex gap-2">
-          {totalCount > 0 && (
+          
+          {/* Mobile-optimized button layout */}
+          <div className="flex flex-wrap gap-2">
             <Button
-              onClick={handleSendToCart}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+              onClick={() => setShowAddItemDialog(true)}
+              className="flex-1 min-w-[140px] h-12"
             >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Send List To Cart "Coming Soon"
+              <Plus className="w-4 h-4 mr-2" />
+              Add Item
             </Button>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => setShowAddRecipeDialog(true)}
-          >
-            <ChefHat className="w-4 h-4 mr-2" />
-            Add Recipe
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowAddItemDialog(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Item
-          </Button>
-          {checkedCount > 0 && (
-            <Button variant="outline" onClick={handleClearChecked}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Clear Checked
+            <Button
+              variant="outline"
+              onClick={() => setShowAddRecipeDialog(true)}
+              className="flex-1 min-w-[140px] h-12"
+            >
+              <ChefHat className="w-4 h-4 mr-2" />
+              Add Recipe
             </Button>
+          </div>
+
+          {(checkedCount > 0 || totalCount > 0) && (
+            <div className="flex flex-wrap gap-2">
+              {checkedCount > 0 && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleClearChecked}
+                  className="flex-1 h-12"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Clear Checked
+                </Button>
+              )}
+              {totalCount > 0 && (
+                <>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleClearAll}
+                    className="flex-1 h-12"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clear All
+                  </Button>
+                  <Button
+                    onClick={handleSendToCart}
+                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Send to Cart
+                  </Button>
+                </>
+              )}
+            </div>
           )}
-          {totalCount > 0 && (
-            <Button variant="destructive" onClick={handleClearAll}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Clear All
-            </Button>
-          )}
-        </div>
         </div>
 
+        {/* Meal planner date range - mobile optimized */}
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <Calendar className="w-5 h-5 text-blue-600" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700 mb-2">Auto-populate from Meal Planner</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm text-gray-600">From:</Label>
-                    <Input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-40"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Label className="text-sm text-gray-600">To:</Label>
-                    <Input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-40"
-                    />
-                  </div>
-                  <Button onClick={loadMealPlannerItems} size="sm">
-                    Refresh List
-                  </Button>
+          <CardContent className="pt-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                <p className="text-sm font-medium text-gray-700">Auto-populate from Meal Planner</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1">
+                  <Label className="text-xs text-gray-600">From:</Label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full h-12"
+                  />
                 </div>
+                <div className="flex-1">
+                  <Label className="text-xs text-gray-600">To:</Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full h-12"
+                  />
+                </div>
+                <Button onClick={loadMealPlannerItems} className="h-12 sm:self-end">
+                  Refresh
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -425,7 +456,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <p className="text-gray-500 mb-4">
               Your grocery list is empty. Add recipes to your meal plan to automatically generate a grocery list.
             </p>
-            <Button onClick={() => onNavigate?.('meal-planner')}>
+            <Button onClick={() => onNavigate?.('meal-planner')} className="h-12">
               <Calendar className="w-4 h-4 mr-2" />
               Go to Meal Planner
             </Button>
@@ -467,21 +498,34 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                         key={item.id}
                         draggable
                         onDragStart={() => handleDragStart(item.id)}
-                        className={`flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors ${
+                        onTouchStart={(e) => handleTouchStart(e, item.id)}
+                        onTouchEnd={(e) => handleTouchEnd(e, item.id)}
+                        className={`relative flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-all ${
                           draggedItem === item.id ? 'opacity-50' : ''
-                        } ${item.checked ? 'opacity-60' : ''}`}
+                        } ${item.checked ? 'opacity-60' : ''} ${
+                          swipedItem === item.id ? 'bg-red-50' : ''
+                        }`}
                       >
-                        <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+                        {/* Desktop drag handle */}
+                        <GripVertical className="w-4 h-4 text-gray-400 cursor-move hidden md:block" />
+                        
+                        {/* Mobile: Tap to move category */}
+                        <button
+                          onClick={() => handleLongPress(item)}
+                          className="md:hidden p-2 -ml-2"
+                        >
+                          <GripVertical className="w-5 h-5 text-gray-400" />
+                        </button>
+
                         <Checkbox
                           checked={item.checked}
-                          onCheckedChange={() =>
-                            handleToggleItem(item.id)
-                          }
+                          onCheckedChange={() => handleToggleItem(item.id)}
+                          className="h-6 w-6"
                         />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span
-                              className={`font-medium ${
+                              className={`font-medium text-base ${
                                 item.checked ? 'line-through text-gray-500' : 'text-gray-900'
                               }`}
                             >
@@ -497,12 +541,15 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                             {formatQuantity(item.quantity)} {item.unit}
                           </p>
                         </div>
+
+                        {/* Delete button - always visible on mobile */}
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteItem(item.id)}
+                          className="shrink-0 h-10 w-10"
                         >
-                          <Trash2 className="w-4 h-4 text-gray-400" />
+                          <Trash2 className="w-5 h-5 text-red-500" />
                         </Button>
                       </div>
                     ))}
@@ -514,6 +561,37 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </div>
       )}
 
+      {/* Move Item Dialog for Mobile */}
+      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move to Category</DialogTitle>
+            <DialogDescription>
+              Select a new category for "{itemToMove?.name}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-4">
+            {categories.map(category => (
+              <Button
+                key={category.id}
+                variant="outline"
+                className="w-full h-14 justify-start text-left"
+                onClick={() => {
+                  if (itemToMove) {
+                    handleMoveItem(itemToMove.id, category.id);
+                  }
+                  setShowMoveDialog(false);
+                  setItemToMove(null);
+                }}
+              >
+                <span className="text-base font-medium">{category.name}</span>
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Item Dialog - Mobile optimized */}
       <Dialog open={showAddItemDialog} onOpenChange={setShowAddItemDialog}>
         <DialogContent>
           <DialogHeader>
@@ -530,6 +608,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                 value={newItemName}
                 onChange={e => setNewItemName(e.target.value)}
                 placeholder="e.g., Milk, Eggs"
+                className="h-12"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -541,6 +620,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                   value={newItemQuantity}
                   onChange={e => setNewItemQuantity(e.target.value)}
                   placeholder="1"
+                  className="h-12"
                 />
               </div>
               <div className="space-y-2">
@@ -550,13 +630,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                   value={newItemUnit}
                   onChange={e => setNewItemUnit(e.target.value)}
                   placeholder="e.g., cups, lbs"
+                  className="h-12"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="itemCategory">Category *</Label>
               <Select value={newItemCategory} onValueChange={setNewItemCategory}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -573,16 +654,22 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <Button
               variant="outline"
               onClick={() => setShowAddItemDialog(false)}
+              className="h-12"
             >
               Cancel
             </Button>
-            <Button onClick={handleAddItem} disabled={!newItemName.trim() || !newItemCategory}>
+            <Button 
+              onClick={handleAddItem} 
+              disabled={!newItemName.trim() || !newItemCategory}
+              className="h-12"
+            >
               Add Item
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Add Recipe Dialog - Mobile optimized */}
       <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
         <DialogContent>
           <DialogHeader>
@@ -595,7 +682,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <div className="space-y-2">
               <Label htmlFor="recipeSelect">Recipe *</Label>
               <Select value={selectedRecipeId} onValueChange={setSelectedRecipeId}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12">
                   <SelectValue placeholder="Select a recipe" />
                 </SelectTrigger>
                 <SelectContent>
@@ -612,10 +699,15 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <Button
               variant="outline"
               onClick={() => setShowAddRecipeDialog(false)}
+              className="h-12"
             >
               Cancel
             </Button>
-            <Button onClick={handleAddRecipe} disabled={!selectedRecipeId}>
+            <Button 
+              onClick={handleAddRecipe} 
+              disabled={!selectedRecipeId}
+              className="h-12"
+            >
               Add Ingredients
             </Button>
           </DialogFooter>
