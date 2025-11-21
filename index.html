@@ -2,9 +2,36 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- Essential for Capacitor / Native App feel -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="light" />
+    <meta name="theme-color" content="#fff7ed" />
+
+    <!-- Favicons (supports all devices) -->
     <link rel="icon" type="image/jpeg" href="/favicon.ico.jpg" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />    
-    <title>Meal Scrape Management App</title>
+    <link rel="apple-touch-icon" href="/favicon.ico.jpg" />
+
+    <!-- PWA Manifest (Capacitor uses this) -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <title>Meal Scrape</title>
+
+    <!-- Full-screen safe area support (notch + home bar) -->
+    <style>
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background: #fff7ed; /* Matches your orange-50 gradient start */
+      }
+      body {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
