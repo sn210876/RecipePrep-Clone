@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { RecipeCard } from '../components/RecipeCard';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
-import { Search, TrendingUp, Zap, Star, Leaf, Globe, Heart, Cake } from 'lucide-react';
+import { Search, TrendingUp, Zap, Star, Leaf, Globe, Heart, Cake, Menu, X as XClose } from 'lucide-react';
 import { useRecipes } from '../context/RecipeContext';
 import { getRecommendedRecipes, getRecommendationInsights } from '../services/recommendationService';
 import { CookMode } from '../components/CookMode';
@@ -24,6 +24,14 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showCuisineFilter, setShowCuisineFilter] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const handleOpenPost = (e: CustomEvent) => {
@@ -50,7 +58,6 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
 
     loadRecipes();
 
-    // Reload recipes when the component becomes visible
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         loadRecipes();
@@ -58,7 +65,6 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -109,39 +115,39 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   const trendingRecipes = useMemo(() => {
     const sorted = [...allRecipes]
       .sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
-    return showAllTrending ? sorted : sorted.slice(0, 12);
-  }, [allRecipes, showAllTrending]);
+    return showAllTrending ? sorted : sorted.slice(0, isMobile ? 6 : 12);
+  }, [allRecipes, showAllTrending, isMobile]);
 
   const quickEasyRecipes = useMemo(() => {
     const filtered = allRecipes
       .filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy');
-    return showAllQuick ? filtered : filtered.slice(0, 12);
-  }, [allRecipes, showAllQuick]);
+    return showAllQuick ? filtered : filtered.slice(0, isMobile ? 6 : 12);
+  }, [allRecipes, showAllQuick, isMobile]);
 
   const healthyRecipes = useMemo(() => {
     const filtered = allRecipes
       .filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan'));
-    return showAllHealthy ? filtered : filtered.slice(0, 12);
-  }, [allRecipes, showAllHealthy]);
+    return showAllHealthy ? filtered : filtered.slice(0, isMobile ? 6 : 12);
+  }, [allRecipes, showAllHealthy, isMobile]);
 
   const internationalRecipes = useMemo(() => {
     const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'];
     const filtered = allRecipes
       .filter((r) => cuisines.includes(r.cuisineType));
-    return showAllInternational ? filtered : filtered.slice(0, 12);
-  }, [allRecipes, showAllInternational]);
+    return showAllInternational ? filtered : filtered.slice(0, isMobile ? 6 : 12);
+  }, [allRecipes, showAllInternational, isMobile]);
 
   const petMealsRecipes = useMemo(() => {
     const filtered = allRecipes
       .filter((r) => r.cuisineType === 'Pet Meals');
-    return showAllPetMeals ? filtered : filtered.slice(0, 12);
-  }, [allRecipes, showAllPetMeals]);
+    return showAllPetMeals ? filtered : filtered.slice(0, isMobile ? 6 : 12);
+  }, [allRecipes, showAllPetMeals, isMobile]);
 
   const bakedGoodsRecipes = useMemo(() => {
     const filtered = allRecipes
       .filter((r) => r.cuisineType === 'Culinary/Baked Goods');
-    return showAllBakedGoods ? filtered : filtered.slice(0, 12);
-  }, [allRecipes, showAllBakedGoods]);
+    return showAllBakedGoods ? filtered : filtered.slice(0, isMobile ? 6 : 12);
+  }, [allRecipes, showAllBakedGoods, isMobile]);
 
   const [recommendedRecipes, setRecommendedRecipes] = useState<Recipe[]>([]);
 
@@ -151,13 +157,13 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
         allRecipes,
         state.savedRecipes,
         state.userPreferences,
-        6
+        isMobile ? 6 : 6
       );
       setRecommendedRecipes(recommendations);
     };
 
     updateRecommendations();
-  }, [allRecipes, state.savedRecipes, state.userPreferences]);
+  }, [allRecipes, state.savedRecipes, state.userPreferences, isMobile]);
 
   const recommendationInsight = useMemo(() => {
     return getRecommendationInsights(state.savedRecipes);
@@ -183,344 +189,237 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
     }
   };
 
+  const RecipeSection = ({ title, subtitle, icon: Icon, recipes, showAll, onToggle, allCount, buttonColor }: any) => (
+    <section>
+      <div className="flex items-center gap-3 mb-6">
+        <div className={`bg-gradient-to-r ${buttonColor} p-2 rounded-lg`}>
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+            {title}
+          </h2>
+          <p className="text-sm md:text-base text-gray-600">
+            {subtitle}
+          </p>
+        </div>
+      </div>
+      <div className={`grid gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
+        {recipes.map((recipe: Recipe) => (
+          <RecipeCard
+            key={recipe.id}
+            recipe={recipe}
+            onSave={handleSave}
+            onCook={handleCook}
+            onDelete={handleDeleteRecipe}
+            isAdmin={isAdmin}
+            showReviewButton={true}
+          />
+        ))}
+      </div>
+      {allCount > (isMobile ? 6 : 12) && (
+        <div className="text-center mt-8">
+          <Button
+            onClick={() => onToggle(!showAll)}
+            variant="outline"
+            size="lg"
+            className={`text-sm md:text-base`}
+          >
+            {showAll ? 'Show Less' : 'Show More'}
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-  Discover Amazing Recipes
-</h1>
-<p className="text-base text-gray-600 max-w-2xl mx-auto mb-2">
-  Recipes scraped from across <span className="font-semibold text-blue-600">social media</span> and the <span className="font-semibold text-blue-600">web</span>
-</p> 
-<p className="text-sm text-gray-500 max-w-2xl mx-auto">
-  Save recipes • Add your your own recipes • Plan your meals
-</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Header */}
+        <div className="text-center mb-8 md:mb-12">
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-3 md:mb-4">
+            Discover Amazing Recipes
+          </h1>
+          <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto mb-2">
+            Recipes scraped from across <span className="font-semibold text-blue-600">social media</span> and the <span className="font-semibold text-blue-600">web</span>
+          </p>
+          <p className="text-xs md:text-sm text-gray-500 max-w-2xl mx-auto">
+            Save recipes • Add your own recipes • Plan your meals
+          </p>
         </div>
 
-        <div className="mb-12 space-y-6">
-          <div className="relative max-w-2xl mx-auto">
+        {/* Search and Filters */}
+        <div className="mb-8 md:mb-12 space-y-4 md:space-y-6">
+          {/* Search Bar */}
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               type="text"
-              placeholder="Search for recipes, ingredients, or cuisines..."
+              placeholder="Search recipes, ingredients..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 text-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 shadow-sm"
+              className="pl-12 h-12 md:h-14 text-base border-gray-300 focus:border-orange-500 focus:ring-orange-500 shadow-sm"
             />
           </div>
 
-          <div className="flex flex-wrap gap-2 justify-center">
-            <Button
-              variant={selectedCuisine === null ? 'default' : 'outline'}
-              onClick={() => setSelectedCuisine(null)}
-              size="sm"
-              className={
-                selectedCuisine === null
-                  ? 'bg-orange-500 hover:bg-orange-600'
-                  : ''
-              }
-            >
-              All Cuisines
-            </Button>
-            {cuisines.map((cuisine) => (
-              <Button
-                key={cuisine}
-                variant={selectedCuisine === cuisine ? 'default' : 'outline'}
-                onClick={() => setSelectedCuisine(cuisine)}
-                size="sm"
-                className={
-                  selectedCuisine === cuisine
-                    ? 'bg-orange-500 hover:bg-orange-600'
-                    : ''
-                }
+          {/* Cuisine Filter */}
+          {isMobile ? (
+            <div className="space-y-3">
+              <button
+                onClick={() => setShowCuisineFilter(!showCuisineFilter)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                {cuisine}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {searchQuery === '' && selectedCuisine === null ? (
-          <div className="space-y-16">
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-orange-500 to-rose-500 p-2 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Trending Now
-                  </h2>
-                  <p className="text-gray-600">
-                    Most popular recipes this week
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {trendingRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                    onDelete={handleDeleteRecipe}
-                    isAdmin={isAdmin}
-                    showReviewButton={true}
-                  />
-                ))}
-              </div>
-              {allRecipes.length > 12 && (
-                <div className="text-center mt-8">
+                <span className="font-medium text-gray-900">
+                  {selectedCuisine ? `Cuisine: ${selectedCuisine}` : 'Filter by Cuisine'}
+                </span>
+                {showCuisineFilter ? (
+                  <XClose className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </button>
+              {showCuisineFilter && (
+                <div className="space-y-2 bg-white border border-gray-200 rounded-lg p-3">
                   <Button
-                    onClick={() => setShowAllTrending(!showAllTrending)}
-                    variant="outline"
-                    size="lg"
-                    className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                    variant={selectedCuisine === null ? 'default' : 'outline'}
+                    onClick={() => {
+                      setSelectedCuisine(null);
+                      setShowCuisineFilter(false);
+                    }}
+                    size="sm"
+                    className={`w-full justify-start ${
+                      selectedCuisine === null ? 'bg-orange-500 hover:bg-orange-600' : ''
+                    }`}
                   >
-                    {showAllTrending ? 'Show Less' : 'Show More Recipes'}
+                    All Cuisines
                   </Button>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-2 rounded-lg">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Quick & Easy
-                  </h2>
-                  <p className="text-gray-600">
-                    Delicious meals ready in 30 minutes or less
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {quickEasyRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                    onDelete={handleDeleteRecipe}
-                    isAdmin={isAdmin}
-                    showReviewButton={true}
-                  />
-                ))}
-              </div>
-              {allRecipes.filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy').length > 12 && (
-                <div className="text-center mt-8">
-                  <Button
-                    onClick={() => setShowAllQuick(!showAllQuick)}
-                    variant="outline"
-                    size="lg"
-                    className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                  >
-                    {showAllQuick ? 'Show Less' : 'Show More Recipes'}
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-lg">
-                  <Leaf className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Healthy Options
-                  </h2>
-                  <p className="text-gray-600">
-                    Vegetarian and vegan recipes for a lighter meal
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {healthyRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                    onDelete={handleDeleteRecipe}
-                    isAdmin={isAdmin}
-                    showReviewButton={true}
-                  />
-                ))}
-              </div>
-              {allRecipes.filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan')).length > 12 && (
-                <div className="text-center mt-8">
-                  <Button
-                    onClick={() => setShowAllHealthy(!showAllHealthy)}
-                    variant="outline"
-                    size="lg"
-                    className="border-green-500 text-green-600 hover:bg-green-50"
-                  >
-                    {showAllHealthy ? 'Show Less' : 'Show More Recipes'}
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-2 rounded-lg">
-                  <Globe className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    International Flavors
-                  </h2>
-                  <p className="text-gray-600">
-                    Explore cuisines from around the world
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {internationalRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                    onDelete={handleDeleteRecipe}
-                    isAdmin={isAdmin}
-                    showReviewButton={true}
-                  />
-                ))}
-              </div>
-              {allRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'].includes(r.cuisineType)).length > 12 && (
-                <div className="text-center mt-8">
-                  <Button
-                    onClick={() => setShowAllInternational(!showAllInternational)}
-                    variant="outline"
-                    size="lg"
-                    className="border-amber-500 text-amber-600 hover:bg-amber-50"
-                  >
-                    {showAllInternational ? 'Show Less' : 'Show More Recipes'}
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            {petMealsRecipes.length > 0 && (
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-2 rounded-lg">
-                    <Heart className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900">
-                      Pet Meals & Treats
-                    </h2>
-                    <p className="text-gray-600">
-                      Homemade recipes for your furry friends
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {petMealsRecipes.map((recipe) => (
-                    <RecipeCard
-                      key={recipe.id}
-                      recipe={recipe}
-                      onSave={handleSave}
-                      onCook={handleCook}
-                      onDelete={handleDeleteRecipe}
-                      isAdmin={isAdmin}
-                      showReviewButton={true}
-                    />
+                  {cuisines.map((cuisine) => (
+                    <Button
+                      key={cuisine}
+                      variant={selectedCuisine === cuisine ? 'default' : 'outline'}
+                      onClick={() => {
+                        setSelectedCuisine(cuisine);
+                        setShowCuisineFilter(false);
+                      }}
+                      size="sm"
+                      className={`w-full justify-start text-sm ${
+                        selectedCuisine === cuisine ? 'bg-orange-500 hover:bg-orange-600' : ''
+                      }`}
+                    >
+                      {cuisine}
+                    </Button>
                   ))}
                 </div>
-                {allRecipes.filter((r) => r.cuisineType === 'Pet Meals').length > 12 && (
-                  <div className="text-center mt-8">
-                    <Button
-                      onClick={() => setShowAllPetMeals(!showAllPetMeals)}
-                      variant="outline"
-                      size="lg"
-                      className="border-pink-500 text-pink-600 hover:bg-pink-50"
-                    >
-                      {showAllPetMeals ? 'Show Less' : 'Show More Pet Recipes'}
-                    </Button>
-                  </div>
-                )}
-              </section>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button
+                variant={selectedCuisine === null ? 'default' : 'outline'}
+                onClick={() => setSelectedCuisine(null)}
+                size="sm"
+                className={selectedCuisine === null ? 'bg-orange-500 hover:bg-orange-600' : ''}
+              >
+                All Cuisines
+              </Button>
+              {cuisines.map((cuisine) => (
+                <Button
+                  key={cuisine}
+                  variant={selectedCuisine === cuisine ? 'default' : 'outline'}
+                  onClick={() => setSelectedCuisine(cuisine)}
+                  size="sm"
+                  className={selectedCuisine === cuisine ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                >
+                  {cuisine}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        {searchQuery === '' && selectedCuisine === null ? (
+          <div className="space-y-12 md:space-y-16">
+            <RecipeSection
+              title="Trending Now"
+              subtitle="Most popular recipes this week"
+              icon={TrendingUp}
+              recipes={trendingRecipes}
+              showAll={showAllTrending}
+              onToggle={setShowAllTrending}
+              allCount={allRecipes.length}
+              buttonColor="from-orange-500 to-rose-500"
+            />
+
+            <RecipeSection
+              title="Quick & Easy"
+              subtitle="Delicious meals ready in 30 minutes or less"
+              icon={Zap}
+              recipes={quickEasyRecipes}
+              showAll={showAllQuick}
+              onToggle={setShowAllQuick}
+              allCount={allRecipes.filter((r) => r.prepTime + r.cookTime <= 30 && r.difficulty === 'Easy').length}
+              buttonColor="from-emerald-500 to-teal-500"
+            />
+
+            <RecipeSection
+              title="Healthy Options"
+              subtitle="Vegetarian and vegan recipes for a lighter meal"
+              icon={Leaf}
+              recipes={healthyRecipes}
+              showAll={showAllHealthy}
+              onToggle={setShowAllHealthy}
+              allCount={allRecipes.filter((r) => r.dietaryTags.includes('Vegetarian') || r.dietaryTags.includes('Vegan')).length}
+              buttonColor="from-green-500 to-emerald-500"
+            />
+
+            <RecipeSection
+              title="International Flavors"
+              subtitle="Explore cuisines from around the world"
+              icon={Globe}
+              recipes={internationalRecipes}
+              showAll={showAllInternational}
+              onToggle={setShowAllInternational}
+              allCount={allRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese'].includes(r.cuisineType)).length}
+              buttonColor="from-amber-500 to-orange-500"
+            />
+
+            {petMealsRecipes.length > 0 && (
+              <RecipeSection
+                title="Pet Meals & Treats"
+                subtitle="Homemade recipes for your furry friends"
+                icon={Heart}
+                recipes={petMealsRecipes}
+                showAll={showAllPetMeals}
+                onToggle={setShowAllPetMeals}
+                allCount={allRecipes.filter((r) => r.cuisineType === 'Pet Meals').length}
+                buttonColor="from-pink-500 to-rose-500"
+              />
             )}
 
             {bakedGoodsRecipes.length > 0 && (
-              <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-2 rounded-lg">
-                    <Cake className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900">
-                      Culinary & Baked Goods
-                    </h2>
-                    <p className="text-gray-600">
-                      From artisan breads to elegant pastries
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {bakedGoodsRecipes.map((recipe) => (
-                    <RecipeCard
-                      key={recipe.id}
-                      recipe={recipe}
-                      onSave={handleSave}
-                      onCook={handleCook}
-                      onDelete={handleDeleteRecipe}
-                      isAdmin={isAdmin}
-                      showReviewButton={true}
-                    />
-                  ))}
-                </div>
-                {allRecipes.filter((r) => r.cuisineType === 'Culinary/Baked Goods').length > 12 && (
-                  <div className="text-center mt-8">
-                    <Button
-                      onClick={() => setShowAllBakedGoods(!showAllBakedGoods)}
-                      variant="outline"
-                      size="lg"
-                      className="border-amber-500 text-amber-600 hover:bg-amber-50"
-                    >
-                      {showAllBakedGoods ? 'Show Less' : 'Show More Baked Goods'}
-                    </Button>
-                  </div>
-                )}
-              </section>
+              <RecipeSection
+                title="Culinary & Baked Goods"
+                subtitle="From artisan breads to elegant pastries"
+                icon={Cake}
+                recipes={bakedGoodsRecipes}
+                showAll={showAllBakedGoods}
+                onToggle={setShowAllBakedGoods}
+                allCount={allRecipes.filter((r) => r.cuisineType === 'Culinary/Baked Goods').length}
+                buttonColor="from-amber-500 to-orange-500"
+              />
             )}
 
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-lg">
-                  <Star className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900">
-                    Recommended for You
-                  </h2>
-                  <p className="text-gray-600">
-                    {recommendationInsight}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {recommendedRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onSave={handleSave}
-                    onCook={handleCook}
-                    onDelete={handleDeleteRecipe}
-                    isAdmin={isAdmin}
-                    showReviewButton={true}
-                  />
-                ))}
-              </div>
-            </section>
+            <RecipeSection
+              title="Recommended for You"
+              subtitle={recommendationInsight}
+              icon={Star}
+              recipes={recommendedRecipes}
+              showAll={false}
+              onToggle={() => {}}
+              allCount={recommendedRecipes.length}
+              buttonColor="from-blue-500 to-cyan-500"
+            />
           </div>
         ) : (
           <section>
@@ -529,12 +428,11 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
                 Search Results
               </h2>
               <p className="text-gray-600">
-                Found {filteredRecipes.length} recipe
-                {filteredRecipes.length !== 1 ? 's' : ''}
+                Found {filteredRecipes.length} recipe{filteredRecipes.length !== 1 ? 's' : ''}
               </p>
             </div>
             {filteredRecipes.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className={`grid gap-4 md:gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
                 {filteredRecipes.map((recipe) => (
                   <RecipeCard
                     key={recipe.id}
@@ -549,7 +447,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-xl text-gray-500">
+                <p className="text-lg text-gray-500">
                   No recipes found. Try adjusting your search.
                 </p>
               </div>
@@ -557,6 +455,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
           </section>
         )}
       </div>
+
       {cookingRecipe && (
         <CookMode
           recipe={cookingRecipe}
