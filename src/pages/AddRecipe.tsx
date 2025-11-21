@@ -549,7 +549,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Chocolate Chip Cookies"
+                  placeholder="ex. Chocolate Chip Cookies"
                   className={`mt-1.5 text-base ${errors.title ? 'border-red-500' : ''}`}
                 />
                 {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
