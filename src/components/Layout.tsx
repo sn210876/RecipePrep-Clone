@@ -191,7 +191,7 @@ const loadUnreadCount = async (userId: string) => {
             <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600 shadow-lg flex-shrink-0 overflow-hidden">
   <img 
-    src="/Woodenspoon.jpg" 
+    src="/Woodenspoon.png" 
     alt="Meal Scrape" 
     className="w-full h-full object-cover"
   />
