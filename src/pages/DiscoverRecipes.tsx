@@ -205,7 +205,12 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
       </div>
     </div>
     {/* ✅ ADDED: auto-rows-fr makes all rows same height */}
-    <div className={`grid gap-4 md:gap-6 auto-rows-fr ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
+   <div className={`grid gap-4 md:gap-5 auto-rows-fr ${
+  isMobile 
+    ? 'grid-cols-2' 
+    : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+}`}>
+
       {recipes.map((recipe: Recipe) => (
         <RecipeCard
           key={recipe.id}
