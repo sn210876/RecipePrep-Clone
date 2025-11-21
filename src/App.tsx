@@ -17,7 +17,12 @@ import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
 import { AuthForm } from './components/AuthForm';
 import { Home } from './pages/Home';
-
+// Mobile-safe layout fix – works everywhere
+const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] bg-gradient-to-br from-orange-50 to-amber-50">
+    {children}
+  </div>
+);
 function AppContent() {
   const { user, loading, isEmailVerified, showVerifying } = useAuth();
 html, body, #root { height: 100%; margin: 0; padding: 0; overflow-x: hidden; }
