@@ -60,23 +60,27 @@ export function StepVisualizer({ step }: StepVisualizerProps) {
 
   return (
     <Card className="overflow-hidden border-0 shadow-lg">
-      <div className="bg-orange-50 p-6">
+      <div className="bg-orange-50 p-4">
         <div className="flex flex-col items-center text-center">
-          <div className="w-32 h-32 rounded-full bg-gradient-to-br from-white to-orange-100 flex items-center justify-center mb-4 shadow-md">
-            <span className="text-7xl">{stepIcon}</span>
+          {/* Icon Circle - Responsive sizing */}
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-white to-orange-100 flex items-center justify-center mb-4 shadow-md">
+            <span className="text-5xl">{stepIcon}</span>
           </div>
 
-          <div className="bg-primary text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl mb-4 shadow-sm">
+          {/* Step Number Badge */}
+          <div className="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg mb-4 shadow-sm">
             {step.stepNumber}
           </div>
 
-          <p className="text-xl font-semibold text-gray-900 leading-relaxed mb-4 px-4">
+          {/* Instruction Text - Responsive and readable */}
+          <p className="text-base font-semibold text-gray-900 leading-relaxed mb-4 px-2">
             {decodeHtmlEntities(step.instruction)}
           </p>
 
+          {/* Duration Badge */}
           {step.duration && (
             <div className="flex items-center gap-1.5 text-sm text-gray-600 bg-white px-4 py-2 rounded-full shadow-sm">
-              <Clock className="w-4 h-4 text-primary" />
+              <Clock className="w-4 h-4 text-primary flex-shrink-0" />
               <span className="font-medium">{step.duration}</span>
             </div>
           )}
