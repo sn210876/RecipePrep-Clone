@@ -464,15 +464,30 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
               <span className="leading-tight">Import from URL</span>
             </CardTitle>
-            <CardDescription className="text-xs leading-relaxed">
-              <div className="mt-2 space-y-1">
-                         <p className="text-black-600 font-semibold"> INSTRUCTIONS - Copy and Paste a link that you see from online, or social media. Click "Extract Recipe", then update the recipe as need.  Note: AI does the best it can, some recipes may need manual editing. </p>
+           <CardDescription className="text-sm leading-relaxed">
+  <div className="mt-3 space-y-4">
+    {/* Underlined "INSTRUCTIONS" in solid black */}
+    <h4 className="text-black font-bold text-base pb-1 border-b-2 border-black inline-block">
+      INSTRUCTIONS
+    </h4>
 
-                <p className="text-emerald-600 font-semibold">✓ All Recipes, Some Blogs</p>
-                <p className="text-orange-600">⚠ Instagram/TikTok may take up to a minute, please be patient</p>
-                <p className="text-slate-500">🚧 YouTube coming soon</p>
-              </div>
-            </CardDescription>
+    {/* Numbered steps — each on its own line, solid black text */}
+    <ol className="space-y-2.5 text-black font-medium ml-1">
+      <li className="flex items-start gap-3">
+        <span className="font-bold text-orange-600">1</span>
+        <span>Copy and paste any recipe link from online or social media</span>
+      </li>
+      <li className="flex items-start gap-3">
+        <span className="font-bold text-orange-600">2</span>
+        <span>Click <span className="font-bold text-emerald-600">“Extract Recipe”</span></span>
+      </li>
+      <li className="flex items-start gap-3">
+        <span className="font-bold text-orange-600">3</span>
+        <span>Update the recipe as needed — AI does its best, but some recipes may need manual edits</span>
+      </li>
+    </ol>
+  </div>
+</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="relative">
