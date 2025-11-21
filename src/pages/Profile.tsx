@@ -121,22 +121,27 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
-  useEffect(() => {
+    useEffect(() => {
+    let isMounted = true;
+
     const loadProfile = async () => {
+      if (!isMounted) return; // ← This stops the flash when you press back
+
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          toast.error('Please log in');
-          window.history.pushState({}, '', '/');
+          if (isMounted) toast.error('Please log in');
+          if (isMounted) window.history.pushState({}, '', '/');
           return;
         }
-        setCurrentUserId(user.id);
 
+        if (!isMounted) return;
+
+        setCurrentUserId(user.id);
         let profileToLoad: ProfileData | null = null;
         let userIdToLoad: string | null = null;
 
         if (targetUsername) {
-          // Load someone else's profile by username
           const { data, error } = await supabase
             .from('profiles')
             .select('id, username, avatar_url, banner_url, bio, link')
@@ -144,16 +149,14 @@ export function Profile({ username: targetUsername }: ProfileProps) {
             .single();
 
           if (error || !data) {
-            toast.error('User not found');
-            window.history.pushState({}, '', '/discover');
-            setLoading(false);
+            if (isMounted) toast.error('User not found');
+            if (isMounted) window.history.pushState({}, '', '/discover');
+            if (isMounted) setLoading(false);
             return;
           }
-
           profileToLoad = data;
           userIdToLoad = data.id;
         } else {
-          // Load current user's profile
           const { data } = await supabase
             .from('profiles')
             .select('id, username, avatar_url, banner_url, bio, link')
@@ -173,10 +176,11 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           userIdToLoad = user.id;
         }
 
+        if (!isMounted) return;
+
         setTargetUserId(userIdToLoad);
         setIsOwnProfile(user.id === userIdToLoad);
 
-        // Fetch follower counts
         const { count: followersCount } = await supabase
           .from('follows')
           .select('*', { count: 'exact', head: true })
@@ -187,7 +191,6 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           .select('*', { count: 'exact', head: true })
           .eq('follower_id', userIdToLoad);
 
-        // Check if current user is following this profile
         if (user.id !== userIdToLoad) {
           const { data: followData } = await supabase
             .from('follows')
@@ -195,38 +198,42 @@ export function Profile({ username: targetUsername }: ProfileProps) {
             .eq('follower_id', user.id)
             .eq('following_id', userIdToLoad)
             .maybeSingle();
-          setIsFollowing(!!followData);
+          if (isMounted) setIsFollowing(!!followData);
         }
 
-        setProfile({
-          ...profileToLoad,
-          followers_count: followersCount || 0,
-          following_count: followingCount || 0,
-        });
+        if (isMounted) {
+          setProfile({
+            ...profileToLoad,
+            followers_count: followersCount || 0,
+            following_count: followingCount || 0,
+          });
+        }
 
-        // Load posts
         const { data: postsData } = await supabase
           .from('posts')
           .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
           .eq('user_id', userIdToLoad)
           .order('created_at', { ascending: false });
 
-        setPosts(postsData || []);
+        if (isMounted) setPosts(postsData || []);
 
-        // Update URL if needed (for own profile)
         if (!targetUsername && profileToLoad?.username) {
           window.history.replaceState({}, '', `/profile/${profileToLoad.username}`);
         }
 
-        setIsUserAdmin(await isAdmin());
+        if (isMounted) setIsUserAdmin(await isAdmin());
       } catch (err) {
-        toast.error('Failed to load profile');
+        if (isMounted) toast.error('Failed to load profile');
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [targetUsername]);
 
   // Check for ?post= query parameter to open a specific post
