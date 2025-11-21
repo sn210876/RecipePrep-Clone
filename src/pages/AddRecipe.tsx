@@ -466,7 +466,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </CardTitle>
             <CardDescription className="text-xs leading-relaxed">
               <div className="mt-2 space-y-1">
-                         <p className="text-black-600 font-semibold"> DIRECTIONS</p>
+                         <p className="text-black-600 font-semibold"> INSTRUCTIONS - Copy and Paste a link that you see from online, or social media. Click "Extract Recipe", then update the recipe as need.  Note: AI does the best it can, some recipes may need manual editing. </p>
 
                 <p className="text-emerald-600 font-semibold">✓ All Recipes, Some Blogs</p>
                 <p className="text-orange-600">⚠ Instagram/TikTok may take up to a minute, please be patient</p>
