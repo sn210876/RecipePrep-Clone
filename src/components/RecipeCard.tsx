@@ -19,6 +19,7 @@ interface RecipeCardProps {
   onDelete?: (recipeId: string) => void;
   showReviewButton?: boolean;
   isAdmin?: boolean;
+  preloadedSocialPost?: any; // NEW: Accept pre-loaded data
 }
 
 export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton = false, isAdmin = false }: RecipeCardProps) {
