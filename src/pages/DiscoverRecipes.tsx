@@ -44,6 +44,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [socialPostsMap, setSocialPostsMap] = useState<Map<string, any>>(new Map());
   const [showCuisineFilter, setShowCuisineFilter] = useState(false);
 
   useEffect(() => {
