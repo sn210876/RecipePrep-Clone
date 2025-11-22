@@ -620,7 +620,132 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       toast.error('Failed to update like');
     }
   };
+const PostSkeleton = () => (
+  <div className="bg-white border-b border-gray-200 animate-pulse">
+    <div className="px-4 py-3 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full bg-gray-300" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-gray-300 rounded w-32" />
+        <div className="h-3 bg-gray-300 rounded w-24" />
+      </div>
+    </div>
+    <div className="bg-gray-300 h-96 w-full" />
+    <div className="px-4 py-3 space-y-3">
+      <div className="h-4 bg-gray-300 rounded w-full" />
+      <div className="h-4 bg-gray-300 rounded w-3/4" />
+      <div className="flex gap-4">
+        <div className="h-9 w-20 bg-gray-300 rounded-full" />
+        <div className="h-9 w-20 bg-gray-300 rounded-full" />
+        <div className="h-9 w-20 bg-gray-300 rounded-full ml-auto" />
+      </div>
+    </div>
+  </div>
+);
+// ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
+interface Post {
+  id: string;
+  user_id: string;
+  title: string;
+  image_url: string | null;
+  photo_url: string | null;
+  video_url: string | null;
+  caption: string | null;
+  recipe_url: string | null;
+  recipe_id: string | null;
+  created_at: string;
+  spotify_track_id?: string | null;
+  spotify_track_name?: string | null;
+  spotify_artist_name?: string | null;
+  spotify_album_art?: string | null;
+  spotify_preview_url?: string | null;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+  likes: { user_id: string }[];
+  comments: {
+    id: string;
+    user_id: string;
+    text: string;
+    created_at: string;
+    profiles: {
+      username: string;
+    };
+  }[];
+  _count?: {
+    likes: number;
+    comments: number;
+  };
+}
+
+interface DiscoverProps {
+  onNavigateToMessages?: (userId: string, username: string) => void;
+  onNavigate?: (page: string) => void;
+  sharedPostId?: string | null;
+  onPostViewed?: () => void;
+}
+
+export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
+  const { isAdmin } = useAuth();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  // … (all your other useState lines stay exactly the same)
+
+  // … (all your useEffect and other functions stay exactly the same until toggleLike)
+
+  const toggleLike = async (postId: string) => {
+    if (!currentUserId) return;
+    const post = posts.find(p => p.id === postId);
+    const isLiked = post?.likes?.some(like => like.user_id === currentUserId);
+    try {
+      if (isLiked) {
+        await supabase
+          .from('likes')
+          .delete()
+          .match({ post_id: postId, user_id: currentUserId });
+        setPosts(prev =>
+          prev.map(p =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likes: p.likes.filter(like => like.user_id !== currentUserId),
+                  _count: { ...p._count!, likes: p._count!.likes - 1 },
+                }
+              : p
+          )
+        );
+      } else {
+        await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
+        const post = posts.find(p => p.id === postId);
+        if (post && post.user_id !== currentUserId) {
+          await supabase.from('notifications').insert({
+            user_id: post.user_id,
+            actor_id: currentUserId,
+            type: 'like',
+            post_id: postId,
+          });
+        }
+        setPosts(prev =>
+          prev.map(p =>
+            p.id === postId
+              ? {
+                  ...p,
+                  likes: [...p.likes, { user_id: currentUserId }],
+                  _count: { ...p._count!, likes: p._count!.likes + 1 },
+                }
+              : p
+          )
+        );
+      }
+    } catch (error: any) {
+      console.error('Error toggling like:', error);
+      toast.error('Failed to update like');
+    }
+  };
    if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-32">
