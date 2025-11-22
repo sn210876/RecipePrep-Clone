@@ -169,48 +169,7 @@ const commentsData = commentsWithProfiles.data || [];
 setComments(commentsData);
 
       // Auto-play music if available
-      if (postResult.data?.spotify_preview_url) {
-        setTimeout(() => {
-          const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
-          if (audio) {
-            audio.play().catch(err => console.log('Auto-play prevented:', err));
-            setIsPlaying(true);
-          }
-        }, 500);
-      }
-
-      // Handle comments - batch fetch profiles
-      if (commentsResult.error) throw commentsResult.error;
-      
-      if (commentsResult.data && commentsResult.data.length > 0) {
-        const userIds = [...new Set(commentsResult.data.map(c => c.user_id))];
-        
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', userIds);
-
-        if (profilesError) throw profilesError;
-
-        const profilesMap = new Map(
-          (profilesData || []).map(p => [p.id, p])
-        );
-
-        const commentsWithProfiles = commentsResult.data.map(comment => ({
-          ...comment,
-          profiles: profilesMap.get(comment.user_id) || {
-            username: 'Unknown User',
-            avatar_url: null,
-          },
-        }));
-
-        setComments(commentsWithProfiles);
-      } else {
-        setComments([]);
-      }
-
-      // Handle ratings
-      if (ratingsResult.error) throw ratingsResult.error;
+    
       
       if (ratingsResult.data && ratingsResult.data.length > 0) {
         const avg = ratingsResult.data.reduce((sum, r) => sum + r.rating, 0) / ratingsResult.data.length;
