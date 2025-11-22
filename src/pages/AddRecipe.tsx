@@ -460,7 +460,7 @@ return (
 {/* Title section - scrolls with content, below Layout header */}
       <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6">
         <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create  Recipe</h1>
           <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
         </div>
       </div>
