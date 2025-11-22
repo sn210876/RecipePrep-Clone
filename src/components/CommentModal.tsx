@@ -56,29 +56,32 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       const userId = userData.user?.id || null;
       setCurrentUserId(userId);
 
-      // ✅ Run all queries in parallel
-      const [postResult, commentsResult, ratingsResult, userRatingResult] = await Promise.all([
-        // Query 1: Get post
+      // ✅ OPTIMIZED: Use joins to get everything in fewer queries
+      const [postWithRatings, commentsWithProfiles, userRatingResult] = await Promise.all([
+        // Query 1: Get post WITH all ratings in one query
         supabase
           .from('posts')
-          .select('*')
+          .select(`
+            *,
+            post_ratings(rating)
+          `)
           .eq('id', postId)
           .maybeSingle(),
         
-        // Query 2: Get all comments
+        // Query 2: Get comments WITH profiles in one query
         supabase
           .from('comments')
-          .select('*')
+          .select(`
+            id,
+            text,
+            created_at,
+            user_id,
+            profiles!comments_user_id_fkey(username, avatar_url)
+          `)
           .eq('post_id', postId)
           .order('created_at', { ascending: true }),
         
-        // Query 3: Get all ratings
-        supabase
-          .from('post_ratings')
-          .select('rating')
-          .eq('post_id', postId),
-        
-        // Query 4: Get user's rating (if logged in)
+        // Query 3: Get user's rating (if logged in)
         userId
           ? supabase
               .from('post_ratings')
@@ -88,6 +91,35 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               .maybeSingle()
           : Promise.resolve({ data: null, error: null })
       ]);
+
+      // Handle post and ratings
+      if (postWithRatings.error) throw postWithRatings.error;
+      setPost(postWithRatings.data);
+
+      // Calculate ratings from joined data
+      const ratings = postWithRatings.data?.post_ratings || [];
+      if (ratings.length > 0) {
+        const avg = ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length;
+        setAverageRating(avg);
+        setTotalRatings(ratings.length);
+      } else {
+        setAverageRating(0);
+        setTotalRatings(0);
+      }
+
+      // Auto-play music if available
+      if (postWithRatings.data?.spotify_preview_url) {
+        setTimeout(() => {
+          const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
+          if (audio) {
+            audio.play().catch(err => console.log('Auto-play prevented:', err));
+            setIsPlaying(true);
+          }
+        }, 500);
+      }
+
+      // Handle comments - already have profiles from join
+      if (commentsWithProfiles.error) throw commen
 
       // Handle post
       if (postResult.error) throw postResult.error;
