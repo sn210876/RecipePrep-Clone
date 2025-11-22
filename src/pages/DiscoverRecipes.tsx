@@ -139,19 +139,6 @@ const loadAllSocialPosts = async (recipes: Recipe[]) => {
 };
 
 useEffect(() => {
-  const loadRecipes = async () => {
-    try {
-      console.log('[Discover] Loading recipes from database...');
-      const dbRecipes = await getAllPublicRecipes();
-      console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
-      setAllRecipes(dbRecipes);
-      
-      await loadAllSocialPosts(dbRecipes);
-    } catch (error) {
-      console.error('Failed to load recipes:', error);
-      setAllRecipes([]);
-    }
-  };
 
   loadRecipes();
     try {
