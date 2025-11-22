@@ -109,7 +109,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [followers, setFollowers] = useState<any[]>([]);
   const [selectedFollowers, setSelectedFollowers] = useState<Set<string>>(new Set());
   const [socialPostsMap, setSocialPostsMap] = useState<Map<string, any>>(new Map());
-
   const [copiedLink, setCopiedLink] = useState(false);
 
   const POSTS_PER_PAGE = 10;
