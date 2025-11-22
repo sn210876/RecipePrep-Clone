@@ -398,13 +398,51 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     }
   };
 
-  if (!post && loading) {
+ if (!post && loading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-lg w-[95vw] h-[90vh] flex items-center justify-center p-0 gap-0 z-[9999] overflow-hidden">
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-            <p className="mt-4 text-gray-600">Loading post...</p>
+        <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
+          <div className="flex flex-col h-full overflow-hidden">
+            
+            {/* Image Skeleton */}
+            <div className="w-full h-[35vh] sm:h-[40vh] bg-gray-300 animate-pulse flex-shrink-0 relative">
+              <button
+                onClick={onClose}
+                className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content Skeleton */}
+            <div className="flex-1 flex flex-col bg-white min-h-0">
+              
+              {/* Header Skeleton */}
+              <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0 space-y-2 animate-pulse">
+                <div className="h-4 bg-gray-300 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-full" />
+              </div>
+
+              {/* Ratings Skeleton */}
+              <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
+                <RatingSkeleton />
+              </div>
+
+              {/* Comments Skeleton */}
+              <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-3 min-h-[100px]">
+                <CommentSkeleton />
+                <CommentSkeleton />
+                <CommentSkeleton />
+              </div>
+
+              {/* Input Skeleton */}
+              <div className="border-t px-3 py-3 sm:px-4 sm:py-4 bg-white flex-shrink-0">
+                <div className="flex gap-2 animate-pulse">
+                  <div className="flex-1 h-9 sm:h-10 bg-gray-200 rounded-lg" />
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 bg-gray-300 rounded-lg" />
+                </div>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
