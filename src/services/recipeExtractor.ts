@@ -147,7 +147,11 @@ if (isSocial) {
 
     return {
       title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
-      description: '
+     description: decodeHtmlEntities(
+    data.description ||
+    data.shortDescription ||
+    data.content ||
+    ''
         ',
       creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
       ingredients,
