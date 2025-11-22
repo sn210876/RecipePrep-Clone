@@ -331,11 +331,13 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     let postImageUrl = null;
 
     // Check if it's an Instagram/external URL that needs to be stored permanently
-    const needsDownload = finalImageUrl && 
-                          !uploadedImageUrl && 
-                          (finalImageUrl.includes('instagram.com') || 
-                           finalImageUrl.includes('cdninstagram.com') ||
-                           finalImageUrl.includes('fbcdn.net'));
+   const needsDownload = finalImageUrl && 
+                      !uploadedImageUrl && 
+                      (finalImageUrl.includes('instagram.com') || 
+                       finalImageUrl.includes('cdninstagram.com') ||
+                       finalImageUrl.includes('fbcdn.net') ||
+                       finalImageUrl.includes('tiktok') ||
+                       finalImageUrl.includes('tiktokcdn'));
 
     try {
       // Show loading toast
