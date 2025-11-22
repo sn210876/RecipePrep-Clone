@@ -109,89 +109,109 @@ export default function BottomNav() {
             <div className="h-16 sm:h-18 flex items-center justify-around">
               
               {/* Messages Button with Badge */}
-              <button
-                onClick={() => handleNavigate('messages')}
-                className={`relative flex flex-col items-center justify-center transition-all duration-200 touch-manipulation ${
-                  currentPage === 'messages' 
-                    ? 'text-cyan-500 scale-105' 
-                    : 'text-slate-600 hover:text-cyan-500 active:scale-95'
-                }`}
-                style={{ minWidth: '64px', minHeight: '48px' }}
-              >
-                <div className="relative">
-                  <MessageCircle 
-                    className="w-6 h-6 sm:w-7 sm:h-7" 
-                    strokeWidth={currentPage === 'messages' ? 2.5 : 2} 
-                  />
-                  
-                  {/* Unread Badge */}
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] sm:text-xs rounded-full min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-[20px] flex items-center justify-center font-bold shadow-md animate-pulse">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </div>
-                
-                <span className={`text-[10px] sm:text-xs mt-1 font-medium ${
-                  currentPage === 'messages' ? 'opacity-100' : 'opacity-70'
-                }`}>
-                  Messages
-                </span>
-              </button>
+             {/* Messages Button with Badge */}
+<button
+  onClick={() => handleNavigate('messages')}
+  className={`relative flex flex-col items-center justify-center transition-all duration-200 touch-manipulation ${
+    currentPage === 'messages' 
+      ? 'text-cyan-500 scale-105' 
+      : 'text-slate-600 hover:text-cyan-500 active:scale-95'
+  }`}
+  style={{ minWidth: '56px', minHeight: '48px' }}
+>
+  <div className="relative">
+    <MessageCircle 
+      className="w-6 h-6" 
+      strokeWidth={currentPage === 'messages' ? 2.5 : 2} 
+    />
+    
+    {/* Unread Badge */}
+    {unreadCount > 0 && (
+      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-md animate-pulse">
+        {unreadCount > 9 ? '9+' : unreadCount}
+      </span>
+    )}
+  </div>
+  
+  <span className={`text-[10px] mt-1 font-medium ${
+    currentPage === 'messages' ? 'opacity-100' : 'opacity-70'
+  }`}>
+    Messages
+  </span>
+</button>
 
-              {/* Centered Upload Button - Elevated */}
-              <button
-                onClick={() => handleNavigate('upload')}
-                className="relative -mt-8 flex flex-col items-center justify-center bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 active:scale-100 touch-manipulation"
-                style={{ width: '64px', height: '64px' }}
-              >
-                <Camera className="w-7 h-7 sm:w-8 sm:h-8 text-white" strokeWidth={2.5} />
-                
-                {/* Glow effect */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-400 to-red-600 opacity-0 hover:opacity-20 transition-opacity duration-300"></div>
-              </button>
+{/* Social Feed Button */}
+<button
+  onClick={() => handleNavigate('discover')}
+  className={`relative flex flex-col items-center justify-center transition-all duration-200 touch-manipulation ${
+    currentPage === 'discover' 
+      ? 'text-orange-500 scale-105' 
+      : 'text-slate-600 hover:text-orange-500 active:scale-95'
+  }`}
+  style={{ minWidth: '56px', minHeight: '48px' }}
+>
+  <UtensilsCrossed 
+    className="w-6 h-6" 
+    strokeWidth={currentPage === 'discover' ? 2.5 : 2} 
+  />
+  
+  <span className={`text-[10px] mt-1 font-medium ${
+    currentPage === 'discover' ? 'opacity-100' : 'opacity-70'
+  }`}>
+    Feed
+  </span>
+</button>
 
-              {/* Profile Button */}
-              <button
-                onClick={() => handleNavigate('profile')}
-                className={`relative flex flex-col items-center justify-center transition-all duration-200 touch-manipulation ${
-                  currentPage === 'profile' 
-                    ? 'text-orange-600 scale-105' 
-                    : 'text-slate-600 hover:text-slate-900 active:scale-95'
-                }`}
-                style={{ minWidth: '64px', minHeight: '48px' }}
-              >
-                <div className="relative">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt="Profile"
-                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover transition-all duration-200 ${
-                        currentPage === 'profile' 
-                          ? 'ring-2 ring-orange-600 ring-offset-2' 
-                          : 'ring-1 ring-slate-300'
-                      }`}
-                    />
-                  ) : (
-                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
-                      currentPage === 'profile'
-                        ? 'bg-orange-100 ring-2 ring-orange-600'
-                        : 'bg-slate-100'
-                    }`}>
-                      <User 
-                        className="w-4 h-4 sm:w-5 sm:h-5" 
-                        strokeWidth={currentPage === 'profile' ? 2.5 : 2} 
-                      />
-                    </div>
-                  )}
-                </div>
-                
-                <span className={`text-[10px] sm:text-xs mt-1 font-medium ${
-                  currentPage === 'profile' ? 'opacity-100' : 'opacity-70'
-                }`}>
-                  Profile
-                </span>
-              </button>
+{/* Centered Upload Button - Elevated */}
+<button
+  onClick={() => handleNavigate('upload')}
+  className="relative -mt-6 flex flex-col items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 active:scale-100 touch-manipulation"
+  style={{ width: '56px', height: '56px' }}
+>
+  <Camera className="w-7 h-7 text-white" strokeWidth={2.5} />
+</button>
+
+{/* Profile Button */}
+<button
+  onClick={() => handleNavigate('profile')}
+  className={`relative flex flex-col items-center justify-center transition-all duration-200 touch-manipulation ${
+    currentPage === 'profile' 
+      ? 'text-orange-600 scale-105' 
+      : 'text-slate-600 hover:text-slate-900 active:scale-95'
+  }`}
+  style={{ minWidth: '56px', minHeight: '48px' }}
+>
+  <div className="relative">
+    {avatarUrl ? (
+      <img
+        src={avatarUrl}
+        alt="Profile"
+        className={`w-7 h-7 rounded-full object-cover transition-all duration-200 ${
+          currentPage === 'profile' 
+            ? 'ring-2 ring-orange-600 ring-offset-2' 
+            : 'ring-1 ring-slate-300'
+        }`}
+      />
+    ) : (
+      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+        currentPage === 'profile'
+          ? 'bg-orange-100 ring-2 ring-orange-600'
+          : 'bg-slate-100'
+      }`}>
+        <User 
+          className="w-4 h-4" 
+          strokeWidth={currentPage === 'profile' ? 2.5 : 2} 
+        />
+      </div>
+    )}
+  </div>
+  
+  <span className={`text-[10px] mt-1 font-medium ${
+    currentPage === 'profile' ? 'opacity-100' : 'opacity-70'
+  }`}>
+    Profile
+  </span>
+</button>
 
             </div>
           </div>
