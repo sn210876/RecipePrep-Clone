@@ -447,22 +447,32 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
         <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
             <div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
-              {post?.image_url ? (
-                <img
-                  src={post.image_url?.includes('instagram.com') || post.image_url?.includes('cdninstagram.com')
-                    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(post.image_url.replace(/&amp;/g, '&'))}`
-                    : post.image_url}
-                  alt={post.title || 'Post'}
-                  className="w-full h-full object-contain"
-                  onLoad={() => console.log('[CommentModal] ✅ Image loaded successfully')}
-                  onError={(e) => console.log('[CommentModal] ❌ Image failed to load:', e)}
-                />
-              ) : (
-                <div className="text-white text-center">
-                  <p>No image available</p>
-                  <p className="text-xs mt-2">Post ID: {postId}</p>
-                </div>
-              )}
+           // Replace the image rendering section in CommentModal.tsx with this:
+
+{post?.image_url ? (
+  <img
+    src={
+      // Check if it's a Supabase storage URL (don't proxy these)
+      post.image_url.includes('supabase.co/storage') || 
+      post.image_url.startsWith(import.meta.env.VITE_SUPABASE_URL)
+        ? post.image_url
+        // Only proxy Instagram/CDN Instagram URLs
+        : (post.image_url.includes('instagram.com') || post.image_url.includes('cdninstagram.com'))
+        ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(post.image_url.replace(/&amp;/g, '&'))}`
+        // All other URLs use directly
+        : post.image_url
+    }
+    alt={post.title || 'Post'}
+    className="w-full h-full object-contain"
+    onLoad={() => console.log('[CommentModal] ✅ Image loaded successfully')}
+    onError={(e) => console.log('[CommentModal] ❌ Image failed to load:', e)}
+  />
+) : (
+  <div className="text-white text-center">
+    <p>No image available</p>
+    <p className="text-xs mt-2">Post ID: {postId}</p>
+  </div>
+)}
               <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
                 <X className="w-5 h-5" />
               </button>
