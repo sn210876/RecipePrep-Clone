@@ -139,15 +139,13 @@ const loadAllSocialPosts = async (recipes: Recipe[]) => {
 };
 
 useEffect(() => {
-
-  loadRecipes();
+  const loadRecipes = async () => {
     try {
       console.log('[Discover] Loading recipes from database...');
       const dbRecipes = await getAllPublicRecipes();
       console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
       setAllRecipes(dbRecipes);
       
-      // ADD THIS LINE to call the batch load
       await loadAllSocialPosts(dbRecipes);
     } catch (error) {
       console.error('Failed to load recipes:', error);
@@ -155,17 +153,19 @@ useEffect(() => {
     }
   };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        loadRecipes();
-      }
-    };
+  loadRecipes();
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      loadRecipes();
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, []);
 
   const handleDeleteRecipe = async (recipeId: string) => {
     try {
