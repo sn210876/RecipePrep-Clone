@@ -296,7 +296,8 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg w-[95vw] max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
+     <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
+
 
         {/* STACKED LAYOUT - Photo on top, comments below (both mobile & desktop) */}
 <div className="flex flex-col h-full overflow-hidden">
