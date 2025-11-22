@@ -519,4 +519,125 @@ Instructions:
                 onChange={(e) => setRecipeText(e.target.value)}
                 className="min-h-[200px] sm:min-h-[300px] font-mono text-xs sm:text-sm"
               />
-            </div
+            </div>
+
+            <div className="flex gap-2 sm:gap-3">
+              <Button
+                onClick={() => {
+                  setImporting(true);
+                  setTimeout(() => {
+                    setImporting(false);
+                    setShowTestModal(false);
+                    setRecipeText('');
+                  }, 1000);
+                }}
+                disabled={importing || !recipeText.trim()}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 h-10 sm:h-11 text-sm sm:text-base"
+              >
+                {importing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  'Import Recipe'
+                )}
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowTestModal(false);
+                  setRecipeText('');
+                }}
+                variant="outline"
+                disabled={importing}
+                className="h-10 sm:h-11 text-sm sm:text-base"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Modal */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent className="w-[95vw] max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">Change Password</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Enter your new password. Must be at least 6 characters.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 sm:space-y-4">
+            <div>
+              <Label htmlFor="new-password" className="text-sm sm:text-base">New Password</Label>
+              <input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirm-password" className="text-sm sm:text-base">Confirm Password</Label>
+              <input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Confirm new password"
+              />
+            </div>
+            <div className="flex gap-2 sm:gap-3 pt-2">
+              <Button
+                onClick={() => {
+                  if (newPassword !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return;
+                  }
+                  if (newPassword.length < 6) {
+                    alert('Password must be at least 6 characters');
+                    return;
+                  }
+                  setChangingPassword(true);
+                  setTimeout(() => {
+                    setChangingPassword(false);
+                    setShowPasswordModal(false);
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }, 1000);
+                }}
+                disabled={changingPassword || !newPassword || !confirmPassword}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 h-10 sm:h-11 text-sm sm:text-base"
+              >
+                {changingPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Password'
+                )}
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setNewPassword('');
+                  setConfirmPassword('');
+                }}
+                variant="outline"
+                disabled={changingPassword}
+                className="h-10 sm:h-11 text-sm sm:text-base"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
