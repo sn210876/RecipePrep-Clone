@@ -193,14 +193,31 @@ export default function AuthForm() {
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1">
-            Meal Scrape
-          </h1>
-          Best Influcencer Recipes scraped from all across social media and the web.
-           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1">
-           Save recipes • Add your own recipes • Plan your meals
-          </p>
-        </div>
+         <div className="text-center">
+  {/* Logo */}
+  <div className="flex justify-center mb-6">
+    <img 
+      src="/Woodenspoon.png" 
+      alt="Meal Scrape" 
+      className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-lg"
+    />
+  </div>
+
+  {/* Main title */}
+  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-3">
+    Meal Scrape
+  </h1>
+
+  {/* Tagline */}
+  <p className="text-lg sm:text-xl text-slate-600 mb-6 max-w-2xl mx-auto leading-relaxed">
+    Best influencer recipes scraped from all across social media and the web.
+  </p>
+
+  {/* Sub-tagline */}
+  <p className="text-base sm:text-lg text-slate-500 font-medium">
+    Save recipes • Add your own • Plan your meals • Shop smarter
+  </p>
+</div>
 
         {/* Auth Card */}
         <Card className="border-slate-200 shadow-xl overflow-hidden">
