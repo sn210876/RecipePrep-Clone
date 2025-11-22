@@ -409,7 +409,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
-        // Replace the image section in CommentModal.tsx with this:
+// Replace the image section in CommentModal.tsx with this:
 
 <div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
   {post?.image_url ? (
@@ -470,6 +470,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     </div>
   )}
 </div>
+            
             <div className="flex-1 flex flex-col bg-white min-h-0">
               <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
                 <h3 className="font-bold text-sm sm:text-base truncate">{post?.title || 'Post'}</h3>
