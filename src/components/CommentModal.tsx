@@ -171,14 +171,7 @@ setComments(commentsData);
       // Auto-play music if available
   
       
-      if (ratingsResult.data && ratingsResult.data.length > 0) {
-        const avg = ratingsResult.data.reduce((sum, r) => sum + r.rating, 0) / ratingsResult.data.length;
-        setAverageRating(avg);
-        setTotalRatings(ratingsResult.data.length);
-      } else {
-        setAverageRating(0);
-        setTotalRatings(0);
-      }
+     
 
       // Handle user rating
       if (userRatingResult.error) throw userRatingResult.error;
