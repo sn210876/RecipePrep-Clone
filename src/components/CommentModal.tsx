@@ -83,60 +83,102 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
   // ✅ OPTIMIZED: Load everything in parallel with just 2 queries
   const loadAllData = async () => {
-  setLoading(true);
-  
-  try {
-    // Get current user first
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id || null;
-    setCurrentUserId(userId);
+    setLoading(true);
+    
+    try {
+      // Get current user first
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id || null;
+      setCurrentUserId(userId);
 
-    // ✅ OPTIMIZED: Use joins to get everything in fewer queries
-    const [postWithRatings, commentsWithProfiles, userRatingResult] = await Promise.all([
-      // Query 1: Get post WITH all ratings AND recipe image in one query
-      supabase
-        .from('posts')
-        .select(`
-          *,
-          post_ratings(rating),
-          public_recipes!posts_recipe_id_fkey(image_url, video_url)
-        `)
-        .eq('id', postId)
-        .maybeSingle(),
-      
-      // ... rest of your queries stay the same
-    ]);
+      // ✅ OPTIMIZED: Use joins to get everything in fewer queries
+      const [postWithRatings, commentsWithProfiles, userRatingResult] = await Promise.all([
+        // Query 1: Get post WITH all ratings in one query
+        supabase
+          .from('posts')
+          .select(`
+            *,
+            post_ratings(rating)
+          `)
+          .eq('id', postId)
+          .maybeSingle(),
+        
+        // Query 2: Get comments WITH profiles in one query
+        supabase
+          .from('comments')
+          .select(`
+            id,
+            text,
+            created_at,
+            user_id,
+            profiles!comments_user_id_fkey(username, avatar_url)
+          `)
+          .eq('post_id', postId)
+          .order('created_at', { ascending: true }),
+        
+        // Query 3: Get user's rating (if logged in)
+        userId
+          ? supabase
+              .from('post_ratings')
+              .select('rating')
+              .eq('post_id', postId)
+              .eq('user_id', userId)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null })
+      ]);
 
+      // Handle post and ratings
     // Handle post and ratings
-    if (postWithRatings.error) throw postWithRatings.error;
-    
-    // ✅ Use recipe image as fallback
-    const postData = postWithRatings.data;
-    if (postData) {
-      // If post doesn't have image_url, use the recipe's image
-      if (!postData.image_url && postData.public_recipes?.image_url) {
-        postData.image_url = postData.public_recipes.image_url;
-      }
+if (postWithRatings.error) throw postWithRatings.error;
+setPost(postWithRatings.data);
+
+// ADD THIS LOGGING
+console.log('[CommentModal] Post loaded:', {
+  postId: postId,
+  hasImageUrl: !!postWithRatings.data?.image_url,
+  imageUrl: postWithRatings.data?.image_url,
+  title: postWithRatings.data?.title
+});
+
+// Calculate ratings from joined data
+const ratings = postWithRatings.data?.post_ratings || [];
+if (ratings.length > 0) {
+  const avg = ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length;
+  setAverageRating(avg);
+  setTotalRatings(ratings.length);
+} else {
+  setAverageRating(0);
+  setTotalRatings(0);
+}
+
+// Auto-play music if available
+if (postWithRatings.data?.spotify_preview_url) {
+  setTimeout(() => {
+    const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
+    if (audio) {
+      audio.play().catch(err => console.log('Auto-play prevented:', err));
+      setIsPlaying(true);
     }
-    
-    setPost(postData);
+  }, 500);
+}
 
-    console.log('[CommentModal] Post loaded:', {
-      postId: postId,
-      hasImageUrl: !!postData?.image_url,
-      imageUrl: postData?.image_url,
-      recipeImageUrl: postData?.public_recipes?.image_url,
-      title: postData?.title
-    });
+// Handle comments - already have profiles from join
+if (commentsWithProfiles.error) throw commentsWithProfiles.error;
 
-    // ... rest of your code
-  } catch (error: any) {
-    console.error('Error loading modal data:', error);
-    toast.error('Failed to load post details');
-  } finally {
-    setLoading(false);
-  }
-};
+const commentsData = commentsWithProfiles.data || [];
+setComments(commentsData);
+
+      // Handle user rating
+      if (userRatingResult.error) throw userRatingResult.error;
+      setUserRating(userRatingResult.data?.rating || 0);
+
+    } catch (error: any) {
+      console.error('Error loading modal data:', error);
+      toast.error('Failed to load post details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ✅ OPTIMIZED: Only reload comments when needed
   const reloadComments = async () => {
