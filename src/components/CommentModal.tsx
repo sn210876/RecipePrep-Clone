@@ -427,7 +427,8 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               </div>
             )}
             {/* Comments Section - scrollable */}
-            <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-0">
+           <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-[100px] max-h-[30vh] sm:max-h-none">
+
               {loading ? (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
