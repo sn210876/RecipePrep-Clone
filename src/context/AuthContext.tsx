@@ -20,44 +20,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [showVerifying, setShowVerifying] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-
   const isEmailVerified = user ? !!user.email_confirmed_at : false;
+
+  // 🔍 DEBUG: Monitor auth state changes
+  useEffect(() => {
+    console.log('🔍 Auth State:', {
+      hasUser: !!user,
+      userEmail: user?.email,
+      isEmailVerified,
+      hasSession: !!session,
+      loading,
+      showVerifying,
+      currentUrl: window.location.href,
+      hash: window.location.hash
+    });
+  }, [user, session, loading, isEmailVerified, showVerifying]);
 
   useEffect(() => {
     const initAuth = async () => {
+      console.log('🚀 Initializing auth...');
+      
       const hash = window.location.hash;
+      console.log('🔗 URL hash:', hash);
 
       if (hash && hash.includes('access_token')) {
+        console.log('✅ Found access_token in URL');
         const params = new URLSearchParams(hash.substring(1));
         const accessToken = params.get('access_token');
         const type = params.get('type');
+        const refreshToken = params.get('refresh_token');
+        
+        console.log('📋 Token params:', { 
+          hasAccessToken: !!accessToken, 
+          type,
+          hasRefreshToken: !!refreshToken 
+        });
 
         if (accessToken && type === 'signup') {
           try {
+            console.log('📧 Processing signup verification...');
             const { data, error } = await supabase.auth.getUser(accessToken);
-
+            
+            if (error) {
+              console.error('❌ getUser error:', error);
+            }
+            
             if (!error && data.user) {
+              console.log('✅ User verified:', data.user.email);
               setShowVerifying(true);
               setUser(data.user);
-
               window.history.replaceState({}, document.title, window.location.pathname);
             }
           } catch (err) {
-            console.error('Token verification error:', err);
+            console.error('❌ Token verification error:', err);
+          }
+        } else if (accessToken) {
+          // Handle OAuth or password reset tokens
+          console.log('🔄 Processing OAuth/password reset token...');
+          try {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || ''
+            });
+            
+            if (error) {
+              console.error('❌ setSession error:', error);
+            } else {
+              console.log('✅ Session set successfully');
+            }
+          } catch (err) {
+            console.error('❌ Session error:', err);
           }
         }
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔍 Getting current session...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+      }
+      
+      console.log('📦 Session retrieved:', { 
+        hasSession: !!session, 
+        userEmail: session?.user?.email 
+      });
+
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
+        console.log('👤 Checking admin status...');
         const adminStatus = await checkIsAdmin();
+        console.log('🔐 Admin status:', adminStatus);
         setIsAdmin(adminStatus);
       }
 
       setLoading(false);
+      console.log('✅ Auth initialization complete');
     };
 
     initAuth();
@@ -65,6 +125,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔔 Auth state change event:', event, { 
+        hasSession: !!session,
+        userEmail: session?.user?.email 
+      });
+
       (async () => {
         const isVerificationEvent =
           event === 'SIGNED_IN' ||
@@ -74,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (isVerificationEvent && session?.user?.email_confirmed_at) {
           const wasUnverified = !user?.email_confirmed_at;
           if (wasUnverified || event === 'SIGNED_IN') {
+            console.log('✉️ Email verified, showing verification screen');
             setShowVerifying(true);
           }
         }
@@ -82,20 +148,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          checkIsAdmin().then(setIsAdmin);
+          checkIsAdmin().then((isAdmin) => {
+            console.log('🔐 Admin check result:', isAdmin);
+            setIsAdmin(isAdmin);
+          });
         } else {
           setIsAdmin(false);
         }
       })();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🧹 Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, [user?.email_confirmed_at]);
 
   const signOut = async () => {
+    console.log('👋 Signing out...');
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    console.log('✅ Sign out complete');
   };
 
   return (
