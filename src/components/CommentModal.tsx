@@ -409,28 +409,28 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
-// Replace the image section in CommentModal.tsx with this:
+        // Replace the entire image section in CommentModal.tsx (around line 450-520)
+// Find the section that starts with: <div className="w-full h-[35vh] sm:h-[40vh]...
 
+{/* Image Section - Top */}
 <div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
   {post?.image_url ? (
-    <>
-      <img
-        src={getProxiedImageUrl(post.image_url)}
-        alt={post.title || 'Post'}
-        className="w-full h-full object-contain" // object-contain keeps it centered
-        onLoad={() => {
-          console.log('[CommentModal] ✅ Image loaded successfully');
-          console.log('[CommentModal] 📸 Original URL:', post.image_url);
-          console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
-        }}
-        onError={(e) => {
-          console.log('[CommentModal] ❌ Image failed to load');
-          console.log('[CommentModal] 📸 Original URL:', post.image_url);
-          console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
-          console.log('[CommentModal] ❌ Error:', e);
-        }}
-      />
-    </>
+    <img
+      src={getProxiedImageUrl(post.image_url)}
+      alt={post.title || 'Post'}
+      className="w-full h-full object-contain"
+      onLoad={() => {
+        console.log('[CommentModal] ✅ Image loaded successfully');
+        console.log('[CommentModal] 📸 Original URL:', post.image_url);
+        console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
+      }}
+      onError={(e) => {
+        console.log('[CommentModal] ❌ Image failed to load');
+        console.log('[CommentModal] 📸 Original URL:', post.image_url);
+        console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
+        console.log('[CommentModal] ❌ Error:', e);
+      }}
+    />
   ) : (
     <div className="text-white text-center">
       <p>No image available</p>
@@ -470,7 +470,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     </div>
   )}
 </div>
-            
             <div className="flex-1 flex flex-col bg-white min-h-0">
               <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
                 <h3 className="font-bold text-sm sm:text-base truncate">{post?.title || 'Post'}</h3>
