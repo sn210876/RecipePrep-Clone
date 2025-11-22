@@ -571,17 +571,18 @@ useEffect(() => {
             </div>
             {filteredRecipes.length > 0 ? (
               <div className={`grid gap-4 md:gap-6 auto-rows-fr ${isMobile ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
-    {filteredRecipes.map((recipe) => (
-      <RecipeCard
-        key={recipe.id}
-        recipe={recipe}
-        onSave={handleSave}
-        onCook={handleCook}
-        onDelete={handleDeleteRecipe}
-        isAdmin={isAdmin}
-        showReviewButton={true}
-      />
-    ))}
+   {filteredRecipes.map((recipe) => (
+  <RecipeCard
+    key={recipe.id}
+    recipe={recipe}
+    onSave={handleSave}
+    onCook={handleCook}
+    onDelete={handleDeleteRecipe}
+    isAdmin={isAdmin}
+    showReviewButton={true}
+    preloadedSocialPost={socialPostsMap.get(recipe.id) || null}
+  />
+))}
   </div>
 ) : (
   <div className="text-center py-12">
