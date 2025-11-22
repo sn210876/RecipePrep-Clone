@@ -84,24 +84,28 @@ export default function AuthForm() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
+ const handleGoogleLogin = async () => {
+  console.log('🔵 Google login button clicked!');
+  setLoading(true);
+  setError('');
 
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getRedirectUrl(),
-        },
-      });
+  try {
+    console.log('🔵 Calling Supabase OAuth...');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: getRedirectUrl(),
+      },
+    });
 
-      if (error) throw error;
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google');
-      setLoading(false);
-    }
-  };
+    console.log('🔵 OAuth response:', { error });
+    if (error) throw error;
+  } catch (err: any) {
+    console.error('❌ OAuth error:', err);
+    setError(err.message || 'Failed to sign in with Google');
+    setLoading(false);
+  }
+};
 
   const handleAppleLogin = async () => {
     setLoading(true);
