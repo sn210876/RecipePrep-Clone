@@ -116,8 +116,10 @@ const [loadingReviews, setLoadingReviews] = useState(false);
       } else {
         console.log('[RecipeCard] ❌ No social post found for recipe:', recipe.id);
       }
-    } catch (error) {
+} catch (error) {
       console.error('[RecipeCard] Failed to load social post:', error);
+    } finally {
+      setLoadingSocialPost(false);
     }
   };
 
