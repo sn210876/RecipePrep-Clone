@@ -1,5 +1,7 @@
 import { User, Camera, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { User, Camera, MessageCircle, UtensilsCrossed } from 'lucide-react';
+
 
 export default function BottomNav() {
   const [currentPage, setCurrentPage] = useState('messages');
