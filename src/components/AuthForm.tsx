@@ -206,7 +206,7 @@ export default function AuthForm() {
   </p>
 
   <p className="text-xs sm:text-sm text-slate-500 px-4">
-    Social Media Recipes • Meal Calendar • Shopping List
+    Social Community Recipes • Meal Calendar • Shopping List
   </p>
 </div>
 
