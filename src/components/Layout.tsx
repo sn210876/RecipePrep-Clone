@@ -278,13 +278,17 @@ const loadUnreadCount = async (userId: string) => {
               </h2>
             )}
             
-            {socialPages.includes(currentPage) && (
-              <div className="flex-1 flex justify-center lg:justify-start">
-                <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
-                  <ChefHat className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                </div>
-              </div>
-            )}
+           {socialPages.includes(currentPage) && (
+  <div className="flex-1 flex justify-center lg:justify-start">
+    <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
+      {currentPage === 'add-recipe' ? (
+        <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+      ) : (
+        <UtensilsCrossed className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+      )}
+    </div>
+  </div>
+)}
             
             <div className="w-9 sm:w-10 lg:hidden" />
           </div>
