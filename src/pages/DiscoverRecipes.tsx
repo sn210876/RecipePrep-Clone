@@ -248,7 +248,7 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
             Discover Amazing Recipes
           </h1>
           <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto mb-2">
-            Recipes scraped from across <span className="font-semibold text-blue-600">social media</span> and the <span className="font-semibold text-blue-600">web</span>
+            Recipes scraped from <span className="font-semibold text-blue-600">social media</span> and the <span className="font-semibold text-blue-600">web</span>
           </p>
           <p className="text-xs md:text-sm text-gray-500 max-w-2xl mx-auto">
             Save Recipes • Plan Meals • Shop Smart
