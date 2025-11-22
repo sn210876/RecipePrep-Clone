@@ -235,57 +235,102 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     }
   }, [sharedPostId, currentUserId, onPostViewed]);
 
-  const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
-    try {
-      let query = supabase
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false });
+ const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
+  if (!isRefresh && !hasMore) return;
 
-      if (filterHashtag) {
-        const { data: hashtagData } = await supabase
-          .from('hashtags')
-          .select('id')
-          .eq('tag', filterHashtag.toLowerCase())
-          .maybeSingle();
+  try {
+    // Show skeleton only on first page load
+    if (pageNum === 0) setLoading(true);
 
-        if (hashtagData) {
-          const { data: postHashtags } = await supabase
-            .from('post_hashtags')
-            .select('post_id')
-            .eq('hashtag_id', hashtagData.id);
+    let query = supabase
+      .from('posts')
+      .select(`
+        *,
+        profiles!user_id(username, avatar_url),
+        likes(user_id),
+        comments!post_id(
+          id, text, created_at, user_id, rating,
+          profiles!user_id(username)
+        ),
+        post_ratings(rating)
+      `)
+      .order('created_at', { ascending: false })
+      .range(pageNum * POSTS_PER_PAGE, (pageNum + 1) * POSTS_PER_PAGE - 1);
 
-          const postIds = (postHashtags || []).map(ph => ph.post_id);
+    // Handle hashtag filter
+    if (filterHashtag) {
+      const { data: hashtag } = await supabase
+        .from('hashtags')
+        .select('id')
+        .eq('tag', filterHashtag.toLowerCase())
+        .maybeSingle();
 
-          if (postIds.length === 0) {
-            setPosts([]);
-            setHasMore(false);
-            setLoading(false);
-            return;
-          }
-
-          query = query.in('id', postIds);
-        } else {
-          setPosts([]);
-          setHasMore(false);
-          setLoading(false);
-          return;
-        }
+      if (!hashtag) {
+        if (isRefresh) setPosts([]);
+        setHasMore(false);
+        return;
       }
 
-      const { data: postsData, error: postsError } = await query
-        .range(pageNum * POSTS_PER_PAGE, (pageNum + 1) * POSTS_PER_PAGE - 1);
+      const { data: linked } = await supabase
+        .from('post_hashtags')
+        .select('post_id')
+        .eq('hashtag_id', hashtag.id);
 
-      if (postsError) throw postsError;
+      const postIds = linked?.map(l => l.post_id) || [];
+      if (postIds.length === 0) {
+        if (isRefresh) setPosts([]);
+        setHasMore(false);
+        return;
+      }
 
-      
-    } catch (error: any) {
-      console.error('Error fetching posts:', error);
-      toast.error('Failed to load posts');
-    } finally {
-      setLoading(false);
+      query = query.in('id', postIds);
     }
-  }, [filterHashtag]);
+
+    const { data: postsData, error } = await query;
+    if (error) throw error;
+
+    const processedPosts = (postsData || []).map(post => {
+      const likes = Array.isArray(post.likes) ? post.likes : [];
+      const allComments = Array.isArray(post.comments) ? post.comments : [];
+      const comments = allComments.slice(0, 2);
+      const ratings = Array.isArray(post.post_ratings) ? post.post_ratings : [];
+
+      const avgRating = ratings.length > 0
+        ? ratings.reduce((sum: any, r: any) => sum + r.rating, 0) / ratings.length
+        : 0;
+
+      return {
+        ...post,
+        profiles: post.profiles || { username: 'Unknown', avatar_url: null },
+        likes,
+        comments,
+        _count: {
+          likes: likes.length,
+          comments: allComments.length,
+        },
+        ratingInfo: {
+          average: avgRating,
+          count: ratings.length
+        }
+      };
+    });
+
+    if (isRefresh) {
+      setPosts(processedPosts);
+      setPage(0);
+    } else {
+      setPosts(prev => [...prev, ...processedPosts]);
+    }
+
+    setHasMore((postsData || []).length === POSTS_PER_PAGE);
+
+  } catch (error: any) {
+    console.error('Error fetching posts:', error);
+    toast.error('Failed to load feed');
+  } finally {
+    if (pageNum === 0) setLoading(false);
+  }
+}, [filterHashtag, hasMore]);
 
   useEffect(() => {
     let isMounted = true;
