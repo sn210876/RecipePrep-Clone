@@ -311,7 +311,7 @@ const [loadingReviews, setLoadingReviews] = useState(false);
       )}
     </Button>
 
-    {socialPost ? (
+    {!loadingSocialPost && socialPost ? (
       <Button
         variant="outline"
         size="sm"
