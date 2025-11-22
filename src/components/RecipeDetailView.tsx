@@ -121,14 +121,12 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
             />
           </div>
         ) : (
-          <img
-            src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-              ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-              : recipe.imageUrl}
-            alt={recipe.title}
-            className="w-full h-64 object-cover"
-            loading="lazy"
-          />
+        <img
+  src={getProxiedImageUrl(recipe.imageUrl)}
+  alt={recipe.title}
+  className="w-full h-64 object-cover"
+  loading="lazy"
+/>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
