@@ -30,7 +30,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
   const [socialPost, setSocialPost] = useState<any>(null);
   const totalTime = recipe.prepTime + recipe.cookTime;
   const isSaved = state.savedRecipes.some(r => r.id === recipe.id);
-
+const [loadingReviews, setLoadingReviews] = useState(false);
   const difficultyColors = {
     Easy: 'bg-orange-100 text-orange-700 border-orange-200',
     Medium: 'bg-amber-100 text-amber-700 border-amber-200',
