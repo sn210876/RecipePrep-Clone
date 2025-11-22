@@ -959,6 +959,7 @@ return (
           </Card>
 
           {/* Notes */}
+         {/* Notes */}
           <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Notes</CardTitle>
@@ -973,27 +974,29 @@ return (
               />
             </CardContent>
           </Card>
-{/* Fixed bottom action buttons */}
-<div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
-  <div className="max-w-4xl mx-auto px-4 py-4 flex justify-center items-center gap-3">
-    {onNavigate && (
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => onNavigate('my-recipes')}
-        className="bg-white shadow-md border-2 border-gray-300 hover:bg-gray-50 px-6 h-12 text-base font-semibold rounded-full"
-      >
-        Cancel
-      </Button>
-    )}
-    <Button
-      type="submit"
-      className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 text-base font-semibold shadow-lg rounded-full transition-all transform active:scale-95"
-    >
-      Create Recipe
-    </Button>
-  </div>
-</div>
+
+          {/* Fixed bottom action buttons - INSIDE THE FORM */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
+            <div className="max-w-4xl mx-auto px-4 py-4 flex justify-center items-center gap-3">
+              {onNavigate && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onNavigate('my-recipes')}
+                  className="bg-white shadow-md border-2 border-gray-300 hover:bg-gray-50 px-6 h-12 text-base font-semibold rounded-full"
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                type="submit"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 text-base font-semibold shadow-lg rounded-full transition-all transform active:scale-95"
+              >
+                Create Recipe
+              </Button>
+            </div>
+          </div>
+        </form>  {/* ← CLOSING FORM TAG SHOULD BE HERE */}
 
         {/* Preview Dialog - Mobile optimized */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
