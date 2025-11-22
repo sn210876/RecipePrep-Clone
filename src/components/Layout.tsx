@@ -272,11 +272,18 @@ const loadUnreadCount = async (userId: string) => {
               <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
             
-            {!socialPages.includes(currentPage) && (
-              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 truncate flex-1 text-center lg:text-left">
-                {navItems.find(item => item.id === currentPage)?.label || 'Meal Scrape'}
-              </h2>
-            )}
+           {!socialPages.includes(currentPage) && (
+  <div className="flex-1 flex items-center justify-center lg:justify-start gap-2">
+    {currentPage === 'discover-recipes' && (
+      <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
+        <ChefHat className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+      </div>
+    )}
+    <span className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 truncate">
+      {navItems.find(item => item.id === currentPage)?.label || 'Meal Scrape'}
+    </span>
+  </div>
+)}
             
          {socialPages.includes(currentPage) && (
   <div className="flex-1 flex items-center justify-center lg:justify-start gap-2">
