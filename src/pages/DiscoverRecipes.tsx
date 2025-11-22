@@ -256,7 +256,40 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   </section>
 );
 
-
+  // SKELETON LOADING FOR RECIPE DISCOVER PAGE
+  if (allRecipes.length === 0 && !searchQuery && !selectedCuisine) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <div className="text-center mb-12">
+            <div className="h-12 bg-gray-300 rounded-xl w-96 mx-auto mb-4 animate-pulse" />
+            <div className="h-6 bg-gray-300 rounded-lg w-80 mx-auto animate-pulse" />
+          </div>
+          <div className="mb-12">
+            <div className="h-14 bg-gray-200 rounded-2xl w-full max-w-2xl mx-auto animate-pulse" />
+          </div>
+          <div className="space-y-16">
+            {[...Array(6)].map((_, i) => (
+              <section key={i}>
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-14 h-14 bg-gray-300 rounded-xl animate-pulse" />
+                  <div>
+                    <div className="h-9 bg-gray-300 rounded-lg w-72 animate-pulse" />
+                    <div className="h-6 bg-gray-300 rounded-lg w-56 mt-3 animate-pulse" />
+                  </div>
+                </div>
+                <div className={`grid gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} auto-rows-fr`}>
+                  {[...Array(isMobile ? 4 : 8)].map((_, j) => (
+                    <RecipeCardSkeleton key={j} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
