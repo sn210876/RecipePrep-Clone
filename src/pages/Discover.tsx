@@ -278,45 +278,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
       if (postsError) throw postsError;
 
-      const postsWithDetails = await Promise.all(
-        (postsData || []).map(async (post) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username, avatar_url')
-            .eq('id', post.user_id)
-            .single();
-
-          const { data: likes } = await supabase
-            .from('likes')
-            .select('user_id')
-            .eq('post_id', post.id);
-
-          const { count: commentsCount } = await supabase
-            .from('comments')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', post.id);
-
-          const { data: comments } = await supabase
-            .from('comments')
-            .select('id, text, created_at, user_id, rating')
-            .eq('post_id', post.id)
-            .order('created_at', { ascending: false })
-            .limit(2);
-
-          const commentsWithProfiles = await Promise.all(
-            (comments || []).map(async (comment) => {
-              const { data: commentProfile } = await supabase
-                .from('profiles')
-                .select('username')
-                .eq('id', comment.user_id)
-                .single();
-
-              return {
-                ...comment,
-                profiles: commentProfile,
-              };
-            })
-          );
+      
 
           const { data: postRatingsData } = await supabase
             .from('post_ratings')
