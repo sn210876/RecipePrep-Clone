@@ -259,7 +259,7 @@ const loadUnreadCount = async (userId: string) => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="lg:ml-64">
+      <div className="lg:ml-56">
         
         {/* Top Header - Mobile Optimized */}
         <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
