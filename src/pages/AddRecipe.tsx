@@ -467,7 +467,6 @@ return (
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
         {/* URL Import Section - Mobile optimized */}
         <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
           <CardHeader className="pb-3">
