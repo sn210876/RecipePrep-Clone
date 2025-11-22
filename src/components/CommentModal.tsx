@@ -83,7 +83,60 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
   // ✅ OPTIMIZED: Load everything in parallel with just 2 queries
  const loadAllData = async () => {
+  setLoading(true);
+  
+  try {
+    // Get current user first
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id || null;
+    setCurrentUserId(userId);
 
+    // ✅ OPTIMIZED: Use joins to get everything in fewer queries
+    const [postWithRatings, commentsWithProfiles, userRatingResult] = await Promise.all([
+      // Query 1: Get post WITH all ratings AND recipe image in one query
+      supabase
+        .from('posts')
+        .select(`
+          *,
+          post_ratings(rating),
+          public_recipes!posts_recipe_id_fkey(image_url, video_url)
+        `)
+        .eq('id', postId)
+        .maybeSingle(),
+      
+      // ... rest of your queries stay the same
+    ]);
+
+    // Handle post and ratings
+    if (postWithRatings.error) throw postWithRatings.error;
+    
+    // ✅ Use recipe image as fallback
+    const postData = postWithRatings.data;
+    if (postData) {
+      // If post doesn't have image_url, use the recipe's image
+      if (!postData.image_url && postData.public_recipes?.image_url) {
+        postData.image_url = postData.public_recipes.image_url;
+      }
+    }
+    
+    setPost(postData);
+
+    console.log('[CommentModal] Post loaded:', {
+      postId: postId,
+      hasImageUrl: !!postData?.image_url,
+      imageUrl: postData?.image_url,
+      recipeImageUrl: postData?.public_recipes?.image_url,
+      title: postData?.title
+    });
+
+    // ... rest of your code
+  } catch (error: any) {
+    console.error('Error loading modal data:', error);
+    toast.error('Failed to load post details');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ✅ OPTIMIZED: Only reload comments when needed
   const reloadComments = async () => {
