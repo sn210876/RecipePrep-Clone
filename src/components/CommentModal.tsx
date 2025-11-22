@@ -168,11 +168,6 @@ if (commentsWithProfiles.error) throw commentsWithProfiles.error;
 const commentsData = commentsWithProfiles.data || [];
 setComments(commentsData);
 
-      // Auto-play music if available
-  
-      
-     
-
       // Handle user rating
       if (userRatingResult.error) throw userRatingResult.error;
       setUserRating(userRatingResult.data?.rating || 0);
