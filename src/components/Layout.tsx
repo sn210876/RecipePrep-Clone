@@ -28,7 +28,7 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
   const [currentPage, setCurrentPage] = useState(propCurrentPage);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   
