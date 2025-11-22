@@ -70,14 +70,16 @@ const loadAllSocialPosts = async (recipes: Recipe[]) => {
     
     const recipeIds = recipes.map(r => r.id);
     
+    // Get posts by recipe_id
     const { data: postsByRecipeId } = await supabase
       .from('posts')
       .select('*')
       .in('recipe_id', recipeIds);
     
+    // Get recipe video URLs for posts that might be linked by URL
     const { data: recipeUrls } = await supabase
       .from('public_recipes')
-      .select('id, video_url')
+      .select('id, video_url, image_url')  // ✅ Also get image_url
       .in('id', recipeIds)
       .not('video_url', 'is', null);
     
@@ -88,16 +90,31 @@ const loadAllSocialPosts = async (recipes: Recipe[]) => {
     
     const postMap = new Map<string, any>();
     
+    // ✅ Create a recipe lookup map for images
+    const recipeImageMap = new Map(
+      recipes.map(r => [r.id, r.imageUrl])
+    );
+    
+    // Process posts by recipe_id
     postsByRecipeId?.forEach(post => {
       if (post.recipe_id) {
+        // ✅ If post doesn't have image, use recipe image
+        if (!post.image_url && recipeImageMap.has(post.recipe_id)) {
+          post.image_url = recipeImageMap.get(post.recipe_id);
+        }
         postMap.set(post.recipe_id, post);
       }
     });
     
+    // Process posts by URL
     const urlToRecipeMap = new Map(recipeUrls?.map(r => [r.video_url, r.id]) || []);
     postsByUrl?.forEach(post => {
       const recipeId = urlToRecipeMap.get(post.recipe_url);
       if (recipeId && !postMap.has(recipeId)) {
+        // ✅ If post doesn't have image, use recipe image
+        if (!post.image_url && recipeImageMap.has(recipeId)) {
+          post.image_url = recipeImageMap.get(recipeId);
+        }
         postMap.set(recipeId, post);
       }
     });
@@ -105,39 +122,39 @@ const loadAllSocialPosts = async (recipes: Recipe[]) => {
     const allPostIds = Array.from(postMap.values()).map(p => p.id);
     
     if (allPostIds.length > 0) {
-  const [profilesData, likesData, commentsData] = await Promise.all([
-    supabase.from('profiles').select('id, username, avatar_url')
-      .in('id', Array.from(postMap.values()).map(p => p.user_id)),
-    supabase.from('likes').select('post_id, user_id').in('post_id', allPostIds),
-    supabase.from('comments').select('post_id').in('post_id', allPostIds)
-  ]);
+      const [profilesData, likesData, commentsData] = await Promise.all([
+        supabase.from('profiles').select('id, username, avatar_url')
+          .in('id', Array.from(postMap.values()).map(p => p.user_id)),
+        supabase.from('likes').select('post_id, user_id').in('post_id', allPostIds),
+        supabase.from('comments').select('post_id').in('post_id', allPostIds)
+      ]);
       
       const profileMap = new Map(profilesData.data?.map(p => [p.id, p]) || []);
       
       const likesMap = new Map<string, number>();
-likesData.data?.forEach(like => {
-  likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
-});
+      likesData.data?.forEach(like => {
+        likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
+      });
 
-const commentsMap = new Map<string, number>();
-commentsData.data?.forEach(comment => {
-  commentsMap.set(comment.post_id, (commentsMap.get(comment.post_id) || 0) + 1);
-});
+      const commentsMap = new Map<string, number>();
+      commentsData.data?.forEach(comment => {
+        commentsMap.set(comment.post_id, (commentsMap.get(comment.post_id) || 0) + 1);
+      });
 
-const enrichedMap = new Map<string, any>();
-postMap.forEach((post, recipeId) => {
-  enrichedMap.set(recipeId, {
-    ...post,
-    profiles: profileMap.get(post.user_id),
-    _count: {
-      likes: likesMap.get(post.id) || 0,
-      comments: commentsMap.get(post.id) || 0
-    }
-  });
-});
+      const enrichedMap = new Map<string, any>();
+      postMap.forEach((post, recipeId) => {
+        enrichedMap.set(recipeId, {
+          ...post,
+          profiles: profileMap.get(post.user_id),
+          _count: {
+            likes: likesMap.get(post.id) || 0,
+            comments: commentsMap.get(post.id) || 0
+          }
+        });
+      });
       
       setSocialPostsMap(enrichedMap);
-      console.log('[Discover] Loaded', enrichedMap.size, 'social posts');
+      console.log('[Discover] ✅ Loaded', enrichedMap.size, 'social posts with images');
     }
   } catch (error) {
     console.error('[Discover] Failed to batch load social posts:', error);
