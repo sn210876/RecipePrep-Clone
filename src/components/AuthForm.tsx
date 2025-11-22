@@ -185,21 +185,30 @@ export default function AuthForm() {
     >
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
-        <div className="text-center mb-4 sm:mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg mb-2 sm:mb-3 p-1 overflow-hidden">
-            <img 
-              src="/Woodenspoon.png" 
-              alt="Meal Scrape Logo" 
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1">
-            Meal Scrape
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-slate-600">
-            Your AI-powered recipe companion
-          </p>
-        </div>
+       {/* Logo/Brand Section - Professional & Clean */}
+<div className="text-center mb-4 sm:mb-6 md:mb-8">
+  <div className="flex justify-center mb-3 sm:mb-4">
+    <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-xl p-1.5 sm:p-2 overflow-hidden">
+      <img
+        src="/Woodenspoon.png"
+        alt="Meal Scrape"
+        className="w-full h-full object-contain drop-shadow-md"
+      />
+    </div>
+  </div>
+
+  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 sm:mb-3 px-2">
+    Meal Scrape
+  </h1>
+
+  <p className="text-sm sm:text-base md:text-lg text-slate-600 mb-1.5 max-w-sm mx-auto px-4">
+    Discover recipes from top influencers
+  </p>
+
+  <p className="text-xs sm:text-sm text-slate-500 px-4">
+    Save • Plan • Shop
+  </p>
+</div>
 
         {/* Auth Card */}
         <Card className="border-slate-200 shadow-xl overflow-hidden">
