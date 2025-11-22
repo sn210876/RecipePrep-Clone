@@ -330,30 +330,31 @@ const loadUnreadCount = async (userId: string) => {
         </header>
 
         {/* Quick Access Toolbar - Desktop Only */}
-        <div className="hidden lg:block fixed top-4 right-4 z-40">
-          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-lg rounded-full shadow-xl border border-gray-200/50 px-3 py-2">
-            {navItems
-              .filter((item) => !['discover', 'settings', 'messages'].includes(item.id))
-              .map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavigate(item.id)}
-                    className={`h-10 w-10 rounded-full transition-all flex items-center justify-center ${
-                      isActive 
-                        ? 'bg-orange-500 text-white shadow-lg scale-110' 
-                        : 'text-gray-600 hover:bg-gray-100 hover:scale-105'
-                    }`}
-                    title={item.label}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </button>
-                );
-              })}
-          </div>
-        </div>
+       {/* Quick Access Toolbar - Desktop Only */}
+<div className="hidden lg:block fixed top-3 right-3 z-40">
+  <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-lg rounded-full shadow-lg border border-gray-200/50 px-2 py-1.5">
+    {navItems
+      .filter((item) => !['discover', 'settings', 'messages'].includes(item.id))
+      .map((item) => {
+        const Icon = item.icon;
+        const isActive = currentPage === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => handleNavigate(item.id)}
+            className={`h-8 w-8 rounded-full transition-all flex items-center justify-center ${
+              isActive 
+                ? 'bg-orange-500 text-white shadow-md scale-110' 
+                : 'text-gray-600 hover:bg-gray-100 hover:scale-105'
+            }`}
+            title={item.label}
+          >
+            <Icon className="h-4 w-4" />
+          </button>
+        );
+      })}
+  </div>
+</div>
 
         {/* Main Content */}
 <main className={socialPages.includes(currentPage) ? 'pt-16' : 'pt-16 lg:pt-0'}>          {children}
