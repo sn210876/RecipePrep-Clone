@@ -161,7 +161,9 @@ export default function AuthForm() {
             Meal Scrape
           </h1>
           <p className="text-sm sm:text-base text-slate-600">
-            Your AI-powered recipe companion
+            Save recipes • Add your own recipes • Plan your meals
+
+
           </p>
         </div>
 
