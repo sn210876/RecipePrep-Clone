@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { Send, X, Play, Pause, ExternalLink } from 'lucide-react';
 import { RecipeDetailModal } from './RecipeDetailModal';
 import { getProxiedImageUrl } from '../lib/imageUtils';
-
 import { Recipe } from '../types/recipe';
 
 const CommentSkeleton = () => (
@@ -94,7 +93,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       const userId = userData.user?.id || null;
       setCurrentUserId(userId);
 
-      // First, get the post to see what data we have
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .select('*')
@@ -103,7 +101,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
       console.log('[CommentModal] 📦 Raw post data:', postData);
       console.log('[CommentModal] 📋 Post columns:', postData ? Object.keys(postData) : 'none');
-      console.log('[CommentModal] ❌ Post error:', postError);
 
       if (postError) throw postError;
       if (!postData) {
@@ -122,7 +119,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
         hasImageUrl: !!postData.image_url
       });
 
-      // Try to get recipe data if recipe_id exists
       let recipeData = null;
       if (postData.recipe_id) {
         console.log('[CommentModal] 🔄 Fetching recipe with ID:', postData.recipe_id);
@@ -133,7 +129,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
           .maybeSingle();
         
         console.log('[CommentModal] 📦 Recipe data:', recipe);
-        console.log('[CommentModal] ❌ Recipe error:', recipeError);
         recipeData = recipe;
 
         if (recipe) {
@@ -144,76 +139,35 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             hasImageUrl: !!recipe.image_url
           });
         }
-      } else {
-        console.log('[CommentModal] ⚠️ Post has no recipe_id');
       }
 
-      // Use recipe image as fallback if post doesn't have one
       if (!postData.image_url && recipeData?.image_url) {
         console.log('[CommentModal] ✅ Using recipe image as fallback:', recipeData.image_url);
         postData.image_url = recipeData.image_url;
       } else if (!postData.image_url) {
-        console.log('[CommentModal] 🚨 NO IMAGE AVAILABLE - Post image_url:', postData.image_url, ', Recipe image_url:', recipeData?.image_url);
-      } else {
-        console.log('[CommentModal] ✅ Post already has image_url:', postData.image_url);
+        console.log('[CommentModal] 🚨 NO IMAGE AVAILABLE');
       }
 
       setPost(postData);
 
-      console.log('[CommentModal] 🎯 FINAL POST STATE:', {
-        postId: postId,
-        hasImageUrl: !!postData?.image_url,
-        imageUrl: postData?.image_url,
-        recipeId: postData?.recipe_id,
-        recipeUrl: postData?.recipe_url,
-        title: postData?.title
-      });
-
-      // Load ratings and comments in parallel
       const [ratingsResult, commentsResult, userRatingResult] = await Promise.all([
-        supabase
-          .from('post_ratings')
-          .select('rating')
-          .eq('post_id', postId),
-        
-        supabase
-          .from('comments')
-          .select(`
-            id,
-            text,
-            created_at,
-            user_id,
-            profiles!comments_user_id_fkey(username, avatar_url)
-          `)
-          .eq('post_id', postId)
-          .order('created_at', { ascending: true }),
-        
-        userId
-          ? supabase
-              .from('post_ratings')
-              .select('rating')
-              .eq('post_id', postId)
-              .eq('user_id', userId)
-              .maybeSingle()
-          : Promise.resolve({ data: null, error: null })
+        supabase.from('post_ratings').select('rating').eq('post_id', postId),
+        supabase.from('comments').select(`id, text, created_at, user_id, profiles!comments_user_id_fkey(username, avatar_url)`).eq('post_id', postId).order('created_at', { ascending: true }),
+        userId ? supabase.from('post_ratings').select('rating').eq('post_id', postId).eq('user_id', userId).maybeSingle() : Promise.resolve({ data: null, error: null })
       ]);
 
-      // Handle ratings
       if (ratingsResult.data && ratingsResult.data.length > 0) {
         const avg = ratingsResult.data.reduce((sum, r) => sum + r.rating, 0) / ratingsResult.data.length;
         setAverageRating(avg);
         setTotalRatings(ratingsResult.data.length);
       }
 
-      // Handle comments
       if (commentsResult.data) {
         setComments(commentsResult.data);
       }
 
-      // Handle user rating
       setUserRating(userRatingResult.data?.rating || 0);
 
-      // Auto-play music if available
       if (postData.spotify_preview_url) {
         setTimeout(() => {
           const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
@@ -229,7 +183,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       toast.error('Failed to load post details');
     } finally {
       setLoading(false);
-      console.log('[CommentModal] ✅ Loading complete');
     }
   };
 
@@ -409,67 +362,90 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
-        // Replace the entire image section in CommentModal.tsx (around line 450-520)
-// Find the section that starts with: <div className="w-full h-[35vh] sm:h-[40vh]...
+            <div className="w-full h-[35vh] sm:h-[40vh] bg-gray-300 animate-pulse flex-shrink-0 relative">
+              <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 flex flex-col bg-white min-h-0">
+              <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0 space-y-2 animate-pulse">
+                <div className="h-4 bg-gray-300 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-full" />
+              </div>
+              <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
+                <RatingSkeleton />
+              </div>
+              <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-3 min-h-[100px]">
+                <CommentSkeleton />
+                <CommentSkeleton />
+                <CommentSkeleton />
+              </div>
+              <div className="border-t px-3 py-3 sm:px-4 sm:py-4 bg-white flex-shrink-0">
+                <div className="flex gap-2 animate-pulse">
+                  <div className="flex-1 h-9 sm:h-10 bg-gray-200 rounded-lg" />
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 bg-gray-300 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
-{/* Image Section - Top */}
-<div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
-  {post?.image_url ? (
-    <img
-      src={getProxiedImageUrl(post.image_url)}
-      alt={post.title || 'Post'}
-      className="w-full h-full object-contain"
-      onLoad={() => {
-        console.log('[CommentModal] ✅ Image loaded successfully');
-        console.log('[CommentModal] 📸 Original URL:', post.image_url);
-        console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
-      }}
-      onError={(e) => {
-        console.log('[CommentModal] ❌ Image failed to load');
-        console.log('[CommentModal] 📸 Original URL:', post.image_url);
-        console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
-        console.log('[CommentModal] ❌ Error:', e);
-      }}
-    />
-  ) : (
-    <div className="text-white text-center">
-      <p>No image available</p>
-      <p className="text-xs mt-2">Post ID: {postId}</p>
-      {post?.recipe_id && (
-        <p className="text-xs mt-1">Recipe ID: {post.recipe_id}</p>
-      )}
-    </div>
-  )}
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
+          <div className="flex flex-col h-full overflow-hidden">
+            
+            {/* Image Section - Top */}
+            <div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
+              {post?.image_url ? (
+                <img
+                  src={getProxiedImageUrl(post.image_url)}
+                  alt={post.title || 'Post'}
+                  className="w-full h-full object-contain"
+                  onLoad={() => {
+                    console.log('[CommentModal] ✅ Image loaded successfully');
+                    console.log('[CommentModal] 📸 Original URL:', post.image_url);
+                    console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
+                  }}
+                  onError={(e) => {
+                    console.log('[CommentModal] ❌ Image failed to load');
+                    console.log('[CommentModal] 📸 Original URL:', post.image_url);
+                    console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
+                  }}
+                />
+              ) : (
+                <div className="text-white text-center">
+                  <p>No image available</p>
+                  <p className="text-xs mt-2">Post ID: {postId}</p>
+                  {post?.recipe_id && (
+                    <p className="text-xs mt-1">Recipe ID: {post.recipe_id}</p>
+                  )}
+                </div>
+              )}
 
-  {/* Close button */}
-  <button
-    onClick={onClose}
-    className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10"
-  >
-    <X className="w-5 h-5" />
-  </button>
+              <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
+                <X className="w-5 h-5" />
+              </button>
 
-  {/* Music Player */}
-  {post?.spotify_preview_url && (
-    <div className="absolute bottom-2 left-2 right-2 z-10">
-      <button
-        onClick={togglePlay}
-        className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-2 w-full"
-      >
-        {isPlaying ? (
-          <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
-        ) : (
-          <Play className="w-4 h-4 sm:w-5 sm:h-5" />
-        )}
-        <div className="text-left text-[10px] sm:text-xs flex-1 min-w-0">
-          <div className="font-semibold truncate">{post.spotify_track_name}</div>
-          <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
-        </div>
-      </button>
-      <audio id={`modal-audio-${postId}`} src={post.spotify_preview_url} />
-    </div>
-  )}
-</div>
+              {post?.spotify_preview_url && (
+                <div className="absolute bottom-2 left-2 right-2 z-10">
+                  <button onClick={togglePlay} className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-2 w-full">
+                    {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    <div className="text-left text-[10px] sm:text-xs flex-1 min-w-0">
+                      <div className="font-semibold truncate">{post.spotify_track_name}</div>
+                      <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
+                    </div>
+                  </button>
+                  <audio id={`modal-audio-${postId}`} src={post.spotify_preview_url} />
+                </div>
+              )}
+            </div>
+
+            {/* Content Section */}
             <div className="flex-1 flex flex-col bg-white min-h-0">
               <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
                 <h3 className="font-bold text-sm sm:text-base truncate">{post?.title || 'Post'}</h3>
@@ -477,6 +453,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                   <p className="text-xs sm:text-sm text-gray-600 mt-0.5 line-clamp-2">{post.caption}</p>
                 )}
               </div>
+
               <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
                 <div className="space-y-1.5 sm:space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -502,6 +479,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                   </div>
                 </div>
               </div>
+
               {(post?.recipe_id || post?.recipe_url) && (
                 <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
                   <Button onClick={async () => {
@@ -519,6 +497,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                   </Button>
                 </div>
               )}
+
               <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-[100px] max-h-[30vh] sm:max-h-none">
                 {loading ? (
                   <div className="text-center py-8">
@@ -558,6 +537,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                   ))
                 )}
               </div>
+
               <form onSubmit={handleSubmitComment} className="border-t px-3 py-3 sm:px-4 sm:py-4 bg-white flex-shrink-0 sticky bottom-0">
                 <div className="flex gap-2">
                   <Input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add a comment..." disabled={submitting} className="flex-1 text-xs sm:text-sm h-9 sm:h-10" />
@@ -570,6 +550,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
           </div>
         </DialogContent>
       </Dialog>
+
       {selectedRecipe && (
         <RecipeDetailModal recipe={selectedRecipe} open={!!selectedRecipe} onOpenChange={(open) => !open && setSelectedRecipe(null)} />
       )}
