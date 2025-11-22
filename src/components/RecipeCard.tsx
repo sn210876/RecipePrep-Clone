@@ -22,7 +22,7 @@ interface RecipeCardProps {
   preloadedSocialPost?: any; // NEW: Accept pre-loaded data
 }
 
-export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton = false, isAdmin = false }: RecipeCardProps) {
+export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton = false, isAdmin = false, preloadedSocialPost }: RecipeCardProps) {
   const { state } = useRecipes();
   const [showDetail, setShowDetail] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
