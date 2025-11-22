@@ -62,19 +62,108 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
   }, []);
 
   useEffect(() => {
-    const loadRecipes = async () => {
-      try {
-        console.log('[Discover] Loading recipes from database...');
-        const dbRecipes = await getAllPublicRecipes();
-        console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
-        setAllRecipes(dbRecipes);
-      } catch (error) {
-        console.error('Failed to load recipes:', error);
-        setAllRecipes([]);
+// ADD THIS ENTIRE FUNCTION HERE (before the useEffect with loadRecipes)
+const loadAllSocialPosts = async (recipes: Recipe[]) => {
+  try {
+    console.log('[Discover] Batch loading social posts...');
+    
+    // Get all recipe IDs
+    const recipeIds = recipes.map(r => r.id);
+    
+    // Batch query 1: Get all posts by recipe_id
+    const { data: postsByRecipeId } = await supabase
+      .from('posts')
+      .select('*')
+      .in('recipe_id', recipeIds);
+    
+    // Batch query 2: Get all posts by video_url (for fallback)
+    const { data: recipeUrls } = await supabase
+      .from('public_recipes')
+      .select('id, video_url')
+      .in('id', recipeIds)
+      .not('video_url', 'is', null);
+    
+    const videoUrls = recipeUrls?.map(r => r.video_url).filter(Boolean) || [];
+    const { data: postsByUrl } = videoUrls.length > 0
+      ? await supabase.from('posts').select('*').in('recipe_url', videoUrls)
+      : { data: [] };
+    
+    // Create maps
+    const postMap = new Map<string, any>();
+    
+    // Map posts by recipe_id
+    postsByRecipeId?.forEach(post => {
+      if (post.recipe_id) {
+        postMap.set(post.recipe_id, post);
       }
-    };
+    });
+    
+    // Map posts by video_url (fallback)
+    const urlToRecipeMap = new Map(recipeUrls?.map(r => [r.video_url, r.id]) || []);
+    postsByUrl?.forEach(post => {
+      const recipeId = urlToRecipeMap.get(post.recipe_url);
+      if (recipeId && !postMap.has(recipeId)) {
+        postMap.set(recipeId, post);
+      }
+    });
+    
+    // Batch load profiles, likes, and comments for all posts
+    const allPostIds = Array.from(postMap.values()).map(p => p.id);
+    
+    if (allPostIds.length > 0) {
+      const [profilesData, likesData, commentsData] = await Promise.all([
+        supabase.from('profiles').select('id, username, avatar_url')
+          .in('id', Array.from(postMap.values()).map(p => p.user_id)),
+        supabase.from('likes').select('post_id, user_id').in('post_id', allPostIds),
+        supabase.from('comments').select('post_id', { count: 'exact', head: true }).in('post_id', allPostIds)
+      ]);
+      
+      // Create profile map
+      const profileMap = new Map(profilesData.data?.map(p => [p.id, p]) || []);
+      
+      // Group likes by post_id
+      const likesMap = new Map<string, number>();
+      likesData.data?.forEach(like => {
+        likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
+      });
+      
+      // Enrich posts with profile and counts
+      const enrichedMap = new Map<string, any>();
+      postMap.forEach((post, recipeId) => {
+        enrichedMap.set(recipeId, {
+          ...post,
+          profiles: profileMap.get(post.user_id),
+          _count: {
+            likes: likesMap.get(post.id) || 0,
+            comments: 0 // You'd need to batch count this properly
+          }
+        });
+      });
+      
+      setSocialPostsMap(enrichedMap);
+      console.log('[Discover] Loaded', enrichedMap.size, 'social posts');
+    }
+  } catch (error) {
+    console.error('[Discover] Failed to batch load social posts:', error);
+  }
+};
 
-    loadRecipes();
+// This useEffect block should come AFTER the function above
+useEffect(() => {
+  const loadRecipes = async () => {
+    try {
+      console.log('[Discover] Loading recipes from database...');
+      const dbRecipes = await getAllPublicRecipes();
+      console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
+      setAllRecipes(dbRecipes);
+      
+      // ADD THIS LINE to call the batch load
+      await loadAllSocialPosts(dbRecipes);
+    } catch (error) {
+      console.error('Failed to load recipes:', error);
+      setAllRecipes([]);
+    }
+  };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
