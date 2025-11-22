@@ -206,7 +206,7 @@ export default function AuthForm() {
   </p>
 
   <p className="text-xs sm:text-sm text-slate-500 px-4">
-    Save • Plan • Shop
+    Save Recipes • Plan Meals • Shop Smart
   </p>
 </div>
 
