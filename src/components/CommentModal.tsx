@@ -6,6 +6,8 @@ import { Input } from './ui/input';
 import { toast } from 'sonner';
 import { Send, X, Play, Pause, ExternalLink } from 'lucide-react';
 import { RecipeDetailModal } from './RecipeDetailModal';
+import { getProxiedImageUrl } from '../lib/imageUtils';
+
 import { Recipe } from '../types/recipe';
 
 const CommentSkeleton = () => (
