@@ -128,37 +128,45 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       ]);
 
       // Handle post and ratings
-      if (postWithRatings.error) throw postWithRatings.error;
-      setPost(postWithRatings.data);
+    // Handle post and ratings
+if (postWithRatings.error) throw postWithRatings.error;
+setPost(postWithRatings.data);
 
-      // Calculate ratings from joined data
-      const ratings = postWithRatings.data?.post_ratings || [];
-      if (ratings.length > 0) {
-        const avg = ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length;
-        setAverageRating(avg);
-        setTotalRatings(ratings.length);
-      } else {
-        setAverageRating(0);
-        setTotalRatings(0);
-      }
+// ADD THIS LOGGING
+console.log('[CommentModal] Post loaded:', {
+  postId: postId,
+  hasImageUrl: !!postWithRatings.data?.image_url,
+  imageUrl: postWithRatings.data?.image_url,
+  title: postWithRatings.data?.title
+});
 
-      // Auto-play music if available
-      if (postWithRatings.data?.spotify_preview_url) {
-        setTimeout(() => {
-          const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
-          if (audio) {
-            audio.play().catch(err => console.log('Auto-play prevented:', err));
-            setIsPlaying(true);
-          }
-        }, 500);
-      }
+// Calculate ratings from joined data
+const ratings = postWithRatings.data?.post_ratings || [];
+if (ratings.length > 0) {
+  const avg = ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length;
+  setAverageRating(avg);
+  setTotalRatings(ratings.length);
+} else {
+  setAverageRating(0);
+  setTotalRatings(0);
+}
 
-      // Handle comments - already have profiles from join
-      if (commentsWithProfiles.error) throw commen
+// Auto-play music if available
+if (postWithRatings.data?.spotify_preview_url) {
+  setTimeout(() => {
+    const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
+    if (audio) {
+      audio.play().catch(err => console.log('Auto-play prevented:', err));
+      setIsPlaying(true);
+    }
+  }, 500);
+}
 
-      // Handle post
-      if (postResult.error) throw postResult.error;
-      setPost(postResult.data);
+// Handle comments - already have profiles from join
+if (commentsWithProfiles.error) throw commentsWithProfiles.error;
+
+const commentsData = commentsWithProfiles.data || [];
+setComments(commentsData);
 
       // Auto-play music if available
       if (postResult.data?.spotify_preview_url) {
