@@ -50,84 +50,17 @@ const [loadingReviews, setLoadingReviews] = useState(false);
     }
   };
 
- const loadSocialPost = async () => {
-  setLoadingSocialPost(true);
-  try {
-    let postData = null;
-
-      // First try to find by recipe_id
-      const { data: postByRecipeId, error: recipeIdError } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('recipe_id', recipe.id)
-        .maybeSingle();
-
-      console.log('[RecipeCard] Search by recipe_id:', recipe.id, 'Found:', postByRecipeId ? 'YES' : 'NO', 'Error:', recipeIdError);
-
-      if (postByRecipeId) {
-        postData = postByRecipeId;
-      } else {
-        // Fallback: try to find by video_url
-        const { data: recipeData } = await supabase
-          .from('public_recipes')
-          .select('video_url')
-          .eq('id', recipe.id)
-          .maybeSingle();
-
-        console.log('[RecipeCard] Search by video_url. Recipe DB entry:', recipeData?.video_url);
-
-        if (recipeData?.video_url) {
-          const { data: postByUrl } = await supabase
-            .from('posts')
-            .select('*')
-            .eq('recipe_url', recipeData.video_url)
-            .maybeSingle();
-
-          console.log('[RecipeCard] Found post by URL:', postByUrl ? 'YES' : 'NO');
-          postData = postByUrl;
-        }
-      }
-
-      if (postData) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username, avatar_url')
-          .eq('id', postData.user_id)
-          .maybeSingle();
-
-        const { data: likes } = await supabase
-          .from('likes')
-          .select('user_id')
-          .eq('post_id', postData.id);
-
-        const { count: commentsCount } = await supabase
-          .from('comments')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', postData.id);
-
-        setSocialPost({
-          ...postData,
-          profiles: profile,
-          _count: {
-            likes: likes?.length || 0,
-            comments: commentsCount || 0
-          }
-        });
-        console.log('[RecipeCard] ✅ Social post loaded for recipe:', recipe.id, 'Post ID:', postData.id);
-      } else {
-        console.log('[RecipeCard] ❌ No social post found for recipe:', recipe.id);
-      }
-} catch (error) {
-      console.error('[RecipeCard] Failed to load social post:', error);
-    } finally {
-      setLoadingSocialPost(false);
-    }
-  };
-
-  useEffect(() => {
-    loadReviewData();
-    loadSocialPost();
-  }, [recipe.id]);
+useEffect(() => {
+  loadReviewData();
+  
+  // Use pre-loaded data if available
+  if (preloadedSocialPost !== undefined) {
+    setSocialPost(preloadedSocialPost);
+    setLoadingSocialPost(false);
+  } else {
+    setLoadingSocialPost(false);
+  }
+}, [recipe.id, preloadedSocialPost]);
 
   useEffect(() => {
     console.log('[RecipeCard] Recipe:', recipe.id, 'Review count:', reviewCount, 'Social post:', socialPost ? 'EXISTS' : 'NULL');
