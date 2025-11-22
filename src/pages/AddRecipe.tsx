@@ -450,7 +450,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pb-32">
       {/* Mobile-optimized header with safe area padding - FIXED */}
-      <div className="fixed top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200 pt-safe">
+      <div className="fixed top-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-b border-slate-200 pt-safe">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
           <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
