@@ -1202,14 +1202,14 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                       </div>
 
                       {post.caption && (
-                        <div className="text-sm">
+                        <div className="text-sm break-words overflow-wrap-anywhere">
                           <span className="inline-flex items-center gap-1">
                             <span className="font-semibold">{post.profiles?.username}</span>
                             {post.user_id === '51ad04fa-6d63-4c45-9423-76183eea7b39' && (
                               <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                             )}
                           </span>{' '}
-                          <span className="text-gray-700">
+                          <span className="text-gray-700 break-all">
                             {makeHashtagsClickable(post.caption, (tag) => {
                               setFilterHashtag(tag);
                               setViewingUserId(null);
