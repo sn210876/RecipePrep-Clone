@@ -11,7 +11,25 @@ import { getAllPublicRecipes, deleteRecipe } from '../services/recipeService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import CommentModal from '../components/CommentModal';
-
+// ADD THIS SKELETON COMPONENT — Paste right after your imports
+const RecipeCardSkeleton = () => (
+  <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
+    <div className="bg-gray-300 aspect-square w-full" />
+    <div className="p-4 space-y-3">
+      <div className="h-5 bg-gray-300 rounded w-3/4" />
+      <div className="h-4 bg-gray-300 rounded w-1/2" />
+      <div className="flex items-center gap-4 mt-4">
+        <div className="h-8 w-20 bg-gray-300 rounded-full" />
+        <div className="h-8 w-20 bg-gray-300 rounded-full" />
+      </div>
+      <div className="flex gap-2 mt-3">
+        <div className="h-6 w-16 bg-gray-300 rounded-full" />
+        <div className="h-6 w-16 bg-gray-300 rounded-full" />
+        <div className="h-6 w-16 bg-gray-300 rounded-full" />
+      </div>
+    </div>
+  </div>
+);
 interface DiscoverProps {
   onNavigate: (page: string) => void;
 }
