@@ -237,23 +237,21 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
  const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
   if (!isRefresh && !hasMore) return;
-
   try {
-    // Show skeleton only on first page load
     if (pageNum === 0) setLoading(true);
 
     let query = supabase
       .from('posts')
-     .select(`
-  *,
-  profiles!user_id(username, avatar_url),
-  likes(user_id),
-  comments(
-    id, text, created_at, user_id,
-    profiles(username)
-  ),
-  post_ratings(rating)
-`)
+      .select(`
+        *,
+        profiles!user_id(username, avatar_url),
+        likes(user_id),
+        comments(
+          id, text, created_at, user_id,
+          profiles(username)
+        ),
+        post_ratings(rating)
+      `)
       .order('created_at', { ascending: false })
       .range(pageNum * POSTS_PER_PAGE, (pageNum + 1) * POSTS_PER_PAGE - 1);
 
