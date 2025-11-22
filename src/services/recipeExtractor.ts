@@ -144,7 +144,7 @@ if (isSocial) {
     };
 
     console.log('[Extractor] Final image URL being returned:', finalImageUrl);
-
+//test
     return {
       title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
      description: decodeHtmlEntities(
