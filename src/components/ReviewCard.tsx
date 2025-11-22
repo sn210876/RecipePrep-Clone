@@ -106,16 +106,16 @@ export function ReviewCard({
               key={img.id || idx}
               className="relative overflow-hidden rounded-lg bg-gray-100 aspect-square"
             >
-              <img
-                src={img.image_url}
-                alt={`Review image ${idx + 1}`}
-                className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                loading="lazy"
-                onClick={() => {
-                  // Optional: Add image viewer/lightbox functionality
-                  window.open(img.image_url, '_blank');
-                }}
-              />
+             <img
+  src={img.image_url}
+  alt={`Review image ${idx + 1}`}
+  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+  loading="lazy"
+  onClick={() => {
+    // Optional: Add image viewer/lightbox functionality
+    window.open(img.image_url, '_blank');
+  }}
+/>
             </div>
           ))}
         </div>
