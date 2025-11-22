@@ -154,7 +154,7 @@ export default function AuthForm() {
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg mb-3 sm:mb-4 p-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg mb-3 sm:mb-4 p-1">
   <img 
     src="/Woodenspoon.png" 
     alt="Meal Scrape Logo" 
