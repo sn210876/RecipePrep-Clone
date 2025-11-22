@@ -184,32 +184,22 @@ export default function AuthForm() {
       }}
     >
       <div className="w-full max-w-md">
-                {/* Logo/Brand Section - FIXED & CLEAN */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-5">
-            <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-xl p-2 overflow-hidden">
-              <img
-                src="/Woodenspoon.png"
-                alt="Meal Scrape"
-                className="w-full h-full object-contain drop-shadow-md"
-              />
-            </div>
+        {/* Logo/Brand Section */}
+        <div className="text-center mb-4 sm:mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg mb-2 sm:mb-3 p-1 overflow-hidden">
+            <img 
+              src="/Woodenspoon.png" 
+              alt="Meal Scrape Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-3">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1">
             Meal Scrape
           </h1>
-
-          <p className="text-lg sm:text-xl text-slate-600 mb-2 max-w-2xl mx-auto leading-relaxed">
-            Best influencer recipes scraped from social media and the web
-          </p>
-
-          <p className="text-base text-slate-500 font-medium">
-            Save recipes • Add your own • Plan meals • Shop smarter
+          <p className="text-xs sm:text-sm md:text-base text-slate-600">
+            Your AI-powered recipe companion
           </p>
         </div>
-
-        
 
         {/* Auth Card */}
         <Card className="border-slate-200 shadow-xl overflow-hidden">
