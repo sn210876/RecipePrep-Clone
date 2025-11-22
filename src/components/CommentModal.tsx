@@ -459,10 +459,12 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             <div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
               {post?.image_url ? (
                 <img
-                  src={post.image_url}
-                  alt={post.title || 'Post'}
-                  className="w-full h-full object-contain"
-                />
+  src={post.image_url?.includes('instagram.com') || post.image_url?.includes('cdninstagram.com')
+    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(post.image_url.replace(/&amp;/g, '&'))}`
+    : post.image_url}
+  alt={post.title || 'Post'}
+  className="w-full h-full object-contain"
+/>
               ) : (
                 <div className="text-white text-center">
                   <p>No image available</p>
