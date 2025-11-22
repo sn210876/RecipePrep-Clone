@@ -147,7 +147,8 @@ if (isSocial) {
 
     return {
       title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
-      description: 'Extracted from video',
+      description: '
+        ',
       creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
       ingredients,
       instructions: (data.instructions || []).map((i: string) => decodeHtmlEntities(i)),
@@ -270,7 +271,7 @@ if (isSocial) {
       prepTime: data.structuredVersion?.prep_time ? `${data.structuredVersion.prep_time} mins` : '30 mins',
       cookTime: data.structuredVersion?.cook_time ? `${data.structuredVersion.cook_time} mins` : '45 mins',
       servings: String(data.structuredVersion?.yield || '4'),
-      notes: 'From recipe card (structured data)',
+      notes: '',
     };
     result.aiVersion = {
       ...result,
@@ -279,7 +280,7 @@ if (isSocial) {
       prepTime: data.aiVersion?.prep_time ? `${data.aiVersion.prep_time} mins` : '30 mins',
       cookTime: data.aiVersion?.cook_time ? `${data.aiVersion.cook_time} mins` : '45 mins',
       servings: String(data.aiVersion?.yield || '4'),
-      notes: 'From blog content (AI extracted)',
+      notes: '',
     };
   }
 
