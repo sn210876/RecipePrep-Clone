@@ -1002,9 +1002,7 @@ return (
                 <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 <span className="leading-tight">Review Recipe</span>
               </DialogTitle>
-              <DialogDescription className="text-xs">
-                Review extracted details before adding
-              </DialogDescription>
+         ]
             </DialogHeader>
 
             {extractedData && (
