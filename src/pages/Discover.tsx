@@ -621,12 +621,13 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     }
   };
 
-  if (loading) {
+   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-          <p className="mt-4 text-gray-600">Loading feed...</p>
+      <div className="min-h-screen bg-gray-50 pb-32">
+        <div className="max-w-sm mx-auto w-full pt-24">
+          {[...Array(6)].map((_, i) => (
+            <PostSkeleton key={i} />
+          ))}
         </div>
       </div>
     );
