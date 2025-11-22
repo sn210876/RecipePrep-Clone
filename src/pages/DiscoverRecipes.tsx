@@ -105,11 +105,12 @@ const loadAllSocialPosts = async (recipes: Recipe[]) => {
     const allPostIds = Array.from(postMap.values()).map(p => p.id);
     
     if (allPostIds.length > 0) {
-      const [profilesData, likesData] = await Promise.all([
-        supabase.from('profiles').select('id, username, avatar_url')
-          .in('id', Array.from(postMap.values()).map(p => p.user_id)),
-        supabase.from('likes').select('post_id, user_id').in('post_id', allPostIds)
-      ]);
+  const [profilesData, likesData, commentsData] = await Promise.all([
+    supabase.from('profiles').select('id, username, avatar_url')
+      .in('id', Array.from(postMap.values()).map(p => p.user_id)),
+    supabase.from('likes').select('post_id, user_id').in('post_id', allPostIds),
+    supabase.from('comments').select('post_id').in('post_id', allPostIds)
+  ]);
       
       const profileMap = new Map(profilesData.data?.map(p => [p.id, p]) || []);
       
