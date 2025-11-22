@@ -202,11 +202,11 @@ export default function AuthForm() {
   </h1>
 
   <p className="text-sm sm:text-base md:text-lg text-slate-600 mb-1.5 max-w-sm mx-auto px-4">
-    Discover recipes from top influencers
+   The Only Recipe Book You'll Ever Need
   </p>
 
   <p className="text-xs sm:text-sm text-slate-500 px-4">
-    Save Recipes • Plan Meals • Shop Smart
+    Social Media Recipes • Meal Calendar • Shopping List
   </p>
 </div>
 
