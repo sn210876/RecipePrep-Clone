@@ -501,7 +501,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
     >
       {/* Back Button + Username Header */}
         <div 
-          className="sticky top-0 bg-white border-b border-gray-200 z-40"
+          className="sticky top-0 bg-white border-b border-gray-200 z-30"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
