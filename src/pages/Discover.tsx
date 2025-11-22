@@ -235,100 +235,132 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     }
   }, [sharedPostId, currentUserId, onPostViewed]);
 
- const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
-  if (!isRefresh && !hasMore) return;
-  try {
-    if (pageNum === 0) setLoading(true);
+  const fetchPosts = useCallback(async (pageNum: number, isRefresh = false) => {
+    try {
+      let query = supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    let query = supabase
-      .from('posts')
-     .select(`
-  *,
-  profiles!user_id(username, avatar_url),
-  likes(user_id),
-  comments:post_id(
-    id, text, created_at, user_id,
-    profiles(username)
-  ),
-  post_ratings(rating)
-`)
-      .order('created_at', { ascending: false })
-      .range(pageNum * POSTS_PER_PAGE, (pageNum + 1) * POSTS_PER_PAGE - 1);
+      if (filterHashtag) {
+        const { data: hashtagData } = await supabase
+          .from('hashtags')
+          .select('id')
+          .eq('tag', filterHashtag.toLowerCase())
+          .maybeSingle();
 
-    // Handle hashtag filter
-    if (filterHashtag) {
-      const { data: hashtag } = await supabase
-        .from('hashtags')
-        .select('id')
-        .eq('tag', filterHashtag.toLowerCase())
-        .maybeSingle();
+        if (hashtagData) {
+          const { data: postHashtags } = await supabase
+            .from('post_hashtags')
+            .select('post_id')
+            .eq('hashtag_id', hashtagData.id);
 
-      if (!hashtag) {
-        if (isRefresh) setPosts([]);
-        setHasMore(false);
-        return;
-      }
+          const postIds = (postHashtags || []).map(ph => ph.post_id);
 
-      const { data: linked } = await supabase
-        .from('post_hashtags')
-        .select('post_id')
-        .eq('hashtag_id', hashtag.id);
+          if (postIds.length === 0) {
+            setPosts([]);
+            setHasMore(false);
+            setLoading(false);
+            return;
+          }
 
-      const postIds = linked?.map(l => l.post_id) || [];
-      if (postIds.length === 0) {
-        if (isRefresh) setPosts([]);
-        setHasMore(false);
-        return;
-      }
-
-      query = query.in('id', postIds);
-    }
-
-    const { data: postsData, error } = await query;
-    if (error) throw error;
-
-    const processedPosts = (postsData || []).map(post => {
-      const likes = Array.isArray(post.likes) ? post.likes : [];
-      const allComments = Array.isArray(post.comments) ? post.comments : [];
-      const comments = allComments.slice(0, 2);
-      const ratings = Array.isArray(post.post_ratings) ? post.post_ratings : [];
-
-      const avgRating = ratings.length > 0
-        ? ratings.reduce((sum: any, r: any) => sum + r.rating, 0) / ratings.length
-        : 0;
-
-      return {
-        ...post,
-        profiles: post.profiles || { username: 'Unknown', avatar_url: null },
-        likes,
-        comments,
-        _count: {
-          likes: likes.length,
-          comments: allComments.length,
-        },
-        ratingInfo: {
-          average: avgRating,
-          count: ratings.length
+          query = query.in('id', postIds);
+        } else {
+          setPosts([]);
+          setHasMore(false);
+          setLoading(false);
+          return;
         }
-      };
-    });
+      }
 
-    if (isRefresh) {
-      setPosts(processedPosts);
-      setPage(0);
-    } else {
-      setPosts(prev => [...prev, ...processedPosts]);
+      const { data: postsData, error: postsError } = await query
+        .range(pageNum * POSTS_PER_PAGE, (pageNum + 1) * POSTS_PER_PAGE - 1);
+
+      if (postsError) throw postsError;
+
+      const postsWithDetails = await Promise.all(
+        (postsData || []).map(async (post) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', post.user_id)
+            .single();
+
+          const { data: likes } = await supabase
+            .from('likes')
+            .select('user_id')
+            .eq('post_id', post.id);
+
+          const { count: commentsCount } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', post.id);
+
+          const { data: comments } = await supabase
+            .from('comments')
+            .select('id, text, created_at, user_id, rating')
+            .eq('post_id', post.id)
+            .order('created_at', { ascending: false })
+            .limit(2);
+
+          const commentsWithProfiles = await Promise.all(
+            (comments || []).map(async (comment) => {
+              const { data: commentProfile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', comment.user_id)
+                .single();
+
+              return {
+                ...comment,
+                profiles: commentProfile,
+              };
+            })
+          );
+
+          const { data: postRatingsData } = await supabase
+            .from('post_ratings')
+            .select('rating')
+            .eq('post_id', post.id);
+
+          const ratingsCount = postRatingsData?.length || 0;
+          const averageRating = ratingsCount > 0
+            ? postRatingsData!.reduce((sum, r) => sum + r.rating, 0) / ratingsCount
+            : 0;
+
+          setPostRatings(prev => ({
+            ...prev,
+            [post.id]: { average: averageRating, count: ratingsCount }
+          }));
+
+          return {
+            ...post,
+            profiles: profile,
+            likes: likes || [],
+            comments: commentsWithProfiles,
+            _count: {
+              likes: likes?.length || 0,
+              comments: commentsCount || 0,
+            },
+          };
+        })
+      );
+
+      if (isRefresh) {
+        setPosts(postsWithDetails);
+        setPage(0);
+      } else {
+        setPosts(prev => [...prev, ...postsWithDetails]);
+      }
+
+      setHasMore((postsData || []).length === POSTS_PER_PAGE);
+    } catch (error: any) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
+    } finally {
+      setLoading(false);
     }
-
-    setHasMore((postsData || []).length === POSTS_PER_PAGE);
-
-  } catch (error: any) {
-    console.error('Error fetching posts:', error);
-    toast.error('Failed to load feed');
-  } finally {
-    if (pageNum === 0) setLoading(false);
-  }
-}, [filterHashtag, hasMore]);
+  }, [filterHashtag]);
 
   useEffect(() => {
     let isMounted = true;
@@ -388,7 +420,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       isMounted = false;
       if (channel) supabase.removeChannel(channel);
     };
-}, [fetchPosts]);
+  }, []);
+
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
@@ -1139,17 +1172,17 @@ value)}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
               <div className="flex items-end justify-between gap-2">
                 <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
-                {post.ratingInfo?.count > 0 && (
-  <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-    <span className="text-lg">Fire</span>
-    <span className="text-white text-xs font-semibold">
-      {post.ratingInfo.average.toFixed(1)}
-    </span>
-    <span className="text-white/70 text-xs">
-      ({post.ratingInfo.count})
-    </span>
-  </div>
-)}
+                {postRatings[post.id] && postRatings[post.id].count > 0 && (
+                  <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
+                    <span className="text-lg">🔥</span>
+                    <span className="text-white text-xs font-semibold">
+                      {postRatings[post.id].average.toFixed(1)}
+                    </span>
+                    <span className="text-white/70 text-xs">
+                      ({postRatings[post.id].count})
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
