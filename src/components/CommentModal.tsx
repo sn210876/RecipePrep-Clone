@@ -38,6 +38,8 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   const [totalRatings, setTotalRatings] = useState<number>(0);
   const [post, setPost] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+
 
   useEffect(() => {
     if (isOpen && postId) {
