@@ -169,7 +169,20 @@ const commentsData = commentsWithProfiles.data || [];
 setComments(commentsData);
 
       // Auto-play music if available
-    
+    const commentsData = commentsWithProfiles.data || [];
+setComments(commentsData);
+
+      // Handle user rating
+      if (userRatingResult.error) throw userRatingResult.error;
+      setUserRating(userRatingResult.data?.rating || 0);
+
+    } catch (error: any) {
+      console.error('Error loading modal data:', error);
+      toast.error('Failed to load post details');
+    } finally {
+      setLoading(false);
+    }
+  };
       
       if (ratingsResult.data && ratingsResult.data.length > 0) {
         const avg = ratingsResult.data.reduce((sum, r) => sum + r.rating, 0) / ratingsResult.data.length;
