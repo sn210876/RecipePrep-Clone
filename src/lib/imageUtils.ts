@@ -9,22 +9,33 @@ export const getProxiedImageUrl = (imageUrl: string | null | undefined): string 
   console.log('[imageUtils] 📥 Input URL:', imageUrl);
 
   // Don't proxy Supabase storage URLs - use them directly
-  if (imageUrl.includes('supabase.co/storage')) {
+  // Check for both the full storage URL pattern and the base domain
+  if (imageUrl.includes('supabase.co/storage') || 
+      imageUrl.includes('/storage/v1/object/public/')) {
     console.log('[imageUtils] ✅ Supabase storage URL - using directly');
     return imageUrl;
   }
 
-  if (imageUrl.startsWith(import.meta.env.VITE_SUPABASE_URL)) {
-    console.log('[imageUtils] ✅ Supabase URL - using directly');
+  // Also check if it starts with the base Supabase URL
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  if (supabaseUrl && imageUrl.startsWith(supabaseUrl) && !imageUrl.includes('/functions/v1/image-proxy')) {
+    console.log('[imageUtils] ✅ Supabase base URL - using directly');
     return imageUrl;
   }
 
-  // Proxy Instagram/CDN Instagram URLs
-  if (imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')) {
+  // Proxy Instagram/CDN Instagram URLs (but not if they're already proxied)
+  if ((imageUrl.includes('instagram.com') || imageUrl.includes('cdninstagram.com')) && 
+      !imageUrl.includes('/functions/v1/image-proxy')) {
     const cleanUrl = imageUrl.replace(/&amp;/g, '&');
-    const proxiedUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
-    console.log('[imageUtils] 🔄 Instagram URL - proxying:', proxiedUrl);
+    const proxiedUrl = `${supabaseUrl}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
+    console.log('[imageUtils] 🔄 Instagram URL - proxying');
     return proxiedUrl;
+  }
+
+  // If it's already proxied, use it as-is
+  if (imageUrl.includes('/functions/v1/image-proxy')) {
+    console.log('[imageUtils] ✅ Already proxied - using as-is');
+    return imageUrl;
   }
 
   // Return all other URLs as-is
