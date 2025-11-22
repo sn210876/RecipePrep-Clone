@@ -15,7 +15,6 @@ import {
   User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '../lib/supabase';
 
 interface LayoutProps {
@@ -181,31 +180,30 @@ const loadUnreadCount = async (userId: string) => {
       )}
 
       {/* Sidebar - Mobile Optimized */}
-    <aside className={`fixed left-0 top-0 z-40 h-screen w-52 sm:w-56 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-
+      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 sm:w-56 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         <div className="flex h-full flex-col">
 
-          {/* Logo/Brand */}
-          <div className="flex items-center justify-between gap-3 border-b border-gray-200 p-4 sm:p-6">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+          {/* Logo/Brand - Mobile Optimized */}
+          <div className="flex items-center justify-between gap-2 border-b border-gray-200 p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
 
               {/* Your WoodenSpoon with Orange Border */}
               <div className="relative flex-shrink-0">
-                <div className="absolute inset-0 rounded-xl ring-4 ring-orange-500 shadow-xl -z-10"></div>
-               <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-white overflow-hidden shadow-lg">
-  <img
-    src="/Woodenspoon.png"
-    alt="Meal Scrape"
-    className="w-full h-full object-cover scale-110"
-  />
-</div>
+                <div className="absolute inset-0 rounded-xl ring-3 ring-orange-500 shadow-xl -z-10"></div>
+                <div className="relative flex h-9 w-9 sm:h-10 sm:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-lg bg-white overflow-hidden shadow-lg">
+                  <img
+                    src="/Woodenspoon.png"
+                    alt="Meal Scrape"
+                    className="w-full h-full object-cover scale-110"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
-                <p className="text-[10px] sm:text-xs text-gray-500 truncate">E-Recipe Book & Social Media</p>
+                <h1 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
+                <p className="text-[9px] sm:text-[10px] lg:text-xs text-gray-500 truncate leading-tight">Recipe Book & Social</p>
               </div>
             </div>
 
@@ -216,12 +214,12 @@ const loadUnreadCount = async (userId: string) => {
               onClick={() => setIsMobileMenuOpen(false)}
               className="lg:hidden h-8 w-8 flex-shrink-0"
             >
-              <X className="h-5 h-5" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
 
-          {/* Navigation Items */}
-          <nav className="flex-1 space-y-1 p-3 sm:p-4 overflow-y-auto">
+          {/* Navigation Items - Mobile Optimized */}
+          <nav className="flex-1 space-y-0.5 sm:space-y-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -229,17 +227,17 @@ const loadUnreadCount = async (userId: string) => {
                 <button
                   key={item.id}
                   onClick={() => handleNavigate(item.id)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 sm:px-4 sm:py-3 text-left transition-all touch-manipulation ${
+                  className={`flex w-full items-center gap-2 sm:gap-3 rounded-lg px-2.5 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 text-left transition-all touch-manipulation ${
                     isActive
                       ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg scale-[1.02]'
                       : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'opacity-100' : 'opacity-70'}`} />
-                  <span className="font-medium text-sm sm:text-base">{item.label}</span>
+                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${isActive ? 'opacity-100' : 'opacity-70'}`} />
+                  <span className="font-medium text-xs sm:text-sm lg:text-base truncate">{item.label}</span>
 
                   {item.id === 'messages' && unreadCount > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    <span className="ml-auto bg-red-500 text-white text-[10px] sm:text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold flex-shrink-0">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -248,11 +246,11 @@ const loadUnreadCount = async (userId: string) => {
             })}
           </nav>
 
-          {/* Footer Card */}
-          <div className="border-t border-gray-200 p-3 sm:p-4 flex-shrink-0">
-            <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-3 sm:p-4 border border-orange-200">
-              <p className="text-xs sm:text-sm font-semibold text-gray-900">Discover, Save, Plan, Shop</p>
-              <p className="mt-1 text-[10px] sm:text-xs text-gray-600">All in One Place</p>
+          {/* Footer Card - Mobile Optimized */}
+          <div className="border-t border-gray-200 p-2 sm:p-3 lg:p-4 flex-shrink-0">
+            <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-2.5 sm:p-3 lg:p-4 border border-orange-200">
+              <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-900 leading-tight">Discover, Save, Plan</p>
+              <p className="mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] lg:text-xs text-gray-600 leading-tight">All in One Place</p>
             </div>
           </div>
         </div>
@@ -331,7 +329,6 @@ const loadUnreadCount = async (userId: string) => {
         </header>
 
         {/* Quick Access Toolbar - Desktop Only */}
-       {/* Quick Access Toolbar - Desktop Only */}
 <div className="hidden lg:block fixed top-3 right-3 z-40">
   <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-lg rounded-full shadow-lg border border-gray-200/50 px-2 py-1.5">
     {navItems
@@ -358,10 +355,11 @@ const loadUnreadCount = async (userId: string) => {
 </div>
 
         {/* Main Content */}
-<main className={socialPages.includes(currentPage) ? 'pt-16' : 'pt-16 lg:pt-0'}>          {children}
+        <main className={socialPages.includes(currentPage) ? 'pt-16' : 'pt-16 lg:pt-0'}>
+          {children}
         </main>
 
-             {/* Bottom Navigation - Hidden on Add Recipe page */}
+        {/* Bottom Navigation - Hidden on Add Recipe page */}
 {currentPage !== 'add-recipe' && (
   <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
     <div className="max-w-lg mx-auto px-4 py-3">
