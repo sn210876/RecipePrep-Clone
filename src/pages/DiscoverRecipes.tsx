@@ -205,10 +205,10 @@ export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
       </div>
     </div>
     {/* ✅ ADDED: auto-rows-fr makes all rows same height */}
-   <div className={`grid gap-4 md:gap-5 auto-rows-fr ${
+  <div className={`grid gap-4 md:gap-6 auto-rows-fr ${
   isMobile 
     ? 'grid-cols-2' 
-    : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'
+    : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
 }`}>
 
       {recipes.map((recipe: Recipe) => (
