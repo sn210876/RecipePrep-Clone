@@ -152,7 +152,7 @@ if (isSocial) {
     data.shortDescription ||
     data.content ||
     ''
-        ).
+        ),
       creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
       ingredients,
       instructions: (data.instructions || []).map((i: string) => decodeHtmlEntities(i)),
