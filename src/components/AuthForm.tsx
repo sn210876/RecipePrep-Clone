@@ -286,4 +286,4 @@ export default function AuthForm() {
               <Button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full bg
+className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 h-11 sm:h-12 text-sm sm:text-base font-semibold shadow-lg"
