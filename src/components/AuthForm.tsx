@@ -154,9 +154,13 @@ export default function AuthForm() {
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg mb-3 sm:mb-4">
-            <ChefHat className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-          </div>
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-600 shadow-lg mb-3 sm:mb-4 p-2">
+  <img 
+    src="/Woodenspoon.png" 
+    alt="Meal Scrape Logo" 
+    className="w-full h-full object-contain"
+  />
+</div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-1 sm:mb-2">
             Meal Scrape
           </h1>
