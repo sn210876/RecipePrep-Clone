@@ -273,6 +273,7 @@ const loadUnreadCount = async (userId: string) => {
             </Button>
             
           {!socialPages.includes(currentPage) && (
+{!socialPages.includes(currentPage) && (
   <div className="flex-1 flex items-center justify-center lg:justify-start gap-2">
     {currentPage === 'discover-recipes' && (
       <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
@@ -282,6 +283,11 @@ const loadUnreadCount = async (userId: string) => {
     {currentPage === 'my-recipes' && (
       <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
         <BookMarked className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+      </div>
+    )}
+    {currentPage === 'meal-planner' && (
+      <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
+        <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       </div>
     )}
     <span className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 truncate">
