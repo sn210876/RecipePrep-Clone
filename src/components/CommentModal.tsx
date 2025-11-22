@@ -4,7 +4,9 @@ import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import { Send, X, Play, Pause } from 'lucide-react';
+import { Send, X, Play, Pause, ExternalLink } from 'lucide-react';
+import { RecipeDetailModal } from './RecipeDetailModal';
+import { Recipe } from '../types/recipe';
 
 interface Comment {
   id: string;
