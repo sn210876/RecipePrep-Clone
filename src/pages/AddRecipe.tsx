@@ -1123,23 +1123,23 @@ return (
               </ScrollArea>
             )}
 
-            <DialogFooter className="flex-row justify-center gap-2 p-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancelExtraction}
-                className="flex-1 sm:flex-none"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleAcceptExtraction}
-                className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none"
-              >
-                Use This Recipe
-              </Button>
-            </DialogFooter>
+          <DialogFooter className="sticky bottom-0 bg-white border-t p-4 flex flex-row justify-center items-center gap-3 shadow-lg">
+  <Button
+    type="button"
+    variant="outline"
+    onClick={handleCancelExtraction}
+    className="px-6 h-12 text-base font-semibold rounded-full"
+  >
+    Cancel
+  </Button>
+  <Button
+    type="button"
+    onClick={handleAcceptExtraction}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 text-base font-semibold rounded-full shadow-lg"
+  >
+    Use This Recipe
+  </Button>
+</DialogFooter>
           </DialogContent>
         </Dialog>
 
