@@ -789,6 +789,32 @@ const PostSkeleton = () => (
     </div>
   </div>
 );
+  // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+// PASTE THIS BLOCK HERE (right before handleCopyLink)
+const PostSkeleton = () => (
+  <div className="bg-white border-b border-gray-200 animate-pulse">
+    <div className="px-4 py-3 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full bg-gray-300" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-gray-300 rounded w-32" />
+        <div className="h-3 bg-gray-300 rounded w-24" />
+      </div>
+    </div>
+    <div className="bg-gray-300 h-96 w-full" />
+    <div className="px-4 py-3 space-y-3">
+      <div className="h-4 bg-gray-300 rounded w-full" />
+      <div className="h-4 bg-gray-300 rounded w-3/4" />
+      <div className="flex gap-4">
+        <div className="h-9 w-20 bg-gray-300 rounded-full" />
+        <div className="h-9 w-20 bg-gray-300 rounded-full" />
+        <div className="h-9 w-20 bg-gray-300 rounded-full ml-auto" />
+      </div>
+    </div>
+  </div>
+);
+// ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+const handleCopyLink = (postId: string) => {
 // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
   const handleCopyLink = (postId: string) => {
     const post = posts.find(p => p.id === postId);
