@@ -973,10 +973,7 @@ return (
               />
             </CardContent>
           </Card>
-        </form>
-
-        {/* Fixed bottom action buttons - Mobile optimized with safe area */}
-        {/* Submit buttons now INSIDE form */}
+{/* Submit buttons now INSIDE form */}
           <div className="pt-4 pb-24 flex justify-center items-center gap-3">
             {onNavigate && (
               <Button
