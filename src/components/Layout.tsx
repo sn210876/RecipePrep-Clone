@@ -273,7 +273,6 @@ const loadUnreadCount = async (userId: string) => {
             </Button>
             
           {!socialPages.includes(currentPage) && (
-{!socialPages.includes(currentPage) && (
   <div className="flex-1 flex items-center justify-center lg:justify-start gap-2">
     {currentPage === 'discover-recipes' && (
       <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
