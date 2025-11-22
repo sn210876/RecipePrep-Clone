@@ -115,21 +115,26 @@ const loadAllSocialPosts = async (recipes: Recipe[]) => {
       const profileMap = new Map(profilesData.data?.map(p => [p.id, p]) || []);
       
       const likesMap = new Map<string, number>();
-      likesData.data?.forEach(like => {
-        likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
-      });
-      
-      const enrichedMap = new Map<string, any>();
-      postMap.forEach((post, recipeId) => {
-        enrichedMap.set(recipeId, {
-          ...post,
-          profiles: profileMap.get(post.user_id),
-          _count: {
-            likes: likesMap.get(post.id) || 0,
-            comments: 0
-          }
-        });
-      });
+likesData.data?.forEach(like => {
+  likesMap.set(like.post_id, (likesMap.get(like.post_id) || 0) + 1);
+});
+
+const commentsMap = new Map<string, number>();
+commentsData.data?.forEach(comment => {
+  commentsMap.set(comment.post_id, (commentsMap.get(comment.post_id) || 0) + 1);
+});
+
+const enrichedMap = new Map<string, any>();
+postMap.forEach((post, recipeId) => {
+  enrichedMap.set(recipeId, {
+    ...post,
+    profiles: profileMap.get(post.user_id),
+    _count: {
+      likes: likesMap.get(post.id) || 0,
+      comments: commentsMap.get(post.id) || 0
+    }
+  });
+});
       
       setSocialPostsMap(enrichedMap);
       console.log('[Discover] Loaded', enrichedMap.size, 'social posts');
