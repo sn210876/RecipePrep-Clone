@@ -459,11 +459,6 @@ return (
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
-        }
-
-
-
-
   
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
           <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
