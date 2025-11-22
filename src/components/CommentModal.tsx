@@ -401,10 +401,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                 </div>
               </div>
             </div>
-</div>
-            </div>
-
-            {/* View Recipe Button */}
+{/* View Recipe Button */}
             {(post?.recipe_id || post?.recipe_url) && (
               <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
                 <Button
@@ -427,7 +424,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                 </Button>
               </div>
             )}
-
             {/* Comments Section - scrollable */}
             <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-0">
               {loading ? (
