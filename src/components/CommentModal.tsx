@@ -402,8 +402,32 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               </div>
             </div>
 
+            {/* View Recipe Button */}
+            {(post?.recipe_id || post?.recipe_url) && (
+              <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
+                <Button
+                  onClick={async () => {
+                    if (post.recipe_id) {
+                      const { getRecipeById } = await import('../services/recipeService');
+                      const recipe = await getRecipeById(post.recipe_id);
+                      if (recipe) setSelectedRecipe(recipe);
+                      else toast.error('Recipe not found');
+                    } else if (post.recipe_url) {
+                      window.open(post.recipe_url, '_blank');
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-orange-600 text-orange-600 hover:bg-orange-50"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Recipe
+                </Button>
+              </div>
+            )}
+
             {/* Comments Section - scrollable */}
-            <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-0">
+            <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-0">me="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-0">
               {loading ? (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
