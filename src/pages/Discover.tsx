@@ -17,6 +17,7 @@ import CommentModal from '../components/CommentModal';
 import { RecipeDetailModal } from '../components/RecipeDetailModal';
 import { UserProfileView } from '../components/UserProfileView';
 import { Recipe } from '../types/recipe';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,6 +108,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [shareModalTab, setShareModalTab] = useState<'followers' | 'link'>('followers');
   const [followers, setFollowers] = useState<any[]>([]);
   const [selectedFollowers, setSelectedFollowers] = useState<Set<string>>(new Set());
+  const [socialPostsMap, setSocialPostsMap] = useState<Map<string, any>>(new Map());
+
   const [copiedLink, setCopiedLink] = useState(false);
 
   const POSTS_PER_PAGE = 10;
