@@ -196,8 +196,9 @@ export default function AuthForm() {
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1">
             Meal Scrape
           </h1>
-          <p className="text-xs sm:text-sm md:text-base text-slate-600">
-            Your AI-powered recipe companion
+          Best Influcencer Recipes scraped from all across social media and the web.
+           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 mb-1">
+           Save recipes • Add your own recipes • Plan your meals
           </p>
         </div>
 
