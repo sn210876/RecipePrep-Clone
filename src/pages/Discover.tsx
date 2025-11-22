@@ -390,8 +390,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       isMounted = false;
       if (channel) supabase.removeChannel(channel);
     };
-  }, []);
-
+}, [fetchPosts]);
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
