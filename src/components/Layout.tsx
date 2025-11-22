@@ -204,7 +204,7 @@ const loadUnreadCount = async (userId: string) => {
 
     <div className="flex-1 min-w-0">
       <h1 className="text-sm sm:text-base lg:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
-      <p className="text-[8px] sm:text-[9px] lg:text-xs text-gray-500 truncate leading-tight">E-Recipe, Planner, Community </p>
+      <p className="text-[8px] sm:text-[9px] lg:text-xs text-gray-500 truncate leading-tight">Discover, Plan, Post </p>
     </div>
   </div>
 
