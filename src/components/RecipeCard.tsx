@@ -29,7 +29,6 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton 
   const [reviewCount, setReviewCount] = useState(0);
   const [socialPost, setSocialPost] = useState<any>(null);
   const [loadingSocialPost, setLoadingSocialPost] = useState(true);
-
   const totalTime = recipe.prepTime + recipe.cookTime;
   const isSaved = state.savedRecipes.some(r => r.id === recipe.id);
 const [loadingReviews, setLoadingReviews] = useState(false);
