@@ -361,86 +361,102 @@ const loadUnreadCount = async (userId: string) => {
 <main className={socialPages.includes(currentPage) ? 'pt-16' : 'pt-16 lg:pt-0'}>          {children}
         </main>
 
-               {/* Bottom Navigation - Hidden on Add Recipe page */}
-        {currentPage !== 'add-recipe' && (
-          <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
-          <div className="max-w-lg mx-auto px-4 py-3">
-            <div className="flex items-center justify-around">
-              
-              {/* Messages with Badge */}
-              <button
-                onClick={() => handleNavigate('messages')}
-                className={`relative flex flex-col items-center gap-1 transition-all touch-manipulation ${
-                  currentPage === 'messages' 
-                    ? 'text-cyan-500 scale-110' 
-                    : 'text-gray-600'
-                }`}
-                style={{ minWidth: '60px', minHeight: '48px' }}
-              >
-                <div className="relative">
-                  <MessageCircle 
-                    className="w-6 h-6" 
-                    strokeWidth={currentPage === 'messages' ? 2.5 : 2} 
-                  />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold animate-pulse">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] font-medium">Messages</span>
-              </button>
-
-              {/* Upload Button - Elevated */}
-            <button
-  onClick={() => handleNavigate('add-recipe')}
-  className="relative -mt-6 grid place-items-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95"
-  style={{ width: '56px', height: '56px' }}
->
-  <Camera className="w-8 h-8 text-white" strokeWidth={2.75} />
-</button>
-
-              {/* Profile */}
-              <button
-                onClick={() => handleNavigate('profile')}
-                className={`flex flex-col items-center gap-1 transition-all touch-manipulation ${
-                  currentPage === 'profile' 
-                    ? 'text-orange-600 scale-110' 
-                    : 'text-gray-600'
-                }`}
-                style={{ minWidth: '60px', minHeight: '48px' }}
-              >
-                <div className="relative">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt="Profile"
-                      className={`w-7 h-7 rounded-full object-cover ${
-                        currentPage === 'profile' 
-                          ? 'ring-2 ring-orange-600 ring-offset-2' 
-                          : 'ring-1 ring-gray-300'
-                      }`}
-                    />
-                  ) : (
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                      currentPage === 'profile'
-                        ? 'bg-orange-100 ring-2 ring-orange-600'
-                        : 'bg-gray-100'
-                    }`}>
-                      <User 
-                        className="w-4 h-4" 
-                        strokeWidth={currentPage === 'profile' ? 2.5 : 2} 
-                      />
-                    </div>
-                  )}
-                </div>
-                                <span className="text-[10px] font-medium">Profile</span>
-              </button>
-            </div>
+             {/* Bottom Navigation - Hidden on Add Recipe page */}
+{currentPage !== 'add-recipe' && (
+  <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
+    <div className="max-w-lg mx-auto px-4 py-3">
+      <div className="flex items-center justify-around">
+        
+        {/* Messages with Badge */}
+        <button
+          onClick={() => handleNavigate('messages')}
+          className={`relative flex flex-col items-center gap-1 transition-all touch-manipulation ${
+            currentPage === 'messages' 
+              ? 'text-cyan-500 scale-110' 
+              : 'text-gray-600'
+          }`}
+          style={{ minWidth: '50px', minHeight: '48px' }}
+        >
+          <div className="relative">
+            <MessageCircle 
+              className="w-6 h-6" 
+              strokeWidth={currentPage === 'messages' ? 2.5 : 2} 
+            />
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold animate-pulse">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </div>
-        </div>
-      
-    )}
+          <span className="text-[10px] font-medium">Messages</span>
+        </button>
+
+        {/* Social Feed Button */}
+        <button
+          onClick={() => handleNavigate('discover')}
+          className={`relative flex flex-col items-center gap-1 transition-all touch-manipulation ${
+            currentPage === 'discover' 
+              ? 'text-orange-500 scale-110' 
+              : 'text-gray-600'
+          }`}
+          style={{ minWidth: '50px', minHeight: '48px' }}
+        >
+          <UtensilsCrossed 
+            className="w-6 h-6" 
+            strokeWidth={currentPage === 'discover' ? 2.5 : 2} 
+          />
+          <span className="text-[10px] font-medium">Feed</span>
+        </button>
+
+        {/* Upload Button - Elevated */}
+        <button
+          onClick={() => handleNavigate('add-recipe')}
+          className="relative -mt-6 grid place-items-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95"
+          style={{ width: '56px', height: '56px' }}
+        >
+          <Camera className="w-8 h-8 text-white" strokeWidth={2.75} />
+        </button>
+
+        {/* Profile */}
+        <button
+          onClick={() => handleNavigate('profile')}
+          className={`flex flex-col items-center gap-1 transition-all touch-manipulation ${
+            currentPage === 'profile' 
+              ? 'text-orange-600 scale-110' 
+              : 'text-gray-600'
+          }`}
+          style={{ minWidth: '50px', minHeight: '48px' }}
+        >
+          <div className="relative">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                className={`w-7 h-7 rounded-full object-cover ${
+                  currentPage === 'profile' 
+                    ? 'ring-2 ring-orange-600 ring-offset-2' 
+                    : 'ring-1 ring-gray-300'
+                }`}
+              />
+            ) : (
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                currentPage === 'profile'
+                  ? 'bg-orange-100 ring-2 ring-orange-600'
+                  : 'bg-gray-100'
+              }`}>
+                <User 
+                  className="w-4 h-4" 
+                  strokeWidth={currentPage === 'profile' ? 2.5 : 2} 
+                />
+              </div>
+            )}
+          </div>
+          <span className="text-[10px] font-medium">Profile</span>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
         {/* Social Feed FAB - For non-social pages, Desktop */}
         {!socialPages.includes(currentPage) && (
           <div className="hidden lg:block fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
