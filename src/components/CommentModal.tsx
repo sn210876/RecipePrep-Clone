@@ -409,78 +409,67 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
-            <div className="w-full h-[35vh] sm:h-[40vh] bg-gray-300 animate-pulse flex-shrink-0 relative">
-              <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 flex flex-col bg-white min-h-0">
-              <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0 space-y-2 animate-pulse">
-                <div className="h-4 bg-gray-300 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 rounded w-full" />
-              </div>
-              <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
-                <RatingSkeleton />
-              </div>
-              <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-3 min-h-[100px]">
-                <CommentSkeleton />
-                <CommentSkeleton />
-                <CommentSkeleton />
-              </div>
-              <div className="border-t px-3 py-3 sm:px-4 sm:py-4 bg-white flex-shrink-0">
-                <div className="flex gap-2 animate-pulse">
-                  <div className="flex-1 h-9 sm:h-10 bg-gray-200 rounded-lg" />
-                  <div className="h-9 w-9 sm:h-10 sm:w-10 bg-gray-300 rounded-lg" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+        // Replace the image section in CommentModal.tsx with this:
 
-  console.log('[CommentModal] 🎨 Rendering with post:', post);
-  console.log('[CommentModal] 🖼️ Image URL being used:', post?.image_url);
-
-  return (
+<div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
+  {post?.image_url ? (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
-          <div className="flex flex-col h-full overflow-hidden">
-            <div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
-           // Replace the image rendering section in CommentModal.tsx with this:
+      <img
+        src={getProxiedImageUrl(post.image_url)}
+        alt={post.title || 'Post'}
+        className="w-full h-full object-contain" // object-contain keeps it centered
+        onLoad={() => {
+          console.log('[CommentModal] ✅ Image loaded successfully');
+          console.log('[CommentModal] 📸 Original URL:', post.image_url);
+          console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
+        }}
+        onError={(e) => {
+          console.log('[CommentModal] ❌ Image failed to load');
+          console.log('[CommentModal] 📸 Original URL:', post.image_url);
+          console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
+          console.log('[CommentModal] ❌ Error:', e);
+        }}
+      />
+    </>
+  ) : (
+    <div className="text-white text-center">
+      <p>No image available</p>
+      <p className="text-xs mt-2">Post ID: {postId}</p>
+      {post?.recipe_id && (
+        <p className="text-xs mt-1">Recipe ID: {post.recipe_id}</p>
+      )}
+    </div>
+  )}
 
-{post?.image_url ? (
-  <img
-    src={getProxiedImageUrl(post.image_url)}
-    alt={post.title || 'Post'}
-    className="w-full h-full object-contain"
-    onLoad={() => console.log('[CommentModal] ✅ Image loaded successfully')}
-    onError={(e) => console.log('[CommentModal] ❌ Image failed to load:', e)}
-  />
-) : (
-  <div className="text-white text-center">
-    <p>No image available</p>
-    <p className="text-xs mt-2">Post ID: {postId}</p>
-  </div>
-)}
-              <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
-                <X className="w-5 h-5" />
-              </button>
-              {post?.spotify_preview_url && (
-                <div className="absolute bottom-2 left-2 right-2 z-10">
-                  <button onClick={togglePlay} className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-2 w-full">
-                    {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5" />}
-                    <div className="text-left text-[10px] sm:text-xs flex-1 min-w-0">
-                      <div className="font-semibold truncate">{post.spotify_track_name}</div>
-                      <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
-                    </div>
-                  </button>
-                  <audio id={`modal-audio-${postId}`} src={post.spotify_preview_url} />
-                </div>
-              )}
-            </div>
+  {/* Close button */}
+  <button
+    onClick={onClose}
+    className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10"
+  >
+    <X className="w-5 h-5" />
+  </button>
+
+  {/* Music Player */}
+  {post?.spotify_preview_url && (
+    <div className="absolute bottom-2 left-2 right-2 z-10">
+      <button
+        onClick={togglePlay}
+        className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-2 w-full"
+      >
+        {isPlaying ? (
+          <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
+        ) : (
+          <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+        )}
+        <div className="text-left text-[10px] sm:text-xs flex-1 min-w-0">
+          <div className="font-semibold truncate">{post.spotify_track_name}</div>
+          <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
+        </div>
+      </button>
+      <audio id={`modal-audio-${postId}`} src={post.spotify_preview_url} />
+    </div>
+  )}
+</div>
             <div className="flex-1 flex flex-col bg-white min-h-0">
               <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
                 <h3 className="font-bold text-sm sm:text-base truncate">{post?.title || 'Post'}</h3>
