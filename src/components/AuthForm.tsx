@@ -197,11 +197,7 @@ export default function AuthForm() {
             Meal Scrape
           </h1>
           <p className="text-xs sm:text-sm md:text-base text-slate-600">
-            Best Recipes from Influencers all around the world
-          </p>
-           <p className="text-xs sm:text-sm md:text-base text-slate-600">
-Save recipes • Add your own recipes • Plan your meals
-
+            Your AI-powered recipe companion
           </p>
         </div>
 
