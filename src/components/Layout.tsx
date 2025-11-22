@@ -186,38 +186,38 @@ const loadUnreadCount = async (userId: string) => {
       }`}>
         <div className="flex h-full flex-col">
 
-          {/* Logo/Brand - Mobile Optimized */}
-          <div className="flex items-center justify-between gap-2 border-b border-gray-200 p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+       {/* Logo/Brand - Mobile Optimized */}
+<div className="flex items-center justify-between gap-2 border-b border-gray-200 p-3 sm:p-4 lg:p-6">
+  <div className="flex items-center gap-2 flex-1 min-w-0">
 
-              {/* Your WoodenSpoon with Orange Border */}
-              <div className="relative flex-shrink-0">
-                <div className="absolute inset-0 rounded-xl ring-3 ring-orange-500 shadow-xl -z-10"></div>
-                <div className="relative flex h-9 w-9 sm:h-10 sm:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-lg bg-white overflow-hidden shadow-lg">
-                  <img
-                    src="/Woodenspoon.png"
-                    alt="Meal Scrape"
-                    className="w-full h-full object-cover scale-110"
-                  />
-                </div>
-              </div>
+    {/* WoodenSpoon with Orange Border */}
+    <div className="relative flex-shrink-0">
+      <div className="absolute inset-0 rounded-xl ring-3 ring-orange-500 shadow-xl -z-10"></div>
+      <div className="relative flex h-9 w-9 sm:h-10 sm:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-lg bg-white overflow-hidden shadow-lg">
+        <img
+          src="/Woodenspoon.png"
+          alt="Meal Scrape"
+          className="w-full h-full object-cover scale-110"
+        />
+      </div>
+    </div>
 
-              <div className="flex-1 min-w-0">
-                <h1 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
-                <p className="text-[9px] sm:text-[10px] lg:text-xs text-gray-500 truncate leading-tight">Recipe Book & Social</p>
-              </div>
-            </div>
+    <div className="flex-1 min-w-0">
+      <h1 className="text-sm sm:text-base lg:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
+      <p className="text-[8px] sm:text-[9px] lg:text-xs text-gray-500 truncate leading-tight">Recipe & Social</p>
+    </div>
+  </div>
 
-            {/* Close button - mobile only */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="lg:hidden h-8 w-8 flex-shrink-0"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+  {/* Close button - mobile only */}
+  <Button
+    variant="ghost"
+    size="icon"
+    onClick={() => setIsMobileMenuOpen(false)}
+    className="lg:hidden h-8 w-8 flex-shrink-0"
+  >
+    <X className="h-5 w-5" />
+  </Button>
+</div>
 
           {/* Navigation Items - Mobile Optimized */}
           <nav className="flex-1 space-y-0.5 sm:space-y-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
