@@ -308,17 +308,18 @@ useEffect(() => {
     : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
 }`}>
 
-      {recipes.map((recipe: Recipe) => (
-        <RecipeCard
-          key={recipe.id}
-          recipe={recipe}
-          onSave={handleSave}
-          onCook={handleCook}
-          onDelete={handleDeleteRecipe}
-          isAdmin={isAdmin}
-          showReviewButton={true}
-        />
-      ))}
+     {recipes.map((recipe: Recipe) => (
+  <RecipeCard
+    key={recipe.id}
+    recipe={recipe}
+    onSave={handleSave}
+    onCook={handleCook}
+    onDelete={handleDeleteRecipe}
+    isAdmin={isAdmin}
+    showReviewButton={true}
+    preloadedSocialPost={socialPostsMap.get(recipe.id) || null}
+  />
+))}
     </div>
     {allCount > (isMobile ? 6 : 12) && (
       <div className="text-center mt-8">
