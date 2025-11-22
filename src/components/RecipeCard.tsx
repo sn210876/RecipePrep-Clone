@@ -307,24 +307,47 @@ const [loadingReviews, setLoadingReviews] = useState(false);
     </Button>
   )}
   
-  {showReviewButton && socialPost && (
-    <Button
-      variant="outline"
-      size="sm"
-      className="w-full min-h-[44px] border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-500 active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
-      onClick={handleSeeReviews}
-    >
-      <span className="text-sm sm:text-base mr-1.5 sm:mr-2 flex-shrink-0">💬</span>
-      <span className="flex items-center gap-1.5 sm:gap-2 truncate min-w-0 leading-tight">
-        <span>See Reviews</span>
-        {socialPost._count?.comments > 0 && (
-          <span className="text-xs bg-orange-100 px-1.5 sm:px-2 py-0.5 rounded-full font-semibold flex-shrink-0">
-            {socialPost._count.comments}
-          </span>
-        )}
-      </span>
-    </Button>
-  )}
+ {showReviewButton && socialPost && (
+  <Button
+    variant="outline"
+    size="sm"
+    disabled={loadingReviews}
+    className={`w-full min-h-[44px] border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-500 active:scale-95 transition-all touch-manipulation text-xs sm:text-sm ${
+      loadingReviews ? 'opacity-60 cursor-wait' : ''
+    }`}
+    onClick={async (e) => {
+      e.stopPropagation();
+      setLoadingReviews(true);
+      
+      // Show loading state for a minimum time
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      handleSeeReviews(e);
+      
+      // Keep loading state for a bit to show feedback
+      setTimeout(() => setLoadingReviews(false), 500);
+    }}
+  >
+    {loadingReviews ? (
+      <>
+        <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2 flex-shrink-0" />
+        <span className="leading-tight">Loading...</span>
+      </>
+    ) : (
+      <>
+        <span className="text-sm sm:text-base mr-1.5 sm:mr-2 flex-shrink-0">💬</span>
+        <span className="flex items-center gap-1.5 sm:gap-2 truncate min-w-0 leading-tight">
+          <span>See Reviews</span>
+          {socialPost._count?.comments > 0 && (
+            <span className="text-xs bg-orange-100 px-1.5 sm:px-2 py-0.5 rounded-full font-semibold flex-shrink-0">
+              {socialPost._count.comments}
+            </span>
+          )}
+        </span>
+      </>
+    )}
+  </Button>
+)}
 </CardFooter>
       </Card>
 
