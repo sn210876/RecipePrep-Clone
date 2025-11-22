@@ -976,8 +976,8 @@ return (
         </form>
 
         {/* Fixed bottom action buttons - Mobile optimized with safe area */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-white via-white to-transparent pt-4 pb-safe">
-          <div className="flex justify-center items-center gap-3 px-4 pb-4">
+        {/* Submit buttons now INSIDE form */}
+          <div className="pt-4 pb-24 flex justify-center items-center gap-3">
             {onNavigate && (
               <Button
                 type="button"
@@ -990,13 +990,12 @@ return (
             )}
             <Button
               type="submit"
-              onClick={handleSubmit}
               className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 text-base font-semibold shadow-lg rounded-full transition-all transform active:scale-95"
             >
               Create Recipe
             </Button>
           </div>
-        </div>
+        </form>
 
         {/* Preview Dialog - Mobile optimized */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
