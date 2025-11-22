@@ -49,9 +49,10 @@ const [loadingReviews, setLoadingReviews] = useState(false);
     }
   };
 
-  const loadSocialPost = async () => {
-    try {
-      let postData = null;
+ const loadSocialPost = async () => {
+  setLoadingSocialPost(true);
+  try {
+    let postData = null;
 
       // First try to find by recipe_id
       const { data: postByRecipeId, error: recipeIdError } = await supabase
