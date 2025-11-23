@@ -566,9 +566,29 @@ onClick={async () => {
         </DialogContent>
       </Dialog>
 
-      {selectedRecipe && (
-        <RecipeDetailModal recipe={selectedRecipe} open={!!selectedRecipe} onOpenChange={(open) => !open && setSelectedRecipe(null)} />
-      )}
+     {/* Minimized floating button */}
+{isOpen && isMinimized && (
+  <button
+    onClick={() => setIsMinimized(false)}
+    className="fixed bottom-4 right-4 z-[9999] bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all active:scale-95 touch-manipulation"
+  >
+    <span className="text-sm sm:text-base">💬</span>
+    <span className="text-sm font-medium">Back to Comments</span>
+  </button>
+)}
+
+{selectedRecipe && (
+  <RecipeDetailModal 
+    recipe={selectedRecipe} 
+    open={!!selectedRecipe} 
+    onOpenChange={(open) => {
+      if (!open) {
+        setSelectedRecipe(null);
+        setIsMinimized(false);
+      }
+    }} 
+  />
+)}
     </>
   );
 }
