@@ -222,7 +222,6 @@ useEffect(() => {
   </Button>
   
 
-    </Button>
 
     {!loadingSocialPost && socialPost ? (
       <Button
