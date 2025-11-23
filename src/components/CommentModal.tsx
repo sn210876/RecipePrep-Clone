@@ -75,6 +75,8 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   const [post, setPost] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [isMinimized, setIsMinimized] = useState(false);
+
 
   useEffect(() => {
     if (isOpen && postId) {
