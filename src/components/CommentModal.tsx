@@ -483,26 +483,27 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       </div>
     </div>
 
-    {/* View Recipe Button - Right side */}
-    {(post?.recipe_id || post?.recipe_url) && (
-      <Button
-        onClick={async () => {
-          if (post.recipe_id) {
-            const { getRecipeById } = await import('../services/recipeService');
-            const recipe = await getRecipeById(post.recipe_id);
-            if (recipe) setSelectedRecipe(recipe);
-            else toast.error('Recipe not found');
-          } else if (post.recipe_url) {
-            window.open(post.recipe_url, '_blank');
-          }
-        }}
-        variant="outline"
-        size="sm"
-        className="border-orange-600 text-orange-600 hover:bg-orange-50 flex-shrink-0 h-auto py-2 px-3"
-      >
-        <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-      </Button>
-    )}
+  {/* View Recipe Button - Right side */}
+{(post?.recipe_id || post?.recipe_url) && (
+  <Button
+    onClick={async () => {
+      if (post.recipe_id) {
+        const { getRecipeById } = await import('../services/recipeService');
+        const recipe = await getRecipeById(post.recipe_id);
+        if (recipe) setSelectedRecipe(recipe);
+        else toast.error('Recipe not found');
+      } else if (post.recipe_url) {
+        window.open(post.recipe_url, '_blank');
+      }
+    }}
+    variant="outline"
+    size="sm"
+    className="border-orange-600 text-orange-600 hover:bg-orange-50 flex-shrink-0 h-auto py-2 px-3 whitespace-nowrap"
+  >
+    <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
+    <span className="text-xs sm:text-sm">View Recipe</span>
+  </Button>
+)}
   </div>
 </div>
 
