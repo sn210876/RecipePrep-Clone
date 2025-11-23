@@ -486,20 +486,19 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   {/* View Recipe Button - Right side */}
 {(post?.recipe_id || post?.recipe_url) && (
   <Button
-  onClick={async () => {
+ onClick={async () => {
   if (post.recipe_id) {
     const { getRecipeById } = await import('../services/recipeService');
     const recipe = await getRecipeById(post.recipe_id);
     if (recipe) {
       setSelectedRecipe(recipe);
-      // Close comment modal after recipe modal opens
-      setTimeout(() => onClose(), 100);
+      // Don't close comment modal - let recipe modal open on top
     } else {
       toast.error('Recipe not found');
     }
   } else if (post.recipe_url) {
+    // Only close for external URLs
     window.open(post.recipe_url, '_blank');
-    onClose();
   }
 }}
     variant="outline"
