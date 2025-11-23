@@ -360,8 +360,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   if (!post && loading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9998] flex flex-col">
-
+        <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
             <div className="w-full h-[35vh] sm:h-[40vh] bg-gray-300 animate-pulse flex-shrink-0 relative">
               <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
