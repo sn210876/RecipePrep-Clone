@@ -400,7 +400,8 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
           <div className="flex flex-col h-full overflow-hidden">
             
             {/* Image Section - Top */}
-            <div className="w-full h-[35vh] sm:h-[40vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
+           <div className="w-full h-[25vh] sm:h-[30vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
+
               {post?.image_url ? (
                 <img
                   src={getProxiedImageUrl(post.image_url)}
