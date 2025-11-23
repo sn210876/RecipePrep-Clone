@@ -486,16 +486,17 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   {/* View Recipe Button - Right side */}
 {(post?.recipe_id || post?.recipe_url) && (
   <Button
-    onClick={async () => {
-      if (post.recipe_id) {
-        const { getRecipeById } = await import('../services/recipeService');
-        const recipe = await getRecipeById(post.recipe_id);
-        if (recipe) setSelectedRecipe(recipe);
-        else toast.error('Recipe not found');
-      } else if (post.recipe_url) {
-        window.open(post.recipe_url, '_blank');
-      }
-    }}
+   onClick={async () => {
+  onClose(); // Close the comment modal first
+  if (post.recipe_id) {
+    const { getRecipeById } = await import('../services/recipeService');
+    const recipe = await getRecipeById(post.recipe_id);
+    if (recipe) setSelectedRecipe(recipe);
+    else toast.error('Recipe not found');
+  } else if (post.recipe_url) {
+    window.open(post.recipe_url, '_blank');
+  }
+}}
     variant="outline"
     size="sm"
     className="border-orange-600 text-orange-600 hover:bg-orange-50 flex-shrink-0 h-auto py-2 px-3 whitespace-nowrap"
