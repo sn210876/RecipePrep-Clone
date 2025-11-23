@@ -455,49 +455,56 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                 )}
               </div>
 
-              <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
-                <div className="space-y-1.5 sm:space-y-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((fire) => (
-                        <span key={fire} className={`text-sm sm:text-base ${fire <= averageRating ? 'opacity-100' : 'opacity-20 grayscale'}`}>🔥</span>
-                      ))}
-                    </div>
-                    <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                      {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
-                      {totalRatings > 0 && ` (${totalRatings})`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs sm:text-sm text-gray-700 font-medium">Your rating:</span>
-                    <div className="flex items-center gap-0.5 sm:gap-1">
-                      {[1, 2, 3, 4, 5].map((fire) => (
-                        <button key={fire} type="button" onClick={() => handleRatingClick(fire)} onMouseEnter={() => setHoverRating(fire)} onMouseLeave={() => setHoverRating(0)} className="transition-transform active:scale-110 touch-manipulation p-1">
-                          <span className={`text-base sm:text-lg ${fire <= (hoverRating || userRating) ? 'opacity-100' : 'opacity-20 grayscale'}`}>🔥</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* Ratings and View Recipe Button - Side by Side */}
+<div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
+  <div className="flex gap-3 items-start">
+    {/* Ratings Section - Left side */}
+    <div className="flex-1 space-y-1.5 sm:space-y-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center">
+          {[1, 2, 3, 4, 5].map((fire) => (
+            <span key={fire} className={`text-sm sm:text-base ${fire <= averageRating ? 'opacity-100' : 'opacity-20 grayscale'}`}>🔥</span>
+          ))}
+        </div>
+        <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+          {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
+          {totalRatings > 0 && ` (${totalRatings})`}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs sm:text-sm text-gray-700 font-medium">Your rating:</span>
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          {[1, 2, 3, 4, 5].map((fire) => (
+            <button key={fire} type="button" onClick={() => handleRatingClick(fire)} onMouseEnter={() => setHoverRating(fire)} onMouseLeave={() => setHoverRating(0)} className="transition-transform active:scale-110 touch-manipulation p-1">
+              <span className={`text-base sm:text-lg ${fire <= (hoverRating || userRating) ? 'opacity-100' : 'opacity-20 grayscale'}`}>🔥</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
 
-              {(post?.recipe_id || post?.recipe_url) && (
-                <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
-                  <Button onClick={async () => {
-                    if (post.recipe_id) {
-                      const { getRecipeById } = await import('../services/recipeService');
-                      const recipe = await getRecipeById(post.recipe_id);
-                      if (recipe) setSelectedRecipe(recipe);
-                      else toast.error('Recipe not found');
-                    } else if (post.recipe_url) {
-                      window.open(post.recipe_url, '_blank');
-                    }
-                  }} variant="outline" size="sm" className="w-full border-orange-600 text-orange-600 hover:bg-orange-50">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    View Recipe
-                  </Button>
-                </div>
-              )}
+    {/* View Recipe Button - Right side */}
+    {(post?.recipe_id || post?.recipe_url) && (
+      <Button
+        onClick={async () => {
+          if (post.recipe_id) {
+            const { getRecipeById } = await import('../services/recipeService');
+            const recipe = await getRecipeById(post.recipe_id);
+            if (recipe) setSelectedRecipe(recipe);
+            else toast.error('Recipe not found');
+          } else if (post.recipe_url) {
+            window.open(post.recipe_url, '_blank');
+          }
+        }}
+        variant="outline"
+        size="sm"
+        className="border-orange-600 text-orange-600 hover:bg-orange-50 flex-shrink-0 h-auto py-2 px-3"
+      >
+        <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      </Button>
+    )}
+  </div>
+</div>
 
               <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-[100px] max-h-[30vh] sm:max-h-none">
                 {loading ? (
