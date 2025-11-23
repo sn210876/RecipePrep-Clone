@@ -134,7 +134,7 @@ useEffect(() => {
           </div>
         </div>
 
-<CardContent className="p-4 space-y-3">
+<CardContent className="p-4 space-y-3 flex-1">
           <div className="space-y-2">
             <Badge
               variant="outline"
