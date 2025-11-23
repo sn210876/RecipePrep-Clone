@@ -483,7 +483,10 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       </div>
     </div>
 
-onClick={async () => {
+  {/* View Recipe Button - Right side */}
+{(post?.recipe_id || post?.recipe_url) && (
+  <Button
+  onClick={async () => {
   if (post.recipe_id) {
     const { getRecipeById } = await import('../services/recipeService');
     const recipe = await getRecipeById(post.recipe_id);
