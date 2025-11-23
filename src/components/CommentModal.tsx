@@ -492,12 +492,11 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     const recipe = await getRecipeById(post.recipe_id);
     if (recipe) {
       setSelectedRecipe(recipe);
-      // Don't close comment modal - let recipe modal open on top
+      onClose(); // Close the comment modal
     } else {
       toast.error('Recipe not found');
     }
   } else if (post.recipe_url) {
-    // Only close for external URLs
     window.open(post.recipe_url, '_blank');
   }
 }}
