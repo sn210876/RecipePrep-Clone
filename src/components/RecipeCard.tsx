@@ -221,28 +221,7 @@ useEffect(() => {
     <span className="leading-tight">Cook</span>
   </Button>
   
- {showReviewButton && (
-  <>
-    <Button
-      variant="outline"
-      size="sm"
-      className="w-full min-h-[44px] border-gray-300 hover:bg-orange-50 hover:border-primary active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
-      onClick={(e) => {
-        e.stopPropagation();
-        setShowReviewForm(true);
-      }}
-    >
-      <span className="text-sm sm:text-base mr-1.5 sm:mr-2 flex-shrink-0">🔥</span>
-      {reviewCount > 0 ? (
-        <span className="flex items-center gap-1.5 sm:gap-2 truncate min-w-0 leading-tight">
-          <span className="font-semibold">{averageRating.toFixed(1)}</span>
-          <span className="text-gray-500 truncate text-xs sm:text-sm">
-            ({reviewCount})
-          </span>
-        </span>
-      ) : (
-        <span className="leading-tight">Write Review</span>
-      )}
+
     </Button>
 
     {!loadingSocialPost && socialPost ? (
