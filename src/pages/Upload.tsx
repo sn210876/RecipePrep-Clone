@@ -125,49 +125,7 @@ const getVideoDuration = (file: File): Promise<number> => {
 
     
   // ✅ Better file type validation
-  const isImage = file.type.startsWith('image/');
-  const isVideo = file.type.startsWith('video/');
-
-  if (!isImage && !isVideo) {
-    toast.error('Please select an image or video file');
-    return;
-  }
-
-  // ✅ Better size validation
-  if (isImage && file.size > 10 * 1024 * 1024) {
-    toast.error('Image must be less than 10MB');
-    return;
-  }
-
-  if (isVideo && file.size > 100 * 1024 * 1024) {
-    toast.error('Video must be less than 100MB');
-    return;
-  }
-
-  if (isImage) {
-    setFileType('image');
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-  } else if (isVideo) {
-    // ✅ Better video duration handling
-    try {
-      const duration = await getVideoDuration(file);
-      setVideoDuration(duration);
-
-      if (postType === 'daily' && duration > 30) {
-        toast.error('Daily videos must be 30 seconds or less');
-        return;
-      }
-
-      setFileType('video');
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    } catch (error) {
-      console.error('Video load error:', error);
-      toast.error('Failed to load video. Please try another file.');
-    }
-  }
-};
+ 
 
  const handleClearImage = () => {
   previewUrls.forEach(url => URL.revokeObjectURL(url));
