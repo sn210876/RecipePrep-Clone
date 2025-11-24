@@ -1247,6 +1247,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       
       // Single media item
       if (mediaUrls.length === 1) {
+          console.log('[Discover] ✓ Single media:', mediaUrls[0]); // ADD THIS
+
         return mediaTypes[0] === 'video' ? (
           <video
             src={mediaUrls[0]}
