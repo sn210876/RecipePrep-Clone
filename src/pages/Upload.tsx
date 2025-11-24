@@ -210,11 +210,22 @@ if (selectedFiles.length === 0) {      toast.error('Please select an image or vi
         });
       }
 
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${userData.user.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from('posts')
-        .upload(fileName, selectedFile, { cacheControl: '3600', upsert: false });
+    // Upload all files
+const uploadedUrls: string[] = [];
+for (const file of selectedFiles) {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userData.user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+  const { error: uploadError } = await supabase.storage
+    .from('posts')
+    .upload(fileName, file, { cacheControl: '3600', upsert: false });
+  if (uploadError) throw uploadError;
+  
+  const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+  uploadedUrls.push(urlData.publicUrl);
+}
+
+// Use first image URL for now (you can enhance this later to support multiple images in DB)
+const mainImageUrl = uploadedUrls[0];
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
