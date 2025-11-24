@@ -8,6 +8,8 @@ import { Send, X, Play, Pause, ExternalLink } from 'lucide-react';
 import { RecipeDetailModal } from './RecipeDetailModal';
 import { getProxiedImageUrl } from '../lib/imageUtils';
 import { Recipe } from '../types/recipe';
+import { useRef } from 'react';
+
 
 const CommentSkeleton = () => (
   <div className="flex gap-2 sm:gap-3 animate-pulse">
