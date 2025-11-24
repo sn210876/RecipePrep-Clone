@@ -536,41 +536,60 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   };
 
   const handleEditPost = async () => {
-    if (!editingPost) return;
+  if (!editingPost) return;
 
-    try {
-      const { error } = await supabase
-        .from('posts')
-        .update({
-          caption: editingPost.caption.trim() || null,
-          recipe_url: editingPost.recipeUrl.trim() || null,
-          photo_url: editingPost.photoUrl.trim() || null,
-          image_url: editingPost.photoUrl.trim() || null,
-        })
-        .eq('id', editingPost.id);
-
-      if (error) throw error;
-
-      setPosts(prev =>
-        prev.map(p =>
-          p.id === editingPost.id
-            ? {
-                ...p,
-                caption: editingPost.caption.trim() || null,
-                image_url: editingPost.photoUrl.trim() || null,
-                recipe_url: editingPost.recipeUrl.trim() || null,
-                photo_url: editingPost.photoUrl.trim() || null
-              }
-            : p
-        )
-      );
-      toast.success('Post updated');
-      setEditingPost(null);
-    } catch (error: any) {
-      console.error('Error updating post:', error);
-      toast.error('Failed to update post');
+  try {
+    // Parse existing images if they're stored as JSON
+    let existingImages: string[] = [];
+    const post = posts.find(p => p.id === editingPost.id);
+    if (post?.image_url) {
+      try {
+        existingImages = JSON.parse(post.image_url);
+      } catch {
+        existingImages = post.image_url.includes(',')
+          ? post.image_url.split(',').map(url => url.trim())
+          : [post.image_url];
+      }
     }
-  };
+
+    // Determine final image URL - keep multiple images or use new single image
+    let finalImageUrl = editingPost.photoUrl.trim() || null;
+    
+    // If photoUrl is the same as one of the existing images, keep all images
+    if (existingImages.includes(editingPost.photoUrl)) {
+      finalImageUrl = post?.image_url || null;
+    }
+
+    const { error } = await supabase
+      .from('posts')
+      .update({
+        caption: editingPost.caption.trim() || null,
+        recipe_url: editingPost.recipeUrl.trim() || null,
+        image_url: finalImageUrl,
+      })
+      .eq('id', editingPost.id);
+
+    if (error) throw error;
+
+    setPosts(prev =>
+      prev.map(p =>
+        p.id === editingPost.id
+          ? {
+              ...p,
+              caption: editingPost.caption.trim() || null,
+              image_url: finalImageUrl,
+              recipe_url: editingPost.recipeUrl.trim() || null,
+            }
+          : p
+      )
+    );
+    toast.success('Post updated');
+    setEditingPost(null);
+  } catch (error: any) {
+    console.error('Error updating post:', error);
+    toast.error('Failed to update post');
+  }
+};
 
   // OPTIMIZED: Batch state updates
   const toggleLike = async (postId: string) => {
