@@ -64,7 +64,35 @@ export function Upload({ onNavigate }: UploadProps) {
       console.error('Error loading recipes:', error);
     }
   };
+const loadUserRecipes = async () => {
+  // ... existing code ...
+};
 
+// ✅ ADD THIS ENTIRE FUNCTION HERE
+const getVideoDuration = (file: File): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+
+    video.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(video.src);
+      const duration = Math.floor(video.duration);
+      
+      if (isNaN(duration) || duration === 0) {
+        reject(new Error('Invalid video duration'));
+      } else {
+        resolve(duration);
+      }
+    };
+
+    video.onerror = () => {
+      window.URL.revokeObjectURL(video.src);
+      reject(new Error('Failed to load video metadata'));
+    };
+
+    video.src = URL.createObjectURL(file);
+  });
+};
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
