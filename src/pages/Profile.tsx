@@ -10,6 +10,60 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import CommentModal from '../components/CommentModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
+// ✅ ADD THIS - Loading skeleton component
+const ProfileSkeleton = () => (
+  <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden animate-pulse">
+    <div className="sticky top-0 bg-white border-b border-gray-200 z-30">
+      <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
+        <div className="w-8 h-8 bg-gray-200 rounded-full" />
+        <div className="h-4 bg-gray-200 rounded w-32" />
+      </div>
+    </div>
+    
+    <div className="max-w-lg mx-auto w-full">
+      <div className="bg-white border-b border-gray-200">
+        {/* Banner skeleton */}
+        <div className="h-28 sm:h-32 bg-gray-200" />
+        
+        {/* Avatar + Bio skeleton */}
+        <div className="relative px-4 pb-3">
+          <div className="flex items-start gap-3 -mt-10">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-300 border-4 border-white" />
+            <div className="flex-1 pt-8 sm:pt-11 space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto" />
+              <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto" />
+            </div>
+          </div>
+          <div className="mt-4 flex justify-center">
+            <div className="h-10 bg-gray-200 rounded-full w-32" />
+          </div>
+        </div>
+        
+        {/* Stats skeleton */}
+        <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
+          <div className="flex justify-center gap-8 sm:gap-10">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="text-center">
+                <div className="h-6 w-12 bg-gray-200 rounded mx-auto mb-1" />
+                <div className="h-3 w-16 bg-gray-200 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Posts grid skeleton */}
+      <div className="border-b border-gray-200 bg-white py-3">
+        <div className="h-4 w-16 bg-gray-200 rounded mx-auto" />
+      </div>
+      <div className="grid grid-cols-3 gap-0.5 sm:gap-1">
+        {[...Array(9)].map((_, i) => (
+          <div key={i} className="aspect-square bg-gray-200" />
+        ))}
+      </div>
+    </div>
+  </div>
+);
 // Add this NEW function right after your imports, around line 60
 const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   if (!imageUrl) return null;
