@@ -709,7 +709,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-0.5 sm:gap-1">
-           {posts.map(post => {
+          {posts.map(post => {
   const displayImageUrl = getDisplayImageUrl(post.image_url);
               return (
                 <div
