@@ -220,7 +220,6 @@ for (const file of selectedFiles) {
     .upload(fileName, file, { cacheControl: '3600', upsert: false });
   if (uploadError) throw uploadError;
   
-  const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
   uploadedUrls.push(urlData.publicUrl);
 }
 
@@ -228,7 +227,6 @@ for (const file of selectedFiles) {
 const mainImageUrl = uploadedUrls[0];
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
 
       // Music data for both posts & dailies
       const musicData: any = {
