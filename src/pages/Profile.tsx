@@ -30,7 +30,6 @@ const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   
   return imageUrl;
 };
-};
 
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
