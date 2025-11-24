@@ -4,10 +4,13 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock } from 'lucide-react';
+import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { migrateExistingPosts } from '@/lib/imageStorage';
+import { toast } from 'sonner';
+import { isAdmin } from '@/lib/supabase';
 
 // Mock timezone data
 const COMMON_TIMEZONES = [
@@ -37,6 +40,12 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [migratingImages, setMigratingImages] = useState(false);
+
+  useEffect(() => {
+    isAdmin().then(setIsUserAdmin);
+  }, []);
 
   useEffect(() => {
     if ('speechSynthesis' in window) {
@@ -69,6 +78,27 @@ export default function Settings({ onNavigate }: SettingsProps) {
       utterance.onend = () => setTestingVoice(false);
       utterance.onerror = () => setTestingVoice(false);
       window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleMigrateImages = async () => {
+    if (!window.confirm('This will download and store all Instagram images permanently. Continue?')) {
+      return;
+    }
+
+    setMigratingImages(true);
+    toast.loading('Migrating images... This may take a while', { id: 'migrate', duration: 0 });
+
+    try {
+      const result = await migrateExistingPosts();
+      toast.success(
+        `Migration complete! Success: ${result?.successCount}, Failed: ${result?.failCount}, Total: ${result?.total}`,
+        { id: 'migrate' }
+      );
+    } catch (error: any) {
+      toast.error('Migration failed: ' + error.message, { id: 'migrate' });
+    } finally {
+      setMigratingImages(false);
     }
   };
 
@@ -468,6 +498,52 @@ export default function Settings({ onNavigate }: SettingsProps) {
               )}
             </CardContent>
           </Card>
+
+          {/* Admin Tools - Only visible to admins */}
+          {isUserAdmin && (
+            <Card className="border-purple-200 shadow-sm overflow-hidden">
+              <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 border-b border-purple-100 p-4 sm:p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                    <Download className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900">Admin Tools</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm text-slate-600">
+                      Database maintenance and migration tools
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6">
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+                    <h3 className="font-semibold text-slate-900 mb-2">Migrate Instagram Images</h3>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Downloads all Instagram images from posts and stores them permanently in Supabase storage to prevent expiration.
+                    </p>
+                    <Button
+                      onClick={handleMigrateImages}
+                      disabled={migratingImages}
+                      className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700"
+                    >
+                      {migratingImages ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Migrating...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4 mr-2" />
+                          Migrate Images
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
