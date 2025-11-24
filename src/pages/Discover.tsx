@@ -1192,7 +1192,10 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       // Parse image URLs properly
       let mediaUrls: string[] = [];
       let mediaTypes: string[] = [];
-      
+      let mediaUrls: string[] = [];
+let mediaTypes: string[] = [];
+
+console.log('[Discover] Starting to parse images for post:', post.id);
       // Handle image_url
       if (post.image_url) {
         try {
