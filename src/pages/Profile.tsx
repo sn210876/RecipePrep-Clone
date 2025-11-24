@@ -30,6 +30,7 @@ const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   
   return imageUrl;
 }; // <-- Just ONE closing brace here
+console.log('[Profile] VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
 
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
