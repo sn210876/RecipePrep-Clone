@@ -647,10 +647,10 @@ onNavigate('discover');
       </div>
 
       {/* Submit Button at Bottom */}
-      <div 
-        className="fixed bottom-0 left-0 right-0 px-4 pb-6 bg-gradient-to-t from-white via-white to-transparent z-40"
-        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
-      >
+     <div 
+  className="fixed bottom-0 left-0 right-0 px-4 pb-6 bg-gradient-to-t from-white via-white to-transparent z-10"
+  style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+>
         <div className="max-w-lg mx-auto flex justify-center">
           <Button
             onClick={handleUpload}
