@@ -554,7 +554,7 @@ const mainImageUrl = uploadedUrls[0];
         <div className="max-w-lg mx-auto flex justify-center">
           <Button
             onClick={handleUpload}
-            disabled={!selectedFile || (postType === 'post' && !title.trim()) || uploading}
+disabled={selectedFiles.length === 0 || (postType === 'post' && !title.trim()) || uploading}
             className="px-12 sm:px-16 py-5 sm:py-6 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg rounded-full"
           >
             {uploading ? 'Submitting...' : 'Submit'}
