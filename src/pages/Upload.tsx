@@ -92,6 +92,13 @@ const getVideoDuration = (file: File): Promise<number> => {
   const files = Array.from(e.target.files || []);
   if (files.length === 0) return;
 
+    // Filter for images only (for multi-upload, skip videos for now)
+  const imageFiles = files.filter(f => f.type.startsWith('image/'));
+  
+  if (imageFiles.length === 0) {
+    toast.error('Please select at least one image');
+    return;
+  }
 
   // ✅ Better file type validation
   const isImage = file.type.startsWith('image/');
