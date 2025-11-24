@@ -314,13 +314,15 @@ const mainImageUrl = uploadedUrls.length > 1
 
         toast.success('Post uploaded successfully!');
       }
+handleClearImage();
+setTitle('');
+setCaption('');
+setSelectedRecipeId('');
+setSelectedTrack(null);
 
-      handleClearImage();
-      setTitle('');
-      setCaption('');
-      setSelectedRecipeId('');
-      setSelectedTrack(null);
-      onNavigate('discover');
+// Clear URL and navigate properly
+window.history.pushState({}, '', '/');
+onNavigate('discover');
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.message || 'Failed to upload');
