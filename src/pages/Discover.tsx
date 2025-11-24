@@ -1182,34 +1182,54 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                     {/* Image / Video */}
                 {/* Image / Video Carousel */}
 {/* Image / Video Carousel */}
+// Image / Video Carousel - FIXED VERSION
 <div className="relative">
- {post.image_url || post.video_url ? (
-  (() => {
-    // Get proper display URL first
-    const displayImageUrl = getDisplayImageUrl(post.image_url);
-    
-    // Check if multiple media (stored as JSON array or comma-separated)
-    let mediaUrls: string[] = [];
-    let mediaTypes: string[] = [];
-    
-    // Get image URLs
-    if (displayImageUrl) {
-      try {
-        const parsed = JSON.parse(displayImageUrl);
-          mediaUrls = Array.isArray(parsed) ? parsed : [parsed];
-          mediaTypes = new Array(mediaUrls.length).fill('image');
+  {post.image_url || post.video_url ? (
+    (() => {
+      // Parse image URLs properly
+      let mediaUrls: string[] = [];
+      let mediaTypes: string[] = [];
+      
+      // Handle image_url
+      if (post.image_url) {
+        try {
+          // Try parsing as JSON array first
+          const parsed = JSON.parse(post.image_url);
+          if (Array.isArray(parsed)) {
+            mediaUrls = parsed.map(url => getDisplayImageUrl(url)).filter(Boolean) as string[];
+          } else {
+            const displayUrl = getDisplayImageUrl(parsed);
+            if (displayUrl) mediaUrls = [displayUrl];
+          }
         } catch {
-          mediaUrls = post.image_url.includes(',') 
-            ? post.image_url.split(',').map(url => url.trim())
-            : [post.image_url];
-          mediaTypes = new Array(mediaUrls.length).fill('image');
+          // Not JSON, try comma-separated
+          if (post.image_url.includes(',')) {
+            mediaUrls = post.image_url
+              .split(',')
+              .map(url => getDisplayImageUrl(url.trim()))
+              .filter(Boolean) as string[];
+          } else {
+            // Single URL
+            const displayUrl = getDisplayImageUrl(post.image_url);
+            if (displayUrl) mediaUrls = [displayUrl];
+          }
         }
+        mediaTypes = new Array(mediaUrls.length).fill('image');
       }
       
-      // Add video URL if exists
+      // Add video if exists
       if (post.video_url) {
         mediaUrls.push(post.video_url);
         mediaTypes.push('video');
+      }
+
+      // If no media found, show placeholder
+      if (mediaUrls.length === 0) {
+        return (
+          <div className="w-full aspect-square bg-gray-200 flex items-center justify-center">
+            <p className="text-gray-500">No media available</p>
+          </div>
+        );
       }
 
       const currentImageIndex = imageIndices[post.id] || 0;
@@ -1220,12 +1240,13 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
         }));
       };
       
+      // Single media item
       if (mediaUrls.length === 1) {
         return mediaTypes[0] === 'video' ? (
           <video
             src={mediaUrls[0]}
             controls
-            className="w-full aspect-square object-cover"
+            className="w-full aspect-square object-cover bg-black"
             preload="metadata"
           />
         ) : (
@@ -1234,10 +1255,17 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
             alt={post.title || 'Post'}
             className="w-full aspect-square object-cover"
             loading="lazy"
+            onError={(e) => {
+              console.error('[Discover] Image failed to load:', mediaUrls[0]);
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              target.parentElement?.classList.add('bg-gray-200');
+            }}
           />
         );
       }
 
+      // Multiple media items - carousel
       return (
         <div className="relative w-full aspect-square bg-black">
           {mediaTypes[currentImageIndex] === 'video' ? (
@@ -1250,10 +1278,17 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
             />
           ) : (
             <img
+              key={mediaUrls[currentImageIndex]}
               src={mediaUrls[currentImageIndex]}
               alt={`${post.title || 'Post'} ${currentImageIndex + 1}`}
               className="w-full h-full object-cover"
               loading="lazy"
+              onError={(e) => {
+                console.error('[Discover] Carousel image failed:', mediaUrls[currentImageIndex]);
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.parentElement?.classList.add('bg-gray-200');
+              }}
             />
           )}
           
@@ -1326,59 +1361,63 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
         </div>
       );
     })()
-  ) : null}
+  ) : (
+    <div className="w-full aspect-square bg-gray-200 flex items-center justify-center">
+      <p className="text-gray-500">No media</p>
+    </div>
+  )}
 
-                      {/* Spotify preview */}
-                      {post.spotify_preview_url && (
-                        <div className="absolute top-4 right-4 z-10">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const audio = document.getElementById(`audio-${post.id}`) as HTMLAudioElement;
-                              const btn = e.currentTarget.querySelector('.play-icon');
-                              document.querySelectorAll('audio').forEach(a => {
-                                if (a.id !== `audio-${post.id}`) a.pause();
-                              });
-                            if (audio.paused) {
-  audio.play();
-  if (btn) btn.textContent = '⏸️';
-} else {
-  audio.pause();
-  if (btn) btn.textContent = '▶️';
-}
-                            }}
-                            className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-full shadow-lg transition-all flex items-center gap-2"
-                          >
-                           <span className="text-xl play-icon">▶️</span>
-                            <div className="text-left text-xs max-w-32">
-                              <div className="font-semibold truncate">{post.spotify_track_name}</div>
-                              <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
-                            </div>
-                          </button>
-                          <audio id={`audio-${post.id}`} src={post.spotify_preview_url} />
-                        </div>
-                      )}
+  {/* Spotify preview */}
+  {post.spotify_preview_url && (
+    <div className="absolute top-4 right-4 z-10">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          const audio = document.getElementById(`audio-${post.id}`) as HTMLAudioElement;
+          const btn = e.currentTarget.querySelector('.play-icon');
+          document.querySelectorAll('audio').forEach(a => {
+            if (a.id !== `audio-${post.id}`) a.pause();
+          });
+          if (audio.paused) {
+            audio.play();
+            if (btn) btn.textContent = '⏸️';
+          } else {
+            audio.pause();
+            if (btn) btn.textContent = '▶️';
+          }
+        }}
+        className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-full shadow-lg transition-all flex items-center gap-2"
+      >
+        <span className="text-xl play-icon">▶️</span>
+        <div className="text-left text-xs max-w-32">
+          <div className="font-semibold truncate">{post.spotify_track_name}</div>
+          <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
+        </div>
+      </button>
+      <audio id={`audio-${post.id}`} src={post.spotify_preview_url} />
+    </div>
+  )}
 
-                      {/* Title + rating overlay */}
-                      {post.title && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-                          <div className="flex items-end justify-between gap-2">
-                            <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
-                            {postRatings[post.id] && postRatings[post.id].count > 0 && (
-                              <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-                                <span className="text-lg">🔥</span>
-                                <span className="text-white text-xs font-semibold">
-                                  {postRatings[post.id].average.toFixed(1)}
-                                </span>
-                                <span className="text-white/70 text-xs">
-                                  ({postRatings[post.id].count})
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+  {/* Title + rating overlay */}
+  {post.title && (
+    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
+      <div className="flex items-end justify-between gap-2">
+        <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
+        {postRatings[post.id] && postRatings[post.id].count > 0 && (
+          <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
+            <span className="text-lg">🔥</span>
+            <span className="text-white text-xs font-semibold">
+              {postRatings[post.id].average.toFixed(1)}
+            </span>
+            <span className="text-white/70 text-xs">
+              ({postRatings[post.id].count})
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  )}
+</div>
 
                     {/* Bottom section */}
                     <div className="px-4 py-3 space-y-2">
