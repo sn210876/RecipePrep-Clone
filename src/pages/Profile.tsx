@@ -230,7 +230,6 @@ export function Profile({ username: targetUsername }: ProfileProps) {
         if (isMounted) setLoading(false);
       }
     };
-const loadUserRecipes = async () => {
 
     loadProfile();
 
