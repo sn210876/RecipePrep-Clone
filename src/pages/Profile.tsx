@@ -10,6 +10,30 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import CommentModal from '../components/CommentModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
+// Add this NEW function right after your imports, around line 60
+const getDisplayImageUrl = (imageUrl: string | null): string | null => {
+  if (!imageUrl) return null;
+  
+  // If already proxied, return as-is
+  if (imageUrl.includes('/functions/v1/image-proxy')) {
+    return imageUrl;
+  }
+  
+  // If it's a Supabase storage URL, return as-is
+  if (imageUrl.includes('supabase.co/storage/v1/object/public/')) {
+    return imageUrl;
+  }
+  
+  // If it's an Instagram/Facebook CDN image, proxy it
+  if (imageUrl.includes('instagram.com') || 
+      imageUrl.includes('cdninstagram.com') || 
+      imageUrl.includes('fbcdn.net')) {
+    return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+  }
+  
+  // For any other URL (imgur, etc.), return as-is
+  return imageUrl;
+};
 
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
