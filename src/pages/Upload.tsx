@@ -225,8 +225,10 @@ uploadedUrls.push(urlData.publicUrl);  // ✅ Use urlData.publicUrl here
 }
 
 // Use first image URL for now (you can enhance this later to support multiple images in DB)
-const mainImageUrl = uploadedUrls[0];
-
+// Store all URLs as JSON array
+const mainImageUrl = uploadedUrls.length > 1 
+  ? JSON.stringify(uploadedUrls) 
+  : uploadedUrls[0];
 
       // Music data for both posts & dailies
       const musicData: any = {
