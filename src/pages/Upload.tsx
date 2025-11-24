@@ -92,69 +92,61 @@ const getVideoDuration = (file: File): Promise<number> => {
   const files = Array.from(e.target.files || []);
   if (files.length === 0) return;
 
-  // Separate images and videos
+  // Filter for images and videos
   const imageFiles = files.filter(f => f.type.startsWith('image/'));
   const videoFiles = files.filter(f => f.type.startsWith('video/'));
+  const allMediaFiles = [...imageFiles, ...videoFiles];
   
-  if (imageFiles.length === 0 && videoFiles.length === 0) {
+  if (allMediaFiles.length === 0) {
     toast.error('Please select at least one image or video');
     return;
   }
 
-  // Can't mix images and videos
-  if (imageFiles.length > 0 && videoFiles.length > 0) {
-    toast.error('Please select either images OR a video, not both');
-    return;
-  }
-
-  // Only allow 1 video
-  if (videoFiles.length > 1) {
-    toast.error('You can only upload 1 video at a time');
+  // Limit to 4 total media files
+  if (allMediaFiles.length > 4) {
+    toast.error('You can only upload up to 4 images/videos total');
     return;
   }
 
   const validFiles: File[] = [];
   const validPreviews: string[] = [];
+  let hasVideo = false;
 
-  // Handle images (up to 4)
-  if (imageFiles.length > 0) {
-    for (const file of imageFiles.slice(0, 4)) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} is too large (max 10MB for images)`);
+  for (const file of allMediaFiles) {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    // Validate size
+    if (isImage && file.size > 10 * 1024 * 1024) {
+      toast.error(`${file.name} is too large (max 10MB for images)`);
+      continue;
+    }
+
+    if (isVideo && file.size > 100 * 1024 * 1024) {
+      toast.error(`${file.name} is too large (max 100MB for videos)`);
+      continue;
+    }
+
+    // Handle video duration check
+    if (isVideo) {
+      try {
+        const duration = await getVideoDuration(file);
+        
+        if (postType === 'daily' && duration > 30) {
+          toast.error(`${file.name}: Daily videos must be 30 seconds or less`);
+          continue;
+        }
+        
+        hasVideo = true;
+      } catch (error) {
+        console.error('Video load error:', error);
+        toast.error(`Failed to load ${file.name}`);
         continue;
       }
-      validFiles.push(file);
-      validPreviews.push(URL.createObjectURL(file));
-    }
-    setFileType('image');
-  }
-
-  // Handle video
-  if (videoFiles.length > 0) {
-    const video = videoFiles[0];
-    
-    if (video.size > 100 * 1024 * 1024) {
-      toast.error('Video must be less than 100MB');
-      return;
     }
 
-    try {
-      const duration = await getVideoDuration(video);
-      setVideoDuration(duration);
-
-      if (postType === 'daily' && duration > 30) {
-        toast.error('Daily videos must be 30 seconds or less');
-        return;
-      }
-
-      validFiles.push(video);
-      validPreviews.push(URL.createObjectURL(video));
-      setFileType('video');
-    } catch (error) {
-      console.error('Video load error:', error);
-      toast.error('Failed to load video. Please try another file.');
-      return;
-    }
+    validFiles.push(file);
+    validPreviews.push(URL.createObjectURL(file));
   }
 
   if (validFiles.length === 0) {
@@ -164,6 +156,7 @@ const getVideoDuration = (file: File): Promise<number> => {
 
   setSelectedFiles(validFiles);
   setPreviewUrls(validPreviews);
+  setFileType(hasVideo ? 'video' : 'image');
 };
 
     
