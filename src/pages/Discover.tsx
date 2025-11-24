@@ -99,7 +99,7 @@ const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   }
   
   return imageUrl;
-};
+}; // <-- Make sure it ends here with ONE closing brace and semicolon
 export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
   const { isAdmin } = useAuth();
 
