@@ -714,7 +714,13 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   {posts.map(post => {
     // Get display URL with proper handling
     const displayImageUrl = getDisplayImageUrl(post.image_url);
-    
+    {posts.map(post => {
+  console.log('[Profile Grid] Post ID:', post.id, 'Raw image_url:', post.image_url);
+  
+  // Get display URL with proper handling
+  const displayImageUrl = getDisplayImageUrl(post.image_url);
+  
+  console.log('[Profile Grid] Display URL:', displayImageUrl);
     // For grid view, show first image if multiple
     let firstImageUrl = displayImageUrl;
     if (displayImageUrl) {
