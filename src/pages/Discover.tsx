@@ -1183,15 +1183,18 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 {/* Image / Video Carousel */}
 <div className="relative">
   {post.image_url || post.video_url ? (
-    (() => {
-      // Check if multiple media (stored as JSON array or comma-separated)
-      let mediaUrls: string[] = [];
-      let mediaTypes: string[] = [];
-      
-      // Get image URLs
-      if (post.image_url) {
-        try {
-          const parsed = JSON.parse(post.image_url);
+  (() => {
+    // Get proper display URL first
+    const displayImageUrl = getDisplayImageUrl(post.image_url);
+    
+    // Check if multiple media (stored as JSON array or comma-separated)
+    let mediaUrls: string[] = [];
+    let mediaTypes: string[] = [];
+    
+    // Get image URLs
+    if (displayImageUrl) {
+      try {
+        const parsed = JSON.parse(displayImageUrl);
           mediaUrls = Array.isArray(parsed) ? parsed : [parsed];
           mediaTypes = new Array(mediaUrls.length).fill('image');
         } catch {
