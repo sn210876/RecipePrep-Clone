@@ -29,7 +29,7 @@ const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   }
   
   return imageUrl;
-};
+}; // <-- Just ONE closing brace here
 
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
