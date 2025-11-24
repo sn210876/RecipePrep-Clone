@@ -712,15 +712,11 @@ export function Profile({ username: targetUsername }: ProfileProps) {
          // Fixed Posts Grid rendering in Profile.tsx
 <div className="grid grid-cols-3 gap-0.5 sm:gap-1">
   {posts.map(post => {
+    console.log('[Profile Grid] Post ID:', post.id, 'Raw image_url:', post.image_url);
+
     // Get display URL with proper handling
     const displayImageUrl = getDisplayImageUrl(post.image_url);
-    {posts.map(post => {
-  console.log('[Profile Grid] Post ID:', post.id, 'Raw image_url:', post.image_url);
-  
-  // Get display URL with proper handling
-  const displayImageUrl = getDisplayImageUrl(post.image_url);
-  
-  console.log('[Profile Grid] Display URL:', displayImageUrl);
+    
     // For grid view, show first image if multiple
     let firstImageUrl = displayImageUrl;
     if (displayImageUrl) {
