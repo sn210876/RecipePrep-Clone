@@ -1163,16 +1163,30 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                 {/* Image / Video Carousel */}
 {/* Image / Video Carousel */}
 <div className="relative">
-  {post.image_url ? (
+  {post.image_url || post.video_url ? (
     (() => {
-      // Check if multiple images (stored as JSON array or comma-separated)
-      let imageUrls: string[] = [];
-      try {
-        imageUrls = JSON.parse(post.image_url);
-      } catch {
-        imageUrls = post.image_url.includes(',') 
-          ? post.image_url.split(',').map(url => url.trim())
-          : [post.image_url];
+      // Check if multiple media (stored as JSON array or comma-separated)
+      let mediaUrls: string[] = [];
+      let mediaTypes: string[] = [];
+      
+      // Get image URLs
+      if (post.image_url) {
+        try {
+          const parsed = JSON.parse(post.image_url);
+          mediaUrls = Array.isArray(parsed) ? parsed : [parsed];
+          mediaTypes = new Array(mediaUrls.length).fill('image');
+        } catch {
+          mediaUrls = post.image_url.includes(',') 
+            ? post.image_url.split(',').map(url => url.trim())
+            : [post.image_url];
+          mediaTypes = new Array(mediaUrls.length).fill('image');
+        }
+      }
+      
+      // Add video URL if exists
+      if (post.video_url) {
+        mediaUrls.push(post.video_url);
+        mediaTypes.push('video');
       }
 
       const currentImageIndex = imageIndices[post.id] || 0;
@@ -1183,10 +1197,17 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
         }));
       };
       
-      if (imageUrls.length === 1) {
-        return (
+      if (mediaUrls.length === 1) {
+        return mediaTypes[0] === 'video' ? (
+          <video
+            src={mediaUrls[0]}
+            controls
+            className="w-full aspect-square object-cover"
+            preload="metadata"
+          />
+        ) : (
           <img
-            src={imageUrls[0]}
+            src={mediaUrls[0]}
             alt={post.title || 'Post'}
             className="w-full aspect-square object-cover"
             loading="lazy"
@@ -1196,12 +1217,22 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
       return (
         <div className="relative w-full aspect-square bg-black">
-          <img
-            src={imageUrls[currentImageIndex]}
-            alt={`${post.title || 'Post'} ${currentImageIndex + 1}`}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+          {mediaTypes[currentImageIndex] === 'video' ? (
+            <video
+              key={mediaUrls[currentImageIndex]}
+              src={mediaUrls[currentImageIndex]}
+              controls
+              className="w-full h-full object-cover"
+              preload="metadata"
+            />
+          ) : (
+            <img
+              src={mediaUrls[currentImageIndex]}
+              alt={`${post.title || 'Post'} ${currentImageIndex + 1}`}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          )}
           
           {/* Navigation arrows */}
           {currentImageIndex > 0 && (
@@ -1218,7 +1249,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
             </button>
           )}
           
-          {currentImageIndex < imageUrls.length - 1 && (
+          {currentImageIndex < mediaUrls.length - 1 && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -1234,7 +1265,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           
           {/* Dots indicator */}
           <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
-            {imageUrls.map((_, idx) => (
+            {mediaUrls.map((_, idx) => (
               <button
                 key={idx}
                 onClick={(e) => {
@@ -1260,7 +1291,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
               const diff = touchStartX - touch.clientX;
               
               if (Math.abs(diff) > 50) {
-                if (diff > 0 && currentImageIndex < imageUrls.length - 1) {
+                if (diff > 0 && currentImageIndex < mediaUrls.length - 1) {
                   setCurrentImageIndex(prev => prev + 1);
                 } else if (diff < 0 && currentImageIndex > 0) {
                   setCurrentImageIndex(prev => prev - 1);
@@ -1272,14 +1303,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
         </div>
       );
     })()
-                      ) : post.video_url ? (
-                        <video
-                          src={post.video_url}
-                          controls
-                          className="w-full aspect-square object-cover"
-                          preload="metadata"
-                        />
-                      ) : null}
+  ) : null}
 
                       {/* Spotify preview */}
                       {post.spotify_preview_url && (
