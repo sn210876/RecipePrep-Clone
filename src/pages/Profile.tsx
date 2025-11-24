@@ -722,7 +722,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                         src={displayImageUrl}
                         alt={post.title || 'Post'}
                         className="w-full h-full object-cover"
-                      onError={(e) => {
+                    onError={(e) => {
   console.error('[Profile] Image failed to load:', displayImageUrl);
   (e.target as HTMLImageElement).style.display = 'none';
 }}
