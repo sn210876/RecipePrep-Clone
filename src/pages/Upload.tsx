@@ -88,13 +88,11 @@ const getVideoDuration = (file: File): Promise<number> => {
     video.src = URL.createObjectURL(file);
   });
 };
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
   const files = Array.from(e.target.files || []);
   if (files.length === 0) return;
 
-
-  
-// Filter for images only (for multi-upload, skip videos for now)
+  // Filter for images only
   const imageFiles = files.filter(f => f.type.startsWith('image/'));
   
   if (imageFiles.length === 0) {
