@@ -416,7 +416,50 @@ const mainImageUrl = uploadedUrls[0];
                 </button>
               </div>
             ))}
-            
+             {selectedFiles.length < 4 && (
+              <label className="cursor-pointer">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple 
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    const remainingSlots = 4 - selectedFiles.length;
+                    const newFiles = files.slice(0, remainingSlots);
+                    
+                    const validFiles: File[] = [];
+                    const validPreviews: string[] = [];
+                    
+                    for (const file of newFiles) {
+                      if (file.size > 10 * 1024 * 1024) {
+                        toast.error(`${file.name} is too large (max 10MB)`);
+                        continue;
+                      }
+                      if (!file.type.startsWith('image/')) {
+                        toast.error(`${file.name} is not an image`);
+                        continue;
+                      }
+                      validFiles.push(file);
+                      validPreviews.push(URL.createObjectURL(file));
+                    }
+                    
+                    if (validFiles.length > 0) {
+                      setSelectedFiles([...selectedFiles, ...validFiles]);
+                      setPreviewUrls([...previewUrls, ...validPreviews]);
+                      toast.success(`Added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`);
+                    }
+                  }}
+                  className="hidden" 
+                />
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-500 transition-colors">
+                  <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm font-medium text-gray-600">Add More Photos</p>
+                  <p className="text-xs text-gray-400 mt-1">{selectedFiles.length}/4 selected</p>
+                </div>
+              </label>
+            )}
+          </div>
+        )}
           </div>
         )}
 
