@@ -1428,63 +1428,103 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
-          <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Edit post</AlertDialogTitle>
-              <AlertDialogDescription>
-                Update your caption and recipe link.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="space-y-4 py-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Caption</label>
-                <Textarea
-                  value={editingPost?.caption || ''}
-                  onChange={(e) => setEditingPost(prev => prev ? { ...prev, caption: e.target.value } : null)}
-                  placeholder="Write a caption..."
-                  className="resize-none"
-                  rows={3}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Recipe URL</label>
-                <input
-                  type="url"
-                  value={editingPost?.recipeUrl || ''}
-                  onChange={(e) => setEditingPost(prev => prev ? { ...prev, recipeUrl: e.target.value } : null)}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Change Photo/Video</label>
-                <input
-                  type="file"
-                  accept="image/*,video/*"
-                  onChange={handlePhotoUpload}
-                  disabled={uploadingPhoto}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-                {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
-                {editingPost?.photoUrl && (
-                  <img
-                    src={editingPost.photoUrl}
-                    alt="Preview"
-                    className="mt-2 w-32 h-32 object-cover rounded-lg"
-                    loading="lazy"
-                  />
-                )}
-              </div>
+       <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+  <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+    <AlertDialogHeader>
+      <AlertDialogTitle>Edit post</AlertDialogTitle>
+      <AlertDialogDescription>
+        Update your caption and recipe link.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <div className="space-y-4 py-4">
+      <div>
+        <label className="text-sm font-medium mb-2 block">Caption</label>
+        <Textarea
+          value={editingPost?.caption || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, caption: e.target.value } : null)}
+          placeholder="Write a caption..."
+          className="resize-none"
+          rows={3}
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-2 block">Recipe URL</label>
+        <input
+          type="url"
+          value={editingPost?.recipeUrl || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, recipeUrl: e.target.value } : null)}
+          placeholder="https://..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-2 block">Current Images</label>
+        <div className="grid grid-cols-2 gap-2">
+          {(() => {
+            const post = posts.find(p => p.id === editingPost?.id);
+            if (!post?.image_url) return null;
+            
+            let imageUrls: string[] = [];
+            try {
+              imageUrls = JSON.parse(post.image_url);
+            } catch {
+              imageUrls = post.image_url.includes(',')
+                ? post.image_url.split(',').map(url => url.trim())
+                : [post.image_url];
+            }
+            
+            return imageUrls.map((url, idx) => (
+              <img
+                key={idx}
+                src={url}
+                alt={`Image ${idx + 1}`}
+                className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                loading="lazy"
+              />
+            ));
+          })()}
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Note: Uploading a new photo will replace all existing photos with the new one.
+        </p>
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-2 block">Replace with New Photo</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoUpload}
+          disabled={uploadingPhoto}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+        {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
+        {editingPost?.photoUrl && (() => {
+          const post = posts.find(p => p.id === editingPost?.id);
+          const originalUrl = post?.image_url;
+          const isNewPhoto = originalUrl && !originalUrl.includes(editingPost.photoUrl);
+          
+          return isNewPhoto ? (
+            <div className="mt-2">
+              <p className="text-xs text-green-600 font-medium mb-1">New photo uploaded:</p>
+              <img
+                src={editingPost.photoUrl}
+                alt="New preview"
+                className="w-32 h-32 object-cover rounded-lg border-2 border-green-500"
+                loading="lazy"
+              />
             </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
-                Save changes
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          ) : null;
+        })()}
+      </div>
+    </div>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
+        Save changes
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
 
         {selectedRecipe && (
           <RecipeDetailModal
