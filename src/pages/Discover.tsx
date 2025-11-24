@@ -1449,12 +1449,12 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           </AlertDialogContent>
         </AlertDialog>
 
-       <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+      <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
   <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
     <AlertDialogHeader>
       <AlertDialogTitle>Edit post</AlertDialogTitle>
       <AlertDialogDescription>
-        Update your caption and recipe link.
+        Update your caption, recipe link, and images (up to 4 total).
       </AlertDialogDescription>
     </AlertDialogHeader>
     <div className="space-y-4 py-4">
@@ -1478,6 +1478,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
       </div>
+      
+      {/* Current Images */}
       <div>
         <label className="text-sm font-medium mb-2 block">Current Images</label>
         <div className="grid grid-cols-2 gap-2">
@@ -1494,54 +1496,264 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                 : [post.image_url];
             }
             
-            return imageUrls.map((url, idx) => (
-              <img
-                key={idx}
-                src={url}
-                alt={`Image ${idx + 1}`}
-                className="w-full h-24 object-cover rounded-lg border border-gray-200"
-                loading="lazy"
-              />
+            // Track deleted images
+            const deletedImages = (editingPost as any)?.deletedImages || [];
+            const remainingImages = imageUrls.filter(url => !deletedImages.includes(url));
+            
+            return remainingImages.map((url, idx) => (
+              <div key={idx} className="relative group">
+                <img
+                  src={url}
+                  alt={`Image ${idx + 1}`}
+                  className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                  loading="lazy"
+                />
+                <button
+                  onClick={() => {
+                    setEditingPost(prev => {
+                      if (!prev) return null;
+                      const currentDeleted = (prev as any).deletedImages || [];
+                      return {
+                        ...prev,
+                        deletedImages: [...currentDeleted, url]
+                      } as any;
+                    });
+                  }}
+                  className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             ));
           })()}
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Note: Uploading a new photo will replace all existing photos with the new one.
-        </p>
       </div>
-      <div>
-        <label className="text-sm font-medium mb-2 block">Replace with New Photo</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handlePhotoUpload}
-          disabled={uploadingPhoto}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
-        {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
-        {editingPost?.photoUrl && (() => {
-          const post = posts.find(p => p.id === editingPost?.id);
-          const originalUrl = post?.image_url;
-          const isNewPhoto = originalUrl && !originalUrl.includes(editingPost.photoUrl);
-          
-          return isNewPhoto ? (
-            <div className="mt-2">
-              <p className="text-xs text-green-600 font-medium mb-1">New photo uploaded:</p>
-              <img
-                src={editingPost.photoUrl}
-                alt="New preview"
-                className="w-32 h-32 object-cover rounded-lg border-2 border-green-500"
-                loading="lazy"
-              />
+
+      {/* New Images to Upload */}
+      {(() => {
+        const newImages = (editingPost as any)?.newImages || [];
+        const newPreviews = (editingPost as any)?.newPreviews || [];
+        
+        if (newImages.length > 0) {
+          return (
+            <div>
+              <label className="text-sm font-medium mb-2 block text-green-600">New Images to Add</label>
+              <div className="grid grid-cols-2 gap-2">
+                {newPreviews.map((preview: string, idx: number) => (
+                  <div key={idx} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`New image ${idx + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border-2 border-green-500"
+                      loading="lazy"
+                    />
+                    <button
+                      onClick={() => {
+                        setEditingPost(prev => {
+                          if (!prev) return null;
+                          const currentNew = (prev as any).newImages || [];
+                          const currentPreviews = (prev as any).newPreviews || [];
+                          
+                          // Revoke the preview URL
+                          URL.revokeObjectURL(currentPreviews[idx]);
+                          
+                          return {
+                            ...prev,
+                            newImages: currentNew.filter((_: any, i: number) => i !== idx),
+                            newPreviews: currentPreviews.filter((_: any, i: number) => i !== idx)
+                          } as any;
+                        });
+                      }}
+                      className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : null;
-        })()}
-      </div>
+          );
+        }
+        return null;
+      })()}
+
+      {/* Upload More Photos */}
+      {(() => {
+        const post = posts.find(p => p.id === editingPost?.id);
+        if (!post?.image_url) return null;
+        
+        let imageUrls: string[] = [];
+        try {
+          imageUrls = JSON.parse(post.image_url);
+        } catch {
+          imageUrls = post.image_url.includes(',')
+            ? post.image_url.split(',').map(url => url.trim())
+            : [post.image_url];
+        }
+        
+        const deletedImages = (editingPost as any)?.deletedImages || [];
+        const remainingCount = imageUrls.length - deletedImages.length;
+        const newImages = (editingPost as any)?.newImages || [];
+        const totalCount = remainingCount + newImages.length;
+        
+        if (totalCount >= 4) {
+          return (
+            <p className="text-sm text-gray-500">Maximum 4 images reached</p>
+          );
+        }
+        
+        return (
+          <div>
+            <label className="text-sm font-medium mb-2 block">Add More Photos</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                const remainingSlots = 4 - totalCount;
+                const filesToAdd = files.slice(0, remainingSlots);
+                
+                const validFiles: File[] = [];
+                const validPreviews: string[] = [];
+                
+                for (const file of filesToAdd) {
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast.error(`${file.name} is too large (max 10MB)`);
+                    continue;
+                  }
+                  if (!file.type.startsWith('image/')) {
+                    toast.error(`${file.name} is not an image`);
+                    continue;
+                  }
+                  validFiles.push(file);
+                  validPreviews.push(URL.createObjectURL(file));
+                }
+                
+                if (validFiles.length > 0) {
+                  setEditingPost(prev => {
+                    if (!prev) return null;
+                    const currentNew = (prev as any).newImages || [];
+                    const currentPreviews = (prev as any).newPreviews || [];
+                    return {
+                      ...prev,
+                      newImages: [...currentNew, ...validFiles],
+                      newPreviews: [...currentPreviews, ...validPreviews]
+                    } as any;
+                  });
+                  toast.success(`Added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`);
+                }
+                
+                // Reset input
+                e.target.value = '';
+              }}
+              disabled={uploadingPhoto}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {totalCount}/4 images selected
+            </p>
+          </div>
+        );
+      })()}
     </div>
     <AlertDialogFooter>
       <AlertDialogCancel>Cancel</AlertDialogCancel>
-      <AlertDialogAction onClick={handleEditPost} className="bg-orange-600 hover:bg-orange-700">
-        Save changes
+      <AlertDialogAction 
+        onClick={async () => {
+          if (!editingPost) return;
+
+          try {
+            const post = posts.find(p => p.id === editingPost.id);
+            if (!post?.image_url) return;
+            
+            // Parse existing images
+            let imageUrls: string[] = [];
+            try {
+              imageUrls = JSON.parse(post.image_url);
+            } catch {
+              imageUrls = post.image_url.includes(',')
+                ? post.image_url.split(',').map(url => url.trim())
+                : [post.image_url];
+            }
+            
+            // Remove deleted images
+            const deletedImages = (editingPost as any)?.deletedImages || [];
+            const remainingImages = imageUrls.filter(url => !deletedImages.includes(url));
+            
+            // Upload new images
+            const newImages = (editingPost as any)?.newImages || [];
+            const uploadedNewUrls: string[] = [];
+            
+            if (newImages.length > 0) {
+              setUploadingPhoto(true);
+              
+              for (const file of newImages) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${currentUserId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                
+                const { error: uploadError } = await supabase.storage
+                  .from('posts')
+                  .upload(fileName, file);
+                
+                if (uploadError) throw uploadError;
+                
+                const { data: urlData } = supabase.storage
+                  .from('posts')
+                  .getPublicUrl(fileName);
+                
+                uploadedNewUrls.push(urlData.publicUrl);
+              }
+              
+              setUploadingPhoto(false);
+            }
+            
+            // Combine remaining + new images
+            const finalImages = [...remainingImages, ...uploadedNewUrls];
+            const finalImageUrl = finalImages.length > 1 
+              ? JSON.stringify(finalImages)
+              : finalImages[0] || null;
+            
+            // Update post
+            const { error } = await supabase
+              .from('posts')
+              .update({
+                caption: editingPost.caption.trim() || null,
+                recipe_url: editingPost.recipeUrl.trim() || null,
+                image_url: finalImageUrl,
+              })
+              .eq('id', editingPost.id);
+
+            if (error) throw error;
+
+            setPosts(prev =>
+              prev.map(p =>
+                p.id === editingPost.id
+                  ? {
+                      ...p,
+                      caption: editingPost.caption.trim() || null,
+                      image_url: finalImageUrl,
+                      recipe_url: editingPost.recipeUrl.trim() || null,
+                    }
+                  : p
+              )
+            );
+            
+            // Cleanup preview URLs
+            const newPreviews = (editingPost as any)?.newPreviews || [];
+            newPreviews.forEach((url: string) => URL.revokeObjectURL(url));
+            
+            toast.success('Post updated');
+            setEditingPost(null);
+          } catch (error: any) {
+            console.error('Error updating post:', error);
+            toast.error('Failed to update post');
+          }
+        }} 
+        className="bg-orange-600 hover:bg-orange-700"
+        disabled={uploadingPhoto}
+      >
+        {uploadingPhoto ? 'Uploading...' : 'Save changes'}
       </AlertDialogAction>
     </AlertDialogFooter>
   </AlertDialogContent>
