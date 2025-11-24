@@ -401,11 +401,21 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   return (
     <>
       <Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>
-        <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
-          <div className="flex flex-col h-full overflow-hidden">
-            
-            {/* Media Section - Top (Carousel) */}
-           <div className="w-full h-[25vh] sm:h-[30vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] sm:h-[85vh] p-0 gap-0 overflow-hidden z-[9999]">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-50"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="flex flex-col sm:flex-row h-full overflow-hidden">
+
+            {/* LEFT COLUMN: Media & Ratings (Mobile: Top, Desktop: Left) */}
+           <div className="w-full sm:w-1/2 flex flex-col bg-black sm:border-r border-gray-200">
+             {/* Media Section */}
+           <div className="w-full h-[40vh] sm:h-[70%] bg-black flex items-center justify-center relative overflow-hidden">
 
               {(() => {
                 // Parse media URLs
@@ -469,6 +479,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                         key={currentMedia}
                         src={currentMedia}
                         controls
+                        playsInline
                         className="w-full h-full object-contain"
                         preload="metadata"
                       />
@@ -514,10 +525,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                 );
               })()}
 
-              <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
-                <X className="w-5 h-5" />
-              </button>
-
               {post?.spotify_preview_url && (
                 <div className="absolute bottom-2 left-2 right-2 z-10">
                   <button onClick={togglePlay} className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-2 w-full">
@@ -537,70 +544,85 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
               )}
             </div>
 
-            {/* Content Section */}
-            <div className="flex-1 flex flex-col bg-white min-h-0">
+             {/* Ratings Section - Below Media */}
+             <div className="flex-1 sm:flex-none sm:h-[30%] bg-white overflow-y-auto">
+               <div className="p-3 sm:p-4 space-y-3">
+                 <div>
+                   <h3 className="font-bold text-sm sm:text-base truncate">{post?.title || 'Post'}</h3>
+                   {post?.caption && (
+                     <p className="text-xs sm:text-sm text-gray-600 mt-0.5 line-clamp-2">{post.caption}</p>
+                   )}
+                 </div>
+
+                 {/* Average Rating */}
+                 <div className="space-y-1.5">
+                   <div className="flex items-center gap-2">
+                     <div className="flex items-center">
+                       {[1, 2, 3, 4, 5].map((fire) => (
+                         <span key={fire} className={`text-sm sm:text-base ${fire <= averageRating ? 'opacity-100' : 'opacity-20 grayscale'}`}>🔥</span>
+                       ))}
+                     </div>
+                     <span className="text-xs sm:text-sm text-gray-600">
+                       {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
+                       {totalRatings > 0 && ` (${totalRatings})`}
+                     </span>
+                   </div>
+
+                   {/* Your Rating */}
+                   <div className="flex items-center gap-2">
+                     <span className="text-xs sm:text-sm text-gray-700 font-medium">Your rating:</span>
+                     <div className="flex items-center gap-0.5 sm:gap-1">
+                       {[1, 2, 3, 4, 5].map((fire) => (
+                         <button
+                           key={fire}
+                           type="button"
+                           onClick={() => handleRatingClick(fire)}
+                           onMouseEnter={() => setHoverRating(fire)}
+                           onMouseLeave={() => setHoverRating(0)}
+                           className="transition-transform active:scale-110 touch-manipulation p-1"
+                         >
+                           <span className={`text-base sm:text-lg ${fire <= (hoverRating || userRating) ? 'opacity-100' : 'opacity-20 grayscale'}`}>🔥</span>
+                         </button>
+                       ))}
+                     </div>
+                   </div>
+                 </div>
+
+                 {/* View Recipe Button */}
+                 {(post?.recipe_id || post?.recipe_url) && (
+                   <Button
+                     onClick={async () => {
+                       if (post.recipe_id) {
+                         const { getRecipeById } = await import('../services/recipeService');
+                         const recipe = await getRecipeById(post.recipe_id);
+                         if (recipe) {
+                           setSelectedRecipe(recipe);
+                           setIsMinimized(true);
+                         } else {
+                           toast.error('Recipe not found');
+                         }
+                       } else if (post.recipe_url) {
+                         window.open(post.recipe_url, '_blank');
+                       }
+                     }}
+                     variant="outline"
+                     size="sm"
+                     className="border-orange-600 text-orange-600 hover:bg-orange-50 w-full"
+                   >
+                     <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
+                     <span className="text-xs sm:text-sm">View Recipe</span>
+                   </Button>
+                 )}
+               </div>
+             </div>
+           </div>
+
+            {/* RIGHT COLUMN: Comments (Mobile: Bottom, Desktop: Right) */}
+            <div className="w-full sm:w-1/2 flex flex-col bg-white">
+              {/* Comments Header */}
               <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
-                <h3 className="font-bold text-sm sm:text-base truncate">{post?.title || 'Post'}</h3>
-                {post?.caption && (
-                  <p className="text-xs sm:text-sm text-gray-600 mt-0.5 line-clamp-2">{post.caption}</p>
-                )}
+                <h3 className="font-bold text-sm sm:text-base">Comments</h3>
               </div>
-
-            {/* Ratings and View Recipe Button - Side by Side */}
-<div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
-  <div className="flex gap-3 items-start">
-    {/* Ratings Section - Left side */}
-    <div className="flex-1 space-y-1.5 sm:space-y-2">
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center">
-          {[1, 2, 3, 4, 5].map((fire) => (
-            <span key={fire} className={`text-sm sm:text-base ${fire <= averageRating ? 'opacity-100' : 'opacity-20 grayscale'}`}>🔥</span>
-          ))}
-        </div>
-        <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-          {averageRating > 0 ? averageRating.toFixed(1) : 'No ratings'}
-          {totalRatings > 0 && ` (${totalRatings})`}
-        </span>
-      </div>
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs sm:text-sm text-gray-700 font-medium">Your rating:</span>
-        <div className="flex items-center gap-0.5 sm:gap-1">
-          {[1, 2, 3, 4, 5].map((fire) => (
-            <button key={fire} type="button" onClick={() => handleRatingClick(fire)} onMouseEnter={() => setHoverRating(fire)} onMouseLeave={() => setHoverRating(0)} className="transition-transform active:scale-110 touch-manipulation p-1">
-              <span className={`text-base sm:text-lg ${fire <= (hoverRating || userRating) ? 'opacity-100' : 'opacity-20 grayscale'}`}>🔥</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-
-  {/* View Recipe Button - Right side */}
-{(post?.recipe_id || post?.recipe_url) && (
-  <Button
-onClick={async () => {
-  if (post.recipe_id) {
-    const { getRecipeById } = await import('../services/recipeService');
-    const recipe = await getRecipeById(post.recipe_id);
-    if (recipe) {
-      setSelectedRecipe(recipe);
-      setIsMinimized(true); // Minimize instead of closing
-    } else {
-      toast.error('Recipe not found');
-    }
-  } else if (post.recipe_url) {
-    window.open(post.recipe_url, '_blank');
-  }
-}}
-    variant="outline"
-    size="sm"
-    className="border-orange-600 text-orange-600 hover:bg-orange-50 flex-shrink-0 h-auto py-2 px-3 whitespace-nowrap"
-  >
-    <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
-    <span className="text-xs sm:text-sm">View Recipe</span>
-  </Button>
-)}
-  </div>
-</div>
 
               <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-[100px] max-h-[30vh] sm:max-h-none">
                 {loading ? (

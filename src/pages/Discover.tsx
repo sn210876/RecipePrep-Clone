@@ -1267,8 +1267,12 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           <video
             src={mediaUrls[0]}
             controls
+            playsInline
             className="w-full aspect-square object-cover bg-black"
             preload="metadata"
+            onError={(e) => {
+              console.error('[Discover] Video failed to load:', mediaUrls[0]);
+            }}
           />
         ) : (
           <img
@@ -1294,8 +1298,12 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
               key={mediaUrls[currentImageIndex]}
               src={mediaUrls[currentImageIndex]}
               controls
+              playsInline
               className="w-full h-full object-cover"
               preload="metadata"
+              onError={(e) => {
+                console.error('[Discover] Carousel video failed:', mediaUrls[currentImageIndex]);
+              }}
             />
           ) : (
             <img
