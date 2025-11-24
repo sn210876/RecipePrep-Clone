@@ -107,6 +107,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [newUsername, setNewUsername] = useState('');
   const [newBio, setNewBio] = useState('');
   const [newLink, setNewLink] = useState('');
+  const loadUserRecipes = async () => {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
