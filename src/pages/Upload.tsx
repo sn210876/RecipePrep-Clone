@@ -99,7 +99,15 @@ const getVideoDuration = (file: File): Promise<number> => {
     toast.error('Please select at least one image');
     return;
   }
-// Validate size for each image
+// Filter for images only (for multi-upload, skip videos for now)
+  const imageFiles = files.filter(f => f.type.startsWith('image/'));
+  
+  if (imageFiles.length === 0) {
+    toast.error('Please select at least one image');
+    return;
+  }
+
+  // Validate size for each image
   const validFiles: File[] = [];
   const validPreviews: string[] = [];
 
@@ -122,6 +130,7 @@ const getVideoDuration = (file: File): Promise<number> => {
   setFileType('image');
 };
 
+    
   // ✅ Better file type validation
   const isImage = file.type.startsWith('image/');
   const isVideo = file.type.startsWith('video/');
