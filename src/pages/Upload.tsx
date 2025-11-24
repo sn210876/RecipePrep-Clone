@@ -663,8 +663,8 @@ disabled={selectedFiles.length === 0 || (postType === 'post' && !title.trim()) |
       </div>
 
       {/* Music Picker Modal */}
-      {showMusicPicker && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-end md:items-center justify-center">
+     {showMusicPicker && (
+  <div className="fixed inset-0 bg-black/70 z-50 flex items-end md:items-center justify-center">
           <div 
             className="bg-white w-full md:max-w-lg md:rounded-2xl flex flex-col"
             style={{ 
