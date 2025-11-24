@@ -399,7 +399,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>
         <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
             
@@ -573,11 +573,12 @@ onClick={async () => {
         </DialogContent>
       </Dialog>
 
-     {/* Minimized floating button */}
+     {/* Minimized floating button - appears above recipe modal */}
 {isOpen && isMinimized && (
   <button
     onClick={() => setIsMinimized(false)}
-    className="fixed bottom-4 right-4 z-[9999] bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all active:scale-95 touch-manipulation"
+    className="fixed bottom-20 right-4 z-[99999] bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-4 py-3 rounded-full shadow-xl flex items-center gap-2 transition-all active:scale-95 touch-manipulation animate-bounce"
+    style={{ animationDuration: '2s', animationIterationCount: '3' }}
   >
     <span className="text-sm sm:text-base">💬</span>
     <span className="text-sm font-medium">Back to Comments</span>
