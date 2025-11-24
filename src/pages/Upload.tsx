@@ -64,11 +64,6 @@ export function Upload({ onNavigate }: UploadProps) {
       console.error('Error loading recipes:', error);
     }
   };
-const loadUserRecipes = async () => {
-  // ... existing code ...
-};
-
-// ✅ ADD THIS ENTIRE FUNCTION HERE
 const getVideoDuration = (file: File): Promise<number> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
