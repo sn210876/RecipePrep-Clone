@@ -416,7 +416,7 @@ const mainImageUrl = uploadedUrls[0];
       </button>
     </div>
   ))}
-</div>
+
             <button
               onClick={handleClearImage}
               className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2"
