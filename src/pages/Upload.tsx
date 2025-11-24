@@ -457,20 +457,32 @@ onNavigate('discover');
               </div>
             </label>
           </div>
-       ) : (
-          <div className="space-y-2">
-            {previewUrls.map((url, index) => (
-              <div key={index} className="relative">
-                <img src={url} alt={`Preview ${index + 1}`} className="w-full aspect-square object-cover rounded-xl" />
-                <button
-                  onClick={handleClearImage}
-                  className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
-             {selectedFiles.length < 4 && (
+     ) : (
+  <div className="space-y-2">
+    {previewUrls.map((url, index) => (
+      <div key={index} className="relative">
+        {fileType === 'video' ? (
+          <video 
+            src={url} 
+            controls 
+            className="w-full aspect-square object-cover rounded-xl"
+          />
+        ) : (
+          <img 
+            src={url} 
+            alt={`Preview ${index + 1}`} 
+            className="w-full aspect-square object-cover rounded-xl" 
+          />
+        )}
+        <button
+          onClick={handleClearImage}
+          className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+    ))}
+    {selectedFiles.length < 4 && fileType === 'image' && (
               <label className="cursor-pointer">
                 <input 
                   type="file" 
