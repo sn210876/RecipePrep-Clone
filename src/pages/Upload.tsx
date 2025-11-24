@@ -93,7 +93,7 @@ const getVideoDuration = (file: File): Promise<number> => {
   if (files.length === 0) return;
 
 
-  }
+  
 // Filter for images only (for multi-upload, skip videos for now)
   const imageFiles = files.filter(f => f.type.startsWith('image/'));
   
