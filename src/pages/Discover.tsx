@@ -1183,7 +1183,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                 {/* Image / Video Carousel */}
 {/* Image / Video Carousel */}
 <div className="relative">
-  {post.image_url || post.video_url ? (
+ {post.image_url || post.video_url ? (
   (() => {
     // Get proper display URL first
     const displayImageUrl = getDisplayImageUrl(post.image_url);
