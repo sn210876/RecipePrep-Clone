@@ -713,17 +713,8 @@ export function Profile({ username: targetUsername }: ProfileProps) {
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-0.5 sm:gap-1">
-            {posts.map(post => {
-            let displayImageUrl = post.image_url;
-
-// Only proxy Instagram images, leave Supabase storage URLs alone
-if (displayImageUrl && 
-    (displayImageUrl.includes('instagram.com') || 
-     displayImageUrl.includes('cdninstagram.com') || 
-     displayImageUrl.includes('fbcdn.net')) &&
-    !displayImageUrl.includes('image-proxy')) {
-  displayImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(displayImageUrl)}`;
-}
+           {posts.map(post => {
+  const displayImageUrl = getDisplayImageUrl(post.image_url);
               return (
                 <div
                   key={post.id}
