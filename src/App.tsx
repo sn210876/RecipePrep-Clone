@@ -16,9 +16,7 @@ import { VerifyEmail } from './pages/VerifyEmail';
 import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
 import AuthForm from './components/AuthForm';
-import { Home } from './pages/Home';
-// Add this import
-import ImageMigrationTool from './pages/MigrateImages';
+
 
 // Add this route (only accessible to admins)
 {isAdmin && <Route path="/admin/migrate-images" element={<ImageMigrationTool />} />}
