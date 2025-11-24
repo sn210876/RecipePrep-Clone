@@ -221,7 +221,7 @@ for (const file of selectedFiles) {
   if (uploadError) throw uploadError;
   
 const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
-uploadedUrls.push(urlData.publicUrl);
+uploadedUrls.push(mainImageUrl);
 }
 
 // Use first image URL for now (you can enhance this later to support multiple images in DB)
@@ -240,7 +240,7 @@ const mainImageUrl = uploadedUrls[0];
       if (postType === 'daily') {
         const dailyData: any = {
           user_id: userData.user.id,
-          media_url: urlData.publicUrl,
+          media_url: mainImageUrl,
           media_type: fileType === 'image' ? 'photo' : 'video',
           caption: caption.trim() || null,
           duration: fileType === 'video' ? videoDuration : null,
@@ -254,7 +254,7 @@ const mainImageUrl = uploadedUrls[0];
           user_id: userData.user.id,
           title: 'Daily',
           caption: caption.trim() || null,
-          [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
+          [fileType === 'image' ? 'image_url' : 'video_url']: mainImageUrl,
           ...musicData,
         });
 
@@ -269,7 +269,7 @@ const mainImageUrl = uploadedUrls[0];
           title: title.trim(),
           caption: caption.trim() || null,
           recipe_url: recipeLink,
-          [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
+          [fileType === 'image' ? 'image_url' : 'video_url']: mainImageUrl,
           ...musicData,
         };
 
