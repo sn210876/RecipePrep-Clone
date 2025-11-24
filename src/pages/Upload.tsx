@@ -383,7 +383,13 @@ const getVideoDuration = (file: File): Promise<number> => {
         {!previewUrl ? (
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 sm:p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
             <label className="cursor-pointer">
-              <input type="file" accept="image/*,video/*" onChange={handleFileSelect} className="hidden" />
+            <input 
+  type="file" 
+  accept="image/*" 
+  multiple 
+  onChange={handleFileSelect} 
+  className="hidden" 
+/>
               <div className="space-y-4">
                 <div className="flex gap-3 sm:gap-4 justify-center">
                   <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
