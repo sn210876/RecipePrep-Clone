@@ -1230,7 +1230,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       // If no media found, show placeholder
       if (mediaUrls.length === 0) {
           console.log('[Discover] ❌ NO MEDIA FOUND for post:', post.id); // ADD THIS
-
         return (
           <div className="w-full aspect-square bg-gray-200 flex items-center justify-center">
             <p className="text-gray-500">No media available</p>
