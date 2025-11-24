@@ -180,8 +180,7 @@ const getVideoDuration = (file: File): Promise<number> => {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      toast.error('Please select an image or video');
+if (selectedFiles.length === 0) {      toast.error('Please select an image or video');
       return;
     }
     if (postType === 'post' && !title.trim()) {
