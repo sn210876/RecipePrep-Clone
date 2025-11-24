@@ -1108,8 +1108,111 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                     </div>
 
                     {/* Image / Video */}
-                <div className="relative">
+                {/* Image / Video Carousel */}
+<div className="relative">
+  {post.image_url ? (
+    (() => {
+      // Check if multiple images (stored as JSON array or comma-separated)
+      let imageUrls: string[] = [];
+      try {
+        imageUrls = JSON.parse(post.image_url);
+      } catch {
+        imageUrls = post.image_url.includes(',') 
+          ? post.image_url.split(',').map(url => url.trim())
+          : [post.image_url];
+      }
 
+      const [currentImageIndex, setCurrentImageIndex] = useState(0);
+      
+      if (imageUrls.length === 1) {
+        return (
+          <img
+            src={imageUrls[0]}
+            alt={post.title || 'Post'}
+            className="w-full aspect-square object-cover"
+            loading="lazy"
+          />
+        );
+      }
+
+      return (
+        <div className="relative w-full aspect-square bg-black">
+          <img
+            src={imageUrls[currentImageIndex]}
+            alt={`${post.title || 'Post'} ${currentImageIndex + 1}`}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+          
+          {/* Navigation arrows */}
+          {currentImageIndex > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentImageIndex(prev => prev - 1);
+              }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+          
+          {currentImageIndex < imageUrls.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentImageIndex(prev => prev + 1);
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+          
+          {/* Dots indicator */}
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+            {imageUrls.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex(idx);
+                }}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  idx === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+          
+          {/* Swipe support for mobile */}
+          <div
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              (e.currentTarget as any).touchStartX = touch.clientX;
+            }}
+            onTouchEnd={(e) => {
+              const touch = e.changedTouches[0];
+              const touchStartX = (e.currentTarget as any).touchStartX;
+              const diff = touchStartX - touch.clientX;
+              
+              if (Math.abs(diff) > 50) {
+                if (diff > 0 && currentImageIndex < imageUrls.length - 1) {
+                  setCurrentImageIndex(prev => prev + 1);
+                } else if (diff < 0 && currentImageIndex > 0) {
+                  setCurrentImageIndex(prev => prev - 1);
+                }
+              }
+            }}
+            className="absolute inset-0"
+          />
+        </div>
+      );
+    })()
                       ) : post.video_url ? (
                         <video
                           src={post.video_url}
