@@ -405,7 +405,7 @@ useEffect(() => {
             Recipes scraped from <span className="font-semibold text-blue-600">social media</span> and the <span className="font-semibold text-blue-600">web</span>
           </p>
           <p className="text-xs md:text-sm text-gray-500 max-w-2xl mx-auto">
-    Social Community Recipes • Meal Calendar • Shopping List
+   Meal Calendar • Shopping List • Social Community 
           </p>
         </div>
 
