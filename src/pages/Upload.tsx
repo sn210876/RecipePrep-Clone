@@ -176,6 +176,7 @@ const getVideoDuration = (file: File): Promise<number> => {
   setFileType(null);
 };
 
+
   const togglePreview = () => {
     if (audioPreviewRef.current) {
       if (isPlayingPreview) {
