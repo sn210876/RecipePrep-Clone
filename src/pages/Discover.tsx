@@ -1220,10 +1220,25 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
         mediaTypes = new Array(mediaUrls.length).fill('image');
       }
       
-      // Add video if exists
+      // Handle video_url
       if (post.video_url) {
-        mediaUrls.push(post.video_url);
-        mediaTypes.push('video');
+        try {
+          // Try parsing as JSON array first
+          const parsed = JSON.parse(post.video_url);
+          if (Array.isArray(parsed)) {
+            parsed.forEach(url => {
+              mediaUrls.push(url);
+              mediaTypes.push('video');
+            });
+          } else {
+            mediaUrls.push(parsed);
+            mediaTypes.push('video');
+          }
+        } catch {
+          // Not JSON, single URL
+          mediaUrls.push(post.video_url);
+          mediaTypes.push('video');
+        }
       }
 
       // If no media found, show placeholder

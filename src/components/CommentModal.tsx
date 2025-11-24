@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import { Send, X, Play, Pause, ExternalLink } from 'lucide-react';
+import { Send, X, Play, Pause, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { RecipeDetailModal } from './RecipeDetailModal';
 import { getProxiedImageUrl } from '../lib/imageUtils';
 import { Recipe } from '../types/recipe';
@@ -79,6 +79,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   const [isMinimized, setIsMinimized] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   useEffect(() => {
     if (isOpen && postId) {
@@ -403,34 +404,115 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
         <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
             
-            {/* Image Section - Top */}
+            {/* Media Section - Top (Carousel) */}
            <div className="w-full h-[25vh] sm:h-[30vh] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
 
-              {post?.image_url ? (
-                <img
-                  src={getProxiedImageUrl(post.image_url)}
-                  alt={post.title || 'Post'}
-                  className="w-full h-full object-contain"
-                  onLoad={() => {
-                    console.log('[CommentModal] ✅ Image loaded successfully');
-                    console.log('[CommentModal] 📸 Original URL:', post.image_url);
-                    console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
-                  }}
-                  onError={(e) => {
-                    console.log('[CommentModal] ❌ Image failed to load');
-                    console.log('[CommentModal] 📸 Original URL:', post.image_url);
-                    console.log('[CommentModal] 🔗 Proxied URL:', getProxiedImageUrl(post.image_url));
-                  }}
-                />
-              ) : (
-                <div className="text-white text-center">
-                  <p>No image available</p>
-                  <p className="text-xs mt-2">Post ID: {postId}</p>
-                  {post?.recipe_id && (
-                    <p className="text-xs mt-1">Recipe ID: {post.recipe_id}</p>
-                  )}
-                </div>
-              )}
+              {(() => {
+                // Parse media URLs
+                let mediaUrls: string[] = [];
+                let mediaTypes: ('image' | 'video')[] = [];
+
+                // Handle image_url
+                if (post?.image_url) {
+                  try {
+                    const parsed = JSON.parse(post.image_url);
+                    if (Array.isArray(parsed)) {
+                      parsed.forEach(url => {
+                        mediaUrls.push(url);
+                        mediaTypes.push('image');
+                      });
+                    } else {
+                      mediaUrls.push(parsed);
+                      mediaTypes.push('image');
+                    }
+                  } catch {
+                    mediaUrls.push(post.image_url);
+                    mediaTypes.push('image');
+                  }
+                }
+
+                // Handle video_url
+                if (post?.video_url) {
+                  try {
+                    const parsed = JSON.parse(post.video_url);
+                    if (Array.isArray(parsed)) {
+                      parsed.forEach(url => {
+                        mediaUrls.push(url);
+                        mediaTypes.push('video');
+                      });
+                    } else {
+                      mediaUrls.push(parsed);
+                      mediaTypes.push('video');
+                    }
+                  } catch {
+                    mediaUrls.push(post.video_url);
+                    mediaTypes.push('video');
+                  }
+                }
+
+                if (mediaUrls.length === 0) {
+                  return (
+                    <div className="text-white text-center">
+                      <p>No media available</p>
+                      <p className="text-xs mt-2">Post ID: {postId}</p>
+                    </div>
+                  );
+                }
+
+                const currentMedia = mediaUrls[currentMediaIndex];
+                const currentType = mediaTypes[currentMediaIndex];
+
+                return (
+                  <>
+                    {currentType === 'video' ? (
+                      <video
+                        key={currentMedia}
+                        src={currentMedia}
+                        controls
+                        className="w-full h-full object-contain"
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img
+                        key={currentMedia}
+                        src={getProxiedImageUrl(currentMedia)}
+                        alt={post.title || 'Post'}
+                        className="w-full h-full object-contain"
+                      />
+                    )}
+
+                    {/* Carousel navigation */}
+                    {mediaUrls.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setCurrentMediaIndex((prev) => (prev === 0 ? mediaUrls.length - 1 : prev - 1))}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => setCurrentMediaIndex((prev) => (prev === mediaUrls.length - 1 ? 0 : prev + 1))}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                        {/* Dots indicator */}
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                          {mediaUrls.map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setCurrentMediaIndex(idx)}
+                              className={`w-1.5 h-1.5 rounded-full transition-all ${
+                                idx === currentMediaIndex ? 'bg-white w-4' : 'bg-white/50'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
 
               <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
                 <X className="w-5 h-5" />
