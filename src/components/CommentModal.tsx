@@ -175,7 +175,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
         setTimeout(() => {
          
      
-          }
+          
         }, 500);
       }
 
