@@ -1303,19 +1303,28 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       // Multiple media items - carousel
       return (
         <div className="relative w-full aspect-square bg-black">
-          {mediaTypes[currentImageIndex] === 'video' ? (
-            <video
-              key={mediaUrls[currentImageIndex]}
-              src={mediaUrls[currentImageIndex]}
-              controls
-              playsInline
-              className="w-full h-full object-cover"
-              preload="metadata"
-              onError={(e) => {
-                console.error('[Discover] Carousel video failed:', mediaUrls[currentImageIndex]);
-              }}
-            />
-          ) : (
+         {mediaTypes[currentImageIndex] === 'video' ? (
+  <video
+    key={mediaUrls[currentImageIndex]}
+    src={mediaUrls[currentImageIndex]}
+    controls
+    playsInline
+    webkit-playsinline="true"
+    className="w-full h-full object-cover"
+    preload="metadata"
+    controlsList="nodownload"
+    onError={(e) => {
+      console.error('[Discover] Carousel video failed:', mediaUrls[currentImageIndex]);
+      toast.error('Video failed to load');
+    }}
+    onLoadStart={() => {
+      console.log('[Discover] Video loading...');
+    }}
+    onCanPlay={() => {
+      console.log('[Discover] Video can play');
+    }}
+  />
+) : (
             <img
               key={mediaUrls[currentImageIndex]}
               src={mediaUrls[currentImageIndex]}
