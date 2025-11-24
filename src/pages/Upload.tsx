@@ -532,7 +532,7 @@ const mainImageUrl = uploadedUrls[0];
           )}
         </div>
 
-        {selectedFile && (
+{selectedFiles.length > 0 && (
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
             <div className="flex items-start gap-3">
               <UploadIcon className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
