@@ -28,31 +28,37 @@ const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
 function AppContent() {
   const { user, loading, isEmailVerified } = useAuth();
 
-  const [currentPage, setCurrentPage] = useState<string>(() => {
-    const path = window.location.pathname;
-    if (path.match(/^\/post\/[a-f0-9]{36}$/)) return 'discover';
-    if (path === '/' || path === '/discover-recipes') return 'discover-recipes';
-    if (path === '/discover') return 'discover';
-    if (path === '/recipes' || path === '/my-recipes') return 'my-recipes';
-    if (path === '/add-recipe') return 'add-recipe';
-    if (path === '/meal-planner') return 'meal-planner';
-    if (path === '/grocery-list') return 'grocery-list';
-    if (path === '/cart') return 'cart';
-    if (path === '/upload') return 'upload';
-    if (path === '/profile') return 'profile';
-    if (path === '/messages') return 'messages';
-    if (path === '/settings') return 'settings';
-    if (path === '/onboarding') return 'onboarding';
-    if (path.startsWith('/profile/') && path !== '/profile') {
-      const username = path.split('/profile/')[1];
-      if (username) return `profile:${username}`;
+ const [currentPage, setCurrentPage] = useState<string>(() => {
+  const path = window.location.pathname;
+  if (path.match(/^\/post\/[a-f0-9-]{36}$/)) return 'discover';
+  if (path === '/' || path === '/discover-recipes') return 'discover-recipes';
+  if (path === '/discover') return 'discover';
+  if (path === '/recipes' || path === '/my-recipes') return 'my-recipes';
+  if (path === '/add-recipe') return 'add-recipe';
+  if (path === '/meal-planner') return 'meal-planner';
+  if (path === '/grocery-list') return 'grocery-list';
+  if (path === '/cart') return 'cart';
+  if (path === '/upload') return 'upload';
+  if (path === '/profile') return 'profile';
+  if (path === '/messages') return 'messages';
+  if (path === '/settings') return 'settings';
+  if (path === '/onboarding') return 'onboarding';
+  if (path.startsWith('/profile/') && path !== '/profile') {
+    const username = path.split('/profile/')[1];
+    if (username) return `profile:${username}`;
+  }
+  
+  // Only treat as username if not a known route
+  if (path !== '/' && path.length > 1 && !path.includes('.')) {
+    const username = path.substring(1);
+    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings'];
+    if (username && !username.includes('/') && !knownRoutes.includes(username)) {
+      return `profile:${username}`;
     }
-    if (path !== '/' && path.length > 1 && !path.includes('.')) {
-      const username = path.substring(1);
-      if (username && !username.includes('/')) return `profile:${username}`;
-    }
-    return 'discover-recipes';
-  });
+  }
+  
+  return 'discover-recipes';
+});
 
   // Handle /post/ deep links
   useEffect(() => {
