@@ -708,74 +708,105 @@ export function Profile({ username: targetUsername }: ProfileProps) {
             <p className="text-sm sm:text-base text-gray-500">Share your first recipe!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-0.5 sm:gap-1">
-          {posts.map(post => {
-  const displayImageUrl = getDisplayImageUrl(post.image_url);
-              return (
-                <div
-                  key={post.id}
-                  className="aspect-square bg-gray-100 overflow-hidden relative group"
-                >
-                  <div onClick={() => setSelectedPostId(post.id)} className="cursor-pointer hover:opacity-90 w-full h-full">
-                    {displayImageUrl ? (
-                      <img
-                        src={displayImageUrl}
-                        alt={post.title || 'Post'}
-                        className="w-full h-full object-cover"
-                    onError={(e) => {
-  console.error('[Profile] Image failed to load:', displayImageUrl);
-  (e.target as HTMLImageElement).style.display = 'none';
-}}
-                      />
-                    ) : post.video_url ? (
-                      <video src={post.video_url} className="w-full h-full object-cover" />
-                    ) : null}
-                    {post.title && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                        <p className="text-white text-xs font-semibold truncate">{post.title}</p>
-                      </div>
-                    )}
-                  </div>
+         // Fixed Posts Grid rendering in Profile.tsx
+<div className="grid grid-cols-3 gap-0.5 sm:gap-1">
+  {posts.map(post => {
+    // Get display URL with proper handling
+    const displayImageUrl = getDisplayImageUrl(post.image_url);
+    
+    // For grid view, show first image if multiple
+    let firstImageUrl = displayImageUrl;
+    if (displayImageUrl) {
+      try {
+        const parsed = JSON.parse(displayImageUrl);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          firstImageUrl = getDisplayImageUrl(parsed[0]);
+        }
+      } catch {
+        // If comma-separated, take first
+        if (displayImageUrl.includes(',')) {
+          const urls = displayImageUrl.split(',').map(u => u.trim());
+          firstImageUrl = getDisplayImageUrl(urls[0]);
+        }
+      }
+    }
+    
+    return (
+      <div
+        key={post.id}
+        className="aspect-square bg-gray-100 overflow-hidden relative group"
+      >
+        <div onClick={() => setSelectedPostId(post.id)} className="cursor-pointer hover:opacity-90 w-full h-full">
+          {firstImageUrl ? (
+            <img
+              src={firstImageUrl}
+              alt={post.title || 'Post'}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                console.error('[Profile] Image failed to load:', firstImageUrl);
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                // Show placeholder
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.innerHTML = '<div class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">No image</div>';
+                }
+              }}
+            />
+          ) : post.video_url ? (
+            <video src={post.video_url} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
+              No media
+            </div>
+          )}
+          {post.title && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+              <p className="text-white text-xs font-semibold truncate">{post.title}</p>
+            </div>
+          )}
+        </div>
 
-                  {(isOwnProfile || isUserAdmin) && (
-                    <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 bg-black/50 hover:bg-black/70 rounded-full backdrop-blur-sm">
-                            <MoreVertical className="w-4 h-4 text-white" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditingPost({
-                                id: post.id,
-                                title: post.title || '',
-                                caption: post.caption || '',
-                                recipeUrl: post.recipe_url || '',
-                                photoUrl: post.image_url || post.video_url || ''
-                              });
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <Edit3 className="w-4 h-4 mr-2" />
-                            Edit post
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setDeletePostId(post.id)}
-                            className="cursor-pointer text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete post
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        {(isOwnProfile || isUserAdmin) && (
+          <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-1.5 bg-black/50 hover:bg-black/70 rounded-full backdrop-blur-sm">
+                  <MoreVertical className="w-4 h-4 text-white" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingPost({
+                      id: post.id,
+                      title: post.title || '',
+                      caption: post.caption || '',
+                      recipeUrl: post.recipe_url || '',
+                      photoUrl: post.image_url || post.video_url || ''
+                    });
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  Edit post
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeletePostId(post.id)}
+                  className="cursor-pointer text-red-600"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+        )}
+      </div>
+    );
+  })}
+</div>
         )}
       </div>
 
