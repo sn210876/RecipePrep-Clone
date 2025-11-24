@@ -1326,7 +1326,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                             }}
                             className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-full shadow-lg transition-all flex items-center gap-2"
                           >
-                            <span className="text-xl play-icon">Play</span>
+                           <span className="text-xl play-icon">▶️</span>
                             <div className="text-left text-xs max-w-32">
                               <div className="font-semibold truncate">{post.spotify_track_name}</div>
                               <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
