@@ -1185,7 +1185,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                     {/* Image / Video */}
                 {/* Image / Video Carousel */}
 {/* Image / Video Carousel */}
-// Image / Video Carousel - FIXED VERSION
 <div className="relative">
   {post.image_url || post.video_url ? (
     (() => {
