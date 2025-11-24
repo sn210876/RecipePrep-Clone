@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { supabase } from './lib/supabase';
-import { reuploadExternalImage } from './lib/imageUtils';
+import { supabase } from "../lib/supabase";
+import { reuploadExternalImage } from "../lib/imageUtils";
 
 export default function ImageMigrationTool() {
   const [isRunning, setIsRunning] = useState(false);
