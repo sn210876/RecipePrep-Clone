@@ -164,22 +164,48 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     if (!currentUserId) return;
 
     const loadNotifications = async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          *,
-          actor:actor_id(id, username, avatar_url)
-        `)
-        .eq('user_id', currentUserId)
-        .neq('type', 'message')
-        .order('created_at', { ascending: false })
-        .limit(20);
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', currentUserId)
+      .neq('type', 'message')
+      .order('created_at', { ascending: false })
+      .limit(20);
 
-      if (error) {
-        console.error('[Notifications] Error loading notifications:', error);
-        return;
+    if (error) {
+      console.error('[Notifications] Error loading notifications:', error);
+      return;
+    }
+
+    if (data) {
+      // Fetch actor profiles separately
+      const actorIds = [...new Set(data.map(n => n.actor_id).filter(Boolean))];
+      
+      if (actorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', actorIds);
+
+        const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+        
+        const notificationsWithActors = data.map(n => ({
+          ...n,
+          actor: n.actor_id ? profileMap.get(n.actor_id) : null
+        }));
+
+        setNotifications(notificationsWithActors);
+      } else {
+        setNotifications(data);
       }
-
+      
+      setUnreadNotifications(data.filter(n => !n.read).length);
+    }
+  } catch (err) {
+    console.error('[Notifications] Exception:', err);
+  }
+};
       if (data) {
         setNotifications(data);
         setUnreadNotifications(data.filter(n => !n.read).length);
