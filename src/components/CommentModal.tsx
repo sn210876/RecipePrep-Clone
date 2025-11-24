@@ -174,8 +174,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       if (postData.spotify_preview_url) {
         setTimeout(() => {
          
-            audio.play().catch(err => console.log('Auto-play prevented:', err));
-            setIsPlaying(true);
+     
           }
         }, 500);
       }
