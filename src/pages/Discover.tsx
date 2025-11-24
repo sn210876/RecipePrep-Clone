@@ -1194,73 +1194,31 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       console.log('[Discover] Starting to parse images for post:', post.id);
 
       // Handle image_url
-     // Parse image URLs properly
-let mediaUrls: string[] = [];
-let mediaTypes: string[] = [];
-
-// Helper to detect if URL is actually a video
-const isVideoUrl = (url: string): boolean => {
-  const videoExtensions = ['.mp4', '.mov', '.webm', '.avi', '.mkv'];
-  const lowerUrl = url.toLowerCase();
-  return videoExtensions.some(ext => lowerUrl.includes(ext));
-};
-
-// Handle image_url
+     // Handle image_url
 if (post.image_url) {
   try {
+    // Try parsing as JSON array first
     const parsed = JSON.parse(post.image_url);
     if (Array.isArray(parsed)) {
-      parsed.forEach(url => {
-        const displayUrl = getDisplayImageUrl(url);
-        if (displayUrl) {
-          mediaUrls.push(displayUrl);
-          mediaTypes.push(isVideoUrl(url) ? 'video' : 'image');
-        }
-      });
+      mediaUrls = parsed.map(url => getDisplayImageUrl(url)).filter(Boolean) as string[];
     } else {
       const displayUrl = getDisplayImageUrl(parsed);
-      if (displayUrl) {
-        mediaUrls.push(displayUrl);
-        mediaTypes.push(isVideoUrl(parsed) ? 'video' : 'image');
-      }
+      if (displayUrl) mediaUrls = [displayUrl];
     }
   } catch {
+    // Not JSON, try comma-separated
     if (post.image_url.includes(',')) {
-      post.image_url.split(',').forEach(url => {
-        const trimmedUrl = url.trim();
-        const displayUrl = getDisplayImageUrl(trimmedUrl);
-        if (displayUrl) {
-          mediaUrls.push(displayUrl);
-          mediaTypes.push(isVideoUrl(trimmedUrl) ? 'video' : 'image');
-        }
-      });
+      mediaUrls = post.image_url
+        .split(',')
+        .map(url => getDisplayImageUrl(url.trim()))
+        .filter(Boolean) as string[];
     } else {
+      // Single URL
       const displayUrl = getDisplayImageUrl(post.image_url);
-      if (displayUrl) {
-        mediaUrls.push(displayUrl);
-        mediaTypes.push(isVideoUrl(post.image_url) ? 'video' : 'image');
-      }
+      if (displayUrl) mediaUrls = [displayUrl];
     }
   }
-}
-
-// Handle video_url (separate column for actual videos)
-if (post.video_url) {
-  try {
-    const parsed = JSON.parse(post.video_url);
-    if (Array.isArray(parsed)) {
-      parsed.forEach(url => {
-        mediaUrls.push(url);
-        mediaTypes.push('video');
-      });
-    } else {
-      mediaUrls.push(parsed);
-      mediaTypes.push('video');
-    }
-  } catch {
-    mediaUrls.push(post.video_url);
-    mediaTypes.push('video');
-  }
+  mediaTypes = new Array(mediaUrls.length).fill('image');
 }
       
       // Handle video_url
