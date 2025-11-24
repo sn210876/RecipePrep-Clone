@@ -1108,14 +1108,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                     </div>
 
                     {/* Image / Video */}
-                    <div className="relative">
-                      {post.image_url ? (
-                        <img
-                          src={post.image_url}
-                          alt={post.title || 'Post'}
-                          className="w-full aspect-square object-cover"
-                          loading="lazy"
-                        />
+                <div className="relative">
+
                       ) : post.video_url ? (
                         <video
                           src={post.video_url}
