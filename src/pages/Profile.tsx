@@ -1050,14 +1050,12 @@ if (loading) {
               />
               {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
               {editingPost?.photoUrl && (
-                <img
-                  src={editingPost.photoUrl}
-                  alt="Preview"
-                  className="mt-2 w-32 h-32 object-cover rounded-lg"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+               <img
+  src={editingPost.photoUrl}
+  alt="Preview"
+  className="mt-2 w-32 h-32 object-cover rounded-lg"
+  loading="lazy"
+/>
               )}
             </div>
           </div>
