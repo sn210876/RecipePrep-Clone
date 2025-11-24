@@ -586,7 +586,7 @@ if (loading) {
           {/* Banner */}
           <div className="relative h-28 sm:h-32">
             {profile.banner_url ? (
-              <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover" />
+              <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover" loading="lazy" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100" />
             )}
