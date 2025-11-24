@@ -69,20 +69,42 @@ function AppContent() {
   // Sync back/forward buttons
   useEffect(() => {
     const handlePop = () => {
-      const path = window.location.pathname;
-      if (path === '/' || path === '/discover-recipes') setCurrentPage('discover-recipes');
-      else if (path === '/discover') setCurrentPage('discover');
-      else if (path === '/recipes' || path === '/my-recipes') setCurrentPage('my-recipes');
-      else if (path === '/profile') setCurrentPage('profile');
-      else if (path.startsWith('/profile/') && path !== '/profile') {
-        const username = path.split('/profile/')[1];
-        if (username) setCurrentPage(`profile:${username}`);
-      }
-      else if (path !== '/' && path.length > 1 && !path.includes('.')) {
-        const username = path.substring(1);
-        if (username && !username.includes('/')) setCurrentPage(`profile:${username}`);
-      }
-    };
+  const path = window.location.pathname;
+  
+  // Explicit route checks first
+  if (path === '/' || path === '/discover-recipes') {
+    setCurrentPage('discover-recipes');
+  } else if (path === '/discover') {
+    setCurrentPage('discover');
+  } else if (path === '/recipes' || path === '/my-recipes') {
+    setCurrentPage('my-recipes');
+  } else if (path === '/upload') {
+    setCurrentPage('upload');
+  } else if (path === '/messages') {
+    setCurrentPage('messages');
+  } else if (path === '/settings') {
+    setCurrentPage('settings');
+  } else if (path === '/profile') {
+    setCurrentPage('profile');
+  } else if (path.startsWith('/profile/') && path !== '/profile') {
+    const username = path.split('/profile/')[1];
+    if (username) setCurrentPage(`profile:${username}`);
+  } else if (path.match(/^\/post\/[a-f0-9-]{36}$/)) {
+    // Handle post deep links
+    setCurrentPage('discover');
+  } else if (path !== '/' && path.length > 1 && !path.includes('.')) {
+    // Only treat as username if it doesn't match any known routes
+    const username = path.substring(1);
+    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart'];
+    if (username && !username.includes('/') && !knownRoutes.includes(username)) {
+      setCurrentPage(`profile:${username}`);
+    } else {
+      setCurrentPage('discover-recipes'); // Default fallback
+    }
+  } else {
+    setCurrentPage('discover-recipes');
+  }
+};
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
   }, []);
