@@ -348,17 +348,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     }
   };
 
-  const togglePlay = () => {
-    const audio = document.getElementById(`modal-audio-${postId}`) as HTMLAudioElement;
-    if (audio) {
-      if (isPlaying) {
-        audio.pause();
-      } else {
-        audio.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
+  
 
   if (!post && loading) {
     return (
