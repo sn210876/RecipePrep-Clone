@@ -220,8 +220,8 @@ for (const file of selectedFiles) {
     .upload(fileName, file, { cacheControl: '3600', upsert: false });
   if (uploadError) throw uploadError;
   
-  uploadedUrls.push(urlData.publicUrl);
-}
+const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+uploadedUrls.push(urlData.publicUrl);}
 
 // Use first image URL for now (you can enhance this later to support multiple images in DB)
 const mainImageUrl = uploadedUrls[0];
