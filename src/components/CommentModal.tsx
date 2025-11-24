@@ -167,7 +167,10 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       }
 
       if (commentsResult.data) {
-        setComments(commentsResult.data);
+        setComments(commentsResult.data.map(c => ({
+          ...c,
+          profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles
+        })));
       }
 
       setUserRating(userRatingResult.data?.rating || 0);

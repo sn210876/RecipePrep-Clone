@@ -662,7 +662,11 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                 </Button>
 
                 <Button
-                  onClick={handleSendMessage}
+                  onClick={() => {
+                    if (profile?.username) {
+                      window.location.href = `/messages?user=${profile.username}`;
+                    }
+                  }}
                   className="flex-1 h-10 text-sm bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50"
                 >
                   Message

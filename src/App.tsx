@@ -17,9 +17,6 @@ import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
 import AuthForm from './components/AuthForm';
 
-
-// Add this route (only accessible to admins)
-{isAdmin && <Route path="/admin/migrate-images" element={<ImageMigrationTool />} />}
 // Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
 const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] bg-gradient-to-br from-orange-50 to-amber-50">
@@ -160,7 +157,7 @@ function AppContent() {
       case 'profile': return <Profile />;
       case 'messages': return <Messages onBack={() => handleNavigate('discover')} />;
       case 'settings': return <Settings onNavigate={handleNavigate} />;
-      default: return <Home onNavigate={handleNavigate} />;
+      default: return <DiscoverRecipes onNavigate={handleNavigate} />;
     }
   };
 
