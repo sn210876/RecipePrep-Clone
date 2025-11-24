@@ -416,7 +416,10 @@ const mainImageUrl = uploadedUrls[0];
                 </button>
               </div>
             ))}
-             {selectedFiles.length < 4 && (
+            
+          </div>
+        )}
+ {selectedFiles.length < 4 && (
               <label className="cursor-pointer">
                 <input 
                   type="file" 
@@ -460,9 +463,6 @@ const mainImageUrl = uploadedUrls[0];
             )}
           </div>
         )}
-          </div>
-        )}
-
         {/* Music Section */}
         <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
