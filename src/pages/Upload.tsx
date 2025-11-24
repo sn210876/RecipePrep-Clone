@@ -25,8 +25,8 @@ interface UserRecipe {
 }
 
 export function Upload({ onNavigate }: UploadProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [fileType, setFileType] = useState<'image' | 'video' | null>(null);
   const [postType, setPostType] = useState<'post' | 'daily'>('post');
   const [title, setTitle] = useState('');
