@@ -726,10 +726,10 @@ export function Profile({ username: targetUsername }: ProfileProps) {
                         src={displayImageUrl}
                         alt={post.title || 'Post'}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error('[Profile] Image failed to load:', displayImageUrl);
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
-                        }}
+                      onError={(e) => {
+  console.error('[Profile] Image failed to load:', displayImageUrl);
+  (e.target as HTMLImageElement).style.display = 'none';
+}}
                       />
                     ) : post.video_url ? (
                       <video src={post.video_url} className="w-full h-full object-cover" />
