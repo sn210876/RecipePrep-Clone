@@ -320,8 +320,8 @@ setCaption('');
 setSelectedRecipeId('');
 setSelectedTrack(null);
 
-// Clear URL and navigate properly
-window.history.pushState({}, '', '/');
+// Properly navigate to discover with clean URL
+window.history.replaceState({}, '', '/discover');
 onNavigate('discover');
     } catch (error: any) {
       console.error('Upload error:', error);
