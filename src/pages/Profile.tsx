@@ -196,142 +196,95 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
-    // ✅ REPLACE the entire useEffect with this optimized parallel loading version
-useEffect(() => {
-  let isMounted = true;
+     useEffect(() => {
+    let isMounted = true;
 
-  const loadProfile = async () => {
-    if (!isMounted) return;
+    const loadProfile = async () => {
+      if (!isMounted) return;
 
-    try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error('Please log in');
-        window.history.pushState({}, '', '/');
-        return;
-      }
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error('Please log in');
+          window.history.pushState({}, '', '/');
+          return;
+        }
 
-      setCurrentUserId(user.id);
+        setCurrentUserId(user.id);
 
-      let profileToLoad: ProfileData | null = null;
-      let userIdToLoad: string | null = null;
+        let profileToLoad: ProfileData | null = null;
+        let userIdToLoad: string | null = null;
 
-      // Determine which profile to load
-      if (targetUsername) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url, banner_url, bio, link')
-          .ilike('username', targetUsername)
-          .single();
+        if (targetUsername) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, banner_url, bio, link')
+            .ilike('username', targetUsername)
+            .single();
+
+          if (!isMounted) return;
+
+          if (error || !data) {
+            if (isMounted) toast.error('User not found');
+            if (isMounted) window.history.pushState({}, '', '/discover');
+            if (isMounted) setLoading(false);
+            return;
+          }
+          profileToLoad = data;
+          userIdToLoad = data.id;
+        } else {
+          const { data } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, banner_url, bio, link')
+            .eq('id', user.id)
+            .single();
+
+          if (!data) {
+            const defaultUsername = user.email?.split('@')[0] || 'user';
+            await supabase.from('profiles').insert({
+              id: user.id,
+              username: defaultUsername,
+            });
+            profileToLoad = { id: user.id, username: defaultUsername, avatar_url: null };
+          } else {
+            profileToLoad = data;
+          }
+          userIdToLoad = user.id;
+        }
 
         if (!isMounted) return;
 
-        if (error || !data) {
-          if (isMounted) toast.error('User not found');
-          if (isMounted) window.history.pushState({}, '', '/discover');
-          if (isMounted) setLoading(false);
-          return;
-        }
-        profileToLoad = data;
-        userIdToLoad = data.id;
-      } else {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url, banner_url, bio, link')
-          .eq('id', user.id)
-          .single();
+        setTargetUserId(userIdToLoad);
+        setIsOwnProfile(user.id === userIdToLoad);
 
-        if (!data) {
-          const defaultUsername = user.email?.split('@')[0] || 'user';
-          await supabase.from('profiles').insert({
-            id: user.id,
-            username: defaultUsername,
+        // follower counts + posts + everything else...
+        const { count: followersCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', userIdToLoad);
+
+        const { count: followingCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', userIdToLoad);
+
+        if (user.id !== userIdToLoad) {
+          const { data: followData } = await supabase
+            .from('follows')
+            .select('id')
+            .eq('follower_id', user.id)
+            .eq('following_id', userIdToLoad)
+            .maybeSingle();
+          if (isMounted) setIsFollowing(!!followData);
+        }
+
+        if (isMounted) {
+          setProfile({
+            ...profileToLoad,
+            followers_count: followersCount || 0,
+            following_count: followingCount || 0,
           });
-          profileToLoad = { id: user.id, username: defaultUsername, avatar_url: null };
-        } else {
-          profileToLoad = data;
         }
-        userIdToLoad = user.id;
-      }
-
-      if (!isMounted) return;
-
-      setTargetUserId(userIdToLoad);
-      setIsOwnProfile(user.id === userIdToLoad);
-
-      // ✅ NEW: Run all queries in parallel instead of sequentially
-      const [
-        followersResult,
-        followingResult,
-        followDataResult,
-        postsResult,
-        adminResult
-      ] = await Promise.all([
-        // Followers count
-        supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('following_id', userIdToLoad),
-        
-        // Following count
-        supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('follower_id', userIdToLoad),
-        
-        // Check if current user follows this profile
-        user.id !== userIdToLoad
-          ? supabase
-              .from('follows')
-              .select('id')
-              .eq('follower_id', user.id)
-              .eq('following_id', userIdToLoad)
-              .maybeSingle()
-          : Promise.resolve({ data: null }),
-        
-        // Get posts
-        supabase
-          .from('posts')
-          .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
-          .eq('user_id', userIdToLoad)
-          .order('created_at', { ascending: false }),
-        
-        // Check admin status
-        isAdmin()
-      ]);
-
-      if (!isMounted) return;
-
-      // Set all data at once
-      setIsFollowing(!!followDataResult.data);
-      setPosts(postsResult.data || []);
-      setIsUserAdmin(adminResult);
-
-      setProfile({
-        ...profileToLoad,
-        followers_count: followersResult.count || 0,
-        following_count: followingResult.count || 0,
-      });
-
-      // Update URL if viewing own profile
-      if (!targetUsername && profileToLoad?.username) {
-        window.history.replaceState({}, '', `/profile/${profileToLoad.username}`);
-      }
-
-    } catch (err) {
-      if (isMounted) toast.error('Failed to load profile');
-    } finally {
-      if (isMounted) setLoading(false);
-    }
-  };
-
-  loadProfile();
-
-  return () => {
-    isMounted = false;
-  };
-}, [targetUsername]);
 
         const { data: postsData } = await supabase
           .from('posts')
@@ -601,17 +554,10 @@ useEffect(() => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-32">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // ✅ Show skeleton while loading
+if (loading) {
+  return <ProfileSkeleton />;
+}
   if (!profile) {
     return <div className="text-center py-20 text-gray-500">Profile not found</div>;
   }
