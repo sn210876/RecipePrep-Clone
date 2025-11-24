@@ -507,33 +507,33 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editingPost) return;
+  const file = e.target.files?.[0];
+  if (!file || !editingPost) return;
 
-    setUploadingPhoto(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+  setUploadingPhoto(true);
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file);
+    const { error: uploadError } = await supabase.storage
+      .from('posts')
+      .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+    if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
+    const { data: urlData } = supabase.storage
+      .from('posts')
+      .getPublicUrl(fileName);
 
-      setEditingPost(prev => prev ? { ...prev, photoUrl: urlData.publicUrl } : null);
-      toast.success('Photo uploaded!');
-    } catch (error: any) {
-      console.error('Error uploading photo:', error);
-      toast.error('Failed to upload photo');
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
+    setEditingPost(prev => prev ? { ...prev, photoUrl: urlData.publicUrl } : null);
+    toast.success('Photo uploaded! Click "Save changes" to apply.');
+  } catch (error: any) {
+    console.error('Error uploading photo:', error);
+    toast.error('Failed to upload photo');
+  } finally {
+    setUploadingPhoto(false);
+  }
+};
 
   const handleEditPost = async () => {
   if (!editingPost) return;
