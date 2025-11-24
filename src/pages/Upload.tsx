@@ -373,7 +373,7 @@ onNavigate('discover');
       style={{ paddingBottom: 'max(10rem, env(safe-area-inset-bottom))' }}
     >
       <div 
-  className="sticky top-0 bg-white border-b border-gray-200 z-100"
+  className="sticky top-0 bg-white border-b border-gray-200 z-9999"
   style={{ paddingTop: 'env(safe-area-inset-top)' }}
 >
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
