@@ -408,8 +408,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
-          // Use permanent URL if we got one, otherwise use the original
-          const finalPostImageUrl = postImageUrl || uploadedImageUrl || null;
+          // Use permanent URL if we got one, otherwise use finalImageUrl (which includes imgur, etc)
+          const finalPostImageUrl = postImageUrl || uploadedImageUrl || finalImageUrl || null;
+
+          console.log('[AddRecipe] Creating post with image URL:', finalPostImageUrl);
 
           const { error: postError } = await supabase.from('posts').insert({
             user_id: user.id,
