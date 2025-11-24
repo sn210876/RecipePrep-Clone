@@ -1263,18 +1263,28 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       if (mediaUrls.length === 1) {
           console.log('[Discover] ✓ Single media:', mediaUrls[0]); // ADD THIS
 
-        return mediaTypes[0] === 'video' ? (
-          <video
-            src={mediaUrls[0]}
-            controls
-            playsInline
-            className="w-full aspect-square object-cover bg-black"
-            preload="metadata"
-            onError={(e) => {
-              console.error('[Discover] Video failed to load:', mediaUrls[0]);
-            }}
-          />
-        ) : (
+       return mediaTypes[0] === 'video' ? (
+  <video
+    key={mediaUrls[0]}
+    src={mediaUrls[0]}
+    controls
+    playsInline
+    webkit-playsinline="true"
+    className="w-full aspect-square object-cover bg-black"
+    preload="metadata"
+    controlsList="nodownload"
+    onError={(e) => {
+      console.error('[Discover] Video failed to load:', mediaUrls[0]);
+      toast.error('Video failed to load');
+    }}
+    onLoadStart={() => {
+      console.log('[Discover] Video loading:', mediaUrls[0]);
+    }}
+    onCanPlay={() => {
+      console.log('[Discover] Video ready to play:', mediaUrls[0]);
+    }}
+  />
+) : (
           <img
             src={mediaUrls[0]}
             alt={post.title || 'Post'}
