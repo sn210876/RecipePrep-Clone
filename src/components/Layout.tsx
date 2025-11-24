@@ -410,12 +410,14 @@ const loadUnreadCount = async (userId: string) => {
         </button>
 
         {/* Upload Button - Elevated */}
-        <button
-onClick={() => handleNavigate('upload')}  // ✅ CHANGE TO 'upload'          className="relative -mt-6 grid place-items-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95"
-          style={{ width: '56px', height: '56px' }}
-        >
-          <Camera className="w-8 h-8 text-white" strokeWidth={2.75} />
-        </button>
+       {/* Upload Button - Elevated */}
+<button
+  onClick={() => handleNavigate('upload')}
+  className="relative -mt-6 flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95 touch-manipulation"
+  style={{ width: '56px', height: '56px' }}
+>
+  <Camera className="w-7 h-7 text-white" strokeWidth={2.5} />
+</button>
 
         {/* Profile */}
         <button
