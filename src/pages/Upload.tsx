@@ -337,9 +337,16 @@ const mainImageUrl = uploadedUrls[0];
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <button onClick={() => onNavigate('discover')} className="text-gray-600 hover:text-gray-900 font-medium">
-            Cancel
-          </button>
+         <button 
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    onNavigate('discover');
+  }} 
+  className="text-gray-600 hover:text-gray-900 font-medium"
+>
+  Cancel
+</button>
           <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
           <div className="w-16"></div>
         </div>
