@@ -1108,7 +1108,9 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           ) : (
             <>
               {posts.map(post => {
-              
+               console.log('[Discover] Post ID:', post.id);
+  console.log('[Discover] Raw image_url:', post.image_url);
+  console.log('[Discover] Raw video_url:', post.video_url);
                 const isLiked = post.likes?.some(like => like.user_id === currentUserId);
                 const latestComments = post.comments?.slice(0, 2) || [];
                 const isOwnPost = post.user_id === currentUserId;
