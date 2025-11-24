@@ -77,8 +77,8 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   const [post, setPost] = useState<any>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
-const audioRef = useRef<HTMLAudioElement>(null);
-const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (isOpen && postId) {
