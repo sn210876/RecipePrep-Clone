@@ -1133,12 +1133,15 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() => setEditingPost({
-                                id: post.id,
-                                caption: post.caption || '',
-                                recipeUrl: post.recipe_url || '',
-                                photoUrl: post.photo_url || ''
-                              })}
+                            onClick={() => setEditingPost({
+  id: post.id,
+  caption: post.caption || '',
+  recipeUrl: post.recipe_url || '',
+  photoUrl: post.image_url || '',
+  deletedImages: [],
+  newImages: [],
+  newPreviews: []
+})}
                               className="cursor-pointer"
                             >
                               <Edit3 className="w-4 h-4 mr-2" />
