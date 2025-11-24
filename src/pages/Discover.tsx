@@ -80,6 +80,7 @@ interface DiscoverProps {
   onPostViewed?: () => void;
 }
 // Add this NEW function right after your imports, around line 80
+// Add this helper function HERE
 const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   if (!imageUrl) return null;
   
@@ -96,6 +97,9 @@ const getDisplayImageUrl = (imageUrl: string | null): string | null => {
       imageUrl.includes('fbcdn.net')) {
     return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
   }
+  
+  return imageUrl;
+};
   
   return imageUrl;
 };
