@@ -206,11 +206,6 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     console.error('[Notifications] Exception:', err);
   }
 };
-      if (data) {
-        setNotifications(data);
-        setUnreadNotifications(data.filter(n => !n.read).length);
-      }
-    };
 
     loadNotifications();
 
