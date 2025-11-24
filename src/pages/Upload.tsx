@@ -92,35 +92,78 @@ const getVideoDuration = (file: File): Promise<number> => {
   const files = Array.from(e.target.files || []);
   if (files.length === 0) return;
 
-  // Filter for images only
+  // Separate images and videos
   const imageFiles = files.filter(f => f.type.startsWith('image/'));
+  const videoFiles = files.filter(f => f.type.startsWith('video/'));
   
-  if (imageFiles.length === 0) {
-    toast.error('Please select at least one image');
+  if (imageFiles.length === 0 && videoFiles.length === 0) {
+    toast.error('Please select at least one image or video');
     return;
   }
 
-  // Validate size for each image
+  // Can't mix images and videos
+  if (imageFiles.length > 0 && videoFiles.length > 0) {
+    toast.error('Please select either images OR a video, not both');
+    return;
+  }
+
+  // Only allow 1 video
+  if (videoFiles.length > 1) {
+    toast.error('You can only upload 1 video at a time');
+    return;
+  }
+
   const validFiles: File[] = [];
   const validPreviews: string[] = [];
 
-  for (const file of imageFiles) {
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error(`${file.name} is too large (max 10MB)`);
-      continue;
+  // Handle images (up to 4)
+  if (imageFiles.length > 0) {
+    for (const file of imageFiles.slice(0, 4)) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 10MB for images)`);
+        continue;
+      }
+      validFiles.push(file);
+      validPreviews.push(URL.createObjectURL(file));
     }
-    validFiles.push(file);
-    validPreviews.push(URL.createObjectURL(file));
+    setFileType('image');
+  }
+
+  // Handle video
+  if (videoFiles.length > 0) {
+    const video = videoFiles[0];
+    
+    if (video.size > 100 * 1024 * 1024) {
+      toast.error('Video must be less than 100MB');
+      return;
+    }
+
+    try {
+      const duration = await getVideoDuration(video);
+      setVideoDuration(duration);
+
+      if (postType === 'daily' && duration > 30) {
+        toast.error('Daily videos must be 30 seconds or less');
+        return;
+      }
+
+      validFiles.push(video);
+      validPreviews.push(URL.createObjectURL(video));
+      setFileType('video');
+    } catch (error) {
+      console.error('Video load error:', error);
+      toast.error('Failed to load video. Please try another file.');
+      return;
+    }
   }
 
   if (validFiles.length === 0) {
-    toast.error('No valid images to upload');
+    toast.error('No valid files to upload');
     return;
   }
 
   setSelectedFiles(validFiles);
   setPreviewUrls(validPreviews);
-  setFileType('image');
 };
 
     
