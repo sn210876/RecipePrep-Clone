@@ -100,9 +100,6 @@ const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   
   return imageUrl;
 };
-  
-  return imageUrl;
-};
 export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
   const { isAdmin } = useAuth();
 
