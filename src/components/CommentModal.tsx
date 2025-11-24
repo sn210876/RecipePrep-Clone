@@ -442,8 +442,13 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                       <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
                     </div>
                   </button>
-                  <audio id={`modal-audio-${postId}`} src={post.spotify_preview_url} />
-                </div>
+<audio 
+  ref={audioRef} 
+  src={post.spotify_preview_url}
+  onPlay={() => setIsPlaying(true)}
+  onPause={() => setIsPlaying(false)}
+  onEnded={() => setIsPlaying(false)}
+/>                </div>
               )}
             </div>
 
