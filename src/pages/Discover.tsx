@@ -97,7 +97,7 @@ const getDisplayImageUrl = (imageUrl: string | null): string | null => {
       imageUrl.includes('fbcdn.net')) {
     return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
   }
-  
+  console.log('[Discover] VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
   return imageUrl;
 }; // <-- Make sure it ends here with ONE closing brace and semicolon
 export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, sharedPostId, onPostViewed }: DiscoverProps = {}) {
