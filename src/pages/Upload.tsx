@@ -99,6 +99,28 @@ const getVideoDuration = (file: File): Promise<number> => {
     toast.error('Please select at least one image');
     return;
   }
+// Validate size for each image
+  const validFiles: File[] = [];
+  const validPreviews: string[] = [];
+
+  for (const file of imageFiles) {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(`${file.name} is too large (max 10MB)`);
+      continue;
+    }
+    validFiles.push(file);
+    validPreviews.push(URL.createObjectURL(file));
+  }
+
+  if (validFiles.length === 0) {
+    toast.error('No valid images to upload');
+    return;
+  }
+
+  setSelectedFiles(validFiles);
+  setPreviewUrls(validPreviews);
+  setFileType('image');
+};
 
   // ✅ Better file type validation
   const isImage = file.type.startsWith('image/');
