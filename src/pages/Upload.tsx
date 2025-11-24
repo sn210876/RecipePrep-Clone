@@ -379,7 +379,7 @@ const mainImageUrl = uploadedUrls[0];
           )}
         </div>
 
-        {!previewUrl ? (
+{previewUrls.length === 0 ? (
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 sm:p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
             <label className="cursor-pointer">
             <input 
