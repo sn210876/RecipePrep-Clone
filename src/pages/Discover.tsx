@@ -1316,13 +1316,13 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                               document.querySelectorAll('audio').forEach(a => {
                                 if (a.id !== `audio-${post.id}`) a.pause();
                               });
-                              if (audio.paused) {
-                                audio.play();
-                                if (btn) btn.textContent = 'Pause';
-                              } else {
-                                audio.pause();
-                                if (btn) btn.textContent = 'Play';
-                              }
+                            if (audio.paused) {
+  audio.play();
+  if (btn) btn.textContent = '⏸️';
+} else {
+  audio.pause();
+  if (btn) btn.textContent = '▶️';
+}
                             }}
                             className="bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white px-3 py-2 rounded-full shadow-lg transition-all flex items-center gap-2"
                           >
