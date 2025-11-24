@@ -310,17 +310,19 @@ const loadUnreadCount = async (userId: string) => {
   </div>
 )}
             
-         {socialPages.includes(currentPage) && (
+        {socialPages.includes(currentPage) && (
   <div className="flex-1 flex items-center justify-center lg:justify-start gap-2">
     <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
       {currentPage === 'add-recipe' ? (
         <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+      ) : currentPage === 'upload' ? (
+        <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       ) : (
         <UtensilsCrossed className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       )}
     </div>
     <span className="text-base sm:text-lg font-semibold text-gray-900">
-      {currentPage === 'add-recipe' ? 'Add Recipe' : 'Social Feed'}
+      {currentPage === 'add-recipe' ? 'Add Recipe' : currentPage === 'upload' ? 'New Post' : 'Social Feed'}
     </span>
   </div>
 )}
