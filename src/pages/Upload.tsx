@@ -169,14 +169,12 @@ const getVideoDuration = (file: File): Promise<number> => {
   }
 };
 
-  const handleClearImage = () => {
-    setSelectedFile(null);
-    setFileType(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
-  };
+ const handleClearImage = () => {
+  previewUrls.forEach(url => URL.revokeObjectURL(url));
+  setSelectedFiles([]);
+  setPreviewUrls([]);
+  setFileType(null);
+};
 
   const togglePreview = () => {
     if (audioPreviewRef.current) {
