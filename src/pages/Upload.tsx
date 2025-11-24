@@ -226,7 +226,6 @@ uploadedUrls.push(urlData.publicUrl);
 
 // Use first image URL for now (you can enhance this later to support multiple images in DB)
 const mainImageUrl = uploadedUrls[0];
-      if (uploadError) throw uploadError;
 
 
       // Music data for both posts & dailies
