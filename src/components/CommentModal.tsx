@@ -347,7 +347,16 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     }
   };
 
-  
+ const togglePlay = () => {
+  if (audioRef.current) {
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(err => console.log('Play failed:', err));
+    }
+    setIsPlaying(!isPlaying);
+  }
+}; 
 
   if (!post && loading) {
     return (
