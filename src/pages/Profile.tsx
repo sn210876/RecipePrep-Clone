@@ -14,25 +14,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   if (!imageUrl) return null;
   
-  // If already proxied, return as-is
   if (imageUrl.includes('/functions/v1/image-proxy')) {
     return imageUrl;
   }
   
-  // If it's a Supabase storage URL, return as-is
   if (imageUrl.includes('supabase.co/storage/v1/object/public/')) {
     return imageUrl;
   }
   
-  // If it's an Instagram/Facebook CDN image, proxy it
   if (imageUrl.includes('instagram.com') || 
       imageUrl.includes('cdninstagram.com') || 
       imageUrl.includes('fbcdn.net')) {
     return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
   }
   
-  // For any other URL (imgur, etc.), return as-is
   return imageUrl;
+};
 };
 
 const validateUsername = (username: string): string | null => {
