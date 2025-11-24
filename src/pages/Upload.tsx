@@ -467,8 +467,7 @@ const mainImageUrl = uploadedUrls[0];
             )}
           </div>
         )}
-          </div>
-        )}
+       
 
         {/* Music Section */}
         <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
