@@ -100,14 +100,36 @@ export async function downloadAndStorePostImage(
   try {
     console.log('[ImageStorage] Downloading post image:', imageUrl);
 
-    // Check if it's an Instagram URL that needs proxying
-    const needsProxy = imageUrl.includes('instagram.com') ||
-                      imageUrl.includes('cdninstagram.com') ||
-                      imageUrl.includes('fbcdn.net');
+    // Check if URL is already proxied (double-proxy situation)
+    let actualUrl = imageUrl;
+    if (imageUrl.includes('/functions/v1/image-proxy?url=')) {
+      try {
+        const urlObj = new URL(imageUrl);
+        const encodedUrl = urlObj.searchParams.get('url');
+        if (encodedUrl) {
+          actualUrl = decodeURIComponent(encodedUrl);
+          console.log('[ImageStorage] Extracted original URL from proxy:', actualUrl);
+        }
+      } catch (e) {
+        console.warn('[ImageStorage] Failed to extract URL from proxy:', e);
+      }
+    }
 
-    let fetchUrl = imageUrl;
+    // Check if it's an Instagram URL that needs proxying
+    const needsProxy = actualUrl.includes('instagram.com') ||
+                      actualUrl.includes('cdninstagram.com') ||
+                      actualUrl.includes('fbcdn.net');
+
+    // If it's an expired Instagram URL, we can't download it
+    // These URLs have time-based tokens that have expired
+    if (needsProxy && (actualUrl.includes('x-expires') || actualUrl.includes('_nc_ht'))) {
+      console.warn('[ImageStorage] ⚠️ Instagram URL has expired tokens, cannot download');
+      throw new Error('Instagram URL expired - image no longer accessible');
+    }
+
+    let fetchUrl = actualUrl;
     if (needsProxy) {
-      fetchUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+      fetchUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(actualUrl)}`;
     }
 
     // Download the image
@@ -230,7 +252,7 @@ export async function migrateExistingPosts() {
   // Get all posts with Instagram URLs
   const { data: posts, error } = await supabase
     .from('posts')
-    .select('id, image_url')
+    .select('id, image_url, title')
     .or('image_url.ilike.%instagram%,image_url.ilike.%cdninstagram%,image_url.ilike.%fbcdn%')
     .not('image_url', 'is', null);
 
@@ -239,14 +261,16 @@ export async function migrateExistingPosts() {
     return;
   }
 
-  console.log(`[Migration] Found ${posts?.length || 0} posts to migrate`);
+  console.log(`[Migration] Found ${posts?.length || 0} posts to check`);
 
   let successCount = 0;
   let failCount = 0;
+  let expiredCount = 0;
+  const expiredPosts: any[] = [];
 
   for (const post of posts || []) {
     try {
-      console.log(`[Migration] Processing post ${post.id}...`);
+      console.log(`[Migration] Processing post ${post.id} - "${post.title}"...`);
 
       // Handle multiple images stored as JSON array
       let imageUrls: string[] = [];
@@ -260,17 +284,40 @@ export async function migrateExistingPosts() {
 
       // Download and store each image permanently
       const permanentUrls: string[] = [];
+      let hasExpired = false;
+
       for (const imageUrl of imageUrls) {
         const needsDownload = imageUrl.includes('instagram.com') ||
                              imageUrl.includes('cdninstagram.com') ||
                              imageUrl.includes('fbcdn.net');
 
         if (needsDownload) {
-          const permanentUrl = await downloadAndStorePostImage(imageUrl, post.id);
-          permanentUrls.push(permanentUrl !== imageUrl ? permanentUrl : imageUrl);
+          try {
+            const permanentUrl = await downloadAndStorePostImage(imageUrl, post.id);
+            if (permanentUrl !== imageUrl) {
+              permanentUrls.push(permanentUrl);
+            } else {
+              // Download failed, keep original
+              permanentUrls.push(imageUrl);
+            }
+          } catch (error: any) {
+            if (error.message.includes('expired')) {
+              console.warn(`[Migration] ⚠️ Post ${post.id} has expired Instagram URL`);
+              hasExpired = true;
+              expiredPosts.push({ id: post.id, title: post.title, url: imageUrl });
+            } else {
+              permanentUrls.push(imageUrl);
+            }
+          }
         } else {
           permanentUrls.push(imageUrl);
         }
+      }
+
+      if (hasExpired) {
+        expiredCount++;
+        failCount++;
+        continue;
       }
 
       // Update the post with permanent URLs
@@ -292,7 +339,7 @@ export async function migrateExistingPosts() {
           successCount++;
         }
       } else {
-        console.warn(`[Migration] ⚠️ Skipped post ${post.id} (no change)`);
+        console.log(`[Migration] ⏭️ Skipped post ${post.id} (no change needed)`);
       }
 
       // Add delay to avoid rate limiting
@@ -304,6 +351,21 @@ export async function migrateExistingPosts() {
     }
   }
 
-  console.log(`[Migration] ✅ Complete! Success: ${successCount}, Failed: ${failCount}`);
-  return { successCount, failCount, total: posts?.length || 0 };
+  console.log(`[Migration] ✅ Complete!`);
+  console.log(`  - Migrated: ${successCount}`);
+  console.log(`  - Expired: ${expiredCount}`);
+  console.log(`  - Failed: ${failCount - expiredCount}`);
+
+  if (expiredPosts.length > 0) {
+    console.log(`\n⚠️ Posts with expired Instagram URLs (need to be re-added):`);
+    expiredPosts.forEach(p => console.log(`  - "${p.title}" (ID: ${p.id})`));
+  }
+
+  return {
+    successCount,
+    failCount,
+    expiredCount,
+    expiredPosts,
+    total: posts?.length || 0
+  };
 }

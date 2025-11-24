@@ -91,10 +91,25 @@ export default function Settings({ onNavigate }: SettingsProps) {
 
     try {
       const result = await migrateExistingPosts();
-      toast.success(
-        `Migration complete! Success: ${result?.successCount}, Failed: ${result?.failCount}, Total: ${result?.total}`,
-        { id: 'migrate' }
-      );
+
+      if (result) {
+        const { successCount, expiredCount, expiredPosts, total } = result;
+
+        if (expiredCount > 0) {
+          const expiredTitles = expiredPosts?.map((p: any) => `"${p.title}"`).join(', ') || '';
+          toast.warning(
+            `Migration complete! Migrated: ${successCount}, Expired URLs: ${expiredCount}. These posts need to be re-added: ${expiredTitles}`,
+            { id: 'migrate', duration: 10000 }
+          );
+        } else {
+          toast.success(
+            `Migration complete! Successfully migrated ${successCount} of ${total} posts`,
+            { id: 'migrate' }
+          );
+        }
+      } else {
+        toast.error('Migration failed - no result returned', { id: 'migrate' });
+      }
     } catch (error: any) {
       toast.error('Migration failed: ' + error.message, { id: 'migrate' });
     } finally {
