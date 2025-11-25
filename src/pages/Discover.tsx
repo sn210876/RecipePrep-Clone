@@ -1659,8 +1659,7 @@ if (post.video_url) {
           </AlertDialogContent>
         </AlertDialog>
 
-     // Add this updated edit post dialog to your Discover.tsx and Profile.tsx
-// Replace the existing AlertDialog for editingPost with this version:
+
 
 <AlertDialog open={!!editingPost} onOpenChange={(open) => {
   if (!open && editingPost) {
@@ -1759,7 +1758,13 @@ if (post.video_url) {
 
 
   
-           
+            // Track deleted media
+            const deletedMedia = (editingPost as any)?.deletedMedia || [];
+            const remainingMedia = mediaUrls
+              .map((url, idx) => ({ url, type: mediaTypes[idx] }))
+              .filter(item => !deletedMedia.includes(item.url));
+            
+            if (remainingMedia.length === 0) return <p className="text-sm text-gray-500">No media</p>;
             
             return remainingMedia.map((item, idx) => (
               <div key={idx} className="relative group">
