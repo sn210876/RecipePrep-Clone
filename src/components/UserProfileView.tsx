@@ -515,13 +515,21 @@ export function UserProfileView({
       })()}
 
     {/* Supporters Dialog */}
+{/* Supporters Dialog */}
 <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
-  <DialogContent className="max-w-sm">
+  <DialogContent 
+    className="max-w-sm"
+    style={{ pointerEvents: 'auto' }}
+    onPointerDown={(e) => e.stopPropagation()}
+  >
     <DialogHeader>
       <DialogTitle>Supporters</DialogTitle>
     </DialogHeader>
 
-    <div className="space-y-2 max-h-96 overflow-y-auto">
+    <div 
+      className="space-y-2 max-h-96 overflow-y-auto"
+      style={{ pointerEvents: 'auto' }}
+    >
       {supporters.length === 0 ? (
         <p className="text-center text-gray-500 py-8">No supporters yet</p>
       ) : (
@@ -532,40 +540,33 @@ export function UserProfileView({
           return (
             <div
               key={supporter.follower_id}
-              onClick={(e) => {
-                e.preventDefault();
+              onPointerDown={(e) => {
                 e.stopPropagation();
-                console.log('Clicked supporter:', supporter);
+                console.log('CLICK DETECTED - Supporter:', username);
                 setShowSupporters(false);
-                setTimeout(() => {
-                  window.location.href = `/${username}`;
-                }, 100);
+                // Use direct navigation
+                window.location.href = `/${username}`;
               }}
-              className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setShowSupporters(false);
-                  setTimeout(() => {
-                    window.location.href = `/${username}`;
-                  }, 100);
-                }
+              className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors select-none"
+              style={{ 
+                pointerEvents: 'auto',
+                touchAction: 'manipulation',
+                userSelect: 'none'
               }}
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden pointer-events-none">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt={username}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover pointer-events-none"
+                    draggable={false}
                   />
                 ) : (
                   username?.[0]?.toUpperCase() || <PiggyBank className="w-5 h-5" />
                 )}
               </div>
-              <span className="font-medium truncate">
+              <span className="font-medium truncate pointer-events-none">
                 {username || 'User'}
               </span>
             </div>
@@ -578,12 +579,19 @@ export function UserProfileView({
 
 {/* Supporting Dialog */}
 <Dialog open={showSupporting} onOpenChange={setShowSupporting}>
-  <DialogContent className="max-w-sm">
+  <DialogContent 
+    className="max-w-sm"
+    style={{ pointerEvents: 'auto' }}
+    onPointerDown={(e) => e.stopPropagation()}
+  >
     <DialogHeader>
       <DialogTitle>Supporting</DialogTitle>
     </DialogHeader>
     
-    <div className="space-y-2 max-h-96 overflow-y-auto">
+    <div 
+      className="space-y-2 max-h-96 overflow-y-auto"
+      style={{ pointerEvents: 'auto' }}
+    >
       {supporting.length === 0 ? (
         <p className="text-center text-gray-500 py-8">Not supporting anyone yet</p>
       ) : (
@@ -594,40 +602,33 @@ export function UserProfileView({
           return (
             <div
               key={followed.following_id}
-              onClick={(e) => {
-                e.preventDefault();
+              onPointerDown={(e) => {
                 e.stopPropagation();
-                console.log('Clicked following:', followed);
+                console.log('CLICK DETECTED - Following:', username);
                 setShowSupporting(false);
-                setTimeout(() => {
-                  window.location.href = `/${username}`;
-                }, 100);
+                // Use direct navigation
+                window.location.href = `/${username}`;
               }}
-              className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setShowSupporting(false);
-                  setTimeout(() => {
-                    window.location.href = `/${username}`;
-                  }, 100);
-                }
+              className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors select-none"
+              style={{ 
+                pointerEvents: 'auto',
+                touchAction: 'manipulation',
+                userSelect: 'none'
               }}
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden pointer-events-none">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt={username}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover pointer-events-none"
+                    draggable={false}
                   />
                 ) : (
                   username?.[0]?.toUpperCase() || <PiggyBank className="w-5 h-5" />
                 )}
               </div>
-              <span className="font-medium truncate">{username || 'User'}</span>
+              <span className="font-medium truncate pointer-events-none">{username || 'User'}</span>
             </div>
           );
         })
