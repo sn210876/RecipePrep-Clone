@@ -1728,20 +1728,17 @@ if (post.video_url) {
             
             // Parse videos
             if (post.video_url) {
-              try {
-                const parsed = JSON.parse(post.video_url);
-                if (Array.isArray(parsed)) {
-                  mediaUrls.push(...parsed);
-                  mediaTypes.push(...parsed.map(() => 'video'));
-                } else {
-                  mediaUrls.push(parsed);
-                  mediaTypes.push('video');
-                }
-              } catch {
-                mediaUrls.push(post.video_url);
-                mediaTypes.push('video');
-              }
-            }
+      try {
+        const parsed = JSON.parse(post.video_url);
+        if (Array.isArray(parsed)) {
+          currentMedia.push(...parsed.map(url => ({ url, type: 'video' as const })));
+        } else {
+          currentMedia.push({ url: parsed, type: 'video' });
+        }
+      } catch {
+        currentMedia.push({ url: post.video_url, type: 'video' });
+      }
+    }
             
             // Track deleted media
             const deletedMedia = (editingPost as any)?.deletedMedia || [];
