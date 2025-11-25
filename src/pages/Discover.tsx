@@ -1662,7 +1662,75 @@ if (post.video_url) {
      // Add this updated edit post dialog to your Discover.tsx and Profile.tsx
 // Replace the existing AlertDialog for editingPost with this version:
 
-<<AlertDialog open={!!editingPost} onOpenChange={(open) => {
+// ADD THIS TO BOTH Discover.tsx AND Profile.tsx
+// Replace the existing edit post dialog with this version
+
+// 1. First, update the editingPost state interface at the top of your component:
+const [editingPost, setEditingPost] = useState<{ 
+  id: string; 
+  caption: string; 
+  recipeUrl: string; 
+  currentMedia: { url: string; type: 'image' | 'video' }[];
+  deletedMedia: string[];
+  newMediaFiles: File[];
+  newMediaPreviews: string[];
+  newMediaTypes: ('image' | 'video')[];
+} | null>(null);
+
+// 2. Update the onClick handler for the edit button:
+onClick={() => {
+  const post = posts.find(p => p.id === post.id);
+  if (post) {
+    // Parse existing media
+    let currentMedia: { url: string; type: 'image' | 'video' }[] = [];
+    
+    // Parse images
+    if (post.image_url) {
+      try {
+        const parsed = JSON.parse(post.image_url);
+        if (Array.isArray(parsed)) {
+          currentMedia.push(...parsed.map(url => ({ url, type: 'image' as const })));
+        } else {
+          currentMedia.push({ url: parsed, type: 'image' });
+        }
+      } catch {
+        if (post.image_url.includes(',')) {
+          currentMedia.push(...post.image_url.split(',').map(url => ({ url: url.trim(), type: 'image' as const })));
+        } else {
+          currentMedia.push({ url: post.image_url, type: 'image' });
+        }
+      }
+    }
+    
+    // Parse videos
+    if (post.video_url) {
+      try {
+        const parsed = JSON.parse(post.video_url);
+        if (Array.isArray(parsed)) {
+          currentMedia.push(...parsed.map(url => ({ url, type: 'video' as const })));
+        } else {
+          currentMedia.push({ url: parsed, type: 'video' });
+        }
+      } catch {
+        currentMedia.push({ url: post.video_url, type: 'video' });
+      }
+    }
+    
+    setEditingPost({
+      id: post.id,
+      caption: post.caption || '',
+      recipeUrl: post.recipe_url || '',
+      currentMedia,
+      deletedMedia: [],
+      newMediaFiles: [],
+      newMediaPreviews: [],
+      newMediaTypes: []
+    });
+  }
+}}
+
+// 3. Replace the entire Edit Post AlertDialog with this:
+<AlertDialog open={!!editingPost} onOpenChange={(open) => {
   if (!open && editingPost) {
     // Cleanup preview URLs
     editingPost.newMediaPreviews.forEach(url => URL.revokeObjectURL(url));
@@ -1689,6 +1757,109 @@ if (post.video_url) {
           rows={3}
         />
       </div>
+      
+      {/* Recipe URL */}
+      <div>
+        <label className="text-sm font-medium mb-2 block">Recipe URL</label>
+        <input
+          type="url"
+          value={editingPost?.recipeUrl || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, recipeUrl: e.target.value } : null)}
+          placeholder="https://..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+      </div>
+      
+      {/* Current Media */}
+      {editingPost && editingPost.currentMedia.length > 0 && (
+        <div>
+          <label className="text-sm font-medium mb-2 block">Current Media</label>
+          <div className="grid grid-cols-2 gap-3">
+            {editingPost.currentMedia
+              .filter(media => !editingPost.deletedMedia.includes(media.url))
+              .map((media, idx) => (
+                <div key={idx} className="relative group rounded-lg overflow-hidden border-2 border-gray-200">
+                  {media.type === 'video' ? (
+                    <div className="relative aspect-square bg-black">
+                      <video
+                        src={media.url}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="bg-white/90 px-2 py-1 rounded text-xs font-semibold">
+                          🎥 VIDEO
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={media.url}
+                      alt={`Media ${idx + 1}`}
+                      className="w-full aspect-square object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPost(prev => {
+                        if (!prev) return null;
+                        return {
+                          ...prev,
+                          deletedMedia: [...prev.deletedMedia, media.url]
+                        };
+                      });
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+      
+      {/* New Media to Upload */}
+      {editingPost && editingPost.newMediaFiles.length > 0 && (
+        <div>
+          <label className="text-sm font-medium mb-2 block text-green-600">New Media to Add</label>
+          <div className="grid grid-cols-2 gap-3">
+            {editingPost.newMediaPreviews.map((preview, idx) => (
+              <div key={idx} className="relative group rounded-lg overflow-hidden border-2 border-green-500">
+                {editingPost.newMediaTypes[idx] === 'video' ? (
+                  <div className="relative aspect-square bg-black">
+                    <video
+                      src={preview}
+                      className="w-full h-full object-cover"
+                      muted
+                    />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <div className="bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
+                        🎥 NEW VIDEO
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <img
+                    src={preview}
+                    alt={`New media ${idx + 1}`}
+                    className="w-full aspect-square object-cover"
+                    loading="lazy"
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingPost(prev => {
+                      if (!prev) return null;
+                      URL.revokeObjectURL(prev.newMediaPreviews[idx]);
+                      return {
+                        ...prev,
+                        newMediaFiles: prev.newMediaFiles.filter((_, i) => i !== idx),
+                        newMediaPreviews: prev.newMediaPreviews.filte
+      <div>
         <label className="text-sm font-medium mb-2 block">Recipe URL</label>
         <input
           type="url"
