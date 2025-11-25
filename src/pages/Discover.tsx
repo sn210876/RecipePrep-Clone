@@ -1689,7 +1689,7 @@ if (post.video_url) {
           rows={3}
         />
       </div>
-      <div>
+      div>
         <label className="text-sm font-medium mb-2 block">Recipe URL</label>
         <input
           type="url"
