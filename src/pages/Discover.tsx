@@ -1730,7 +1730,7 @@ if (post.video_url) {
     }
             
             // Parse videos
-            if (post.video_url) {
+         if (post.video_url) {
       try {
         const parsed = JSON.parse(post.video_url);
         if (Array.isArray(parsed)) {
@@ -1742,7 +1742,8 @@ if (post.video_url) {
         currentMedia.push({ url: post.video_url, type: 'video' });
       }
     }
-   setEditingPost({
+    
+    setEditingPost({
       id: post.id,
       caption: post.caption || '',
       recipeUrl: post.recipe_url || '',
@@ -1753,7 +1754,8 @@ if (post.video_url) {
       newMediaTypes: []
     });
   }
-}}         
+}}
+            
             // Track deleted media
             const deletedMedia = (editingPost as any)?.deletedMedia || [];
             const remainingMedia = mediaUrls
