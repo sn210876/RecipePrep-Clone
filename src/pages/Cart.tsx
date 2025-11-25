@@ -123,31 +123,45 @@ export function Cart({ onNavigate }: CartProps = {}) {
     toast.info('Stripe checkout coming soon!');
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-      </div>
-    );
-  }
+  // In Cart.tsx, replace the entire return statement with:
 
+if (loading) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
-        <div className="p-4 md:p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
-                <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-3xl font-bold text-slate-900">Your Cart</h1>
-                <p className="text-xs md:text-sm text-slate-600">
-                  {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
-                </p>
-              </div>
-            </div>
+    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+    </div>
+  );
+}
+
+return (
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
+    {/* Remove the entire header div that was here */}
+
+    {cartItems.length === 0 ? (
+      <div className="p-4 md:p-6 flex items-center justify-center min-h-[calc(100vh-200px)]">
+        <Card className="w-full max-w-sm">
+          <CardContent className="flex flex-col items-center justify-center py-12 px-6">
+            <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" />
+            <p className="text-gray-500 text-center mb-4 text-sm md:text-base">
+              Your cart is empty. Soon you will be able to order your ingredients and get them delivered!
+            </p>
+            <Button 
+              onClick={() => onNavigate?.('meal-planner')}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              Add Items from Meal Planner
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    ) : (
+      <div className="p-4 md:p-6 pb-32 md:pb-24">
+        {/* Add a header inside the content area instead */}
+        <div className="max-w-4xl mx-auto mb-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-600">
+              {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
+            </p>
             {cartItems.length > 0 && (
               <Button 
                 variant="ghost" 
@@ -155,11 +169,13 @@ export function Cart({ onNavigate }: CartProps = {}) {
                 onClick={clearCart}
                 className="text-xs md:text-sm hover:bg-red-50 hover:text-red-600"
               >
-                Clear
+                Clear All
               </Button>
             )}
           </div>
         </div>
+
+        {/* Rest of your cart items code stays the same... */}
       </div>
 
       {cartItems.length === 0 ? (
