@@ -1713,26 +1713,21 @@ if (post.video_url) {
             
             // Parse images
             if (post.image_url) {
-              try {
-                const parsed = JSON.parse(post.image_url);
-                if (Array.isArray(parsed)) {
-                  mediaUrls.push(...parsed);
-                  mediaTypes.push(...parsed.map(() => 'image'));
-                } else {
-                  mediaUrls.push(parsed);
-                  mediaTypes.push('image');
-                }
-              } catch {
-                if (post.image_url.includes(',')) {
-                  const urls = post.image_url.split(',').map(url => url.trim());
-                  mediaUrls.push(...urls);
-                  mediaTypes.push(...urls.map(() => 'image'));
-                } else {
-                  mediaUrls.push(post.image_url);
-                  mediaTypes.push('image');
-                }
-              }
-            }
+      try {
+        const parsed = JSON.parse(post.image_url);
+        if (Array.isArray(parsed)) {
+          currentMedia.push(...parsed.map(url => ({ url, type: 'image' as const })));
+        } else {
+          currentMedia.push({ url: parsed, type: 'image' });
+        }
+      } catch {
+        if (post.image_url.includes(',')) {
+          currentMedia.push(...post.image_url.split(',').map(url => ({ url: url.trim(), type: 'image' as const })));
+        } else {
+          currentMedia.push({ url: post.image_url, type: 'image' });
+        }
+      }
+    }
             
             // Parse videos
             if (post.video_url) {
