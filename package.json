@@ -10,7 +10,12 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "server": "node server.js",
-    "server:dev": "node --watch server.js"
+    "server:dev": "node --watch server.js",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:open:ios": "npx cap open ios",
+    "cap:open:android": "npx cap open android",
+    "cap:run:ios": "npm run cap:sync && npx cap run ios",
+    "cap:run:android": "npm run cap:sync && npx cap run android"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",
