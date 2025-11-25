@@ -111,10 +111,11 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [postRatings, setPostRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
-const [editingPost, setEditingPost] = useState<{ 
-  id: string; 
-  caption: string; 
-  recipeUrl: string; 
+const [editingPost, setEditingPost] = useState<{
+  id: string;
+  title: string;
+  caption: string;
+  recipeUrl: string;
   currentMedia: { url: string; type: 'image' | 'video' }[];
   deletedMedia: string[];
   newMediaFiles: File[];
