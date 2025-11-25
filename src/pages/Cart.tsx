@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { ShoppingCart, Trash2, Plus, Minus, ExternalLink, CreditCard, Menu, X as XClose } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ExternalLink, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CartItem {
@@ -26,13 +26,6 @@ export function Cart({ onNavigate }: CartProps = {}) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     loadCart();
@@ -123,61 +116,16 @@ export function Cart({ onNavigate }: CartProps = {}) {
     toast.info('Stripe checkout coming soon!');
   };
 
-  // In Cart.tsx, replace the entire return statement with:
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+      </div>
+    );
+  }
 
-if (loading) {
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-    </div>
-  );
-}
-
-return (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
-    {/* Remove the entire header div that was here */}
-
-    {cartItems.length === 0 ? (
-      <div className="p-4 md:p-6 flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <Card className="w-full max-w-sm">
-          <CardContent className="flex flex-col items-center justify-center py-12 px-6">
-            <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" />
-            <p className="text-gray-500 text-center mb-4 text-sm md:text-base">
-              Your cart is empty. Soon you will be able to order your ingredients and get them delivered!
-            </p>
-            <Button 
-              onClick={() => onNavigate?.('meal-planner')}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-            >
-              Add Items from Meal Planner
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    ) : (
-      <div className="p-4 md:p-6 pb-32 md:pb-24">
-        {/* Add a header inside the content area instead */}
-        <div className="max-w-4xl mx-auto mb-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-600">
-              {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
-            </p>
-            {cartItems.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={clearCart}
-                className="text-xs md:text-sm hover:bg-red-50 hover:text-red-600"
-              >
-                Clear All
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Rest of your cart items code stays the same... */}
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
       {cartItems.length === 0 ? (
         <div className="p-4 md:p-6 flex items-center justify-center min-h-[calc(100vh-200px)]">
           <Card className="w-full max-w-sm">
@@ -197,6 +145,23 @@ return (
         </div>
       ) : (
         <div className="p-4 md:p-6 pb-32 md:pb-24">
+          {/* Header inside content area */}
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-slate-600">
+                {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
+              </p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearCart}
+                className="text-xs md:text-sm hover:bg-red-50 hover:text-red-600"
+              >
+                Clear All
+              </Button>
+            </div>
+          </div>
+
           {/* Cart Items */}
           <div className="space-y-3 md:space-y-4 mb-6 max-w-4xl mx-auto">
             {cartItems.map(item => (
