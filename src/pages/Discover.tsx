@@ -1162,18 +1162,26 @@ const [editingPost, setEditingPost] = useState<{
 onClick={() => {
   const post = posts.find(p => p.id === post.id);
   if (post) {
-   setEditingPost({
-      id: post.id,
-      caption: post.caption || '',
-      recipeUrl: post.recipe_url || '',
-      currentMedia,
-      deletedMedia: [],
-      newMediaFiles: [],
-      newMediaPreviews: [],
-      newMediaTypes: []
-    });
-  }
-}}
+    // Parse existing media
+    let currentMedia: { url: string; type: 'image' | 'video' }[] = [];
+    
+    // Parse images
+    if (post.image_url) {
+      try {
+        const parsed = JSON.parse(post.image_url);
+        if (Array.isArray(parsed)) {
+          currentMedia.push(...parsed.map(url => ({ url, type: 'image' as const })));
+        } else {
+          currentMedia.push({ url: parsed, type: 'image' });
+        }
+      } catch {
+        if (post.image_url.includes(',')) {
+          currentMedia.push(...post.image_url.split(',').map(url => ({ url: url.trim(), type: 'image' as const })));
+        } else {
+          currentMedia.push({ url: post.image_url, type: 'image' });
+        }
+      }
+    }
                               className="cursor-pointer"
                             >
                               <Edit3 className="w-4 h-4 mr-2" />
