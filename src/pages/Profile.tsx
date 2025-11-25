@@ -16,12 +16,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 // ✅ ADD THIS - Loading skeleton component
 const ProfileSkeleton = () => (
   <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden animate-pulse">
-    <div className="sticky top-0 bg-white border-b border-gray-200 z-30">
-      <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-        <div className="w-8 h-8 bg-gray-200 rounded-full" />
-        <div className="h-4 bg-gray-200 rounded w-32" />
-      </div>
-    </div>
+   <div className="sticky top-0 bg-white border-b border-gray-200 z-30">
+  <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
+
+    {/* ⬅️ BACK BUTTON */}
+    <button
+      onClick={() => window.history.back()}
+      className="flex items-center"
+    >
+      <ArrowLeft className="w-6 h-6 text-gray-700 hover:opacity-50 transition" />
+    </button>
+
+    {/* Title skeleton */}
+    <div className="h-4 bg-gray-200 rounded w-32" />
+  </div>
+</div>
+
     
     <div className="max-w-lg mx-auto w-full">
       <div className="bg-white border-b border-gray-200">
