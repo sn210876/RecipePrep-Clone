@@ -44,7 +44,7 @@ const ProfileSkeleton = () => (
         
  {/* Stats skeleton */}
         <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
-          <div className="flex justify-center gap-8 sm:gap-10">
+<div className="flex justify-center items-center gap-8 sm:gap-10">
             {[1, 2, 3].map(i => (
               <div key={i} className="text-center">
                 <div className="h-6 w-12 bg-gray-200 rounded mx-auto mb-1" />
