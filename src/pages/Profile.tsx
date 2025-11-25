@@ -8,7 +8,6 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
-import { Label } from '../components/ui/label
 
 import CommentModal from '../components/CommentModal';
 import { FollowersModal } from './FollowersModal'; // or wherever you save it
@@ -44,29 +43,35 @@ const ProfileSkeleton = () => (
           </div>
         </div>
         
-        {/* Stats skeleton */}
-        <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
-          <div className="flex justify-center gap-8 sm:gap-10">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="text-center">
-                <div className="h-6 w-12 bg-gray-200 rounded mx-auto mb-1" />
-                <div className="h-3 w-16 bg-gray-200 rounded" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      {/* Posts grid skeleton */}
-      <div className="border-b border-gray-200 bg-white py-3">
-        <div className="h-4 w-16 bg-gray-200 rounded mx-auto" />
-      </div>
-      <div className="grid grid-cols-3 gap-0.5 sm:gap-1">
-        {[...Array(9)].map((_, i) => (
-          <div key={i} className="aspect-square bg-gray-200" />
-        ))}
-      </div>
+       {/* Stats */}
+<div className="px-4 py-3 sm:py-4 border-t border-gray-200">
+  <div className="flex justify-center gap-8 sm:gap-10">
+    <div className="text-center">
+      <div className="text-lg sm:text-xl font-bold">{posts.length}</div>
+      <div className="text-xs text-gray-500">posts</div>
     </div>
+    <button
+      onClick={() => {
+        setFollowersModalType('followers');
+        setFollowersModalOpen(true);
+      }}
+      className="text-center hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+    >
+      <div className="text-lg sm:text-xl font-bold">{profile.followers_count || 0}</div>
+      <div className="text-xs text-gray-500">supporters</div>
+    </button>
+    <button
+      onClick={() => {
+        setFollowersModalType('following');
+        setFollowersModalOpen(true);
+      }}
+      className="text-center hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+    >
+      <div className="text-lg sm:text-xl font-bold">{profile.following_count || 0}</div>
+      <div className="text-xs text-gray-500">supporting</div>
+    </button>
+  </div>
+</div>
   </div>
 );
 // Add this NEW function right after your imports, around line 60
