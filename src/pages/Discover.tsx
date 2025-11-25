@@ -1650,12 +1650,12 @@ if (post.video_url) {
           </AlertDialogContent>
         </AlertDialog>
 
-      <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+     <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
   <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
     <AlertDialogHeader>
       <AlertDialogTitle>Edit post</AlertDialogTitle>
       <AlertDialogDescription>
-        Update your caption, recipe link, and images (up to 4 total).
+        Update your caption, recipe link, and media (images or videos).
       </AlertDialogDescription>
     </AlertDialogHeader>
     <div className="space-y-4 py-4">
