@@ -17,6 +17,7 @@ import CommentModal from '../components/CommentModal';
 import { RecipeDetailModal } from '../components/RecipeDetailModal';
 import { UserProfileView } from '../components/UserProfileView';
 import { Recipe } from '../types/recipe';
+import { EditPostModal } from '../components/EditPostModal';
 
 import {
   DropdownMenu,
