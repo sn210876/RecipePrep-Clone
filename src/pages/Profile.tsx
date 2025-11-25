@@ -751,7 +751,35 @@ if (loading) {
               </div>
             </div>
           )}
-
+{/* Stats */}
+          <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
+            <div className="flex justify-center gap-8 sm:gap-10">
+              <div className="text-center">
+                <div className="text-lg sm:text-xl font-bold">{posts.length}</div>
+                <div className="text-xs text-gray-500">posts</div>
+              </div>
+              <button
+                onClick={() => {
+                  setFollowersModalType('followers');
+                  setFollowersModalOpen(true);
+                }}
+                className="text-center hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+              >
+                <div className="text-lg sm:text-xl font-bold">{profile.followers_count || 0}</div>
+                <div className="text-xs text-gray-500">supporters</div>
+              </button>
+              <button
+                onClick={() => {
+                  setFollowersModalType('following');
+                  setFollowersModalOpen(true);
+                }}
+                className="text-center hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+              >
+                <div className="text-lg sm:text-xl font-bold">{profile.following_count || 0}</div>
+                <div className="text-xs text-gray-500">supporting</div>
+              </button>
+            </div>
+          </div>
           {/* Stats */}
 
          
