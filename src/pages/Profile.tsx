@@ -751,21 +751,25 @@ if (loading) {
             </div>
           )}
 {/* Stats */}
-          <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
-            <div className="flex justify-center gap-8 sm:gap-10">
-              {[
-      { label: 'Posts', value: posts.length },
-      { label: 'Supporters', value: profile.followers_count },
-      { label: 'Supporting', value: profile.following_count },
-    ].map((stat, idx) => (
-      <div key={idx} className="flex flex-col items-center">
-        <span className="font-semibold text-sm">{stat.value}</span>
-        <span className="text-xs text-gray-500">{stat.label}</span>
-      </div>
-    ))}
+          <div className="px-4 py-3 border-t border-gray-200">
+  <div className="flex justify-center items-center gap-10">
+    <div className="flex flex-col items-center">
+      <span className="text-lg font-semibold">{posts.length}</span>
+      <span className="text-xs text-gray-500">Posts</span>
+    </div>
+
+    <div className="flex flex-col items-center">
+      <span className="text-lg font-semibold">{profile.followers_count}</span>
+      <span className="text-xs text-gray-500">Supporters</span>
+    </div>
+
+    <div className="flex flex-col items-center">
+      <span className="text-lg font-semibold">{profile.following_count}</span>
+      <span className="text-xs text-gray-500">Supporting</span>
+    </div>
   </div>
 </div>
-              
+
               <button
                 onClick={() => {
                   setFollowersModalType('followers');
