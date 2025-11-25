@@ -1759,13 +1759,7 @@ if (post.video_url) {
 
 
   
-            // Track deleted media
-            const deletedMedia = (editingPost as any)?.deletedMedia || [];
-            const remainingMedia = mediaUrls
-              .map((url, idx) => ({ url, type: mediaTypes[idx] }))
-              .filter(item => !deletedMedia.includes(item.url));
-            
-            if (remainingMedia.length === 0) return <p className="text-sm text-gray-500">No media</p>;
+           
             
             return remainingMedia.map((item, idx) => (
               <div key={idx} className="relative group">
