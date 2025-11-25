@@ -1259,13 +1259,17 @@ if (post.video_url) {
 
       // If no media found, show placeholder
       if (mediaUrls.length === 0) {
-          console.log('[Discover] ❌ NO MEDIA FOUND for post:', post.id); // ADD THIS
+          console.log('[Discover] ❌ NO MEDIA FOUND for post:', post.id);
         return (
           <div className="w-full aspect-square bg-gray-200 flex items-center justify-center">
             <p className="text-gray-500">No media available</p>
           </div>
         );
       }
+
+      console.log('[Discover] 📊 Media parsed for post:', post.id);
+      console.log('[Discover] 📊 mediaUrls:', mediaUrls);
+      console.log('[Discover] 📊 mediaTypes:', mediaTypes);
 
       const currentImageIndex = imageIndices[post.id] || 0;
       const setCurrentImageIndex = (indexOrFn: number | ((prev: number) => number)) => {

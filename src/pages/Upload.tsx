@@ -246,25 +246,44 @@ if (selectedFiles.length === 0) {      toast.error('Please select an image or vi
         });
       }
 
-    // Upload all files
-const uploadedUrls: string[] = [];
+    // Upload all files and separate by type
+const uploadedImageUrls: string[] = [];
+const uploadedVideoUrls: string[] = [];
+
 for (const file of selectedFiles) {
-  const fileExt = file.name.split('.').pop();
+  const fileExt = file.name.split('.').pop()?.toLowerCase();
   const fileName = `${userData.user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
   const { error: uploadError } = await supabase.storage
     .from('posts')
     .upload(fileName, file, { cacheControl: '3600', upsert: false });
   if (uploadError) throw uploadError;
-  
-const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
-uploadedUrls.push(urlData.publicUrl);  // ✅ Use urlData.publicUrl here
+
+  const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+
+  // Determine if it's an image or video by file extension
+  const isVideo = ['mp4', 'mov', 'webm', 'avi', 'mkv'].includes(fileExt || '');
+  if (isVideo) {
+    uploadedVideoUrls.push(urlData.publicUrl);
+  } else {
+    uploadedImageUrls.push(urlData.publicUrl);
+  }
 }
 
-// Use first image URL for now (you can enhance this later to support multiple images in DB)
-// Store all URLs as JSON array
-const mainImageUrl = uploadedUrls.length > 1 
-  ? JSON.stringify(uploadedUrls) 
-  : uploadedUrls[0];
+// Format URLs as JSON arrays if multiple, or single string if one
+const imageUrlForDb = uploadedImageUrls.length > 1
+  ? JSON.stringify(uploadedImageUrls)
+  : uploadedImageUrls.length === 1
+    ? uploadedImageUrls[0]
+    : null;
+
+const videoUrlForDb = uploadedVideoUrls.length > 1
+  ? JSON.stringify(uploadedVideoUrls)
+  : uploadedVideoUrls.length === 1
+    ? uploadedVideoUrls[0]
+    : null;
+
+// For dailies/single file posts, use the first uploaded file
+const mainImageUrl = uploadedImageUrls[0] || uploadedVideoUrls[0];
 
       // Music data for both posts & dailies
       const musicData: any = {
@@ -307,7 +326,8 @@ const mainImageUrl = uploadedUrls.length > 1
           title: title.trim(),
           caption: caption.trim() || null,
           recipe_url: recipeLink,
-          [fileType === 'image' ? 'image_url' : 'video_url']: mainImageUrl,
+          image_url: imageUrlForDb,
+          video_url: videoUrlForDb,
           ...musicData,
         };
 
