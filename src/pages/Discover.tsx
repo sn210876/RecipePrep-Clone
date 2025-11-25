@@ -1296,10 +1296,16 @@ if (post.video_url) {
     src={mediaUrls[0]}
     controls
     playsInline
-    webkit-playsinline="true"
     className="w-full aspect-square object-cover bg-black"
-    preload="metadata"
-    controlsList="nodownload"
+    preload="auto"
+    onClick={(e) => {
+      const video = e.target as HTMLVideoElement;
+      if (video.paused) {
+        video.play().catch(err => console.error('[Discover] Play failed:', err));
+      } else {
+        video.pause();
+      }
+    }}
     onError={(e) => {
       const videoElement = e.target as HTMLVideoElement;
       console.error('[Discover] Single video failed:', mediaUrls[0]);
@@ -1343,10 +1349,17 @@ if (post.video_url) {
     src={mediaUrls[currentImageIndex]}
     controls
     playsInline
-    webkit-playsinline="true"
     className="w-full h-full object-cover"
-    preload="metadata"
-    controlsList="nodownload"
+    preload="auto"
+    onClick={(e) => {
+      e.stopPropagation();
+      const video = e.target as HTMLVideoElement;
+      if (video.paused) {
+        video.play().catch(err => console.error('[Discover] Play failed:', err));
+      } else {
+        video.pause();
+      }
+    }}
     onError={(e) => {
       const videoElement = e.target as HTMLVideoElement;
       console.error('[Discover] Carousel video failed:', mediaUrls[currentImageIndex]);
