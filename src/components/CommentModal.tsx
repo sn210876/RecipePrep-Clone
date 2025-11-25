@@ -367,7 +367,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 <Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>   
   <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
-            <div className="w-full h-[35vh] sm:h-[40vh] bg-gray-300 animate-pulse flex-shrink-0 relative">
+           <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-[100px] max-h-[35vh] sm:max-h-none">
               <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
                 <X className="w-5 h-5" />
               </button>
