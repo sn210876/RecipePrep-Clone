@@ -555,55 +555,7 @@ const [editingPost, setEditingPost] = useState<{
     }
   };
 
-  const handleSaveEdit = async (updates: {
-  id: string;
-  caption: string;
-  recipeUrl: string;
-  deletedMedia: string[];
-  newMediaFiles: File[];
-}) => {
-  try {
-    // Upload new media files
-    const uploadedUrls: { url: string; type: 'image' | 'video' }[] = [];
-    
-    for (const file of updates.newMediaFiles) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUserId}/${Date.now()}-${Math.random()}.${fileExt}`;
-      const isVideo = file.type.startsWith('video/');
-      
-      const { error: uploadError } = await supabase.storage
-        .from('posts')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('posts')
-        .getPublicUrl(fileName);
-
-      uploadedUrls.push({ url: publicUrl, type: isVideo ? 'video' : 'image' });
-    }
-
-    // Get current post to merge media
-    const currentPost = posts.find(p => p.id === updates.id);
-    if (!currentPost) throw new Error('Post not found');
-
-    // Parse existing media
-    let existingImages: string[] = [];
-    let existingVideos: string[] = [];
-
-    if (currentPost.image_url) {
-      try {
-        const parsed = JSON.parse(currentPost.image_url);
-        existingImages = Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        existingImages = currentPost.image_url.includes(',') 
-          ? currentPost.image_url.split(',').map(u => u.trim())
-          : [currentPost.image_url];
-      }
-    }
-
-    if
+  
 
   // OPTIMIZED: Batch state updates
   const toggleLike = async (postId: string) => {
