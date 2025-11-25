@@ -1742,7 +1742,18 @@ if (post.video_url) {
         currentMedia.push({ url: post.video_url, type: 'video' });
       }
     }
-            
+   setEditingPost({
+      id: post.id,
+      caption: post.caption || '',
+      recipeUrl: post.recipe_url || '',
+      currentMedia,
+      deletedMedia: [],
+      newMediaFiles: [],
+      newMediaPreviews: [],
+      newMediaTypes: []
+    });
+  }
+}}         
             // Track deleted media
             const deletedMedia = (editingPost as any)?.deletedMedia || [];
             const remainingMedia = mediaUrls
