@@ -1856,24 +1856,23 @@ if (post.video_url) {
         if (!post) return null;
         
         let totalExisting = 0;
-        if (post.image_url) {
-          try {
-            const parsed = JSON.parse(post.image_url);
-            totalExisting += Array.isArray(parsed) ? parsed.length : 1;
-          } catch {
-            totalExisting += post.image_url.includes(',') 
-              ? post.image_url.split(',').length 
-              : 1;
-          }
+           if (post.image_url) {
+      try {
+        const parsed = JSON.parse(post.image_url);
+        if (Array.isArray(parsed)) {
+          currentMedia.push(...parsed.map(url => ({ url, type: 'image' as const })));
+        } else {
+          currentMedia.push({ url: parsed, type: 'image' });
         }
-        if (post.video_url) {
-          try {
-            const parsed = JSON.parse(post.video_url);
-            totalExisting += Array.isArray(parsed) ? parsed.length : 1;
-          } catch {
-            totalExisting += 1;
-          }
+      } catch {
+        if (post.image_url.includes(',')) {
+          currentMedia.push(...post.image_url.split(',').map(url => ({ url: url.trim(), type: 'image' as const })));
+        } else {
+          currentMedia.push({ url: post.image_url, type: 'image' });
         }
+      }
+    }
+    
         
         const deletedMedia = (editingPost as any)?.deletedMedia || [];
         const remainingCount = totalExisting - deletedMedia.length;
