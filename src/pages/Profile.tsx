@@ -16,22 +16,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 // ✅ ADD THIS - Loading skeleton component
 const ProfileSkeleton = () => (
   <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden animate-pulse">
-   <div className="sticky top-0 bg-white border-b border-gray-200 z-30">
-  <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-
-    {/* ⬅️ BACK BUTTON */}
-    <button
-      onClick={() => window.history.back()}
-      className="flex items-center"
-    >
-      <ArrowLeft className="w-6 h-6 text-gray-700 hover:opacity-50 transition" />
-    </button>
-
-    {/* Title skeleton */}
-    <div className="h-4 bg-gray-200 rounded w-32" />
-  </div>
-</div>
-
+    <div className="sticky top-0 bg-white border-b border-gray-200 z-30">
+      <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
+        <div className="w-8 h-8 bg-gray-200 rounded-full" />
+        <div className="h-4 bg-gray-200 rounded w-32" />
+      </div>
+    </div>
     
     <div className="max-w-lg mx-auto w-full">
       <div className="bg-white border-b border-gray-200">
@@ -54,7 +44,7 @@ const ProfileSkeleton = () => (
         
  {/* Stats skeleton */}
         <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
-<div className="flex justify-center items-center gap-8 sm:gap-10">
+          <div className="flex justify-center gap-8 sm:gap-10">
             {[1, 2, 3].map(i => (
               <div key={i} className="text-center">
                 <div className="h-6 w-12 bg-gray-200 rounded mx-auto mb-1" />
@@ -761,25 +751,21 @@ if (loading) {
             </div>
           )}
 {/* Stats */}
-          <div className="px-4 py-3 border-t border-gray-200">
-  <div className="flex justify-center items-center gap-10">
-    <div className="flex flex-col items-center">
-      <span className="text-lg font-semibold">{posts.length}</span>
-      <span className="text-xs text-gray-500">Posts</span>
-    </div>
-
-    <div className="flex flex-col items-center">
-      <span className="text-lg font-semibold">{profile.followers_count}</span>
-      <span className="text-xs text-gray-500">Supporters</span>
-    </div>
-
-    <div className="flex flex-col items-center">
-      <span className="text-lg font-semibold">{profile.following_count}</span>
-      <span className="text-xs text-gray-500">Supporting</span>
-    </div>
+          <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
+            <div className="flex justify-center gap-8 sm:gap-10">
+              {[
+      { label: 'Posts', value: posts.length },
+      { label: 'Supporters', value: profile.followers_count },
+      { label: 'Supporting', value: profile.following_count },
+    ].map((stat, idx) => (
+      <div key={idx} className="flex flex-col items-center">
+        <span className="font-semibold text-sm">{stat.value}</span>
+        <span className="text-xs text-gray-500">{stat.label}</span>
+      </div>
+    ))}
   </div>
 </div>
-
+              
               <button
                 onClick={() => {
                   setFollowersModalType('followers');
