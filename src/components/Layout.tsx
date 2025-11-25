@@ -475,15 +475,4 @@ const loadUnreadCount = async (userId: string) => {
        
       </div>
 
-      {/* Demo: Avatar Toggle Button */}
-      <button
-        onClick={() => setAvatarUrl(prev => 
-          prev ? null : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop'
-        )}
-        className="fixed top-20 right-4 bg-slate-800 text-white text-xs px-3 py-2 rounded-full shadow-lg hover:bg-slate-700 z-50 hidden lg:block"
-      >
-        Toggle Avatar
-      </button>
-    </div>
-  );
-}
+     
