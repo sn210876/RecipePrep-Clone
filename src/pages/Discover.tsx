@@ -17,7 +17,6 @@ import CommentModal from '../components/CommentModal';
 import { RecipeDetailModal } from '../components/RecipeDetailModal';
 import { UserProfileView } from '../components/UserProfileView';
 import { Recipe } from '../types/recipe';
-import { EditPostModal } from '../components/EditPostModal';
 
 import {
   DropdownMenu,
@@ -112,14 +111,15 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [postRatings, setPostRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
-const [editingPost, setEditingPost] = useState<{
-  id: string;
-  title: string;
-  caption: string;
-  recipeUrl: string;
-  currentMedia: { url: string; type: 'image' | 'video' }[];
+ const [editingPost, setEditingPost] = useState<{ 
+  id: string; 
+  caption: string; 
+  recipeUrl: string; 
+  photoUrl: string;
+  deletedImages?: string[];
+  newImages?: File[];
+  newPreviews?: string[];
 } | null>(null);
-
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -555,114 +555,91 @@ const [editingPost, setEditingPost] = useState<{
     }
   };
 
-  
-const handleSaveEdit = async (updates: {
-  id: string;
-  caption: string;
-  recipeUrl: string;
-  deletedMedia: string[];
-  newMediaFiles: File[];
-}) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file || !editingPost) return;
+
+  setUploadingPhoto(true);
   try {
-    // Upload new media files
-    const uploadedUrls: { url: string; type: 'image' | 'video' }[] = [];
-    
-    for (const file of updates.newMediaFiles) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUserId}/${Date.now()}-${Math.random()}.${fileExt}`;
-      const isVideo = file.type.startsWith('video/');
-      
-      const { error: uploadError } = await supabase.storage
-        .from('posts')
-        .upload(fileName, file);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
 
-      if (uploadError) throw uploadError;
+    const { error: uploadError } = await supabase.storage
+      .from('posts')
+      .upload(fileName, file);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('posts')
-        .getPublicUrl(fileName);
+    if (uploadError) throw uploadError;
 
-      uploadedUrls.push({ url: publicUrl, type: isVideo ? 'video' : 'image' });
-    }
+    const { data: urlData } = supabase.storage
+      .from('posts')
+      .getPublicUrl(fileName);
 
-    // Get current post to merge media
-    const currentPost = posts.find(p => p.id === updates.id);
-    if (!currentPost) throw new Error('Post not found');
+    setEditingPost(prev => prev ? { ...prev, photoUrl: urlData.publicUrl } : null);
+    toast.success('Photo uploaded! Click "Save changes" to apply.');
+  } catch (error: any) {
+    console.error('Error uploading photo:', error);
+    toast.error('Failed to upload photo');
+  } finally {
+    setUploadingPhoto(false);
+  }
+};
 
-    // Parse existing media
+  const handleEditPost = async () => {
+  if (!editingPost) return;
+
+  try {
+    // Parse existing images if they're stored as JSON
     let existingImages: string[] = [];
-    let existingVideos: string[] = [];
-
-    if (currentPost.image_url) {
+    const post = posts.find(p => p.id === editingPost.id);
+    if (post?.image_url) {
       try {
-        const parsed = JSON.parse(currentPost.image_url);
-        existingImages = Array.isArray(parsed) ? parsed : [parsed];
+        existingImages = JSON.parse(post.image_url);
       } catch {
-        existingImages = currentPost.image_url.includes(',') 
-          ? currentPost.image_url.split(',').map(u => u.trim())
-          : [currentPost.image_url];
+        existingImages = post.image_url.includes(',')
+          ? post.image_url.split(',').map(url => url.trim())
+          : [post.image_url];
       }
     }
 
-    if (currentPost.video_url) {
-      try {
-        const parsed = JSON.parse(currentPost.video_url);
-        existingVideos = Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        existingVideos = currentPost.video_url.includes(',')
-          ? currentPost.video_url.split(',').map(u => u.trim())
-          : [currentPost.video_url];
-      }
+    // Determine final image URL - keep multiple images or use new single image
+    let finalImageUrl = editingPost.photoUrl.trim() || null;
+    
+    // If photoUrl is the same as one of the existing images, keep all images
+    if (existingImages.includes(editingPost.photoUrl)) {
+      finalImageUrl = post?.image_url || null;
     }
 
-    // Remove deleted media
-    existingImages = existingImages.filter(url => !updates.deletedMedia.includes(url));
-    existingVideos = existingVideos.filter(url => !updates.deletedMedia.includes(url));
-
-    // Add new media
-    uploadedUrls.forEach(item => {
-      if (item.type === 'image') {
-        existingImages.push(item.url);
-      } else {
-        existingVideos.push(item.url);
-      }
-    });
-
-    // Update post in database
     const { error } = await supabase
       .from('posts')
       .update({
-        caption: updates.caption || null,
-        recipe_url: updates.recipeUrl || null,
-        image_url: existingImages.length > 0 ? JSON.stringify(existingImages) : null,
-        video_url: existingVideos.length > 0 ? JSON.stringify(existingVideos) : null,
+        caption: editingPost.caption.trim() || null,
+        recipe_url: editingPost.recipeUrl.trim() || null,
+        image_url: finalImageUrl,
       })
-      .eq('id', updates.id);
+      .eq('id', editingPost.id);
 
     if (error) throw error;
 
-    // Update local state
     setPosts(prev =>
       prev.map(p =>
-        p.id === updates.id
+        p.id === editingPost.id
           ? {
               ...p,
-              caption: updates.caption || null,
-              recipe_url: updates.recipeUrl || null,
-              image_url: existingImages.length > 0 ? JSON.stringify(existingImages) : null,
-              video_url: existingVideos.length > 0 ? JSON.stringify(existingVideos) : null,
+              caption: editingPost.caption.trim() || null,
+              image_url: finalImageUrl,
+              recipe_url: editingPost.recipeUrl.trim() || null,
             }
           : p
       )
     );
-
-    toast.success('Post updated!');
+    toast.success('Post updated');
     setEditingPost(null);
   } catch (error: any) {
-    console.error('Edit error:', error);
-    toast.error('Failed to update post: ' + error.message);
+    console.error('Error updating post:', error);
+    toast.error('Failed to update post');
   }
 };
+
   // OPTIMIZED: Batch state updates
   const toggleLike = async (postId: string) => {
     if (!currentUserId) return;
@@ -1179,60 +1156,15 @@ const handleSaveEdit = async (updates: {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() => {
-                                const currentPost = posts.find(p => p.id === post.id);
-                                if (currentPost) {
-                                  let currentMedia: { url: string; type: 'image' | 'video' }[] = [];
-
-                                  // Parse images
-                                  if (currentPost.image_url) {
-                                    try {
-                                      const parsed = JSON.parse(currentPost.image_url);
-                                      if (Array.isArray(parsed)) {
-                                        currentMedia.push(...parsed.map(url => ({ url, type: 'image' as const })));
-                                      } else {
-                                        currentMedia.push({ url: parsed, type: 'image' });
-                                      }
-                                    } catch {
-                                      if (currentPost.image_url.includes(',')) {
-                                        currentMedia.push(...currentPost.image_url.split(',').map(url => ({ url: url.trim(), type: 'image' as const })));
-                                      } else {
-                                        currentMedia.push({ url: currentPost.image_url, type: 'image' });
-                                      }
-                                    }
-                                  }
-
-                                  // Parse videos
-                                  if (currentPost.video_url) {
-                                    try {
-                                      const parsed = JSON.parse(currentPost.video_url);
-                                      if (Array.isArray(parsed)) {
-                                        currentMedia.push(...parsed.map(url => ({ url, type: 'video' as const })));
-                                      } else {
-                                        currentMedia.push({ url: parsed, type: 'video' });
-                                      }
-                                    } catch {
-                                      if (currentPost.video_url.includes(',')) {
-                                        currentMedia.push(...currentPost.video_url.split(',').map(url => ({ url: url.trim(), type: 'video' as const })));
-                                      } else {
-                                        currentMedia.push({ url: currentPost.video_url, type: 'video' });
-                                      }
-                                    }
-                                  }
-
-                                  setEditingPost({
-                                    id: currentPost.id,
-                                    title: currentPost.title || '',
-                                    caption: currentPost.caption || '',
-                                    recipeUrl: currentPost.recipe_url || '',
-                                    currentMedia: currentMedia,
-                                    deletedMedia: [],
-                                    newMediaFiles: [],
-                                    newMediaPreviews: [],
-                                    newMediaTypes: []
-                                  });
-                                }
-                              }}
+                            onClick={() => setEditingPost({
+  id: post.id,
+  caption: post.caption || '',
+  recipeUrl: post.recipe_url || '',
+  photoUrl: post.image_url || '',
+  deletedImages: [],
+  newImages: [],
+  newPreviews: []
+})}
                               className="cursor-pointer"
                             >
                               <Edit3 className="w-4 h-4 mr-2" />
@@ -1718,6 +1650,324 @@ if (post.video_url) {
           </AlertDialogContent>
         </AlertDialog>
 
+      <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+  <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+    <AlertDialogHeader>
+      <AlertDialogTitle>Edit post</AlertDialogTitle>
+      <AlertDialogDescription>
+        Update your caption, recipe link, and images (up to 4 total).
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <div className="space-y-4 py-4">
+      <div>
+        <label className="text-sm font-medium mb-2 block">Caption</label>
+        <Textarea
+          value={editingPost?.caption || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, caption: e.target.value } : null)}
+          placeholder="Write a caption..."
+          className="resize-none"
+          rows={3}
+        />
+      </div>
+      <div>
+        <label className="text-sm font-medium mb-2 block">Recipe URL</label>
+        <input
+          type="url"
+          value={editingPost?.recipeUrl || ''}
+          onChange={(e) => setEditingPost(prev => prev ? { ...prev, recipeUrl: e.target.value } : null)}
+          placeholder="https://..."
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+      </div>
+      
+      {/* Current Images */}
+      <div>
+        <label className="text-sm font-medium mb-2 block">Current Images</label>
+        <div className="grid grid-cols-2 gap-2">
+          {(() => {
+            const post = posts.find(p => p.id === editingPost?.id);
+            if (!post?.image_url) return null;
+            
+            let imageUrls: string[] = [];
+            try {
+              imageUrls = JSON.parse(post.image_url);
+            } catch {
+              imageUrls = post.image_url.includes(',')
+                ? post.image_url.split(',').map(url => url.trim())
+                : [post.image_url];
+            }
+            
+            // Track deleted images
+            const deletedImages = (editingPost as any)?.deletedImages || [];
+            const remainingImages = imageUrls.filter(url => !deletedImages.includes(url));
+            
+            return remainingImages.map((url, idx) => (
+              <div key={idx} className="relative group">
+                <img
+                  src={url}
+                  alt={`Image ${idx + 1}`}
+                  className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                  loading="lazy"
+                />
+                <button
+                  onClick={() => {
+                    setEditingPost(prev => {
+                      if (!prev) return null;
+                      const currentDeleted = (prev as any).deletedImages || [];
+                      return {
+                        ...prev,
+                        deletedImages: [...currentDeleted, url]
+                      } as any;
+                    });
+                  }}
+                  className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+
+      {/* New Images to Upload */}
+      {(() => {
+        const newImages = (editingPost as any)?.newImages || [];
+        const newPreviews = (editingPost as any)?.newPreviews || [];
+        
+        if (newImages.length > 0) {
+          return (
+            <div>
+              <label className="text-sm font-medium mb-2 block text-green-600">New Images to Add</label>
+              <div className="grid grid-cols-2 gap-2">
+                {newPreviews.map((preview: string, idx: number) => (
+                  <div key={idx} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`New image ${idx + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border-2 border-green-500"
+                      loading="lazy"
+                    />
+                    <button
+                      onClick={() => {
+                        setEditingPost(prev => {
+                          if (!prev) return null;
+                          const currentNew = (prev as any).newImages || [];
+                          const currentPreviews = (prev as any).newPreviews || [];
+                          
+                          // Revoke the preview URL
+                          URL.revokeObjectURL(currentPreviews[idx]);
+                          
+                          return {
+                            ...prev,
+                            newImages: currentNew.filter((_: any, i: number) => i !== idx),
+                            newPreviews: currentPreviews.filter((_: any, i: number) => i !== idx)
+                          } as any;
+                        });
+                      }}
+                      className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
+      {/* Upload More Photos */}
+      {(() => {
+        const post = posts.find(p => p.id === editingPost?.id);
+        if (!post?.image_url) return null;
+        
+        let imageUrls: string[] = [];
+        try {
+          imageUrls = JSON.parse(post.image_url);
+        } catch {
+          imageUrls = post.image_url.includes(',')
+            ? post.image_url.split(',').map(url => url.trim())
+            : [post.image_url];
+        }
+        
+        const deletedImages = (editingPost as any)?.deletedImages || [];
+        const remainingCount = imageUrls.length - deletedImages.length;
+        const newImages = (editingPost as any)?.newImages || [];
+        const totalCount = remainingCount + newImages.length;
+        
+        if (totalCount >= 4) {
+          return (
+            <p className="text-sm text-gray-500">Maximum 4 images reached</p>
+          );
+        }
+        
+        return (
+          <div>
+            <label className="text-sm font-medium mb-2 block">Add More Photos</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                const remainingSlots = 4 - totalCount;
+                const filesToAdd = files.slice(0, remainingSlots);
+                
+                const validFiles: File[] = [];
+                const validPreviews: string[] = [];
+                
+                for (const file of filesToAdd) {
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast.error(`${file.name} is too large (max 10MB)`);
+                    continue;
+                  }
+                  if (!file.type.startsWith('image/')) {
+                    toast.error(`${file.name} is not an image`);
+                    continue;
+                  }
+                  validFiles.push(file);
+                  validPreviews.push(URL.createObjectURL(file));
+                }
+                
+                if (validFiles.length > 0) {
+                  setEditingPost(prev => {
+                    if (!prev) return null;
+                    const currentNew = (prev as any).newImages || [];
+                    const currentPreviews = (prev as any).newPreviews || [];
+                    return {
+                      ...prev,
+                      newImages: [...currentNew, ...validFiles],
+                      newPreviews: [...currentPreviews, ...validPreviews]
+                    } as any;
+                  });
+                  toast.success(`Added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`);
+                }
+                
+                // Reset input
+                e.target.value = '';
+              }}
+              disabled={uploadingPhoto}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {totalCount}/4 images selected
+            </p>
+          </div>
+        );
+      })()}
+    </div>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction 
+        onClick={async () => {
+          if (!editingPost) return;
+
+          try {
+            const post = posts.find(p => p.id === editingPost.id);
+            if (!post?.image_url) return;
+            
+            // Parse existing images
+            let imageUrls: string[] = [];
+            try {
+              imageUrls = JSON.parse(post.image_url);
+            } catch {
+              imageUrls = post.image_url.includes(',')
+                ? post.image_url.split(',').map(url => url.trim())
+                : [post.image_url];
+            }
+            
+            // Remove deleted images
+            const deletedImages = (editingPost as any)?.deletedImages || [];
+            const remainingImages = imageUrls.filter(url => !deletedImages.includes(url));
+            
+            // Upload new images
+            const newImages = (editingPost as any)?.newImages || [];
+            const uploadedNewUrls: string[] = [];
+            
+            if (newImages.length > 0) {
+              setUploadingPhoto(true);
+              
+              for (const file of newImages) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${currentUserId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                
+                const { error: uploadError } = await supabase.storage
+                  .from('posts')
+                  .upload(fileName, file);
+                
+                if (uploadError) throw uploadError;
+                
+                const { data: urlData } = supabase.storage
+                  .from('posts')
+                  .getPublicUrl(fileName);
+                
+                uploadedNewUrls.push(urlData.publicUrl);
+              }
+              
+              setUploadingPhoto(false);
+            }
+            
+            // Combine remaining + new images
+            const finalImages = [...remainingImages, ...uploadedNewUrls];
+            const finalImageUrl = finalImages.length > 1 
+              ? JSON.stringify(finalImages)
+              : finalImages[0] || null;
+            
+            // Update post
+            const { error } = await supabase
+              .from('posts')
+              .update({
+                caption: editingPost.caption.trim() || null,
+                recipe_url: editingPost.recipeUrl.trim() || null,
+                image_url: finalImageUrl,
+              })
+              .eq('id', editingPost.id);
+
+            if (error) throw error;
+
+            setPosts(prev =>
+              prev.map(p =>
+                p.id === editingPost.id
+                  ? {
+                      ...p,
+                      caption: editingPost.caption.trim() || null,
+                      image_url: finalImageUrl,
+                      recipe_url: editingPost.recipeUrl.trim() || null,
+                    }
+                  : p
+              )
+            );
+            
+            // Cleanup preview URLs
+            const newPreviews = (editingPost as any)?.newPreviews || [];
+            newPreviews.forEach((url: string) => URL.revokeObjectURL(url));
+            
+            toast.success('Post updated');
+            setEditingPost(null);
+          } catch (error: any) {
+            console.error('Error updating post:', error);
+            toast.error('Failed to update post');
+          }
+        }} 
+        className="bg-orange-600 hover:bg-orange-700"
+        disabled={uploadingPhoto}
+      >
+        {uploadingPhoto ? 'Uploading...' : 'Save changes'}
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+        {selectedRecipe && (
+          <RecipeDetailModal
+            recipe={selectedRecipe}
+            open={!!selectedRecipe}
+            onOpenChange={(open) => !open && setSelectedRecipe(null)}
+          />
+        )}
+
         <Dialog open={!!sharePostId} onOpenChange={(open) => !open && setSharePostId(null)}>
           <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
             <DialogHeader>
@@ -1842,66 +2092,6 @@ if (post.video_url) {
             </div>
           </DialogContent>
         </Dialog>
-        </AlertDialog>
-
-        <Dialog open={!!sharePostId} onOpenChange={(open) => !open && setSharePostId(null)}>
-          <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Share</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div className="flex gap-2 border-b border-gray-200">
-                <button
-                  onClick={() => setShareModalTab('followers')}
-                  className={`flex-1 py-2 px-4 font-medium transition-colors ${
-                    shareModalTab === 'followers'
-                      ? 'text-orange-600 border-b-2 border-orange-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Send to Followers
-                </button>
-                <button
-                  onClick={() => setShareModalTab('link')}
-                  className={`flex-1 py-2 px-4 font-medium transition-colors ${
-                    shareModalTab === 'link'
-                      ? 'text-orange-600 border-b-2 border-orange-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Share Link
-                </button>
-              </div>
-
-              {shareModalTab === 'followers' && (
-                <div className="space-y-4">
-                  {/* ... rest of followers tab ... */}
-                </div>
-              )}
-
-              {shareModalTab === 'link' && (
-                <div className="space-y-4">
-                  {/* ... rest of link tab ... */}
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* 👇 ADD THE EDIT MODAL HERE - AFTER THE SHARE DIALOG CLOSES */}
-        {editingPost && (
-          <EditPostModal
-            isOpen={!!editingPost}
-            onClose={() => setEditingPost(null)}
-            post={editingPost}
-            onSave={handleSaveEdit}
-          />
-        )}
-      </div>
-    </div>
-  );
-}
       </div>
     </div>
   );
