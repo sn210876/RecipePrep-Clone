@@ -118,10 +118,6 @@ const [editingPost, setEditingPost] = useState<{
   caption: string;
   recipeUrl: string;
   currentMedia: { url: string; type: 'image' | 'video' }[];
-  deletedMedia: string[];
-  newMediaFiles: File[];
-  newMediaPreviews: string[];
-  newMediaTypes: ('image' | 'video')[];
 } | null>(null);
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
