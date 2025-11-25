@@ -1439,27 +1439,29 @@ if (post.video_url) {
             ))}
           </div>
           
-          {/* Swipe support for mobile */}
-          <div
-            onTouchStart={(e) => {
-              const touch = e.touches[0];
-              (e.currentTarget as any).touchStartX = touch.clientX;
-            }}
-            onTouchEnd={(e) => {
-              const touch = e.changedTouches[0];
-              const touchStartX = (e.currentTarget as any).touchStartX;
-              const diff = touchStartX - touch.clientX;
-              
-              if (Math.abs(diff) > 50) {
-                if (diff > 0 && currentImageIndex < mediaUrls.length - 1) {
-                  setCurrentImageIndex(prev => prev + 1);
-                } else if (diff < 0 && currentImageIndex > 0) {
-                  setCurrentImageIndex(prev => prev - 1);
+        {/* Swipe support for mobile - only active on non-video content */}
+          {mediaTypes[currentImageIndex] !== 'video' && (
+            <div
+              onTouchStart={(e) => {
+                const touch = e.touches[0];
+                (e.currentTarget as any).touchStartX = touch.clientX;
+              }}
+              onTouchEnd={(e) => {
+                const touch = e.changedTouches[0];
+                const touchStartX = (e.currentTarget as any).touchStartX;
+                const diff = touchStartX - touch.clientX;
+                
+                if (Math.abs(diff) > 50) {
+                  if (diff > 0 && currentImageIndex < mediaUrls.length - 1) {
+                    setCurrentImageIndex(prev => prev + 1);
+                  } else if (diff < 0 && currentImageIndex > 0) {
+                    setCurrentImageIndex(prev => prev - 1);
+                  }
                 }
-              }
-            }}
-            className="absolute inset-0"
-          />
+              }}
+              className="absolute inset-0"
+            />
+          )}
         </div>
       );
     })()
