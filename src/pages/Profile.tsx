@@ -1099,8 +1099,7 @@ if (loading) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Delete Post Confirmation Dialog */}
+{/* Delete Post Confirmation Dialog */}
       <AlertDialog open={!!deletePostId} onOpenChange={(open) => !open && setDeletePostId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1117,6 +1116,14 @@ if (loading) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+
+      {/* Followers/Following Modal */}
+      <FollowersModal
+        isOpen={followersModalOpen}
+        onClose={() => setFollowersModalOpen(false)}
+        userId={targetUserId || ''}
+        type={followersModalType}
+      />
+    </div>  {/* ← This is the final closing div of the entire Profile component */}
   );
 }
