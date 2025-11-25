@@ -15,6 +15,10 @@ import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { Messages } from './pages/Messages';
 import { Toaster } from './components/ui/sonner';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { App as CapApp } from '@capacitor/app';
 import AuthForm from './components/AuthForm';
 
 // Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
