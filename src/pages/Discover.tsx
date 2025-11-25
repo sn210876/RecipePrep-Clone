@@ -555,41 +555,55 @@ const [editingPost, setEditingPost] = useState<{
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file || !editingPost) return;
-
-  setUploadingPhoto(true);
+  const handleSaveEdit = async (updates: {
+  id: string;
+  caption: string;
+  recipeUrl: string;
+  deletedMedia: string[];
+  newMediaFiles: File[];
+}) => {
   try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+    // Upload new media files
+    const uploadedUrls: { url: string; type: 'image' | 'video' }[] = [];
+    
+    for (const file of updates.newMediaFiles) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUserId}/${Date.now()}-${Math.random()}.${fileExt}`;
+      const isVideo = file.type.startsWith('video/');
+      
+      const { error: uploadError } = await supabase.storage
+        .from('posts')
+        .upload(fileName, file);
 
-    const { error: uploadError } = await supabase.storage
-      .from('posts')
-      .upload(fileName, file);
+      if (uploadError) throw uploadError;
 
-    if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage
+        .from('posts')
+        .getPublicUrl(fileName);
 
-    const { data: urlData } = supabase.storage
-      .from('posts')
-      .getPublicUrl(fileName);
+      uploadedUrls.push({ url: publicUrl, type: isVideo ? 'video' : 'image' });
+    }
 
-    setEditingPost(prev => prev ? { ...prev, photoUrl: urlData.publicUrl } : null);
-    toast.success('Photo uploaded! Click "Save changes" to apply.');
-  } catch (error: any) {
-    console.error('Error uploading photo:', error);
-    toast.error('Failed to upload photo');
-  } finally {
-    setUploadingPhoto(false);
-  }
-};
+    // Get current post to merge media
+    const currentPost = posts.find(p => p.id === updates.id);
+    if (!currentPost) throw new Error('Post not found');
 
-  const handleEditPost = async () => {
-  // TODO: Implement edit functionality with proper UI
-  // Currently disabled due to missing edit dialog
-  toast.error('Edit functionality is temporarily disabled');
-  setEditingPost(null);
-};
+    // Parse existing media
+    let existingImages: string[] = [];
+    let existingVideos: string[] = [];
+
+    if (currentPost.image_url) {
+      try {
+        const parsed = JSON.parse(currentPost.image_url);
+        existingImages = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        existingImages = currentPost.image_url.includes(',') 
+          ? currentPost.image_url.split(',').map(u => u.trim())
+          : [currentPost.image_url];
+      }
+    }
+
+    if
 
   // OPTIMIZED: Batch state updates
   const toggleLike = async (postId: string) => {
