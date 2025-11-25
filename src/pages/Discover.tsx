@@ -1271,6 +1271,13 @@ if (post.video_url) {
       console.log('[Discover] 📊 mediaUrls:', mediaUrls);
       console.log('[Discover] 📊 mediaTypes:', mediaTypes);
 
+      // Debug video URLs specifically
+      mediaUrls.forEach((url, idx) => {
+        if (mediaTypes[idx] === 'video') {
+          console.log('[Discover] 🎥 Video URL at index', idx, ':', url);
+        }
+      });
+
       const currentImageIndex = imageIndices[post.id] || 0;
       const setCurrentImageIndex = (indexOrFn: number | ((prev: number) => number)) => {
         setImageIndices(prev => ({
@@ -1294,14 +1301,21 @@ if (post.video_url) {
     preload="metadata"
     controlsList="nodownload"
     onError={(e) => {
-      console.error('[Discover] Video failed to load:', mediaUrls[0]);
+      const videoElement = e.target as HTMLVideoElement;
+      console.error('[Discover] Single video failed:', mediaUrls[0]);
+      console.error('[Discover] Video error details:', {
+        error: videoElement.error,
+        networkState: videoElement.networkState,
+        readyState: videoElement.readyState,
+        src: videoElement.src
+      });
       toast.error('Video failed to load');
     }}
     onLoadStart={() => {
-      console.log('[Discover] Video loading:', mediaUrls[0]);
+      console.log('[Discover] Single video loading:', mediaUrls[0]);
     }}
     onCanPlay={() => {
-      console.log('[Discover] Video ready to play:', mediaUrls[0]);
+      console.log('[Discover] Single video can play:', mediaUrls[0]);
     }}
   />
 ) : (
@@ -1334,7 +1348,14 @@ if (post.video_url) {
     preload="metadata"
     controlsList="nodownload"
     onError={(e) => {
+      const videoElement = e.target as HTMLVideoElement;
       console.error('[Discover] Carousel video failed:', mediaUrls[currentImageIndex]);
+      console.error('[Discover] Video error details:', {
+        error: videoElement.error,
+        networkState: videoElement.networkState,
+        readyState: videoElement.readyState,
+        src: videoElement.src
+      });
       toast.error('Video failed to load');
     }}
     onLoadStart={() => {
