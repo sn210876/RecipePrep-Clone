@@ -1701,15 +1701,56 @@ if (post.video_url) {
       </div>
       
       {/* Current Media (Images and Videos) */}
-      <div>
-        <label className="text-sm font-medium mb-2 block">Current Media</label>
-        <div className="grid grid-cols-2 gap-2">
-          {(() => {
-            const post = posts.find(p => p.id === editingPost?.id);
-            if (!post) return null;
-            
-            let mediaUrls: string[] = [];
-            let mediaTypes: string[] = [];
+       {/* Current Media */}
+      {editingPost && editingPost.currentMedia.length > 0 && (
+        <div>
+          <label className="text-sm font-medium mb-2 block">Current Media</label>
+          <div className="grid grid-cols-2 gap-3">
+            {editingPost.currentMedia
+              .filter(media => !editingPost.deletedMedia.includes(media.url))
+              .map((media, idx) => (
+                <div key={idx} className="relative group rounded-lg overflow-hidden border-2 border-gray-200">
+                  {media.type === 'video' ? (
+                    <div className="relative aspect-square bg-black">
+                      <video
+                        src={media.url}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="bg-white/90 px-2 py-1 rounded text-xs font-semibold">
+                          🎥 VIDEO
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={media.url}
+                      alt={`Media ${idx + 1}`}
+                      className="w-full aspect-square object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPost(prev => {
+                        if (!prev) return null;
+                        return {
+                          ...prev,
+                          deletedMedia: [...prev.deletedMedia, media.url]
+                        };
+                      });
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
             
             // Parse images
             if (post.image_url) {
