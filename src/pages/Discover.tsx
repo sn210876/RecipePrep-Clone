@@ -111,14 +111,14 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [commentModalPostId, setCommentModalPostId] = useState<string | null>(null);
   const [postRatings, setPostRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
- const [editingPost, setEditingPost] = useState<{ 
   id: string; 
   caption: string; 
   recipeUrl: string; 
-  photoUrl: string;
-  deletedImages?: string[];
-  newImages?: File[];
-  newPreviews?: string[];
+  currentMedia: { url: string; type: 'image' | 'video' }[];
+  deletedMedia: string[];
+  newMediaFiles: File[];
+  newMediaPreviews: string[];
+  newMediaTypes: ('image' | 'video')[];
 } | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(new Set());
