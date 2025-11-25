@@ -1128,6 +1128,6 @@ if (loading) {
         userId={targetUserId || ''}
         type={followersModalType}
       />
-    </div>  {/* ← This is the final closing div of the entire Profile component */}
+    </div>  /* ← This is the final closing div of the entire Profile component */}
   );
 }
