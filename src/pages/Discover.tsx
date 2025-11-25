@@ -1702,18 +1702,18 @@ if (post.video_url) {
     }
             
             // Parse videos
-             if (post.video_url) {
-      try {
-        const parsed = JSON.parse(post.video_url);
-        if (Array.isArray(parsed)) {
-          currentMedia.push(...parsed.map(url => ({ url, type: 'video' as const })));
-        } else {
-          currentMedia.push({ url: parsed, type: 'video' });
+            if (currentPost.video_url) {
+        try {
+          const parsed = JSON.parse(currentPost.video_url);
+          if (Array.isArray(parsed)) {
+            currentMedia.push(...parsed.map(url => ({ url, type: 'video' as const })));
+          } else {
+            currentMedia.push({ url: parsed, type: 'video' });
+          }
+        } catch {
+          currentMedia.push({ url: currentPost.video_url, type: 'video' });
         }
-      } catch {
-        currentMedia.push({ url: post.video_url, type: 'video' });
       }
-    }
   setEditingPost({
       id: post.id,
       caption: post.caption || '',
