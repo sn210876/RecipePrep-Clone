@@ -1160,29 +1160,29 @@ const [editingPost, setEditingPost] = useState<{
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
          // In both Discover.tsx and Profile.tsx, update the edit button onClick:
-onClick={() => {
-  const post = posts.find(p => p.id === post.id);
-  if (post) {
-    // Parse existing media
-    let currentMedia: { url: string; type: 'image' | 'video' }[] = [];
-    
-    // Parse images
-    if (post.image_url) {
-      try {
-        const parsed = JSON.parse(post.image_url);
-        if (Array.isArray(parsed)) {
-          currentMedia.push(...parsed.map(url => ({ url, type: 'image' as const })));
-        } else {
-          currentMedia.push({ url: parsed, type: 'image' });
-        }
-      } catch {
-        if (post.image_url.includes(',')) {
-          currentMedia.push(...post.image_url.split(',').map(url => ({ url: url.trim(), type: 'image' as const })));
-        } else {
-          currentMedia.push({ url: post.image_url, type: 'image' });
+<DropdownMenuItem
+  onClick={() => {
+    const currentPost = posts.find(p => p.id === post.id);  // ✅ Use post from map
+    if (currentPost) {
+      let currentMedia: { url: string; type: 'image' | 'video' }[] = [];
+      
+      // Parse images
+      if (currentPost.image_url) {
+        try {
+          const parsed = JSON.parse(currentPost.image_url);
+          if (Array.isArray(parsed)) {
+            currentMedia.push(...parsed.map(url => ({ url, type: 'image' as const })));
+          } else {
+            currentMedia.push({ url: parsed, type: 'image' });
+          }
+        } catch {
+          if (currentPost.image_url.includes(',')) {
+            currentMedia.push(...currentPost.image_url.split(',').map(url => ({ url: url.trim(), type: 'image' as const })));
+          } else {
+            currentMedia.push({ url: currentPost.image_url, type: 'image' });
+          }
         }
       }
-    }
                               className="cursor-pointer"
                             >
                               <Edit3 className="w-4 h-4 mr-2" />
