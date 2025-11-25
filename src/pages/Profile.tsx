@@ -780,7 +780,6 @@ if (loading) {
               </button>
             </div>
           </div>
-          {/* Stats */}
 
          
           
