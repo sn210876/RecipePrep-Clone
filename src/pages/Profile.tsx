@@ -604,8 +604,7 @@ if (loading) {
             <h1 className="text-lg font-semibold">@{profile.username}</h1>
           </div>
         </div>
-      )
-
+      
       <div className="max-w-lg mx-auto w-full">
         <div className="bg-white border-b border-gray-200">
           {/* Banner */}
