@@ -1723,7 +1723,14 @@ if (post.video_url) {
             <DialogHeader>
               <DialogTitle>Share</DialogTitle>
             </DialogHeader>
-
+{editingPost && (
+          <EditPostModal
+            isOpen={!!editingPost}
+            onClose={() => setEditingPost(null)}
+            post={editingPost}
+            onSave={handleSaveEdit}
+          />
+        )}
             <div className="space-y-4">
               <div className="flex gap-2 border-b border-gray-200">
                 <button
