@@ -1727,11 +1727,11 @@ if (post.video_url) {
       });
     }
   }}
-  className="pointer-events-auto p-2 sm:p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
-  title="Edit post"
+  className="cursor-pointer"
 >
-  <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-</button>
+  <Edit3 className="w-4 h-4 mr-2" />
+  Edit post
+</DropdownMenuItem>
 
 
 
