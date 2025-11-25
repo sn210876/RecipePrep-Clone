@@ -1715,17 +1715,23 @@ if (post.video_url) {
         }
       }
   setEditingPost({
-      id: post.id,
-      caption: post.caption || '',
-      recipeUrl: post.recipe_url || '',
-      currentMedia,
-      deletedMedia: [],
-      newMediaFiles: [],
-      newMediaPreviews: [],
-      newMediaTypes: []
-    });
-  }
-}}
+        id: currentPost.id,
+        title: currentPost.title || '',
+        caption: currentPost.caption || '',
+        recipeUrl: currentPost.recipe_url || '',
+        currentMedia,
+        deletedMedia: [],
+        newMediaFiles: [],
+        newMediaPreviews: [],
+        newMediaTypes: []
+      });
+    }
+  }}
+  className="pointer-events-auto p-2 sm:p-3 bg-black/50 backdrop-blur-md hover:bg-orange-600/70 rounded-full transition-all shadow-lg"
+  title="Edit post"
+>
+  <Edit3 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+</button>
 
 
 
