@@ -556,7 +556,113 @@ const [editingPost, setEditingPost] = useState<{
   };
 
   
+const handleSaveEdit = async (updates: {
+  id: string;
+  caption: string;
+  recipeUrl: string;
+  deletedMedia: string[];
+  newMediaFiles: File[];
+}) => {
+  try {
+    // Upload new media files
+    const uploadedUrls: { url: string; type: 'image' | 'video' }[] = [];
+    
+    for (const file of updates.newMediaFiles) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUserId}/${Date.now()}-${Math.random()}.${fileExt}`;
+      const isVideo = file.type.startsWith('video/');
+      
+      const { error: uploadError } = await supabase.storage
+        .from('posts')
+        .upload(fileName, file);
 
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('posts')
+        .getPublicUrl(fileName);
+
+      uploadedUrls.push({ url: publicUrl, type: isVideo ? 'video' : 'image' });
+    }
+
+    // Get current post to merge media
+    const currentPost = posts.find(p => p.id === updates.id);
+    if (!currentPost) throw new Error('Post not found');
+
+    // Parse existing media
+    let existingImages: string[] = [];
+    let existingVideos: string[] = [];
+
+    if (currentPost.image_url) {
+      try {
+        const parsed = JSON.parse(currentPost.image_url);
+        existingImages = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        existingImages = currentPost.image_url.includes(',') 
+          ? currentPost.image_url.split(',').map(u => u.trim())
+          : [currentPost.image_url];
+      }
+    }
+
+    if (currentPost.video_url) {
+      try {
+        const parsed = JSON.parse(currentPost.video_url);
+        existingVideos = Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        existingVideos = currentPost.video_url.includes(',')
+          ? currentPost.video_url.split(',').map(u => u.trim())
+          : [currentPost.video_url];
+      }
+    }
+
+    // Remove deleted media
+    existingImages = existingImages.filter(url => !updates.deletedMedia.includes(url));
+    existingVideos = existingVideos.filter(url => !updates.deletedMedia.includes(url));
+
+    // Add new media
+    uploadedUrls.forEach(item => {
+      if (item.type === 'image') {
+        existingImages.push(item.url);
+      } else {
+        existingVideos.push(item.url);
+      }
+    });
+
+    // Update post in database
+    const { error } = await supabase
+      .from('posts')
+      .update({
+        caption: updates.caption || null,
+        recipe_url: updates.recipeUrl || null,
+        image_url: existingImages.length > 0 ? JSON.stringify(existingImages) : null,
+        video_url: existingVideos.length > 0 ? JSON.stringify(existingVideos) : null,
+      })
+      .eq('id', updates.id);
+
+    if (error) throw error;
+
+    // Update local state
+    setPosts(prev =>
+      prev.map(p =>
+        p.id === updates.id
+          ? {
+              ...p,
+              caption: updates.caption || null,
+              recipe_url: updates.recipeUrl || null,
+              image_url: existingImages.length > 0 ? JSON.stringify(existingImages) : null,
+              video_url: existingVideos.length > 0 ? JSON.stringify(existingVideos) : null,
+            }
+          : p
+      )
+    );
+
+    toast.success('Post updated!');
+    setEditingPost(null);
+  } catch (error: any) {
+    console.error('Edit error:', error);
+    toast.error('Failed to update post: ' + error.message);
+  }
+};
   // OPTIMIZED: Batch state updates
   const toggleLike = async (postId: string) => {
     if (!currentUserId) return;
