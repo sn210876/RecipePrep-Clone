@@ -79,7 +79,60 @@ function AppContent() {
   useEffect(() => {
     const handlePop = () => {
   const path = window.location.pathname;
+  // Add mobile app initialization
+useEffect(() => {
+  const initializeMobileApp = async () => {
+    // Only run on native platforms (iOS/Android)
+    if (Capacitor.isNativePlatform()) {
+      
+      // Configure status bar
+      try {
+        await StatusBar.setStyle({ style: Style.Light });
+        if (Capacitor.getPlatform() === 'android') {
+          await StatusBar.setBackgroundColor({ color: '#FF6B35' });
+        }
+      } catch (e) {
+        console.log('Status bar error:', e);
+      }
+      
+      // Hide splash screen after app loads
+      setTimeout(() => {
+        SplashScreen.hide();
+      }, 1000);
+      
+      // Handle Android back button
+      CapApp.addListener('backButton', ({ canGoBack }) => {
+        if (!canGoBack) {
+          CapApp.exitApp();
+        } else {
+          window.history.back();
+        }
+      });
+      
+      // Handle deep links (e.g., mealscrape://recipe/123)
+      CapApp.addListener('appUrlOpen', (data) => {
+        console.log('App opened with URL:', data.url);
+        // Handle deep link navigation here
+        const url = new URL(data.url);
+        if (url.pathname.startsWith('/post/')) {
+          const postId = url.pathname.split('/post/')[1];
+          setCurrentPage('discover');
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
+          }, 500);
+        }
+      });
+    }
+  };
   
+  initializeMobileApp();
+  
+  return () => {
+    if (Capacitor.isNativePlatform()) {
+      CapApp.removeAllListeners();
+    }
+  };
+}, []);
   // Explicit route checks first
   if (path === '/' || path === '/discover-recipes') {
     setCurrentPage('discover-recipes');
