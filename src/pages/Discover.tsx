@@ -980,7 +980,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   return (
     <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden">
       <div className="max-w-sm mx-auto w-full" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-        <div className="fixed top-14 left-0 right-0 z-20 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto lg:ml-64 lg:max-w-sm">
+        <div className="fixed top-14 left-0 right-0 z-20 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
