@@ -401,12 +401,19 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
   return (
     <>
       <Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] sm:h-[85vh] p-0 gap-0 overflow-hidden z-[9999]">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-50"
-          >
+       <DialogContent className="
+  max-w-5xl 
+  w-[calc(100vw-1rem)]
+  sm:w-[95vw] 
+  h-[calc(100vh-2rem)]
+  sm:h-[85vh] 
+  p-0 
+  gap-0 
+  overflow-hidden 
+  z-[9999]
+  mx-2
+  sm:mx-auto
+">
             <X className="w-5 h-5" />
           </button>
 
