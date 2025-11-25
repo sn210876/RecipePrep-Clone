@@ -514,7 +514,7 @@ export function UserProfileView({
         );
       })()}
 
-     <Dialog open={{/* Supporters Dialog */}
+    {/* Supporters Dialog */}
 <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
   <DialogContent className="max-w-sm">
     <DialogHeader>
