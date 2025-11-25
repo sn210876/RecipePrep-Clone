@@ -44,9 +44,17 @@ export function RecipeDetailModal({
   const isSaved = state.savedRecipes.some((r) => r.id === recipe.id);
   const hasSteps = recipe.steps && recipe.steps.length > 0;
 
-  if (cookMode && hasSteps) {
-    return <CookMode recipe={recipe} onClose={() => setCookMode(false)} />;
-  }
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
 
   const handleToggleIngredient = (index: number) => {
     setCheckedIngredients((prev) => {
