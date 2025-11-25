@@ -1162,14 +1162,14 @@ const [editingPost, setEditingPost] = useState<{
 onClick={() => {
   const post = posts.find(p => p.id === post.id);
   if (post) {
-    setEditingPost({
+   setEditingPost({
       id: post.id,
       caption: post.caption || '',
       recipeUrl: post.recipe_url || '',
-      photoUrl: post.image_url || '',
+      currentMedia,
       deletedMedia: [],
-      newMedia: [],
-      newPreviews: [],
+      newMediaFiles: [],
+      newMediaPreviews: [],
       newMediaTypes: []
     });
   }
