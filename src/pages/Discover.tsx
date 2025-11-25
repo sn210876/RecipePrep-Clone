@@ -1701,7 +1701,7 @@ if (post.video_url) {
     }
             
             // Parse videos
-            if (post.video_url) {
+             if (post.video_url) {
       try {
         const parsed = JSON.parse(post.video_url);
         if (Array.isArray(parsed)) {
