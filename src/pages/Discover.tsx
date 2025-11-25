@@ -1650,7 +1650,10 @@ if (post.video_url) {
           </AlertDialogContent>
         </AlertDialog>
 
-     <AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+     // Add this updated edit post dialog to your Discover.tsx and Profile.tsx
+// Replace the existing AlertDialog for editingPost with this version:
+
+<AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
   <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
     <AlertDialogHeader>
       <AlertDialogTitle>Edit post</AlertDialogTitle>
@@ -1680,43 +1683,92 @@ if (post.video_url) {
         />
       </div>
       
-      {/* Current Images */}
+      {/* Current Media (Images and Videos) */}
       <div>
-        <label className="text-sm font-medium mb-2 block">Current Images</label>
+        <label className="text-sm font-medium mb-2 block">Current Media</label>
         <div className="grid grid-cols-2 gap-2">
           {(() => {
             const post = posts.find(p => p.id === editingPost?.id);
-            if (!post?.image_url) return null;
+            if (!post) return null;
             
-            let imageUrls: string[] = [];
-            try {
-              imageUrls = JSON.parse(post.image_url);
-            } catch {
-              imageUrls = post.image_url.includes(',')
-                ? post.image_url.split(',').map(url => url.trim())
-                : [post.image_url];
+            let mediaUrls: string[] = [];
+            let mediaTypes: string[] = [];
+            
+            // Parse images
+            if (post.image_url) {
+              try {
+                const parsed = JSON.parse(post.image_url);
+                if (Array.isArray(parsed)) {
+                  mediaUrls.push(...parsed);
+                  mediaTypes.push(...parsed.map(() => 'image'));
+                } else {
+                  mediaUrls.push(parsed);
+                  mediaTypes.push('image');
+                }
+              } catch {
+                if (post.image_url.includes(',')) {
+                  const urls = post.image_url.split(',').map(url => url.trim());
+                  mediaUrls.push(...urls);
+                  mediaTypes.push(...urls.map(() => 'image'));
+                } else {
+                  mediaUrls.push(post.image_url);
+                  mediaTypes.push('image');
+                }
+              }
             }
             
-            // Track deleted images
-            const deletedImages = (editingPost as any)?.deletedImages || [];
-            const remainingImages = imageUrls.filter(url => !deletedImages.includes(url));
+            // Parse videos
+            if (post.video_url) {
+              try {
+                const parsed = JSON.parse(post.video_url);
+                if (Array.isArray(parsed)) {
+                  mediaUrls.push(...parsed);
+                  mediaTypes.push(...parsed.map(() => 'video'));
+                } else {
+                  mediaUrls.push(parsed);
+                  mediaTypes.push('video');
+                }
+              } catch {
+                mediaUrls.push(post.video_url);
+                mediaTypes.push('video');
+              }
+            }
             
-            return remainingImages.map((url, idx) => (
+            // Track deleted media
+            const deletedMedia = (editingPost as any)?.deletedMedia || [];
+            const remainingMedia = mediaUrls
+              .map((url, idx) => ({ url, type: mediaTypes[idx] }))
+              .filter(item => !deletedMedia.includes(item.url));
+            
+            if (remainingMedia.length === 0) return <p className="text-sm text-gray-500">No media</p>;
+            
+            return remainingMedia.map((item, idx) => (
               <div key={idx} className="relative group">
-                <img
-                  src={url}
-                  alt={`Image ${idx + 1}`}
-                  className="w-full h-24 object-cover rounded-lg border border-gray-200"
-                  loading="lazy"
-                />
+                {item.type === 'video' ? (
+                  <video
+                    src={item.url}
+                    className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                    muted
+                  />
+                ) : (
+                  <img
+                    src={item.url}
+                    alt={`Media ${idx + 1}`}
+                    className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                    loading="lazy"
+                  />
+                )}
+                <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
+                  {item.type === 'video' ? '🎥' : '🖼️'}
+                </div>
                 <button
                   onClick={() => {
                     setEditingPost(prev => {
                       if (!prev) return null;
-                      const currentDeleted = (prev as any).deletedImages || [];
+                      const currentDeleted = (prev as any).deletedMedia || [];
                       return {
                         ...prev,
-                        deletedImages: [...currentDeleted, url]
+                        deletedMedia: [...currentDeleted, item.url]
                       } as any;
                     });
                   }}
@@ -1730,38 +1782,52 @@ if (post.video_url) {
         </div>
       </div>
 
-      {/* New Images to Upload */}
+      {/* New Media to Upload */}
       {(() => {
-        const newImages = (editingPost as any)?.newImages || [];
+        const newMedia = (editingPost as any)?.newMedia || [];
         const newPreviews = (editingPost as any)?.newPreviews || [];
+        const newMediaTypes = (editingPost as any)?.newMediaTypes || [];
         
-        if (newImages.length > 0) {
+        if (newMedia.length > 0) {
           return (
             <div>
-              <label className="text-sm font-medium mb-2 block text-green-600">New Images to Add</label>
+              <label className="text-sm font-medium mb-2 block text-green-600">New Media to Add</label>
               <div className="grid grid-cols-2 gap-2">
                 {newPreviews.map((preview: string, idx: number) => (
                   <div key={idx} className="relative group">
-                    <img
-                      src={preview}
-                      alt={`New image ${idx + 1}`}
-                      className="w-full h-24 object-cover rounded-lg border-2 border-green-500"
-                      loading="lazy"
-                    />
+                    {newMediaTypes[idx] === 'video' ? (
+                      <video
+                        src={preview}
+                        className="w-full h-24 object-cover rounded-lg border-2 border-green-500"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={preview}
+                        alt={`New media ${idx + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border-2 border-green-500"
+                        loading="lazy"
+                      />
+                    )}
+                    <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded">
+                      {newMediaTypes[idx] === 'video' ? '🎥 New' : '🖼️ New'}
+                    </div>
                     <button
                       onClick={() => {
                         setEditingPost(prev => {
                           if (!prev) return null;
-                          const currentNew = (prev as any).newImages || [];
+                          const currentNew = (prev as any).newMedia || [];
                           const currentPreviews = (prev as any).newPreviews || [];
+                          const currentTypes = (prev as any).newMediaTypes || [];
                           
                           // Revoke the preview URL
                           URL.revokeObjectURL(currentPreviews[idx]);
                           
                           return {
                             ...prev,
-                            newImages: currentNew.filter((_: any, i: number) => i !== idx),
-                            newPreviews: currentPreviews.filter((_: any, i: number) => i !== idx)
+                            newMedia: currentNew.filter((_: any, i: number) => i !== idx),
+                            newPreviews: currentPreviews.filter((_: any, i: number) => i !== idx),
+                            newMediaTypes: currentTypes.filter((_: any, i: number) => i !== idx)
                           } as any;
                         });
                       }}
@@ -1778,37 +1844,48 @@ if (post.video_url) {
         return null;
       })()}
 
-      {/* Upload More Photos */}
+      {/* Upload More Media */}
       {(() => {
         const post = posts.find(p => p.id === editingPost?.id);
-        if (!post?.image_url) return null;
+        if (!post) return null;
         
-        let imageUrls: string[] = [];
-        try {
-          imageUrls = JSON.parse(post.image_url);
-        } catch {
-          imageUrls = post.image_url.includes(',')
-            ? post.image_url.split(',').map(url => url.trim())
-            : [post.image_url];
+        let totalExisting = 0;
+        if (post.image_url) {
+          try {
+            const parsed = JSON.parse(post.image_url);
+            totalExisting += Array.isArray(parsed) ? parsed.length : 1;
+          } catch {
+            totalExisting += post.image_url.includes(',') 
+              ? post.image_url.split(',').length 
+              : 1;
+          }
+        }
+        if (post.video_url) {
+          try {
+            const parsed = JSON.parse(post.video_url);
+            totalExisting += Array.isArray(parsed) ? parsed.length : 1;
+          } catch {
+            totalExisting += 1;
+          }
         }
         
-        const deletedImages = (editingPost as any)?.deletedImages || [];
-        const remainingCount = imageUrls.length - deletedImages.length;
-        const newImages = (editingPost as any)?.newImages || [];
-        const totalCount = remainingCount + newImages.length;
+        const deletedMedia = (editingPost as any)?.deletedMedia || [];
+        const remainingCount = totalExisting - deletedMedia.length;
+        const newMedia = (editingPost as any)?.newMedia || [];
+        const totalCount = remainingCount + newMedia.length;
         
         if (totalCount >= 4) {
           return (
-            <p className="text-sm text-gray-500">Maximum 4 images reached</p>
+            <p className="text-sm text-gray-500">Maximum 4 media files reached</p>
           );
         }
         
         return (
           <div>
-            <label className="text-sm font-medium mb-2 block">Add More Photos</label>
+            <label className="text-sm font-medium mb-2 block">Add More Media (Images or Videos)</label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               multiple
               onChange={(e) => {
                 const files = Array.from(e.target.files || []);
@@ -1817,32 +1894,40 @@ if (post.video_url) {
                 
                 const validFiles: File[] = [];
                 const validPreviews: string[] = [];
+                const validTypes: string[] = [];
                 
                 for (const file of filesToAdd) {
-                  if (file.size > 10 * 1024 * 1024) {
-                    toast.error(`${file.name} is too large (max 10MB)`);
+                  // Check file size (50MB for videos, 10MB for images)
+                  const maxSize = file.type.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+                  if (file.size > maxSize) {
+                    toast.error(`${file.name} is too large (max ${file.type.startsWith('video/') ? '50MB' : '10MB'})`);
                     continue;
                   }
-                  if (!file.type.startsWith('image/')) {
-                    toast.error(`${file.name} is not an image`);
+                  
+                  if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+                    toast.error(`${file.name} is not an image or video`);
                     continue;
                   }
+                  
                   validFiles.push(file);
                   validPreviews.push(URL.createObjectURL(file));
+                  validTypes.push(file.type.startsWith('video/') ? 'video' : 'image');
                 }
                 
                 if (validFiles.length > 0) {
                   setEditingPost(prev => {
                     if (!prev) return null;
-                    const currentNew = (prev as any).newImages || [];
+                    const currentNew = (prev as any).newMedia || [];
                     const currentPreviews = (prev as any).newPreviews || [];
+                    const currentTypes = (prev as any).newMediaTypes || [];
                     return {
                       ...prev,
-                      newImages: [...currentNew, ...validFiles],
-                      newPreviews: [...currentPreviews, ...validPreviews]
+                      newMedia: [...currentNew, ...validFiles],
+                      newPreviews: [...currentPreviews, ...validPreviews],
+                      newMediaTypes: [...currentTypes, ...validTypes]
                     } as any;
                   });
-                  toast.success(`Added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`);
+                  toast.success(`Added ${validFiles.length} file${validFiles.length > 1 ? 's' : ''}`);
                 }
                 
                 // Reset input
@@ -1852,7 +1937,7 @@ if (post.video_url) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <p className="text-xs text-gray-500 mt-1">
-              {totalCount}/4 images selected
+              {totalCount}/4 media files • Max 10MB for images, 50MB for videos
             </p>
           </div>
         );
@@ -1866,54 +1951,87 @@ if (post.video_url) {
 
           try {
             const post = posts.find(p => p.id === editingPost.id);
-            if (!post?.image_url) return;
+            if (!post) return;
             
-            // Parse existing images
-            let imageUrls: string[] = [];
-            try {
-              imageUrls = JSON.parse(post.image_url);
-            } catch {
-              imageUrls = post.image_url.includes(',')
-                ? post.image_url.split(',').map(url => url.trim())
-                : [post.image_url];
+            // Parse existing media
+            let existingImages: string[] = [];
+            let existingVideos: string[] = [];
+            
+            if (post.image_url) {
+              try {
+                const parsed = JSON.parse(post.image_url);
+                existingImages = Array.isArray(parsed) ? parsed : [parsed];
+              } catch {
+                existingImages = post.image_url.includes(',')
+                  ? post.image_url.split(',').map(url => url.trim())
+                  : [post.image_url];
+              }
             }
             
-            // Remove deleted images
-            const deletedImages = (editingPost as any)?.deletedImages || [];
-            const remainingImages = imageUrls.filter(url => !deletedImages.includes(url));
+            if (post.video_url) {
+              try {
+                const parsed = JSON.parse(post.video_url);
+                existingVideos = Array.isArray(parsed) ? parsed : [parsed];
+              } catch {
+                existingVideos = [post.video_url];
+              }
+            }
             
-            // Upload new images
-            const newImages = (editingPost as any)?.newImages || [];
-            const uploadedNewUrls: string[] = [];
+            // Remove deleted media
+            const deletedMedia = (editingPost as any)?.deletedMedia || [];
+            const remainingImages = existingImages.filter(url => !deletedMedia.includes(url));
+            const remainingVideos = existingVideos.filter(url => !deletedMedia.includes(url));
             
-            if (newImages.length > 0) {
+            // Upload new media
+            const newMedia = (editingPost as any)?.newMedia || [];
+            const newMediaTypes = (editingPost as any)?.newMediaTypes || [];
+            const uploadedImageUrls: string[] = [];
+            const uploadedVideoUrls: string[] = [];
+            
+            if (newMedia.length > 0) {
               setUploadingPhoto(true);
+              toast.loading('Uploading media...', { duration: 0 });
               
-              for (const file of newImages) {
+              for (let i = 0; i < newMedia.length; i++) {
+                const file = newMedia[i];
+                const mediaType = newMediaTypes[i];
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${currentUserId}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                 
+                const bucket = mediaType === 'video' ? 'videos' : 'posts';
+                
                 const { error: uploadError } = await supabase.storage
-                  .from('posts')
+                  .from(bucket)
                   .upload(fileName, file);
                 
                 if (uploadError) throw uploadError;
                 
                 const { data: urlData } = supabase.storage
-                  .from('posts')
+                  .from(bucket)
                   .getPublicUrl(fileName);
                 
-                uploadedNewUrls.push(urlData.publicUrl);
+                if (mediaType === 'video') {
+                  uploadedVideoUrls.push(urlData.publicUrl);
+                } else {
+                  uploadedImageUrls.push(urlData.publicUrl);
+                }
               }
               
+              toast.dismiss();
               setUploadingPhoto(false);
             }
             
-            // Combine remaining + new images
-            const finalImages = [...remainingImages, ...uploadedNewUrls];
-            const finalImageUrl = finalImages.length > 1 
-              ? JSON.stringify(finalImages)
-              : finalImages[0] || null;
+            // Combine remaining + new media
+            const finalImages = [...remainingImages, ...uploadedImageUrls];
+            const finalVideos = [...remainingVideos, ...uploadedVideoUrls];
+            
+            const finalImageUrl = finalImages.length > 0
+              ? (finalImages.length > 1 ? JSON.stringify(finalImages) : finalImages[0])
+              : null;
+            
+            const finalVideoUrl = finalVideos.length > 0
+              ? (finalVideos.length > 1 ? JSON.stringify(finalVideos) : finalVideos[0])
+              : null;
             
             // Update post
             const { error } = await supabase
@@ -1922,6 +2040,7 @@ if (post.video_url) {
                 caption: editingPost.caption.trim() || null,
                 recipe_url: editingPost.recipeUrl.trim() || null,
                 image_url: finalImageUrl,
+                video_url: finalVideoUrl,
               })
               .eq('id', editingPost.id);
 
@@ -1934,6 +2053,7 @@ if (post.video_url) {
                       ...p,
                       caption: editingPost.caption.trim() || null,
                       image_url: finalImageUrl,
+                      video_url: finalVideoUrl,
                       recipe_url: editingPost.recipeUrl.trim() || null,
                     }
                   : p
@@ -1949,6 +2069,7 @@ if (post.video_url) {
           } catch (error: any) {
             console.error('Error updating post:', error);
             toast.error('Failed to update post');
+            toast.dismiss();
           }
         }} 
         className="bg-orange-600 hover:bg-orange-700"
