@@ -10,8 +10,7 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 
 import CommentModal from '../components/CommentModal';
-import { FollowersModal } from './FollowersModal'; // or wherever you save it
-
+import { FollowersModal } from '../components/FollowersModal';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 // ✅ ADD THIS - Loading skeleton component
