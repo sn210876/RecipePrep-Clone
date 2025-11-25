@@ -514,46 +514,47 @@ export function UserProfileView({
         );
       })()}
 
-      {/* Supporters Dialog */}
-      <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Supporters</DialogTitle>
-          </DialogHeader>
+     <Dialog open={showSupporters} onOpenChange={setShowSupporters}>
+  <DialogContent className="max-w-sm">
+    <DialogHeader>
+      <DialogTitle>Supporters</DialogTitle>
+    </DialogHeader>
 
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {supporters.map((supporter) => (
-           <button
-  key={supporter.follower_id}
-  onClick={() => {
-    setShowSupporters(false);
-    window.location.href = `/${supporter.profiles?.username}`;
-  }}
-  className="flex items-center gap-3 min-h-[44px] w-full hover:bg-gray-50 p-2 rounded-lg transition-colors touch-manipulation active:scale-95"
->
-  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
-    {supporter.profiles?.avatar_url ? (
-      <img
-        src={supporter.profiles.avatar_url}
-        alt={supporter.profiles.username}
-        className="w-full h-full object-cover"
-      />
-    ) : (
-      supporter.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-5 h-5" />
-    )}
-  </div>
-  <span className="font-medium truncate">
-    {supporter.profiles?.username || 'User'}
-  </span>
-</button>
-            ))}
-
-            {supporters.length === 0 && (
-              <p className="text-center text-gray-500 py-8">No supporters yet</p>
+    <div className="space-y-3 max-h-96 overflow-y-auto">
+      {supporters.map((supporter) => (
+        <button
+          key={supporter.follower_id}
+          onClick={() => {
+            console.log('Clicking supporter:', supporter); // Debug log
+            setShowSupporters(false);
+            // Use the follower_id which is the actual user ID
+            window.location.href = `/${supporter.profiles?.username || supporter.follower_id}`;
+          }}
+          className="flex items-center gap-3 min-h-[44px] w-full hover:bg-gray-50 p-2 rounded-lg transition-colors touch-manipulation active:scale-95 text-left"
+        >
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden">
+            {supporter.profiles?.avatar_url ? (
+              <img
+                src={supporter.profiles.avatar_url}
+                alt={supporter.profiles.username}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              supporter.profiles?.username?.[0]?.toUpperCase() || <PiggyBank className="w-5 h-5" />
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+          <span className="font-medium truncate">
+            {supporter.profiles?.username || 'User'}
+          </span>
+        </button>
+      ))}
+
+      {supporters.length === 0 && (
+        <p className="text-center text-gray-500 py-8">No supporters yet</p>
+      )}
+    </div>
+  </DialogContent>
+</Dialog>
 
       {/* Supporting Dialog */}
       <Dialog open={showSupporting} onOpenChange={setShowSupporting}>
