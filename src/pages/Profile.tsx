@@ -42,35 +42,18 @@ const ProfileSkeleton = () => (
           </div>
         </div>
         
- {/* Stats */}
-          <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
-            <div className="flex justify-center gap-8 sm:gap-10">
-              <div className="text-center">
-                <div className="text-lg sm:text-xl font-bold">{posts.length}</div>
-                <div className="text-xs text-gray-500">posts</div>
+ {/* Stats skeleton */}
+        <div className="px-4 py-3 sm:py-4 border-t border-gray-200">
+          <div className="flex justify-center gap-8 sm:gap-10">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="text-center">
+                <div className="h-6 w-12 bg-gray-200 rounded mx-auto mb-1" />
+                <div className="h-3 w-16 bg-gray-200 rounded" />
               </div>
-              <button
-                onClick={() => {
-                  setFollowersModalType('followers');
-                  setFollowersModalOpen(true);
-                }}
-                className="text-center hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
-              >
-                <div className="text-lg sm:text-xl font-bold">{profile.followers_count || 0}</div>
-                <div className="text-xs text-gray-500">supporters</div>
-              </button>
-              <button
-                onClick={() => {
-                  setFollowersModalType('following');
-                  setFollowersModalOpen(true);
-                }}
-                className="text-center hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
-              >
-                <div className="text-lg sm:text-xl font-bold">{profile.following_count || 0}</div>
-                <div className="text-xs text-gray-500">supporting</div>
-              </button>
-            </div>
+            ))}
           </div>
+        </div>
+      </div>
       
       {/* Posts grid skeleton */}
       <div className="border-b border-gray-200 bg-white py-3">
@@ -84,7 +67,7 @@ const ProfileSkeleton = () => (
     </div>
   </div>
 );
-// Add this NEW function right after your imports, around line 60
+
 const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   if (!imageUrl) return null;
   
@@ -103,9 +86,9 @@ const getDisplayImageUrl = (imageUrl: string | null): string | null => {
   }
   
   return imageUrl;
-}; // <-- Just ONE closing brace here
-console.log('[Profile] VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+};
 
+console.log('[Profile] VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
   if (trimmed.length === 0) return 'Username required';
