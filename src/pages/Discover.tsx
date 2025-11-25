@@ -1674,8 +1674,8 @@ if (post.video_url) {
       
       {/* Current Media (Images and Videos) */}
       <div>
-        <label className="text-sm font-medium mb-2 block">Current Media</label>
-        <div className="grid grid-cols-2 gap-2">
+
+                <div className="grid grid-cols-2 gap-2">
           {(() => {
             const post = posts.find(p => p.id === editingPost?.id);
             if (!post) return null;
