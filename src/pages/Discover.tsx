@@ -1156,15 +1156,22 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                            onClick={() => setEditingPost({
-  id: post.id,
-  caption: post.caption || '',
-  recipeUrl: post.recipe_url || '',
-  photoUrl: post.image_url || '',
-  deletedImages: [],
-  newImages: [],
-  newPreviews: []
-})}
+         // In both Discover.tsx and Profile.tsx, update the edit button onClick:
+onClick={() => {
+  const post = posts.find(p => p.id === post.id);
+  if (post) {
+    setEditingPost({
+      id: post.id,
+      caption: post.caption || '',
+      recipeUrl: post.recipe_url || '',
+      photoUrl: post.image_url || '',
+      deletedMedia: [],
+      newMedia: [],
+      newPreviews: [],
+      newMediaTypes: []
+    });
+  }
+}}
                               className="cursor-pointer"
                             >
                               <Edit3 className="w-4 h-4 mr-2" />
