@@ -1723,14 +1723,7 @@ if (post.video_url) {
             <DialogHeader>
               <DialogTitle>Share</DialogTitle>
             </DialogHeader>
-{editingPost && (
-          <EditPostModal
-            isOpen={!!editingPost}
-            onClose={() => setEditingPost(null)}
-            post={editingPost}
-            onSave={handleSaveEdit}
-          />
-        )}
+
             <div className="space-y-4">
               <div className="flex gap-2 border-b border-gray-200">
                 <button
@@ -1849,6 +1842,66 @@ if (post.video_url) {
             </div>
           </DialogContent>
         </Dialog>
+        </AlertDialog>
+
+        <Dialog open={!!sharePostId} onOpenChange={(open) => !open && setSharePostId(null)}>
+          <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Share</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="flex gap-2 border-b border-gray-200">
+                <button
+                  onClick={() => setShareModalTab('followers')}
+                  className={`flex-1 py-2 px-4 font-medium transition-colors ${
+                    shareModalTab === 'followers'
+                      ? 'text-orange-600 border-b-2 border-orange-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Send to Followers
+                </button>
+                <button
+                  onClick={() => setShareModalTab('link')}
+                  className={`flex-1 py-2 px-4 font-medium transition-colors ${
+                    shareModalTab === 'link'
+                      ? 'text-orange-600 border-b-2 border-orange-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Share Link
+                </button>
+              </div>
+
+              {shareModalTab === 'followers' && (
+                <div className="space-y-4">
+                  {/* ... rest of followers tab ... */}
+                </div>
+              )}
+
+              {shareModalTab === 'link' && (
+                <div className="space-y-4">
+                  {/* ... rest of link tab ... */}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* 👇 ADD THE EDIT MODAL HERE - AFTER THE SHARE DIALOG CLOSES */}
+        {editingPost && (
+          <EditPostModal
+            isOpen={!!editingPost}
+            onClose={() => setEditingPost(null)}
+            post={editingPost}
+            onSave={handleSaveEdit}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
       </div>
     </div>
   );
