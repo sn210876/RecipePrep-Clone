@@ -1662,15 +1662,23 @@ if (post.video_url) {
      // Add this updated edit post dialog to your Discover.tsx and Profile.tsx
 // Replace the existing AlertDialog for editingPost with this version:
 
-<AlertDialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
-  <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+<<AlertDialog open={!!editingPost} onOpenChange={(open) => {
+  if (!open && editingPost) {
+    // Cleanup preview URLs
+    editingPost.newMediaPreviews.forEach(url => URL.revokeObjectURL(url));
+    setEditingPost(null);
+  }
+}}>
+  <AlertDialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
     <AlertDialogHeader>
       <AlertDialogTitle>Edit post</AlertDialogTitle>
       <AlertDialogDescription>
-        Update your caption, recipe link, and media (images or videos).
+        Update caption, recipe link, and media (up to 4 images/videos total)
       </AlertDialogDescription>
     </AlertDialogHeader>
+    
     <div className="space-y-4 py-4">
+      {/* Caption */}
       <div>
         <label className="text-sm font-medium mb-2 block">Caption</label>
         <Textarea
@@ -1681,7 +1689,6 @@ if (post.video_url) {
           rows={3}
         />
       </div>
-      <div>
         <label className="text-sm font-medium mb-2 block">Recipe URL</label>
         <input
           type="url"
