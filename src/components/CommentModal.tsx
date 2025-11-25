@@ -398,22 +398,27 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
     );
   }
 
-  return (
+ return (
     <>
       <Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>
-       <DialogContent className="
-  max-w-5xl 
-  w-[calc(100vw-1rem)]
-  sm:w-[95vw] 
-  h-[calc(100vh-2rem)]
-  sm:h-[85vh] 
-  p-0 
-  gap-0 
-  overflow-hidden 
-  z-[9999]
-  mx-2
-  sm:mx-auto
-">
+        <DialogContent className="
+          max-w-5xl 
+          w-[calc(100vw-1rem)]
+          sm:w-[95vw] 
+          h-[calc(100vh-2rem)]
+          sm:h-[85vh] 
+          p-0 
+          gap-0 
+          overflow-hidden 
+          z-[9999]
+          mx-2
+          sm:mx-auto
+        ">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-50"
+          >
             <X className="w-5 h-5" />
           </button>
 
@@ -422,7 +427,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             {/* LEFT COLUMN: Media & Ratings (Mobile: Top, Desktop: Left) */}
            <div className="w-full sm:w-1/2 flex flex-col bg-black sm:border-r border-gray-200">
              {/* Media Section */}
-           <div className="w-full h-[40vh] sm:h-[70%] bg-black flex items-center justify-center relative overflow-hidden">
+           <div className="w-full h-[35vh] sm:h-[70%] bg-black flex items-center justify-center relative overflow-hidden flex-shrink-0">
 
               {(() => {
                 // Parse media URLs
@@ -541,13 +546,14 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                       <div className="text-white/80 truncate">{post.spotify_artist_name}</div>
                     </div>
                   </button>
-<audio 
-  ref={audioRef} 
-  src={post.spotify_preview_url}
-  onPlay={() => setIsPlaying(true)}
-  onPause={() => setIsPlaying(false)}
-  onEnded={() => setIsPlaying(false)}
-/>                </div>
+                  <audio 
+                    ref={audioRef} 
+                    src={post.spotify_preview_url}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onEnded={() => setIsPlaying(false)}
+                  />
+                </div>
               )}
             </div>
 
@@ -625,13 +631,13 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
            </div>
 
             {/* RIGHT COLUMN: Comments (Mobile: Bottom, Desktop: Right) */}
-            <div className="w-full sm:w-1/2 flex flex-col bg-white">
+            <div className="w-full sm:w-1/2 flex flex-col bg-white min-h-0">
               {/* Comments Header */}
               <div className="px-3 py-2 sm:px-4 sm:py-3 border-b flex-shrink-0">
                 <h3 className="font-bold text-sm sm:text-base">Comments</h3>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-[100px] max-h-[30vh] sm:max-h-none">
+              <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-0">
                 {loading ? (
                   <div className="text-center py-8">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
@@ -671,7 +677,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
                 )}
               </div>
 
-              <form onSubmit={handleSubmitComment} className="border-t px-3 py-3 sm:px-4 sm:py-4 bg-white flex-shrink-0 sticky bottom-0">
+              <form onSubmit={handleSubmitComment} className="border-t px-3 py-3 sm:px-4 sm:py-4 bg-white flex-shrink-0">
                 <div className="flex gap-2">
                   <Input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Add a comment..." disabled={submitting} className="flex-1 text-xs sm:text-sm h-9 sm:h-10" />
                   <Button type="submit" disabled={!newComment.trim() || submitting} size="icon" className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10">
@@ -684,30 +690,30 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
         </DialogContent>
       </Dialog>
 
-     {/* Minimized floating button - appears above recipe modal */}
-{isOpen && isMinimized && (
-  <button
-    onClick={() => setIsMinimized(false)}
-    className="fixed bottom-20 right-4 z-[99999] bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-4 py-3 rounded-full shadow-xl flex items-center gap-2 transition-all active:scale-95 touch-manipulation animate-bounce"
-    style={{ animationDuration: '2s', animationIterationCount: '3' }}
-  >
-    <span className="text-sm sm:text-base">💬</span>
-    <span className="text-sm font-medium">Back to Comments</span>
-  </button>
-)}
+     {/* Minimized floating button */}
+     {isOpen && isMinimized && (
+       <button
+         onClick={() => setIsMinimized(false)}
+         className="fixed bottom-20 right-4 z-[99999] bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-4 py-3 rounded-full shadow-xl flex items-center gap-2 transition-all active:scale-95 touch-manipulation animate-bounce"
+         style={{ animationDuration: '2s', animationIterationCount: '3' }}
+       >
+         <span className="text-sm sm:text-base">💬</span>
+         <span className="text-sm font-medium">Back to Comments</span>
+       </button>
+     )}
 
-{selectedRecipe && (
-  <RecipeDetailModal 
-    recipe={selectedRecipe} 
-    open={!!selectedRecipe} 
-    onOpenChange={(open) => {
-      if (!open) {
-        setSelectedRecipe(null);
-        setIsMinimized(false);
-      }
-    }} 
-  />
-)}
+     {selectedRecipe && (
+       <RecipeDetailModal 
+         recipe={selectedRecipe} 
+         open={!!selectedRecipe} 
+         onOpenChange={(open) => {
+           if (!open) {
+             setSelectedRecipe(null);
+             setIsMinimized(false);
+           }
+         }} 
+       />
+     )}
     </>
   );
 }
