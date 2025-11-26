@@ -48,7 +48,7 @@ export async function getAllBlogPosts(page = 1, limit = 20): Promise<BlogPost[]>
     .from('blog_posts')
     .select(`
       *,
-      profiles!blog_posts_user_id_fkey(id, username, avatar_url)
+      profiles!blog_posts_user_id_profiles_fkey(id, username, avatar_url)
     `)
     .eq('published', true)
     .order('created_at', { ascending: false })
@@ -97,7 +97,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
     .from('blog_posts')
     .select(`
       *,
-      profiles!blog_posts_user_id_fkey(id, username, avatar_url)
+      profiles!blog_posts_user_id_profiles_fkey(id, username, avatar_url)
     `)
     .eq('slug', slug)
     .eq('published', true)
@@ -170,7 +170,7 @@ export async function createBlogPost(data: {
     })
     .select(`
       *,
-      profiles!blog_posts_user_id_fkey(id, username, avatar_url)
+      profiles!blog_posts_user_id_profiles_fkey(id, username, avatar_url)
     `)
     .single();
 
@@ -216,7 +216,7 @@ export async function getBlogComments(postId: string): Promise<BlogComment[]> {
     .from('blog_comments')
     .select(`
       *,
-      profiles!blog_comments_user_id_fkey(id, username, avatar_url)
+      profiles!blog_comments_user_id_profiles_fkey(id, username, avatar_url)
     `)
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
@@ -298,7 +298,7 @@ export async function createBlogComment(
     })
     .select(`
       *,
-      profiles!blog_comments_user_id_fkey(id, username, avatar_url)
+      profiles!blog_comments_user_id_profiles_fkey(id, username, avatar_url)
     `)
     .single();
 

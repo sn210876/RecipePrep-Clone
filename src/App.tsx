@@ -32,6 +32,7 @@ const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
 
 function AppContent() {
   const { user, loading, isEmailVerified } = useAuth();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
  const [currentPage, setCurrentPage] = useState<string>(() => {
   const path = window.location.pathname;
@@ -200,7 +201,8 @@ useEffect(() => {
 
     // Check if user is trying to access a protected page without login
     if (!user && (protectedPages.includes(page) || page.startsWith('profile:'))) {
-      // Redirect to login
+      // Show auth form
+      setShowAuthPrompt(true);
       return;
     }
 
@@ -290,7 +292,8 @@ useEffect(() => {
   const publicPages = ['discover-recipes', 'blog'];
   const isPublicPage = publicPages.includes(currentPage) || currentPage.startsWith('blog:');
 
-  if (!user && !isPublicPage) return <AuthForm />;
+  // Show auth form if not logged in and trying to access protected content OR if showAuthPrompt is true
+  if ((!user && !isPublicPage) || showAuthPrompt) return <AuthForm />;
   // Only check email verification if user is logged in and not on public pages
   if (user && !isEmailVerified && !isPublicPage) return <VerifyEmail />;
 
