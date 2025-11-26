@@ -632,11 +632,12 @@ if (loading) {
               <div className="flex-shrink-0">
                 <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20">
                   {profile.avatar_url ? (
-                    <img 
-  src={profile.avatar_url} 
-  alt={profile.username} 
-  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-white shadow-lg" 
+                    <img
+  src={profile.avatar_url}
+  alt={profile.username}
+  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-white shadow-lg"
   loading="lazy"
+  decoding="async"
 />
                   ) : (
                     <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white text-xl sm:text-2xl font-bold border-4 border-white shadow-lg">
@@ -842,6 +843,7 @@ if (loading) {
               alt={post.title || 'Post'}
               className="w-full h-full object-cover"
               loading="lazy"
+              decoding="async"
               onError={(e) => {
                 console.error('[Profile] Image failed to load:', firstImageUrl);
                 const target = e.target as HTMLImageElement;

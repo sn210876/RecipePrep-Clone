@@ -36,6 +36,8 @@ export function ImageCarousel({ images, alt = 'Post image', className = '' }: Im
         src={getProxiedImageUrl(images[currentIndex])}
         alt={`${alt} ${currentIndex + 1}`}
         className="w-full h-full object-contain"
+        loading="lazy"
+        decoding="async"
       />
 
       {/* Navigation Arrows - Only show if multiple images */}

@@ -1007,7 +1007,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                       >
                         <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-red-400 overflow-hidden flex items-center justify-center">
                           {user.avatar_url ? (
-                            <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                            <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                           ) : (
                             <span className="text-white font-semibold text-sm">
                               {user.username.charAt(0).toUpperCase()}
@@ -1151,8 +1151,9 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                           <img
                             src={post.profiles.avatar_url}
                             alt={post.profiles.username}
-                            className="w-8 h-8 rounded-full object-cover"
                             loading="lazy"
+                            decoding="async"
+                            className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-medium text-sm">
@@ -1397,8 +1398,9 @@ if (post.video_url) {
           <img
             src={mediaUrls[0]}
             alt={post.title || 'Post'}
-            className="w-full aspect-square object-cover"
             loading="lazy"
+            decoding="async"
+            className="w-full aspect-square object-cover"
             onError={(e) => {
               console.error('[Discover] Image failed to load:', mediaUrls[0]);
               const target = e.target as HTMLImageElement;
@@ -1451,9 +1453,10 @@ if (post.video_url) {
             <img
               key={mediaUrls[currentImageIndex]}
               src={mediaUrls[currentImageIndex]}
+              loading="lazy"
+              decoding="async"
               alt={`${post.title || 'Post'} ${currentImageIndex + 1}`}
               className="w-full h-full object-cover"
-              loading="lazy"
               onError={(e) => {
                 console.error('[Discover] Carousel image failed:', mediaUrls[currentImageIndex]);
                 const target = e.target as HTMLImageElement;
