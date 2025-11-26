@@ -26,7 +26,6 @@ import {
   Plus,
   Check,
   Trash2,
-  ShoppingCart,
   Menu,
   X as XClose,
 } from 'lucide-react';
@@ -465,14 +464,6 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                   </div>
                 )}
               </div>
-
-              <Button
-                onClick={() => onNavigate?.('grocery-list')}
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium shadow-lg text-xs md:text-sm"
-              >
-                <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                Grocery List
-              </Button>
             </div>
 
             {/* Week Navigation */}

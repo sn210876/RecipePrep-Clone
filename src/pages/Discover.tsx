@@ -1309,21 +1309,31 @@ if (post.image_url) {
 }
 
 // Handle video_url (separate column for actual videos)
+// Skip Instagram videos as they cannot be played directly
 if (post.video_url) {
   try {
     const parsed = JSON.parse(post.video_url);
     if (Array.isArray(parsed)) {
       parsed.forEach(url => {
-        mediaUrls.push(url);
-        mediaTypes.push('video');
+        // Only add non-Instagram video URLs
+        if (!url.includes('instagram.com')) {
+          mediaUrls.push(url);
+          mediaTypes.push('video');
+        }
       });
     } else {
-      mediaUrls.push(parsed);
-      mediaTypes.push('video');
+      // Only add non-Instagram video URLs
+      if (!parsed.includes('instagram.com')) {
+        mediaUrls.push(parsed);
+        mediaTypes.push('video');
+      }
     }
   } catch {
-    mediaUrls.push(post.video_url);
-    mediaTypes.push('video');
+    // Only add non-Instagram video URLs
+    if (!post.video_url.includes('instagram.com')) {
+      mediaUrls.push(post.video_url);
+      mediaTypes.push('video');
+    }
   }
 }
 
