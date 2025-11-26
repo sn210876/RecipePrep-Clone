@@ -418,9 +418,7 @@ const loadUnreadCount = async (userId: string) => {
       >
         <Camera className="w-7 h-7 text-white" strokeWidth={2.5} />
       </button>
-
-Here's the corrected section (lines 462-490):
-typescript      {/* Profile */}
+{/* Profile */}
       <button
         onClick={() => handleNavigate('profile')}
         className={`flex flex-col items-center gap-1 transition-all touch-manipulation ${
