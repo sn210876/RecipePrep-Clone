@@ -475,7 +475,7 @@ return (
         </div>
 
         {/* Scrollable content container */}
-        <div className="overflow-y-auto max-h-[calc(90vh-8rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6">
+       <div className="overflow-y-auto max-h-[calc(90vh-8rem)] md:overflow-visible md:max-h-none overscroll-contain pb-[180px] md:pb-6">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* URL Import Section - Mobile optimized */}
