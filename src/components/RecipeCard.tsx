@@ -6,11 +6,13 @@ import { Card, CardContent, CardFooter } from './ui/card';
 import { Recipe } from '../types/recipe';
 import { RecipeDetailModal } from './RecipeDetailModal';
 import { useRecipes } from '../context/RecipeContext';
+import { useAuth } from '../context/AuthContext';
 import RatingDisplay from './RatingDisplay';
 import { getRecipeReviews, getAverageRating } from '../services/reviewService';
 import { ReviewForm } from './ReviewForm';
 import { supabase } from '../lib/supabase';
 import { decodeHtmlEntities } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -19,11 +21,13 @@ interface RecipeCardProps {
   onDelete?: (recipeId: string) => void;
   showReviewButton?: boolean;
   isAdmin?: boolean;
-  preloadedSocialPost?: any; // NEW: Accept pre-loaded data
+  preloadedSocialPost?: any;
+  requireAuth?: boolean;
 }
 
-export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton = false, isAdmin = false, preloadedSocialPost }: RecipeCardProps) {
+export function RecipeCard({ recipe, onSave, onCook, onDelete, showReviewButton = false, isAdmin = false, preloadedSocialPost, requireAuth = false }: RecipeCardProps) {
   const { state } = useRecipes();
+  const { user } = useAuth();
   const [showDetail, setShowDetail] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
@@ -100,7 +104,13 @@ useEffect(() => {
     <>
      <Card
   className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white cursor-pointer active:scale-[0.98] flex flex-col h-full"
-  onClick={() => setShowDetail(true)}
+  onClick={() => {
+    if (requireAuth && !user) {
+      toast.error('Please sign up or log in to view recipe details');
+      return;
+    }
+    setShowDetail(true);
+  }}
 >
         <div className="relative overflow-hidden aspect-square">
           <img

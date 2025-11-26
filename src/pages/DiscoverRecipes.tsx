@@ -35,9 +35,9 @@ interface DiscoverProps {
   onNavigate: (page: string) => void;
 }
 
-export function Discover({ onNavigate: _onNavigate }: DiscoverProps) {
+export function Discover({ onNavigate }: DiscoverProps) {
   const { state, dispatch } = useRecipes();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
   const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
@@ -290,6 +290,10 @@ useEffect(() => {
   }, [state.savedRecipes]);
 
   const handleSave = (recipeId: string) => {
+    if (!user) {
+      toast.error('Please sign up or log in to save recipes');
+      return;
+    }
     const recipe = allRecipes.find(r => r.id === recipeId);
     if (recipe) {
       const isAlreadySaved = state.savedRecipes.some(r => r.id === recipeId);
@@ -302,6 +306,10 @@ useEffect(() => {
   };
 
   const handleCook = (recipeId: string) => {
+    if (!user) {
+      toast.error('Please sign up or log in to use cook mode');
+      return;
+    }
     const recipe = allRecipes.find(r => r.id === recipeId);
     if (recipe) {
       console.log('Cook clicked for:', recipe.title);
@@ -396,6 +404,24 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Sign Up Banner for non-authenticated users */}
+        {!user && (
+          <div className="mb-6 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-2xl p-6 shadow-lg">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-center md:text-left">
+                <h3 className="text-xl font-bold mb-1">Join MealScrape Today!</h3>
+                <p className="text-sm opacity-90">Sign up to save recipes, create meal plans, and connect with food lovers</p>
+              </div>
+              <Button
+                onClick={() => onNavigate('discover')}
+                className="bg-white text-orange-600 hover:bg-gray-100 font-semibold px-8 py-3 rounded-full shadow-md"
+              >
+                Sign Up Free
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">
           <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-3 md:mb-4">
@@ -405,7 +431,7 @@ useEffect(() => {
             Recipes scraped from <span className="font-semibold text-blue-600">social media</span> and the <span className="font-semibold text-blue-600">web</span>
           </p>
           <p className="text-xs md:text-sm text-gray-500 max-w-2xl mx-auto">
-   Meal Calendar • Shopping List • Social Community 
+   Meal Calendar • Shopping List • Social Community
           </p>
         </div>
 

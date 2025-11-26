@@ -172,6 +172,26 @@ useEffect(() => {
   }, []);
 
   const handleNavigate = (page: string) => {
+    // Protected pages that require authentication
+    const protectedPages = [
+      'discover',
+      'my-recipes',
+      'add-recipe',
+      'meal-planner',
+      'grocery-list',
+      'cart',
+      'upload',
+      'profile',
+      'messages',
+      'settings'
+    ];
+
+    // Check if user is trying to access a protected page without login
+    if (!user && (protectedPages.includes(page) || page.startsWith('profile:'))) {
+      // Redirect to login
+      return;
+    }
+
     const routes: Record<string, string> = {
       'discover-recipes': '/',
       'discover': '/discover',
@@ -242,8 +262,10 @@ useEffect(() => {
     );
   }
 
-  if (!user) return <AuthForm />;
-  if (!isEmailVerified) return <VerifyEmail />;
+  // Allow access to DiscoverRecipes without login
+  if (!user && currentPage !== 'discover-recipes') return <AuthForm />;
+  // Only check email verification if user is logged in and not on discover-recipes
+  if (user && !isEmailVerified && currentPage !== 'discover-recipes') return <VerifyEmail />;
 
   // Main app with mobile-safe padding
   return (
