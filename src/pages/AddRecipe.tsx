@@ -452,11 +452,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   };
 
 return (
-    <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent">
+    <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent md:relative">
       <div
-        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gradient-to-br from-slate-50 via-white to-slate-50 md:min-h-screen overflow-hidden rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
+        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gradient-to-br from-slate-50 via-white to-slate-50 md:min-h-screen overflow-hidden md:overflow-visible rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
         style={{
-          maxHeight: '90vh'
+          maxHeight: window.innerWidth >= 768 ? 'none' : '90vh'
         }}
       >
         {/* Grabber handle - mobile only */}
@@ -473,7 +473,7 @@ return (
         </div>
 
         {/* Scrollable content container */}
-        <div className="overflow-y-auto max-h-[calc(90vh-8rem)] md:max-h-none overscroll-contain pb-32">
+        <div className="overflow-y-auto max-h-[calc(90vh-8rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* URL Import Section - Mobile optimized */}
@@ -1141,22 +1141,24 @@ return (
               </ScrollArea>
             )}
 
-          <DialogFooter className="sticky bottom-0 bg-white border-t p-4 flex flex-row justify-center items-center gap-3 shadow-lg">
-  <Button
-    type="button"
-    variant="outline"
-    onClick={handleCancelExtraction}
-    className="px-6 h-12 text-base font-semibold rounded-full"
-  >
-    Cancel
-  </Button>
-  <Button
-    type="button"
-    onClick={handleAcceptExtraction}
-    className="bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 text-base font-semibold rounded-full shadow-lg"
-  >
-    Use This Recipe
-  </Button>
+          <DialogFooter className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 md:p-6 flex flex-col sm:flex-row justify-center items-center gap-3 shadow-2xl z-50">
+  <div className="w-full max-w-md flex flex-col sm:flex-row gap-3">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={handleCancelExtraction}
+      className="w-full sm:w-auto px-8 h-12 sm:h-14 text-base font-semibold rounded-full border-2 hover:bg-gray-50 active:scale-95 transition-transform"
+    >
+      Cancel
+    </Button>
+    <Button
+      type="button"
+      onClick={handleAcceptExtraction}
+      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-12 h-12 sm:h-14 text-base font-semibold rounded-full shadow-lg active:scale-95 transition-transform"
+    >
+      Use This Recipe
+    </Button>
+  </div>
 </DialogFooter>
           </DialogContent>
         </Dialog>

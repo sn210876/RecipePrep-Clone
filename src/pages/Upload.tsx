@@ -388,11 +388,11 @@ onNavigate('discover');
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent">
+    <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent md:relative">
       <div
-        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gray-50 md:min-h-screen overflow-hidden md:overflow-x-hidden rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
+        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gray-50 md:min-h-screen overflow-hidden md:overflow-visible rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
         style={{
-          maxHeight: '90vh',
+          maxHeight: window.innerWidth >= 768 ? 'none' : '90vh',
           paddingBottom: 'max(10rem, env(safe-area-inset-bottom))'
         }}
       >
@@ -422,7 +422,7 @@ onNavigate('discover');
         </div>
 
         {/* Scrollable content container */}
-        <div className="overflow-y-auto max-h-[calc(90vh-4rem)] md:max-h-none overscroll-contain">
+        <div className="overflow-y-auto max-h-[calc(90vh-4rem)] md:overflow-visible md:max-h-none overscroll-contain">
           <div className="max-w-lg mx-auto p-4 space-y-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <label className="text-sm font-medium text-gray-700 mb-2 block">Post Type</label>
