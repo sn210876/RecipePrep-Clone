@@ -429,7 +429,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
               <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                 <Button
-                  onClick={() => window.location.href = 'https://mealscrape.com/grocery-list'}
+                  onClick={() => onNavigate?.('grocery-list')}
                   className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white gap-2 text-xs md:text-sm"
                   size="sm"
                 >

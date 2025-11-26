@@ -73,10 +73,19 @@ export function Blog({ onNavigate }: BlogPageProps) {
     try {
       const newPosts = await getAllBlogPosts(reset ? 1 : page, 20);
       if (reset) {
-        setPosts(newPosts);
+        // Remove duplicates by ID
+        const uniquePosts = Array.from(
+          new Map(newPosts.map(post => [post.id, post])).values()
+        );
+        setPosts(uniquePosts);
         setPage(1);
       } else {
-        setPosts((prev) => [...prev, ...newPosts]);
+        // Merge with existing posts and remove duplicates
+        const allPosts = [...posts, ...newPosts];
+        const uniquePosts = Array.from(
+          new Map(allPosts.map(post => [post.id, post])).values()
+        );
+        setPosts(uniquePosts);
       }
       setHasMore(newPosts.length === 20);
     } catch (error) {
