@@ -382,7 +382,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
         {/* MESSAGES */}
       {/* MESSAGES */}
-<div className="pt-16 flex-1 overflow-y-auto px-4 pb-[88px]">
+<div className="pt-16 flex-1 overflow-y-auto px-4 pb-32 lg:pb-24">
   <div className="space-y-4 py-4">
     {messages.map((message) => (
       <div
@@ -454,21 +454,21 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   </div>
 </div>
 
-        {/* INPUT BAR */}
-        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 w-80 bg-white border-t border-gray-200 px-4 py-3 z-50">
-          <div className="flex gap-2">
+        {/* INPUT BAR - Fixed footer above bottom nav */}
+        <div className="fixed bottom-0 left-0 right-0 lg:left-56 bg-white border-t border-gray-200 px-4 py-3 z-40 mb-16 lg:mb-0 shadow-lg">
+          <div className="max-w-4xl mx-auto flex gap-2">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
-              className="w-[80%] px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm md:text-base"
             />
             <Button
               onClick={sendMessage}
               disabled={!newMessage.trim()}
-              className="rounded-full bg-orange-500 hover:bg-orange-600 text-white px-6"
+              className="rounded-full bg-orange-500 hover:bg-orange-600 text-white px-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <SendIcon className="w-5 h-5" />
             </Button>

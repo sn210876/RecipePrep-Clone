@@ -1369,11 +1369,19 @@ if (post.video_url) {
     className="w-full aspect-square object-cover bg-black"
     preload="auto"
     onClick={(e) => {
-      const video = e.target as HTMLVideoElement;
-      if (video.paused) {
-        video.play().catch(err => console.error('[Discover] Play failed:', err));
-      } else {
-        video.pause();
+      // Don't toggle if clicking on controls (they have their own handlers)
+      const rect = (e.target as HTMLVideoElement).getBoundingClientRect();
+      const controlsHeight = 40; // Approximate height of video controls
+      const clickY = e.clientY - rect.top;
+
+      // Only toggle if clicking outside the controls area at the bottom
+      if (clickY < rect.height - controlsHeight) {
+        const video = e.target as HTMLVideoElement;
+        if (video.paused) {
+          video.play().catch(err => console.error('[Discover] Play failed:', err));
+        } else {
+          video.pause();
+        }
       }
     }}
     onError={(e) => {
@@ -1424,11 +1432,18 @@ if (post.video_url) {
     preload="auto"
     onClick={(e) => {
       e.stopPropagation();
-      const video = e.target as HTMLVideoElement;
-      if (video.paused) {
-        video.play().catch(err => console.error('[Discover] Play failed:', err));
-      } else {
-        video.pause();
+      // Don't toggle if clicking on controls
+      const rect = (e.target as HTMLVideoElement).getBoundingClientRect();
+      const controlsHeight = 40;
+      const clickY = e.clientY - rect.top;
+
+      if (clickY < rect.height - controlsHeight) {
+        const video = e.target as HTMLVideoElement;
+        if (video.paused) {
+          video.play().catch(err => console.error('[Discover] Play failed:', err));
+        } else {
+          video.pause();
+        }
       }
     }}
     onError={(e) => {

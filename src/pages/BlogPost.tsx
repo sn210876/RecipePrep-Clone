@@ -364,6 +364,7 @@ export function BlogPostPage({ slug, onNavigate }: BlogPostPageProps) {
                   comment={comment}
                   postId={post.id}
                   onCommentAdded={loadComments}
+                  onNavigate={onNavigate}
                 />
               ))}
 

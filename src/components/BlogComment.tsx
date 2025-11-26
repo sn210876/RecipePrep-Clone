@@ -13,9 +13,10 @@ interface BlogCommentProps {
   postId: string;
   onCommentAdded: () => void;
   depth?: number;
+  onNavigate?: (page: string, userId?: string) => void;
 }
 
-export function BlogComment({ comment, postId, onCommentAdded, depth = 0 }: BlogCommentProps) {
+export function BlogComment({ comment, postId, onCommentAdded, depth = 0, onNavigate }: BlogCommentProps) {
   const { user } = useAuth();
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -120,9 +121,12 @@ export function BlogComment({ comment, postId, onCommentAdded, depth = 0 }: Blog
                 {comment.author.username?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm font-medium text-gray-900">
+            <button
+              onClick={() => onNavigate?.('profile', comment.author.id)}
+              className="text-sm font-medium text-gray-900 hover:text-orange-600 hover:underline cursor-pointer transition-colors"
+            >
               {comment.author.username || 'Anonymous'}
-            </span>
+            </button>
             <span className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
             </span>
@@ -183,6 +187,7 @@ export function BlogComment({ comment, postId, onCommentAdded, depth = 0 }: Blog
                   postId={postId}
                   onCommentAdded={onCommentAdded}
                   depth={depth + 1}
+                  onNavigate={onNavigate}
                 />
               ))}
             </div>
