@@ -6,7 +6,7 @@
 // 4. Add swipe-to-delete gesture
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X } from 'lucide-react';
+import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X, Apple, Beef, Milk, Wheat, Carrot, Fish, Egg, Cookie } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -58,6 +58,41 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [swipedItem, setSwipedItem] = useState<string | null>(null);
 
   const items = state.groceryList;
+
+  // Helper function to get ingredient icon
+  function getIngredientIcon(name: string, categoryId: string) {
+    const nameLower = name.toLowerCase();
+
+    // Fruits and vegetables
+    if (nameLower.includes('apple') || nameLower.includes('fruit')) return <Apple className="w-5 h-5 text-red-500" />;
+    if (nameLower.includes('carrot') || nameLower.includes('vegetable') || nameLower.includes('lettuce') || nameLower.includes('tomato') || nameLower.includes('onion')) return <Carrot className="w-5 h-5 text-orange-500" />;
+
+    // Meat and protein
+    if (nameLower.includes('beef') || nameLower.includes('steak') || nameLower.includes('meat')) return <Beef className="w-5 h-5 text-red-700" />;
+    if (nameLower.includes('chicken') || nameLower.includes('pork')) return <span className="text-lg">🍗</span>;
+    if (nameLower.includes('fish') || nameLower.includes('salmon') || nameLower.includes('tuna')) return <Fish className="w-5 h-5 text-blue-500" />;
+    if (nameLower.includes('egg')) return <Egg className="w-5 h-5 text-yellow-600" />;
+
+    // Dairy
+    if (nameLower.includes('milk') || nameLower.includes('cheese') || nameLower.includes('yogurt') || nameLower.includes('cream') || nameLower.includes('butter')) return <Milk className="w-5 h-5 text-blue-400" />;
+
+    // Grains and bakery
+    if (nameLower.includes('bread') || nameLower.includes('pasta') || nameLower.includes('rice') || nameLower.includes('flour') || nameLower.includes('cereal')) return <Wheat className="w-5 h-5 text-amber-600" />;
+    if (nameLower.includes('cookie') || nameLower.includes('cake') || nameLower.includes('dessert')) return <Cookie className="w-5 h-5 text-amber-700" />;
+
+    // Category-based fallback emojis
+    if (categoryId === 'produce') return <span className="text-lg">🥬</span>;
+    if (categoryId === 'meat') return <span className="text-lg">🥩</span>;
+    if (categoryId === 'dairy') return <span className="text-lg">🥛</span>;
+    if (categoryId === 'pantry') return <span className="text-lg">🥫</span>;
+    if (categoryId === 'frozen') return <span className="text-lg">🧊</span>;
+    if (categoryId === 'bakery') return <span className="text-lg">🥖</span>;
+    if (categoryId === 'snacks') return <span className="text-lg">🍿</span>;
+    if (categoryId === 'beverages') return <span className="text-lg">🥤</span>;
+
+    // Default
+    return <span className="text-lg">📦</span>;
+  }
 
   useEffect(() => {
     loadMealPlannerItems();
@@ -522,6 +557,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                           onCheckedChange={() => handleToggleItem(item.id)}
                           className="h-6 w-6"
                         />
+                        {/* Ingredient Icon */}
+                        <div className="shrink-0">
+                          {getIngredientIcon(item.name, item.categoryId)}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span

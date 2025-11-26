@@ -1,13 +1,36 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRecipes } from '../context/RecipeContext';
 import { RecipeCard } from '../components/RecipeCard';
-import { BookmarkCheck, ChefHat } from 'lucide-react';
+import { BookmarkCheck, ChefHat, Search } from 'lucide-react';
 import { CookMode } from '../components/CookMode';
 import { Recipe } from '../types/recipe';
+import { Input } from '../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 export function MyRecipes() {
   const { state } = useRecipes();
   const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRecipe, setSelectedRecipe] = useState<string>('all');
+
+  const filteredRecipes = useMemo(() => {
+    let filtered = state.savedRecipes;
+
+    if (selectedRecipe !== 'all') {
+      filtered = filtered.filter(recipe => recipe.id === selectedRecipe);
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(recipe =>
+        recipe.title.toLowerCase().includes(query) ||
+        recipe.cuisineType?.toLowerCase().includes(query) ||
+        recipe.tags?.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  }, [state.savedRecipes, searchQuery, selectedRecipe]);
 
   if (state.savedRecipes.length === 0) {
     return (
@@ -70,23 +93,66 @@ export function MyRecipes() {
             </h1>
             <p className="text-sm sm:text-base md:text-xl text-gray-600 flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-emerald-600">
-                {state.savedRecipes.length}
+                {filteredRecipes.length}
               </span>
               <span>
-                saved recipe{state.savedRecipes.length !== 1 ? 's' : ''}
+                {selectedRecipe !== 'all' || searchQuery ? 'matching' : 'saved'} recipe{filteredRecipes.length !== 1 ? 's' : ''}
               </span>
             </p>
           </div>
-          
+
           {/* Icon badge - responsive sizing */}
           <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-3 sm:p-3 md:p-4 rounded-2xl sm:rounded-full shadow-md shrink-0">
             <ChefHat className="w-6 h-6 sm:w-6 sm:h-6 md:w-8 md:h-8 text-emerald-600" />
           </div>
         </div>
 
+        {/* Search and Filter Section */}
+        <div className="mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search recipes by name, cuisine, or tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full h-12 text-base"
+            />
+          </div>
+
+          {/* Recipe Dropdown Filter */}
+          <div className="flex items-center gap-2">
+            <Select value={selectedRecipe} onValueChange={setSelectedRecipe}>
+              <SelectTrigger className="w-full sm:w-64 h-12">
+                <SelectValue placeholder="Filter by recipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Recipes ({state.savedRecipes.length})</SelectItem>
+                {state.savedRecipes.map((recipe) => (
+                  <SelectItem key={recipe.id} value={recipe.id}>
+                    {recipe.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Results count for filtered view */}
+        {(searchQuery || selectedRecipe !== 'all') && (
+          <div className="mb-4 text-sm text-gray-600">
+            {filteredRecipes.length === 0 ? (
+              <p>No recipes found matching your criteria.</p>
+            ) : (
+              <p>Showing {filteredRecipes.length} of {state.savedRecipes.length} recipes</p>
+            )}
+          </div>
+        )}
+
         {/* Mobile-responsive grid: 1 column on mobile, 2 on tablet, 3 on desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-          {state.savedRecipes.map((recipe) => (
+          {filteredRecipes.map((recipe) => (
             <div key={recipe.id} className="flex w-full">
               <RecipeCard
                 recipe={recipe}
