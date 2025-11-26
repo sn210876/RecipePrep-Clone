@@ -26,6 +26,7 @@ import {
   Plus,
   Check,
   Trash2,
+  ShoppingCart,
   Menu,
   X as XClose,
 } from 'lucide-react';
@@ -427,6 +428,15 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
             {/* Controls */}
             <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
               <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                <Button
+                  onClick={() => window.location.href = 'https://mealscrape.com/grocery-list'}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white gap-2 text-xs md:text-sm"
+                  size="sm"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  See Grocery List
+                </Button>
+
                 <Button
                   variant="destructive"
                   size="sm"

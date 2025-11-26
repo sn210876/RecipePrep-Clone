@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Heart, MessageSquare, Eye, TrendingUp } from 'lucide-react';
+import { Plus, Heart, MessageSquare, Eye, TrendingUp, MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { CreateBlogPost } from '../components/CreateBlogPost';
-import { getAllBlogPosts, BlogPost } from '../services/blogService';
+import { getAllBlogPosts, BlogPost, deleteBlogPost } from '../services/blogService';
 import { useAuth } from '../context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ export function Blog({ onNavigate }: BlogPageProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     setPageMeta({
@@ -30,6 +32,17 @@ export function Blog({ onNavigate }: BlogPageProps) {
       type: 'website',
     });
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => setIsAdmin(data?.is_admin === true));
+    }
+  }, [user]);
 
   useEffect(() => {
     loadPosts();
@@ -75,12 +88,26 @@ export function Blog({ onNavigate }: BlogPageProps) {
   };
 
   const handlePostCreated = (slug: string) => {
-    loadPosts(true);
+    // Don't manually reload - realtime subscription will handle it
     onNavigate(`blog:${slug}`);
   };
 
   const handlePostClick = (slug: string) => {
     onNavigate(`blog:${slug}`);
+  };
+
+  const handleDeletePost = async (postId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this post?')) return;
+
+    try {
+      await deleteBlogPost(postId);
+      toast.success('Post deleted successfully');
+      loadPosts(true);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
+    }
   };
 
   if (loading && posts.length === 0) {
@@ -151,9 +178,29 @@ export function Blog({ onNavigate }: BlogPageProps) {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2 hover:text-orange-600 transition-colors">
-                    {post.title}
-                  </h2>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h2 className="text-2xl font-bold text-gray-900 hover:text-orange-600 transition-colors flex-1">
+                      {post.title}
+                    </h2>
+                    {(user?.id === post.user_id || isAdmin) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => handleDeletePost(post.id, e)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Post
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
 
                   {post.excerpt && (
                     <p className="text-gray-600 mb-3 line-clamp-2">{post.excerpt}</p>

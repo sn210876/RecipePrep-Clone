@@ -347,3 +347,69 @@ export async function voteOnComment(
       .insert({ comment_id: commentId, user_id: user.id, vote_type: voteType });
   }
 }
+
+export async function deleteBlogPost(postId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  const { data: post } = await supabase
+    .from('blog_posts')
+    .select('user_id')
+    .eq('id', postId)
+    .single();
+
+  if (!post) throw new Error('Post not found');
+
+  const isOwner = post.user_id === user.id;
+  const isAdmin = profile?.is_admin === true;
+
+  if (!isOwner && !isAdmin) {
+    throw new Error('Not authorized to delete this post');
+  }
+
+  const { error } = await supabase
+    .from('blog_posts')
+    .delete()
+    .eq('id', postId);
+
+  if (error) throw error;
+}
+
+export async function deleteBlogComment(commentId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  const { data: comment } = await supabase
+    .from('blog_comments')
+    .select('user_id')
+    .eq('id', commentId)
+    .single();
+
+  if (!comment) throw new Error('Comment not found');
+
+  const isOwner = comment.user_id === user.id;
+  const isAdmin = profile?.is_admin === true;
+
+  if (!isOwner && !isAdmin) {
+    throw new Error('Not authorized to delete this comment');
+  }
+
+  const { error } = await supabase
+    .from('blog_comments')
+    .delete()
+    .eq('id', commentId);
+
+  if (error) throw error;
+}

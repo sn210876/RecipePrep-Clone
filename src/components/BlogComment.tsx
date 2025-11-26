@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { ArrowUp, ArrowDown, MessageSquare, MoreVertical } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowUp, ArrowDown, MessageSquare, MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { BlogComment as BlogCommentType, voteOnComment, createBlogComment } from '../services/blogService';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { BlogComment as BlogCommentType, voteOnComment, createBlogComment, deleteBlogComment } from '../services/blogService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { supabase } from '../lib/supabase';
 
 interface BlogCommentProps {
   comment: BlogCommentType;
@@ -23,6 +25,18 @@ export function BlogComment({ comment, postId, onCommentAdded, depth = 0, onNavi
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localVoteScore, setLocalVoteScore] = useState(comment.vote_score || 0);
   const [localUserVote, setLocalUserVote] = useState(comment.user_vote);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => setIsAdmin(data?.is_admin === true));
+    }
+  }, [user]);
 
   const handleVote = async (voteType: 'up' | 'down') => {
     if (!user) {
@@ -81,6 +95,19 @@ export function BlogComment({ comment, postId, onCommentAdded, depth = 0, onNavi
     }
   };
 
+  const handleDeleteComment = async () => {
+    if (!confirm('Are you sure you want to delete this comment?')) return;
+
+    try {
+      await deleteBlogComment(comment.id);
+      toast.success('Comment deleted successfully');
+      onCommentAdded();
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error('Failed to delete comment');
+    }
+  };
+
   const maxDepth = 5;
   const canNest = depth < maxDepth;
 
@@ -130,6 +157,24 @@ export function BlogComment({ comment, postId, onCommentAdded, depth = 0, onNavi
             <span className="text-xs text-gray-500">
               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
             </span>
+            {(user?.id === comment.user_id || isAdmin) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 ml-auto">
+                    <MoreVertical className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={handleDeleteComment}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Comment
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           <p className="text-sm text-gray-700 mb-2 whitespace-pre-wrap">{comment.content}</p>
