@@ -594,9 +594,12 @@ if (loading) {
     >
       {/* Back Button + Username Header */}
      {/* Back Button + Username Header */}
-<div 
-  className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50"
-  style={{ paddingTop: 'env(safe-area-inset-top)' }}
+<div
+  className="fixed left-0 right-0 bg-white border-b border-gray-200 z-50"
+  style={{
+    top: 'calc(56px + env(safe-area-inset-top))',   // 56px = your main nav height
+    paddingTop: 'env(safe-area-inset-top)',        // keeps notch area safe
+  }}
 >
   <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
     <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full">
