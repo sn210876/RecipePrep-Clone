@@ -990,7 +990,7 @@ return (
               />
             </CardContent>
           </Card>
-
+        </form>  {/* ← ADD THIS CLOSING FORM TAG HERE */}
          
 
         {/* Preview Dialog - Mobile optimized */}
