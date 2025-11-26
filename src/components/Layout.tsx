@@ -182,7 +182,7 @@ const loadUnreadCount = async (userId: string) => {
       )}
 
       {/* Sidebar - Mobile Optimized */}
-  <aside className={`fixed left-0 top-0 z-40 h-screen w-60 sm:w-60 lg:w-56 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+ <aside className={`fixed left-0 top-0 z-[90] h-screen w-60 sm:w-60 lg:w-56 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
 
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
