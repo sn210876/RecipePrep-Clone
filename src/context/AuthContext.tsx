@@ -39,45 +39,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       console.log('🚀 Initializing auth...');
-      
-      const hash = window.location.hash;
-      console.log('🔗 URL hash:', hash);
 
-      if (hash && hash.includes('access_token')) {
-        console.log('✅ Found access_token in URL');
-        const params = new URLSearchParams(hash.substring(1));
-        const accessToken = params.get('access_token');
-        const type = params.get('type');
-        const refreshToken = params.get('refresh_token');
-        
-        console.log('📋 Token params:', { 
-          hasAccessToken: !!accessToken, 
-          type,
-          hasRefreshToken: !!refreshToken 
-        });
+      try {
+        const hash = window.location.hash;
+        console.log('🔗 URL hash:', hash);
 
-        if (accessToken && type === 'signup') {
-          try {
-            console.log('📧 Processing signup verification...');
-            const { data, error } = await supabase.auth.getUser(accessToken);
-            
-            if (error) {
-              console.error('❌ getUser error:', error);
+        if (hash && hash.includes('access_token')) {
+          console.log('✅ Found access_token in URL');
+          const params = new URLSearchParams(hash.substring(1));
+          const accessToken = params.get('access_token');
+          const type = params.get('type');
+          const refreshToken = params.get('refresh_token');
+
+          console.log('📋 Token params:', {
+            hasAccessToken: !!accessToken,
+            type,
+            hasRefreshToken: !!refreshToken
+          });
+
+          if (accessToken && type === 'signup') {
+            try {
+              console.log('📧 Processing signup verification...');
+              const { data, error } = await supabase.auth.getUser(accessToken);
+
+              if (error) {
+                console.error('❌ getUser error:', error);
+              }
+
+              if (!error && data.user) {
+                console.log('✅ User verified:', data.user.email);
+                setShowVerifying(true);
+                setUser(data.user);
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
+            } catch (err) {
+              console.error('❌ Token verification error:', err);
             }
-            
-            if (!error && data.user) {
-              console.log('✅ User verified:', data.user.email);
-              setShowVerifying(true);
-              setUser(data.user);
-              window.history.replaceState({}, document.title, window.location.pathname);
-            }
-          } catch (err) {
-            console.error('❌ Token verification error:', err);
-          }
-        } else if (accessToken) {
-          // Handle OAuth or password reset tokens
-          console.log('🔄 Processing OAuth/password reset token...');
-          try {
+          } else if (accessToken) {
+            // Handle OAuth or password reset tokens
+            console.log('🔄 Processing OAuth/password reset token...');
+            try {
             const { data, error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken || ''
@@ -94,33 +95,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      console.log('🔍 Getting current session...');
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('❌ Session error:', sessionError);
+        console.log('🔍 Getting current session...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error('❌ Session error:', sessionError);
+        }
+
+        console.log('📦 Session retrieved:', {
+          hasSession: !!session,
+          userEmail: session?.user?.email
+        });
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          console.log('👤 Checking admin status...');
+          try {
+            const adminStatus = await checkIsAdmin();
+            console.log('🔐 Admin status:', adminStatus);
+            setIsAdmin(adminStatus);
+          } catch (adminError) {
+            console.error('❌ Admin check error:', adminError);
+            setIsAdmin(false);
+          }
+        }
+
+        setLoading(false);
+        console.log('✅ Auth initialization complete');
+      } catch (error) {
+        console.error('❌ Auth initialization error:', error);
+        setLoading(false);
       }
-      
-      console.log('📦 Session retrieved:', { 
-        hasSession: !!session, 
-        userEmail: session?.user?.email 
-      });
-
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        console.log('👤 Checking admin status...');
-        const adminStatus = await checkIsAdmin();
-        console.log('🔐 Admin status:', adminStatus);
-        setIsAdmin(adminStatus);
-      }
-
-      setLoading(false);
-      console.log('✅ Auth initialization complete');
     };
 
-    initAuth();
+    // Set a timeout fallback in case initAuth hangs
+    const timeoutId = setTimeout(() => {
+      console.warn('⚠️ Auth initialization timeout - forcing loading to false');
+      setLoading(false);
+    }, 5000);
+
+    initAuth().finally(() => {
+      clearTimeout(timeoutId);
+    });
 
     const {
       data: { subscription },
