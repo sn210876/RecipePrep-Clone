@@ -59,69 +59,163 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
   const items = state.groceryList;
 
-  // Helper function to get ingredient icon
+  // Helper function to get ingredient icon with comprehensive detection
   function getIngredientIcon(name: string, categoryId: string) {
-    const nameLower = name.toLowerCase();
+    const nameLower = name.toLowerCase().trim();
 
-    // Water and liquids (check first - most specific)
-    if (nameLower.includes('water')) return <Droplet className="w-5 h-5 text-blue-500" />;
-    if (nameLower.includes('juice') || nameLower.includes('soda') || nameLower.includes('drink')) return <span className="text-lg">🥤</span>;
+    // EXACT MATCHES FIRST (highest priority)
+    const exactMatches: Record<string, JSX.Element> = {
+      'salt': <span className="text-lg">🧂</span>,
+      'black pepper': <span className="text-lg">🌶️</span>,
+      'pepper': <span className="text-lg">🌶️</span>,
+      'paprika': <span className="text-lg">🌶️</span>,
+      'water': <Droplet className="w-5 h-5 text-blue-500" />,
+      'duck': <span className="text-lg">🦆</span>,
+    };
 
-    // Oils and fats (check before other categories)
-    if (nameLower.includes('oil') || nameLower.includes('sesame') || nameLower.includes('olive') || nameLower.includes('vegetable oil') || nameLower.includes('coconut oil')) return <span className="text-lg">🛢️</span>;
-    if (nameLower.includes('butter') || nameLower.includes('ghee')) return <span className="text-lg">🧈</span>;
+    if (exactMatches[nameLower]) return exactMatches[nameLower];
 
-    // Spices and seasonings (check before other categories)
-    if (nameLower.includes('pepper') || nameLower.includes('salt') || nameLower.includes('spice') || nameLower.includes('cumin') || nameLower.includes('paprika') || nameLower.includes('oregano') || nameLower.includes('basil') || nameLower.includes('thyme') || nameLower.includes('rosemary') || nameLower.includes('cinnamon') || nameLower.includes('ginger')) return <Flame className="w-5 h-5 text-red-600" />;
-    if (nameLower.includes('garlic') || nameLower.includes('onion powder') || nameLower.includes('garlic powder')) return <span className="text-lg">🧄</span>;
+    // POULTRY & FOWL - Check before general meats
+    if (nameLower.match(/\b(duck|goose|quail|pheasant|turkey|chicken|poultry|wing|drumstick|breast|thigh)\b/))
+      return <span className="text-lg">🍗</span>;
 
-    // Sauces and condiments
-    if (nameLower.includes('sauce') || nameLower.includes('ketchup') || nameLower.includes('mustard') || nameLower.includes('mayo') || nameLower.includes('soy sauce') || nameLower.includes('vinegar')) return <span className="text-lg">🍯</span>;
+    // SPICES, HERBS & SEASONINGS - Very specific matching
+    if (nameLower.match(/\b(cumin|coriander|turmeric|cardamom|clove|nutmeg|saffron|curry|chili|cayenne|red pepper|crushed pepper|pepper flake)/))
+      return <Flame className="w-5 h-5 text-red-600" />;
+    if (nameLower.match(/\b(basil|oregano|thyme|rosemary|sage|dill|parsley|cilantro|mint|bay leaf|herb)/))
+      return <span className="text-lg">🌿</span>;
+    if (nameLower.match(/\b(cinnamon|vanilla|allspice|anise|fennel)/))
+      return <span className="text-lg">🌰</span>;
+    if (nameLower.match(/\b(garlic|onion powder|garlic powder|shallot powder)/))
+      return <span className="text-lg">🧄</span>;
 
-    // Fruits and vegetables
-    if (nameLower.includes('apple')) return <Apple className="w-5 h-5 text-red-500" />;
-    if (nameLower.includes('banana')) return <span className="text-lg">🍌</span>;
-    if (nameLower.includes('orange') || nameLower.includes('citrus')) return <span className="text-lg">🍊</span>;
-    if (nameLower.includes('berry') || nameLower.includes('strawberry') || nameLower.includes('blueberry')) return <span className="text-lg">🍓</span>;
-    if (nameLower.includes('carrot')) return <Carrot className="w-5 h-5 text-orange-500" />;
-    if (nameLower.includes('tomato')) return <span className="text-lg">🍅</span>;
-    if (nameLower.includes('lettuce') || nameLower.includes('salad') || nameLower.includes('spinach') || nameLower.includes('kale')) return <span className="text-lg">🥬</span>;
-    if (nameLower.includes('potato')) return <span className="text-lg">🥔</span>;
-    if (nameLower.includes('onion')) return <span className="text-lg">🧅</span>;
-    if (nameLower.includes('mushroom')) return <span className="text-lg">🍄</span>;
-    if (nameLower.includes('avocado')) return <span className="text-lg">🥑</span>;
-    if (nameLower.includes('corn')) return <span className="text-lg">🌽</span>;
-    if (nameLower.includes('broccoli')) return <span className="text-lg">🥦</span>;
-    if (nameLower.includes('cucumber')) return <span className="text-lg">🥒</span>;
+    // OILS & FATS - Before checking for other ingredients
+    if (nameLower.match(/\b(sesame oil|olive oil|vegetable oil|canola oil|coconut oil|peanut oil|avocado oil|oil)\b/))
+      return <span className="text-lg">🫗</span>;
+    if (nameLower.match(/\b(butter|ghee|lard|shortening)\b/))
+      return <span className="text-lg">🧈</span>;
 
-    // Meat and protein
-    if (nameLower.includes('beef') || nameLower.includes('steak')) return <Beef className="w-5 h-5 text-red-700" />;
-    if (nameLower.includes('chicken') || nameLower.includes('turkey') || nameLower.includes('poultry')) return <span className="text-lg">🍗</span>;
-    if (nameLower.includes('pork') || nameLower.includes('bacon') || nameLower.includes('ham')) return <span className="text-lg">🥓</span>;
-    if (nameLower.includes('fish') || nameLower.includes('salmon') || nameLower.includes('tuna')) return <Fish className="w-5 h-5 text-blue-500" />;
-    if (nameLower.includes('shrimp') || nameLower.includes('seafood') || nameLower.includes('lobster')) return <span className="text-lg">🦞</span>;
-    if (nameLower.includes('egg')) return <Egg className="w-5 h-5 text-yellow-600" />;
+    // LIQUIDS & BEVERAGES
+    if (nameLower.match(/\b(water|h2o)\b/)) return <Droplet className="w-5 h-5 text-blue-500" />;
+    if (nameLower.match(/\b(milk|whole milk|skim milk|2%|almond milk|soy milk|oat milk)\b/))
+      return <Milk className="w-5 h-5 text-blue-400" />;
+    if (nameLower.match(/\b(juice|lemon juice|lime juice|orange juice)\b/))
+      return <span className="text-lg">🧃</span>;
+    if (nameLower.match(/\b(wine|beer|sake|liquor|vodka|rum|whiskey|brandy)\b/))
+      return <span className="text-lg">🍷</span>;
+    if (nameLower.match(/\b(stock|broth|bouillon)\b/))
+      return <span className="text-lg">🥣</span>;
 
-    // Dairy
-    if (nameLower.includes('milk')) return <Milk className="w-5 h-5 text-blue-400" />;
-    if (nameLower.includes('cheese')) return <span className="text-lg">🧀</span>;
-    if (nameLower.includes('yogurt')) return <span className="text-lg">🥛</span>;
-    if (nameLower.includes('cream')) return <span className="text-lg">🍶</span>;
+    // SAUCES & CONDIMENTS
+    if (nameLower.match(/\b(soy sauce|tamari|worcestershire|fish sauce|oyster sauce|hoisin|teriyaki)\b/))
+      return <span className="text-lg">🥫</span>;
+    if (nameLower.match(/\b(ketchup|mustard|mayo|mayonnaise|aioli|relish)\b/))
+      return <span className="text-lg">🍯</span>;
+    if (nameLower.match(/\b(vinegar|balsamic|rice vinegar|apple cider vinegar)\b/))
+      return <span className="text-lg">🧪</span>;
+    if (nameLower.match(/\b(hot sauce|sriracha|tabasco|salsa|pico de gallo)\b/))
+      return <span className="text-lg">🌶️</span>;
 
-    // Grains and bakery
-    if (nameLower.includes('bread') || nameLower.includes('baguette') || nameLower.includes('roll')) return <span className="text-lg">🥖</span>;
-    if (nameLower.includes('pasta') || nameLower.includes('noodle') || nameLower.includes('spaghetti')) return <span className="text-lg">🍝</span>;
-    if (nameLower.includes('rice')) return <span className="text-lg">🍚</span>;
-    if (nameLower.includes('flour') || nameLower.includes('wheat')) return <Wheat className="w-5 h-5 text-amber-600" />;
-    if (nameLower.includes('cereal') || nameLower.includes('oat')) return <span className="text-lg">🥣</span>;
-    if (nameLower.includes('cookie') || nameLower.includes('biscuit')) return <Cookie className="w-5 h-5 text-amber-700" />;
-    if (nameLower.includes('cake') || nameLower.includes('dessert') || nameLower.includes('pastry')) return <span className="text-lg">🍰</span>;
+    // VEGETABLES - Comprehensive list
+    if (nameLower.match(/\b(tomato|tomatoes)\b/)) return <span className="text-lg">🍅</span>;
+    if (nameLower.match(/\b(onion|onions|red onion|white onion|yellow onion|sweet onion)\b/))
+      return <span className="text-lg">🧅</span>;
+    if (nameLower.match(/\b(garlic|garlic clove)\b/)) return <span className="text-lg">🧄</span>;
+    if (nameLower.match(/\b(carrot|carrots)\b/)) return <Carrot className="w-5 h-5 text-orange-500" />;
+    if (nameLower.match(/\b(potato|potatoes|russet|yukon)\b/)) return <span className="text-lg">🥔</span>;
+    if (nameLower.match(/\b(sweet potato|yam)\b/)) return <span className="text-lg">🍠</span>;
+    if (nameLower.match(/\b(lettuce|romaine|iceberg|arugula|salad|greens)\b/))
+      return <span className="text-lg">🥬</span>;
+    if (nameLower.match(/\b(spinach|kale|chard|collard)\b/)) return <span className="text-lg">🥬</span>;
+    if (nameLower.match(/\b(broccoli)\b/)) return <span className="text-lg">🥦</span>;
+    if (nameLower.match(/\b(cauliflower)\b/)) return <span className="text-lg">🥦</span>;
+    if (nameLower.match(/\b(corn|maize)\b/)) return <span className="text-lg">🌽</span>;
+    if (nameLower.match(/\b(pepper|bell pepper|capsicum|jalapeño|serrano)\b/))
+      return <span className="text-lg">🫑</span>;
+    if (nameLower.match(/\b(cucumber|cukes)\b/)) return <span className="text-lg">🥒</span>;
+    if (nameLower.match(/\b(eggplant|aubergine)\b/)) return <span className="text-lg">🍆</span>;
+    if (nameLower.match(/\b(zucchini|courgette|squash)\b/)) return <span className="text-lg">🥒</span>;
+    if (nameLower.match(/\b(mushroom|shiitake|portobello|cremini)\b/))
+      return <span className="text-lg">🍄</span>;
+    if (nameLower.match(/\b(asparagus)\b/)) return <span className="text-lg">🥦</span>;
+    if (nameLower.match(/\b(peas|snap pea|snow pea)\b/)) return <span className="text-lg">🫛</span>;
+    if (nameLower.match(/\b(bean|green bean|kidney bean|black bean|pinto|chickpea|garbanzo)\b/))
+      return <span className="text-lg">🫘</span>;
+    if (nameLower.match(/\b(celery)\b/)) return <span className="text-lg">🥬</span>;
+    if (nameLower.match(/\b(radish)\b/)) return <span className="text-lg">🌱</span>;
+    if (nameLower.match(/\b(ginger|ginger root)\b/)) return <span className="text-lg">🫚</span>;
+    if (nameLower.match(/\b(avocado)\b/)) return <span className="text-lg">🥑</span>;
 
-    // Nuts and seeds
-    if (nameLower.includes('nut') || nameLower.includes('almond') || nameLower.includes('peanut') || nameLower.includes('walnut')) return <span className="text-lg">🥜</span>;
+    // FRUITS - Comprehensive list
+    if (nameLower.match(/\b(apple|apples)\b/)) return <Apple className="w-5 h-5 text-red-500" />;
+    if (nameLower.match(/\b(banana|bananas)\b/)) return <span className="text-lg">🍌</span>;
+    if (nameLower.match(/\b(orange|oranges)\b/)) return <span className="text-lg">🍊</span>;
+    if (nameLower.match(/\b(lemon|lemons)\b/)) return <span className="text-lg">🍋</span>;
+    if (nameLower.match(/\b(lime|limes)\b/)) return <span className="text-lg">🍋</span>;
+    if (nameLower.match(/\b(strawberry|strawberries)\b/)) return <span className="text-lg">🍓</span>;
+    if (nameLower.match(/\b(blueberry|blueberries)\b/)) return <span className="text-lg">🫐</span>;
+    if (nameLower.match(/\b(grape|grapes)\b/)) return <span className="text-lg">🍇</span>;
+    if (nameLower.match(/\b(watermelon)\b/)) return <span className="text-lg">🍉</span>;
+    if (nameLower.match(/\b(mango|mangoes)\b/)) return <span className="text-lg">🥭</span>;
+    if (nameLower.match(/\b(pineapple)\b/)) return <span className="text-lg">🍍</span>;
+    if (nameLower.match(/\b(peach|peaches)\b/)) return <span className="text-lg">🍑</span>;
+    if (nameLower.match(/\b(cherry|cherries)\b/)) return <span className="text-lg">🍒</span>;
+    if (nameLower.match(/\b(pear|pears)\b/)) return <span className="text-lg">🍐</span>;
+    if (nameLower.match(/\b(berry|berries|raspberry|blackberry)\b/))
+      return <span className="text-lg">🍓</span>;
 
-    // Sugar and sweeteners
-    if (nameLower.includes('sugar') || nameLower.includes('honey') || nameLower.includes('syrup')) return <span className="text-lg">🍯</span>;
+    // MEAT & PROTEIN
+    if (nameLower.match(/\b(beef|steak|ribeye|sirloin|chuck|brisket|ground beef)\b/))
+      return <Beef className="w-5 h-5 text-red-700" />;
+    if (nameLower.match(/\b(pork|ham|bacon|sausage|chorizo|pepperoni)\b/))
+      return <span className="text-lg">🥓</span>;
+    if (nameLower.match(/\b(lamb|mutton)\b/)) return <span className="text-lg">🍖</span>;
+    if (nameLower.match(/\b(fish|salmon|tuna|cod|tilapia|halibut|trout)\b/))
+      return <Fish className="w-5 h-5 text-blue-500" />;
+    if (nameLower.match(/\b(shrimp|prawn|crab|lobster|scallop|clam|mussel|oyster|seafood)\b/))
+      return <span className="text-lg">🦞</span>;
+    if (nameLower.match(/\b(egg|eggs)\b/)) return <Egg className="w-5 h-5 text-yellow-600" />;
+    if (nameLower.match(/\b(tofu|tempeh|seitan)\b/)) return <span className="text-lg">🥡</span>;
+
+    // DAIRY
+    if (nameLower.match(/\b(cheese|cheddar|mozzarella|parmesan|feta|gouda|brie)\b/))
+      return <span className="text-lg">🧀</span>;
+    if (nameLower.match(/\b(yogurt|yoghurt)\b/)) return <span className="text-lg">🥛</span>;
+    if (nameLower.match(/\b(cream|heavy cream|sour cream|whipping cream)\b/))
+      return <span className="text-lg">🥛</span>;
+
+    // GRAINS & CARBS
+    if (nameLower.match(/\b(rice|basmati|jasmine|brown rice|white rice)\b/))
+      return <span className="text-lg">🍚</span>;
+    if (nameLower.match(/\b(pasta|spaghetti|penne|rigatoni|linguine|fettuccine|noodle|macaroni)\b/))
+      return <span className="text-lg">🍝</span>;
+    if (nameLower.match(/\b(bread|baguette|roll|bun|loaf|sourdough|wheat bread)\b/))
+      return <span className="text-lg">🥖</span>;
+    if (nameLower.match(/\b(flour|all-purpose|wheat|bread flour|cake flour)\b/))
+      return <Wheat className="w-5 h-5 text-amber-600" />;
+    if (nameLower.match(/\b(tortilla|wrap|pita|flatbread|naan)\b/))
+      return <span className="text-lg">🫓</span>;
+    if (nameLower.match(/\b(cereal|oat|oatmeal|granola)\b/)) return <span className="text-lg">🥣</span>;
+    if (nameLower.match(/\b(quinoa|couscous|barley|farro)\b/))
+      return <span className="text-lg">🌾</span>;
+
+    // BAKING & SWEETS
+    if (nameLower.match(/\b(sugar|brown sugar|powdered sugar|confectioner)\b/))
+      return <span className="text-lg">🍬</span>;
+    if (nameLower.match(/\b(honey|maple syrup|agave|molasses)\b/))
+      return <span className="text-lg">🍯</span>;
+    if (nameLower.match(/\b(chocolate|cocoa|cacao)\b/)) return <span className="text-lg">🍫</span>;
+    if (nameLower.match(/\b(cookie|biscuit)\b/)) return <Cookie className="w-5 h-5 text-amber-700" />;
+    if (nameLower.match(/\b(cake|cupcake|muffin|pastry|brownie)\b/))
+      return <span className="text-lg">🍰</span>;
+    if (nameLower.match(/\b(baking powder|baking soda|yeast)\b/))
+      return <span className="text-lg">🧪</span>;
+
+    // NUTS & SEEDS
+    if (nameLower.match(/\b(almond|peanut|walnut|cashew|pistachio|pecan|hazelnut|nut)\b/))
+      return <span className="text-lg">🥜</span>;
+    if (nameLower.match(/\b(seed|sesame|sunflower|pumpkin|chia|flax)\b/))
+      return <span className="text-lg">🌻</span>;
 
     // Category-based fallback emojis
     if (categoryId === 'produce') return <span className="text-lg">🥬</span>;
