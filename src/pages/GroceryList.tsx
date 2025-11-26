@@ -6,7 +6,7 @@
 // 4. Add swipe-to-delete gesture
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X, Apple, Beef, Milk, Wheat, Carrot, Fish, Egg, Cookie } from 'lucide-react';
+import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X, Apple, Beef, Milk, Wheat, Carrot, Fish, Egg, Cookie, Droplet, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -63,22 +63,65 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   function getIngredientIcon(name: string, categoryId: string) {
     const nameLower = name.toLowerCase();
 
+    // Water and liquids (check first - most specific)
+    if (nameLower.includes('water')) return <Droplet className="w-5 h-5 text-blue-500" />;
+    if (nameLower.includes('juice') || nameLower.includes('soda') || nameLower.includes('drink')) return <span className="text-lg">🥤</span>;
+
+    // Oils and fats (check before other categories)
+    if (nameLower.includes('oil') || nameLower.includes('sesame') || nameLower.includes('olive') || nameLower.includes('vegetable oil') || nameLower.includes('coconut oil')) return <span className="text-lg">🛢️</span>;
+    if (nameLower.includes('butter') || nameLower.includes('ghee')) return <span className="text-lg">🧈</span>;
+
+    // Spices and seasonings (check before other categories)
+    if (nameLower.includes('pepper') || nameLower.includes('salt') || nameLower.includes('spice') || nameLower.includes('cumin') || nameLower.includes('paprika') || nameLower.includes('oregano') || nameLower.includes('basil') || nameLower.includes('thyme') || nameLower.includes('rosemary') || nameLower.includes('cinnamon') || nameLower.includes('ginger')) return <Flame className="w-5 h-5 text-red-600" />;
+    if (nameLower.includes('garlic') || nameLower.includes('onion powder') || nameLower.includes('garlic powder')) return <span className="text-lg">🧄</span>;
+
+    // Sauces and condiments
+    if (nameLower.includes('sauce') || nameLower.includes('ketchup') || nameLower.includes('mustard') || nameLower.includes('mayo') || nameLower.includes('soy sauce') || nameLower.includes('vinegar')) return <span className="text-lg">🍯</span>;
+
     // Fruits and vegetables
-    if (nameLower.includes('apple') || nameLower.includes('fruit')) return <Apple className="w-5 h-5 text-red-500" />;
-    if (nameLower.includes('carrot') || nameLower.includes('vegetable') || nameLower.includes('lettuce') || nameLower.includes('tomato') || nameLower.includes('onion')) return <Carrot className="w-5 h-5 text-orange-500" />;
+    if (nameLower.includes('apple')) return <Apple className="w-5 h-5 text-red-500" />;
+    if (nameLower.includes('banana')) return <span className="text-lg">🍌</span>;
+    if (nameLower.includes('orange') || nameLower.includes('citrus')) return <span className="text-lg">🍊</span>;
+    if (nameLower.includes('berry') || nameLower.includes('strawberry') || nameLower.includes('blueberry')) return <span className="text-lg">🍓</span>;
+    if (nameLower.includes('carrot')) return <Carrot className="w-5 h-5 text-orange-500" />;
+    if (nameLower.includes('tomato')) return <span className="text-lg">🍅</span>;
+    if (nameLower.includes('lettuce') || nameLower.includes('salad') || nameLower.includes('spinach') || nameLower.includes('kale')) return <span className="text-lg">🥬</span>;
+    if (nameLower.includes('potato')) return <span className="text-lg">🥔</span>;
+    if (nameLower.includes('onion')) return <span className="text-lg">🧅</span>;
+    if (nameLower.includes('mushroom')) return <span className="text-lg">🍄</span>;
+    if (nameLower.includes('avocado')) return <span className="text-lg">🥑</span>;
+    if (nameLower.includes('corn')) return <span className="text-lg">🌽</span>;
+    if (nameLower.includes('broccoli')) return <span className="text-lg">🥦</span>;
+    if (nameLower.includes('cucumber')) return <span className="text-lg">🥒</span>;
 
     // Meat and protein
-    if (nameLower.includes('beef') || nameLower.includes('steak') || nameLower.includes('meat')) return <Beef className="w-5 h-5 text-red-700" />;
-    if (nameLower.includes('chicken') || nameLower.includes('pork')) return <span className="text-lg">🍗</span>;
+    if (nameLower.includes('beef') || nameLower.includes('steak')) return <Beef className="w-5 h-5 text-red-700" />;
+    if (nameLower.includes('chicken') || nameLower.includes('turkey') || nameLower.includes('poultry')) return <span className="text-lg">🍗</span>;
+    if (nameLower.includes('pork') || nameLower.includes('bacon') || nameLower.includes('ham')) return <span className="text-lg">🥓</span>;
     if (nameLower.includes('fish') || nameLower.includes('salmon') || nameLower.includes('tuna')) return <Fish className="w-5 h-5 text-blue-500" />;
+    if (nameLower.includes('shrimp') || nameLower.includes('seafood') || nameLower.includes('lobster')) return <span className="text-lg">🦞</span>;
     if (nameLower.includes('egg')) return <Egg className="w-5 h-5 text-yellow-600" />;
 
     // Dairy
-    if (nameLower.includes('milk') || nameLower.includes('cheese') || nameLower.includes('yogurt') || nameLower.includes('cream') || nameLower.includes('butter')) return <Milk className="w-5 h-5 text-blue-400" />;
+    if (nameLower.includes('milk')) return <Milk className="w-5 h-5 text-blue-400" />;
+    if (nameLower.includes('cheese')) return <span className="text-lg">🧀</span>;
+    if (nameLower.includes('yogurt')) return <span className="text-lg">🥛</span>;
+    if (nameLower.includes('cream')) return <span className="text-lg">🍶</span>;
 
     // Grains and bakery
-    if (nameLower.includes('bread') || nameLower.includes('pasta') || nameLower.includes('rice') || nameLower.includes('flour') || nameLower.includes('cereal')) return <Wheat className="w-5 h-5 text-amber-600" />;
-    if (nameLower.includes('cookie') || nameLower.includes('cake') || nameLower.includes('dessert')) return <Cookie className="w-5 h-5 text-amber-700" />;
+    if (nameLower.includes('bread') || nameLower.includes('baguette') || nameLower.includes('roll')) return <span className="text-lg">🥖</span>;
+    if (nameLower.includes('pasta') || nameLower.includes('noodle') || nameLower.includes('spaghetti')) return <span className="text-lg">🍝</span>;
+    if (nameLower.includes('rice')) return <span className="text-lg">🍚</span>;
+    if (nameLower.includes('flour') || nameLower.includes('wheat')) return <Wheat className="w-5 h-5 text-amber-600" />;
+    if (nameLower.includes('cereal') || nameLower.includes('oat')) return <span className="text-lg">🥣</span>;
+    if (nameLower.includes('cookie') || nameLower.includes('biscuit')) return <Cookie className="w-5 h-5 text-amber-700" />;
+    if (nameLower.includes('cake') || nameLower.includes('dessert') || nameLower.includes('pastry')) return <span className="text-lg">🍰</span>;
+
+    // Nuts and seeds
+    if (nameLower.includes('nut') || nameLower.includes('almond') || nameLower.includes('peanut') || nameLower.includes('walnut')) return <span className="text-lg">🥜</span>;
+
+    // Sugar and sweeteners
+    if (nameLower.includes('sugar') || nameLower.includes('honey') || nameLower.includes('syrup')) return <span className="text-lg">🍯</span>;
 
     // Category-based fallback emojis
     if (categoryId === 'produce') return <span className="text-lg">🥬</span>;
@@ -90,8 +133,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     if (categoryId === 'snacks') return <span className="text-lg">🍿</span>;
     if (categoryId === 'beverages') return <span className="text-lg">🥤</span>;
 
-    // Default
-    return <span className="text-lg">📦</span>;
+    // Default for uncategorized items
+    return <span className="text-lg">🛒</span>;
   }
 
   useEffect(() => {

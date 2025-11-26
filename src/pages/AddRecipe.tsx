@@ -452,17 +452,29 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   };
 
 return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pb-32">
-      {/* Title section - scrolls with content, below Layout header */}
-      <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
-          <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
+    <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent">
+      <div
+        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gradient-to-br from-slate-50 via-white to-slate-50 md:min-h-screen overflow-hidden rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
+        style={{
+          maxHeight: '90vh'
+        }}
+      >
+        {/* Grabber handle - mobile only */}
+        <div className="flex md:hidden items-center justify-center pt-3 pb-2 bg-gradient-to-br from-blue-50 to-white">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
-      </div>
 
+        {/* Title section - scrolls with content, below Layout header */}
+        <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6">
+          <div className="max-w-4xl mx-auto px-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
+            <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
+          </div>
+        </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+        {/* Scrollable content container */}
+        <div className="overflow-y-auto max-h-[calc(90vh-8rem)] md:max-h-none overscroll-contain pb-32">
+          <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* URL Import Section - Mobile optimized */}
         <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
@@ -1238,6 +1250,8 @@ return (
             </DialogFooter>
           </DialogContent>
         </Dialog>
+          </div>
+        </div>
       </div>
     </div>
   );

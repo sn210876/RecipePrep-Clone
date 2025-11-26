@@ -388,31 +388,42 @@ onNavigate('discover');
   };
 
   return (
-    <div 
-      className="min-h-screen bg-gray-50 pb-40 overflow-x-hidden"
-      style={{ paddingBottom: 'max(10rem, env(safe-area-inset-bottom))' }}
-    >
-      <div 
-  className="sticky top-0 bg-white border-b border-gray-200 z-20"
-  style={{ paddingTop: 'env(safe-area-inset-top)' }}
->
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-         <button 
-  type="button"
-  onClick={(e) => {
-    e.preventDefault();
-    onNavigate('discover');
-  }} 
-  className="text-gray-600 hover:text-gray-900 font-medium"
->
-  Cancel
-</button>
-          <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
-          <div className="w-16"></div>
+    <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent">
+      <div
+        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gray-50 md:min-h-screen overflow-hidden md:overflow-x-hidden rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
+        style={{
+          maxHeight: '90vh',
+          paddingBottom: 'max(10rem, env(safe-area-inset-bottom))'
+        }}
+      >
+        {/* Grabber handle - mobile only */}
+        <div className="flex md:hidden items-center justify-center pt-3 pb-2 bg-white">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
-      </div>
 
-      <div className="max-w-lg mx-auto p-4 space-y-4">
+        <div
+          className="sticky top-0 bg-white border-b border-gray-200 z-20"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        >
+          <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate('discover');
+              }}
+              className="text-gray-600 hover:text-gray-900 font-medium active:scale-95 transition-transform"
+            >
+              Cancel
+            </button>
+            <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
+            <div className="w-16"></div>
+          </div>
+        </div>
+
+        {/* Scrollable content container */}
+        <div className="overflow-y-auto max-h-[calc(90vh-4rem)] md:max-h-none overscroll-contain">
+          <div className="max-w-lg mx-auto p-4 space-y-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <label className="text-sm font-medium text-gray-700 mb-2 block">Post Type</label>
           <div className="flex gap-2">
@@ -485,10 +496,12 @@ onNavigate('discover');
               className="w-full aspect-square object-cover rounded-xl"
             />
           ) : (
-            <img 
-              src={url} 
-              alt={`Preview ${index + 1}`} 
-              className="w-full aspect-square object-cover rounded-xl" 
+            <img
+              src={url}
+              alt={`Preview ${index + 1}`}
+              className="w-full aspect-square object-cover rounded-xl"
+              loading="lazy"
+              decoding="async"
             />
           )}
           <button
@@ -563,6 +576,8 @@ onNavigate('discover');
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
               <img
                 src={selectedTrack.album.images[0]?.url}
+                loading="lazy"
+                decoding="async"
                 alt="album"
                 className="w-12 h-12 rounded object-cover"
               />
@@ -639,7 +654,7 @@ onNavigate('discover');
                       <SelectItem key={recipe.id} value={recipe.id}>
                         <div className="flex items-center gap-2">
                           {recipe.image_url && (
-                            <img src={recipe.image_url} alt={recipe.title} className="w-8 h-8 rounded object-cover" />
+                            <img src={recipe.image_url} alt={recipe.title} className="w-8 h-8 rounded object-cover" loading="lazy" decoding="async" />
                           )}
                           <span>{recipe.title}</span>
                         </div>
@@ -683,10 +698,11 @@ disabled={selectedFiles.length === 0 || (postType === 'post' && !title.trim()) |
             {uploading ? 'Submitting...' : 'Submit'}
           </Button>
         </div>
+        </div>
       </div>
 
       {/* Music Picker Modal */}
-     {showMusicPicker && (
+      {showMusicPicker && (
   <div className="fixed inset-0 bg-black/70 z-50 flex items-end md:items-center justify-center">
           <div 
             className="bg-white w-full md:max-w-lg md:rounded-2xl flex flex-col"
@@ -730,6 +746,8 @@ disabled={selectedFiles.length === 0 || (postType === 'post' && !title.trim()) |
                 >
                   <img
                     src={track.album.images[0]?.url || '/placeholder.png'}
+                    loading="lazy"
+                    decoding="async"
                     alt="album"
                     className="w-12 h-12 rounded flex-shrink-0"
                   />
@@ -749,6 +767,7 @@ disabled={selectedFiles.length === 0 || (postType === 'post' && !title.trim()) |
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
