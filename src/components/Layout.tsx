@@ -419,7 +419,8 @@ const loadUnreadCount = async (userId: string) => {
         <Camera className="w-7 h-7 text-white" strokeWidth={2.5} />
       </button>
 
-      {/* Profile */}
+Here's the corrected section (lines 462-490):
+typescript      {/* Profile */}
       <button
         onClick={() => handleNavigate('profile')}
         className={`flex flex-col items-center gap-1 transition-all touch-manipulation ${
@@ -458,10 +459,11 @@ const loadUnreadCount = async (userId: string) => {
     </div>
   </div>
 </div>
-
-)}
+        {/* REMOVE THIS LINE 481: )} */}
+        
         {/* Social Feed FAB - For non-social pages, Desktop */}
         {!socialPages.includes(currentPage) && (
+
           <div className="hidden lg:block fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
             <button
               onClick={() => handleNavigate('discover')}
