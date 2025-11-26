@@ -928,15 +928,15 @@ if (loading) {
     setNewUsername(e.target.value);
     setUsernameError(null);
   }}
-  placeholder="max 10 chars, no spaces"  // Change from 20 to 10
-  maxLength={10}  // Change from 20 to 10
+  placeholder="max 15 chars, no spaces"  
+  maxLength={15}  
   className={usernameError ? 'border-red-500' : ''}
 />
 {usernameError && (
   <p className="text-xs text-red-600 font-medium">{usernameError}</p>
 )}
 <p className="text-xs text-gray-500">
-  {newUsername.length}/10 • letters, numbers, _ .  // Change from 20 to 10
+  {newUsername.length}/15 • letters, numbers, _ .  
 </p>
               </div>
             </div>
