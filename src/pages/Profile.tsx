@@ -956,7 +956,7 @@ if (loading) {
                   value = value.split('\n').map(line => line.slice(0, 40)).join('\n');
                   setNewBio(value);
                 }}
-                placeholder="i love peegi love peegi love peegi\ni love peegi love peegi love peegi\ni love peegi love peegi snguyen7"
+                placeholder="place bio here"
                 className="min-h-[110px] resize-none text-center font-medium"
                 rows={3}
               />
