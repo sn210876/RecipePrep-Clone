@@ -1231,8 +1231,37 @@ return (
                 Cancel
               </Button>
             </DialogFooter>
-          </DialogContent>
+</DialogContent>
         </Dialog>
+          </div>
+        </div>
+
+        {/* RECIPE ACTION BUTTONS - Fixed above nav icons, z-[70] */}
+        <div className="fixed bottom-[80px] left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[70] lg:hidden">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3">
+            {onNavigate && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onNavigate('my-recipes')}
+                className="bg-white shadow-md border-2 border-gray-300 hover:bg-gray-50 px-6 h-12 text-base font-semibold rounded-full"
+              >
+                Cancel
+              </Button>
+            )}
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                const form = document.querySelector('form');
+                if (form) {
+                  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                }
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 text-base font-semibold shadow-lg rounded-full transition-all transform active:scale-95"
+            >
+              Create Recipe
+            </Button>
           </div>
         </div>
       </div>
