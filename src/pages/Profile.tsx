@@ -92,7 +92,7 @@ console.log('[Profile] VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
   if (trimmed.length === 0) return 'Username required';
-  if (trimmed.length > 10) return 'Max 10 characters';
+  if (trimmed.length > 20) return 'Max 20 characters';
   if (trimmed.includes(' ')) return 'No spaces allowed';
   if (!/^[a-zA-Z0-9._]+$/.test(trimmed)) return 'Only letters, numbers, _ . allowed';
   if (/^[._]/.test(trimmed) || /[._]$/.test(trimmed)) return 'Cannot start or end with _ or .';
