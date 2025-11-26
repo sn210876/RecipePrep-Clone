@@ -464,8 +464,8 @@ return (
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Title section - scrolls with content, below Layout header */}
-        <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6">
+        {/* Title section - sticky on desktop */}
+        <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6 md:sticky md:top-0 md:z-10">
           <div className="max-w-4xl mx-auto px-4">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
             <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
@@ -473,7 +473,7 @@ return (
         </div>
 
         {/* Scrollable content container */}
-        <div className="overflow-y-auto max-h-[calc(90vh-8rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32">
+        <div className="overflow-y-auto max-h-[calc(90vh-8rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* URL Import Section - Mobile optimized */}

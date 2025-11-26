@@ -366,9 +366,8 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                                 </div>
                                 <div className="px-3 pb-3">
                                   <Button
-                                    variant="outline"
                                     size="sm"
-                                    className="w-full"
+                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleOpenAddMealDialog(recipe);
@@ -416,8 +415,12 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                 </div>
               </div>
               {isMobile && (
-                <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-100 rounded-lg">
-                  <Menu className="w-6 h-6" />
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <Menu className="w-5 h-5" />
+                  <span className="text-sm font-medium">Add by Recipe</span>
                 </button>
               )}
             </div>
@@ -494,7 +497,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
 
         {/* Calendar - Mobile vs Desktop View */}
         <ScrollArea className="flex-1">
-          <div className="p-4 md:p-6">
+          <div className="p-4 md:p-6 pb-32 md:pb-6">
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -617,10 +620,9 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                             </div>
                             <p className="text-sm text-slate-400 mb-4">No meal planned</p>
                             <Button
-                              variant="outline"
                               size="sm"
                               onClick={() => handleOpenSlotDropdown(selectedDateForView, mealType)}
-                              className="gap-2"
+                              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                             >
                               <Plus className="w-4 h-4" />
                               Add Meal
@@ -790,6 +792,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
             <Button
               onClick={handleAddMealViaDialog}
               disabled={!selectedDate || !selectedMealType}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:bg-gray-300 disabled:text-gray-500"
             >
               Add
             </Button>
