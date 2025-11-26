@@ -71,6 +71,42 @@ export async function downloadAndStoreImage(
 }
 
 /**
+ * Upload a file directly to Supabase storage
+ * @param file - The file to upload
+ * @param bucket - The storage bucket name (defaults to 'recipe-images')
+ * @returns Public URL of the uploaded file
+ */
+export async function uploadImage(
+  file: File,
+  bucket: string = 'recipe-images'
+): Promise<string> {
+  try {
+    const fileExtension = file.name.split('.').pop() || 'jpg';
+    const timestamp = Date.now();
+    const fileName = `${bucket}/${timestamp}.${fileExtension}`;
+
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, file, {
+        contentType: file.type,
+        cacheControl: '31536000',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('[ImageStorage] Failed to upload image:', error);
+    throw error;
+  }
+}
+
+/**
  * Batch download and store multiple images
  * @param images - Array of {url, recipeId}
  * @returns Array of permanent URLs

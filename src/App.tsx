@@ -14,6 +14,8 @@ import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { Messages } from './pages/Messages';
+import { Blog } from './pages/Blog';
+import { BlogPostPage } from './pages/BlogPost';
 import { Toaster } from './components/ui/sonner';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -46,20 +48,25 @@ function AppContent() {
   if (path === '/messages') return 'messages';
   if (path === '/settings') return 'settings';
   if (path === '/onboarding') return 'onboarding';
+  if (path === '/blog') return 'blog';
+  if (path.startsWith('/blog/') && path !== '/blog') {
+    const slug = path.split('/blog/')[1];
+    if (slug) return `blog:${slug}`;
+  }
   if (path.startsWith('/profile/') && path !== '/profile') {
     const username = path.split('/profile/')[1];
     if (username) return `profile:${username}`;
   }
-  
+
   // Only treat as username if not a known route
   if (path !== '/' && path.length > 1 && !path.includes('.')) {
     const username = path.substring(1);
-    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings'];
+    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings', 'blog'];
     if (username && !username.includes('/') && !knownRoutes.includes(username)) {
       return `profile:${username}`;
     }
   }
-  
+
   return 'discover-recipes';
 });
 
@@ -146,6 +153,11 @@ useEffect(() => {
     setCurrentPage('messages');
   } else if (path === '/settings') {
     setCurrentPage('settings');
+  } else if (path === '/blog') {
+    setCurrentPage('blog');
+  } else if (path.startsWith('/blog/') && path !== '/blog') {
+    const slug = path.split('/blog/')[1];
+    if (slug) setCurrentPage(`blog:${slug}`);
   } else if (path === '/profile') {
     setCurrentPage('profile');
   } else if (path.startsWith('/profile/') && path !== '/profile') {
@@ -157,7 +169,7 @@ useEffect(() => {
   } else if (path !== '/' && path.length > 1 && !path.includes('.')) {
     // Only treat as username if it doesn't match any known routes
     const username = path.substring(1);
-    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart'];
+    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'blog'];
     if (username && !username.includes('/') && !knownRoutes.includes(username)) {
       setCurrentPage(`profile:${username}`);
     } else {
@@ -205,10 +217,17 @@ useEffect(() => {
       'messages': '/messages',
       'settings': '/settings',
       'onboarding': '/onboarding',
+      'blog': '/blog',
     };
     if (page.startsWith('profile:')) {
       const username = page.split('profile:')[1];
       window.history.pushState({}, '', `/${username}`);
+      setCurrentPage(page);
+      return;
+    }
+    if (page.startsWith('blog:')) {
+      const slug = page.split('blog:')[1];
+      window.history.pushState({}, '', `/blog/${slug}`);
       setCurrentPage(page);
       return;
     }
@@ -222,6 +241,10 @@ useEffect(() => {
       const username = currentPage.split('profile:')[1];
       return <Profile username={username} />;
     }
+    if (currentPage.startsWith('blog:')) {
+      const slug = currentPage.split('blog:')[1];
+      return <BlogPostPage slug={slug} onNavigate={handleNavigate} />;
+    }
     switch (currentPage) {
       case 'discover-recipes': return <DiscoverRecipes onNavigate={handleNavigate} />;
       case 'discover': return <Discover onNavigate={handleNavigate} />;
@@ -234,6 +257,7 @@ useEffect(() => {
       case 'profile': return <Profile />;
       case 'messages': return <Messages onBack={() => handleNavigate('discover')} />;
       case 'settings': return <Settings onNavigate={handleNavigate} />;
+      case 'blog': return <Blog onNavigate={handleNavigate} />;
       default: return <DiscoverRecipes onNavigate={handleNavigate} />;
     }
   };
@@ -262,10 +286,13 @@ useEffect(() => {
     );
   }
 
-  // Allow access to DiscoverRecipes without login
-  if (!user && currentPage !== 'discover-recipes') return <AuthForm />;
-  // Only check email verification if user is logged in and not on discover-recipes
-  if (user && !isEmailVerified && currentPage !== 'discover-recipes') return <VerifyEmail />;
+  // Allow access to DiscoverRecipes and Blog without login
+  const publicPages = ['discover-recipes', 'blog'];
+  const isPublicPage = publicPages.includes(currentPage) || currentPage.startsWith('blog:');
+
+  if (!user && !isPublicPage) return <AuthForm />;
+  // Only check email verification if user is logged in and not on public pages
+  if (user && !isEmailVerified && !isPublicPage) return <VerifyEmail />;
 
   // Main app with mobile-safe padding
   return (
