@@ -112,7 +112,6 @@ export function RecipeDetailModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
    <Dialog open={open} onOpenChange={onOpenChange}>
   <DialogContent 
     className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0"
