@@ -122,7 +122,7 @@ export function RecipeDetailModal({
       </style>
 
       <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
-        <DialogContent className="max-w-5xl w-[95%] h-[90vh] p-0 gap-0 overflow-hidden rounded-xl border">
+        <DialogContent className="max-w-4xl w-[85%] h-[85vh] p-0 gap-0 overflow-hidden rounded-xl border">
           <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
           <div className="h-full overflow-y-auto overscroll-contain scroll-smooth">
             <div className="relative">
