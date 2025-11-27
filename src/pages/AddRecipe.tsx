@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,9 +10,12 @@ import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image
 import { useRecipes } from '@/context/RecipeContext';
 import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
-import { extractRecipeFromUrl, isValidUrl, getPlatformFromUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
+import { extractRecipeFromUrl, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { downloadAndStoreImage } from '@/lib/imageStorage';
+import { compressImage, formatFileSize, isImageFile } from '@/lib/imageCompression';
+
 
 function parseTimeValue(value: string | number): number {
   if (typeof value === 'number') return value;
@@ -38,13 +41,13 @@ function parseServingsValue(value: string | number): number {
 }
 
 const UNITS = [
-  'cup', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'l',
-  'piece', 'whole', 'pinch', 'dash', 'to taste'
+  'cup', 'TBSP', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'l',
+  'piece(s)', 'whole', 'pinch', 'dash', 'egg(s)', 'to taste'
 ];
 
 const CUISINE_TYPES = [
   'American', 'Chinese', 'Culinary/Baked Goods', 'French', 'Healing/Medicine', 'Indian', 'Italian', 'Juices/Smoothies', 
-  'Japanese', 'Korean', 'Mediterranean', 'Mexican/Spanish', 'Other', 'Pet Meals',
+  'Japanese', 'Korean', 'Mediterranean', 'Mexican/Spanish', 'Other', 'Pet Meals', 'Supplements',
   'Thai', 'Vegan/Vegetarian', 'Vietnamese'
 ];
 
@@ -61,6 +64,8 @@ interface AddRecipeProps {
 
 export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const { dispatch } = useRecipes();
+  const [editRecipeId, setEditRecipeId] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [title, setTitle] = useState('');
   const [ingredients, setIngredients] = useState<Ingredient[]>([
@@ -86,6 +91,55 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [uploadedImageFile, setUploadedImageFile] = useState<File | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showConflictDialog, setShowConflictDialog] = useState(false);
+
+  // Load recipe for editing if edit parameter is present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get('edit');
+
+    console.log('[AddRecipe] Checking for edit param:', editId);
+    console.log('[AddRecipe] Current URL:', window.location.href);
+
+    if (editId) {
+      setEditRecipeId(editId);
+      setIsEditMode(true);
+      loadRecipeForEdit(editId);
+    }
+  }, []);
+
+  const loadRecipeForEdit = async (recipeId: string) => {
+    try {
+      const { getRecipeById } = await import('@/services/recipeService');
+      const recipe = await getRecipeById(recipeId);
+
+      if (recipe) {
+        setTitle(recipe.title);
+        setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : [{ quantity: '', unit: 'cup', name: '' }]);
+        setInstructions(recipe.instructions.length > 0 ? recipe.instructions : ['']);
+        setPrepTime(String(recipe.prepTime));
+        setCookTime(String(recipe.cookTime));
+        setServings(String(recipe.servings));
+        setCuisineType(recipe.cuisineType);
+        setDifficulty(recipe.difficulty);
+        setSelectedMealTypes(recipe.mealType || []);
+        setSelectedDietaryTags(recipe.dietaryTags || []);
+        setImageUrl(recipe.imageUrl || '');
+        setVideoUrl(recipe.videoUrl || '');
+        setNotes(recipe.notes || '');
+        toast.success('Recipe loaded for editing');
+      } else {
+        toast.error('Recipe not found');
+        setIsEditMode(false);
+        setEditRecipeId(null);
+      }
+    } catch (error) {
+      console.error('Failed to load recipe:', error);
+      toast.error('Failed to load recipe');
+      setIsEditMode(false);
+      setEditRecipeId(null);
+    }
+  };
 
   const addIngredient = () => {
     setIngredients([...ingredients, { quantity: '', unit: 'cup', name: '' }]);
@@ -139,168 +193,163 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!isImageFile(file)) {
       toast.error('Please select an image file');
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
-      return;
-    }
-
     setIsUploadingImage(true);
+    const toastId = toast.loading('Compressing image...', { duration: 0 });
+
     try {
+      const originalSize = file.size;
+
+      const result = await compressImage(file, (progress) => {
+        if (progress.isCompressing) {
+          toast.loading(
+            `Compressing image... ${Math.round(progress.percent)}%`,
+            { id: toastId, duration: 0 }
+          );
+        }
+      });
+
+      const compressedFile = result.file;
+      const savedBytes = originalSize - result.compressedSize;
+      const savedPercent = Math.round(((savedBytes) / originalSize) * 100);
+
+      toast.loading('Uploading compressed image...', { id: toastId, duration: 0 });
+
       const { supabase } = await import('@/lib/supabase');
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        toast.error('You must be logged in to upload images');
+        toast.error('You must be logged in to upload images', { id: toastId });
         return;
       }
 
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
+      const fileExt = 'jpg';
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      console.log('[AddRecipe] Uploading image to recipe-images bucket:', fileName);
-
-      // Upload to Supabase storage
       const { error } = await supabase.storage
         .from('recipe-images')
-        .upload(fileName, file, {
+        .upload(fileName, compressedFile, {
           cacheControl: '3600',
           upsert: false
         });
 
-      if (error) {
-        console.error('[AddRecipe] Upload error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('recipe-images')
         .getPublicUrl(fileName);
 
-      console.log('[AddRecipe] Image uploaded successfully:', publicUrl);
-
-      setUploadedImageFile(file);
+      setUploadedImageFile(compressedFile);
       setUploadedImageUrl(publicUrl);
-      setImageUrl(''); // Clear URL field when file is uploaded
-      toast.success('Image uploaded successfully!');
+      setImageUrl('');
+
+      toast.success(
+        `Image uploaded! Reduced ${formatFileSize(originalSize)} → ${formatFileSize(result.compressedSize)} (${savedPercent}% smaller)`,
+        { id: toastId, duration: 4000 }
+      );
     } catch (error: any) {
-      console.error('[AddRecipe] Failed to upload image:', error);
       toast.error(error.message || 'Failed to upload image');
     } finally {
       setIsUploadingImage(false);
     }
   };
 
-//start
- const handleUrlExtract = async () => {
-  if (!urlInput.trim()) {
-    toast.error('Please enter a URL');
-    return;
-  }
-
-  if (!isValidUrl(urlInput)) {
-    toast.error('Please enter a valid URL');
-    return;
-  }
-
-  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
-  const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
-
-  if (isImageUrl) {
-    toast.error('Please paste a recipe page URL, not a direct image link.');
-    return;
-  }
-
-  setIsExtracting(true);
-  const platform = getPlatformFromUrl(urlInput);
-  
-  try {
-    toast.loading('Extracting recipe...', { id: 'extract' });
-    const data = await extractRecipeFromUrl(urlInput);
-    setExtractedData(data);
-    setShowPreview(true);
-    toast.success(`Recipe extracted from ${platform}! Review and edit before saving.`, { id: 'extract' });
-    setIsExtracting(false);
-  } catch (error: any) {
-    console.error('Extract error:', error);
-    
-    if (error.message.includes('waking up')) {
-      toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
-      
-      setTimeout(async () => {
-        try {
-          toast.loading('Retrying extraction...', { id: 'extract' });
-          const data = await extractRecipeFromUrl(urlInput);
-          setExtractedData(data);
-          setShowPreview(true);
-          toast.success(`Recipe extracted from ${platform}!`, { id: 'extract' });
-        } catch (retryError: any) {
-          toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
-        } finally {
-          setIsExtracting(false);
-        }
-      }, 30000);
-    } else {
-      toast.error(error.message || 'Failed to extract recipe.', { id: 'extract' });
-      setIsExtracting(false);
+  const handleUrlExtract = async () => {
+    if (!urlInput.trim()) {
+      toast.error('Please enter a URL');
+      return;
     }
-  }
-};
-  // ✅ REMOVE THE FINALLY BLOCK ENTIRELY
+
+    if (!isValidUrl(urlInput)) {
+      toast.error('Please enter a valid URL');
+      return;
+    }
+
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+    const isImageUrl = imageExtensions.some(ext => urlInput.toLowerCase().includes(ext));
+
+    if (isImageUrl) {
+      toast.error('Please paste a recipe page URL, not a direct image link.');
+      return;
+    }
+
+    setIsExtracting(true);
+
+    try {
+      toast.loading('Extracting recipe...', { id: 'extract' });
+      const data = await extractRecipeFromUrl(urlInput);
+      setExtractedData(data);
+
+      if (data.hasConflict) {
+        setShowConflictDialog(true);
+        toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract' });
+      } else {
+        setShowPreview(true);
+        toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract' });
+      }
+      setIsExtracting(false);
+    } catch (error: any) {
+      if (error.message.includes('waking up')) {
+        toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
+        
+        setTimeout(async () => {
+          try {
+            toast.loading('Retrying extraction...', { id: 'extract' });
+            const data = await extractRecipeFromUrl(urlInput);
+            setExtractedData(data);
+            setShowPreview(true);
+            toast.success('Recipe extracted!', { id: 'extract' });
+          } catch (retryError: any) {
+            toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
+          } finally {
+            setIsExtracting(false);
+          }
+        }, 30000);
+      } else {
+        toast.error(error.message || 'Failed to extract recipe.', { id: 'extract' });
+        setIsExtracting(false);
+      }
+    }
+  };
 
   const handleAcceptExtraction = () => {
-  if (!extractedData) return;
+    if (!extractedData) return;
 
-  console.log('[AddRecipe] Accepting extraction');
-  console.log('[AddRecipe] Extracted ingredients:', extractedData.ingredients);
-  console.log('[AddRecipe] Extracted instructions:', extractedData.instructions);
-  console.log('[AddRecipe] Extracted imageUrl:', extractedData.imageUrl);
+    setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
 
-  setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
+    const normalizedIngredients = extractedData.ingredients.map(ing => ({
+      quantity: ing.quantity || '',
+      unit: ing.unit || 'cup',
+      name: ing.name || ''
+    }));
 
-  // Ensure ingredients have proper structure
-  const normalizedIngredients = extractedData.ingredients.map(ing => ({
-    quantity: ing.quantity || '',
-    unit: ing.unit || 'cup',
-    name: ing.name || ''
-  }));
+    setIngredients(normalizedIngredients);
+    setInstructions(extractedData.instructions);
+    setPrepTime(String(parseTimeValue(extractedData.prepTime)));
+    setCookTime(String(parseTimeValue(extractedData.cookTime)));
+    setServings(String(parseServingsValue(extractedData.servings)));
+    setCuisineType(extractedData.cuisineType);
+    setDifficulty(extractedData.difficulty);
+    setSelectedMealTypes(extractedData.mealTypes);
+    setSelectedDietaryTags(extractedData.dietaryTags);
+    
+    if (extractedData.imageUrl) {
+      setImageUrl(extractedData.imageUrl);
+    }
+    
+    setVideoUrl(extractedData.videoUrl || '');
+    const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
+    setNotes(sourceNote + (extractedData.notes || ''));
 
-  console.log('[AddRecipe] Normalized ingredients:', normalizedIngredients);
-  setIngredients(normalizedIngredients);
+    setShowPreview(false);
+    setExtractedData(null);
 
-  setInstructions(extractedData.instructions);
-  setPrepTime(String(parseTimeValue(extractedData.prepTime)));
-  setCookTime(String(parseTimeValue(extractedData.cookTime)));
-  setServings(String(parseServingsValue(extractedData.servings)));
-  setCuisineType(extractedData.cuisineType);
-  setDifficulty(extractedData.difficulty);
-  setSelectedMealTypes(extractedData.mealTypes);
-  setSelectedDietaryTags(extractedData.dietaryTags);
-  
-  // FIX: Handle Instagram images properly - set the image URL directly
-  // The proxy will be applied later when creating the post
-  if (extractedData.imageUrl) {
-    console.log('[AddRecipe] Setting imageUrl from extraction:', extractedData.imageUrl);
-    setImageUrl(extractedData.imageUrl);
-  }
-  
-  setVideoUrl(extractedData.videoUrl || '');
-  const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
-  setNotes(sourceNote + (extractedData.notes || ''));
-
-  setShowPreview(false);
-  setExtractedData(null);
-
-  toast.success('Recipe loaded! Edit any details as needed.');
-};
+    toast.success('Recipe loaded! Edit any details as needed.');
+  };
 
   const handleCancelExtraction = () => {
     setShowPreview(false);
@@ -317,9 +366,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     if (!servings || parseInt(servings) <= 0) newErrors.servings = 'Valid servings count is required';
     if (selectedMealTypes.length === 0) newErrors.mealTypes = 'Select at least one meal type';
 
-    const validIngredients = ingredients.filter(
-      ing => ing.name.trim()
-    );
+    const validIngredients = ingredients.filter(ing => ing.name.trim());
     if (validIngredients.length === 0) {
       newErrors.ingredients = 'Add at least one ingredient';
     }
@@ -333,180 +380,270 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ============================================
+  // UPDATED handleSubmit - WITH PERMANENT IMAGE STORAGE
+  // ============================================
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  console.log('[AddRecipe] Form submitted');
-  setShowErrors(true);
+    e.preventDefault();
+    setShowErrors(true);
 
-  if (!validate()) {
-    console.log('[AddRecipe] Validation failed, errors:', errors);
-    toast.error('Please fill in all required fields');
-    return;
-  }
-
-  const validIngredients = ingredients.filter(ing => ing.name.trim());
-  const validInstructions = instructions.filter(inst => inst.trim());
-
-  console.log('[AddRecipe] Valid ingredients:', validIngredients.length);
-  console.log('[AddRecipe] Valid instructions:', validInstructions.length);
-
-  // FIX: Process and proxy image URL BEFORE creating recipe
-  let finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
-  let postImageUrl = null;
-  
-  if (finalImageUrl && !uploadedImageUrl) {
-    const needsProxy = finalImageUrl.includes('instagram.com') || 
-                       finalImageUrl.includes('cdninstagram.com') ||
-                       finalImageUrl.includes('fbcdn.net');
-    
-    if (needsProxy) {
-      console.log('[AddRecipe] Instagram image detected, proxying:', finalImageUrl);
-      const cleanUrl = finalImageUrl.replace(/&amp;/g, '&');
-      postImageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
-      // CRITICAL: Also update the recipe image URL to use the proxy
-      finalImageUrl = postImageUrl;
-      console.log('[AddRecipe] Using proxied URL for both recipe and post:', postImageUrl);
+    if (!validate()) {
+      toast.error('Please fill in all required fields');
+      return;
     }
-  }
 
-  const newRecipe = {
-    title: title.trim(),
-    ingredients: validIngredients,
-    instructions: validInstructions,
-    prepTime: parseTimeValue(prepTime),
-    cookTime: parseTimeValue(cookTime),
-    servings: parseServingsValue(servings),
-    tags: [...selectedMealTypes, ...selectedDietaryTags],
-    cuisineType,
-    difficulty,
-    dietaryTags: selectedDietaryTags,
-    mealType: selectedMealTypes,
-    imageUrl: finalImageUrl, // Now uses proxied URL
-    videoUrl: videoUrl.trim() || undefined,
-    sourceUrl: urlInput.trim() || undefined,
-    notes: notes.trim() || undefined,
-    isSaved: true
-  };
+    const validIngredients = ingredients.filter(ing => ing.name.trim());
+    const validInstructions = instructions.filter(inst => inst.trim());
 
-  console.log('[AddRecipe] Creating recipe with imageUrl:', newRecipe.imageUrl);
+    // Determine the initial image URL
+    let finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
+    let postImageUrl = null;
 
-  try {
-    const { createRecipe } = await import('@/services/recipeService');
-    console.log('[AddRecipe] Calling createRecipe...');
-    const createdRecipe = await createRecipe(newRecipe);
-    console.log('[AddRecipe] Recipe created:', createdRecipe);
-
-    dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+    // Check if it's an Instagram/external URL that needs to be stored permanently
+   const needsDownload = finalImageUrl && 
+                      !uploadedImageUrl && 
+                      (finalImageUrl.includes('instagram.com') || 
+                       finalImageUrl.includes('cdninstagram.com') ||
+                       finalImageUrl.includes('fbcdn.net') ||
+                       finalImageUrl.includes('tiktok') ||
+                       finalImageUrl.includes('tiktokcdn'));
 
     try {
-      const { supabase } = await import('@/lib/supabase');
-      const { data: { user } } = await supabase.auth.getUser();
+      // Show loading toast
+      const loadingToastId = toast.loading(isEditMode ? 'Updating recipe...' : 'Creating recipe...');
 
-      if (user) {
-        // Use the already proxied URL or uploaded URL
-        const finalPostImageUrl = postImageUrl || uploadedImageUrl || null;
+      // 1. Create or update the recipe
+      const { createRecipe, updateRecipe } = await import('@/services/recipeService');
+      const tempRecipe = {
+        title: title.trim(),
+        ingredients: validIngredients,
+        instructions: validInstructions,
+        prepTime: parseTimeValue(prepTime),
+        cookTime: parseTimeValue(cookTime),
+        servings: parseServingsValue(servings),
+        tags: [...selectedMealTypes, ...selectedDietaryTags],
+        cuisineType,
+        difficulty,
+        dietaryTags: selectedDietaryTags,
+        mealType: selectedMealTypes,
+        imageUrl: finalImageUrl, // Temporary URL for now
+        videoUrl: videoUrl.trim() || undefined,
+        sourceUrl: urlInput.trim() || undefined,
+        notes: notes.trim() || undefined,
+        isSaved: true
+      };
 
-        console.log('[AddRecipe] Creating social post with image:', finalPostImageUrl);
+      const createdRecipe = isEditMode && editRecipeId
+        ? await updateRecipe(editRecipeId, tempRecipe)
+        : await createRecipe(tempRecipe);
 
-        const { error: postError } = await supabase.from('posts').insert({
-          user_id: user.id,
-          title: title.trim(),
-          image_url: finalPostImageUrl,
-          video_url: videoUrl.trim() || null,
-          caption: notes.trim() || 'Check out my recipe!',
-          recipe_url: videoUrl.trim() || urlInput.trim() || null,
-          recipe_id: createdRecipe.id,
-        });
+      console.log(`[AddRecipe] Recipe ${isEditMode ? 'updated' : 'created'} with ID:`, createdRecipe.id);
 
-        if (postError) {
-          console.error('[AddRecipe] Failed to create social post:', postError);
-          toast.success('Recipe created successfully!');
-        } else {
-          console.log('[AddRecipe] Social post created successfully');
-          toast.success('Recipe created and posted to your profile!');
+      // 2. If it's an Instagram URL, download and store it permanently
+      if (needsDownload && finalImageUrl) {
+        try {
+          toast.loading('Downloading and storing image permanently...', { id: loadingToastId });
+          console.log('[AddRecipe] Downloading Instagram image:', finalImageUrl);
+
+          const permanentUrl = await downloadAndStoreImage(
+            finalImageUrl,
+            createdRecipe.id
+          );
+
+          console.log('[AddRecipe] Permanent URL:', permanentUrl);
+
+          // 3. Update the recipe with the permanent URL
+          if (permanentUrl !== finalImageUrl) {
+            const { supabase } = await import('@/lib/supabase');
+            const { error: updateError } = await supabase
+              .from('public_recipes')
+              .update({ image_url: permanentUrl })
+              .eq('id', createdRecipe.id);
+
+            if (updateError) {
+              console.error('[AddRecipe] Failed to update with permanent URL:', updateError);
+            } else {
+              console.log('[AddRecipe] ✅ Updated recipe with permanent URL');
+              finalImageUrl = permanentUrl;
+              postImageUrl = permanentUrl;
+            }
+          }
+        } catch (imageError) {
+          console.error('[AddRecipe] Image storage failed, using original URL:', imageError);
+          // Continue with original URL if download fails
         }
-      } else {
-        toast.success('Recipe created successfully!');
       }
-    } catch (postError) {
-      console.error('[AddRecipe] Failed to create social post:', postError);
-      toast.success('Recipe created successfully!');
-    }
 
-    if (onNavigate) {
-      onNavigate('my-recipes');
-    }
-  } catch (error: any) {
-    console.error('[AddRecipe] Failed to create recipe:', error);
-    const errorMessage = error?.message || 'Failed to create recipe. Please try again.';
-    toast.error(errorMessage);
-  }
-};
+      // 4. Create social post
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data: { user } } = await supabase.auth.getUser();
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Create New Recipe</h1>
-          <p className="text-slate-600">See a recipe online you like, add it here for the community</p>
+        if (user) {
+          // Use permanent URL if we got one, otherwise use finalImageUrl (which includes imgur, etc)
+          const finalPostImageUrl = postImageUrl || uploadedImageUrl || finalImageUrl || null;
+
+          console.log('[AddRecipe] Creating post with image URL:', finalPostImageUrl);
+
+          const { error: postError } = await supabase.from('posts').insert({
+            user_id: user.id,
+            title: title.trim(),
+            image_url: finalPostImageUrl,
+            video_url: videoUrl.trim() || null,
+            caption: notes.trim() || 'Check out my recipe!',
+            recipe_url: videoUrl.trim() || urlInput.trim() || null,
+            recipe_id: createdRecipe.id,
+          });
+
+          if (postError) {
+            console.error('[AddRecipe] Post creation failed:', postError);
+            toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
+          } else {
+            toast.success(isEditMode ? 'Recipe updated and posted to your profile!' : 'Recipe created and posted to your profile!', { id: loadingToastId });
+          }
+        } else {
+          toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
+        }
+      } catch (postError) {
+        console.error('[AddRecipe] Post creation error:', postError);
+        toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
+      }
+
+      // 5. Add to local state
+      dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+
+      // 6. Navigate to my recipes
+      if (onNavigate) {
+        onNavigate('my-recipes');
+      }
+    } catch (error: any) {
+      console.error('[AddRecipe] Recipe creation failed:', error);
+      const errorMessage = error?.message || 'Failed to create recipe. Please try again.';
+      toast.error(errorMessage);
+    }
+  };
+
+return (
+    <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent md:relative">
+      <div
+        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gradient-to-br from-slate-50 via-white to-slate-50 md:min-h-screen overflow-hidden md:overflow-visible rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
+        style={{
+          maxHeight: window.innerWidth >= 768 ? 'none' : '90vh'
+        }}
+      >
+        {/* Grabber handle - mobile only */}
+        <div className="flex md:hidden items-center justify-center pt-3 pb-2 bg-gradient-to-br from-blue-50 to-white">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
+        {/* Title section - sticky on desktop */}
+      <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6 fixed top-14 left-0 right-0 z-[60]">
+
+
+          <div className="max-w-4xl mx-auto px-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
+            <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
+          </div>
+        </div>
+
+        {/* Scrollable content container */}
+       <div className="overflow-y-auto max-h-[calc(95vh-6rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6">
+          <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+
+        {/* URL Import Section - Mobile optimized */}
         <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-600" />
-              Import from URL
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <span className="leading-tight">Import from URL</span>
             </CardTitle>
-            <CardDescription>
-              Try extracting recipes from public recipe websites. Note: Video platforms often block automated extraction.
-            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="Paste copy and pasted link here"
-                  className="pl-10"
-                  disabled={isExtracting}
-                  onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-                />
-              </div>
-              <Button
-                type="button"
-                onClick={handleUrlExtract}
-                disabled={isExtracting || !urlInput.trim()}
-                className="bg-blue-600 hover:bg-blue-700 text-white min-w-[140px]"
-              >
-                {isExtracting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Extracting...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Extract Recipe
-                  </>
-                )}
-              </Button>
-            </div>
- <div className="mt-3 space-y-1">
-  <p className="text-xs text-emerald-600 font-bold">
-    NOW WORKS: All Recipes, Blogs.
-  </p>
-  <p className="text-xs text-orange-600 font-normal">
-    Instagram → If video has no ingredients in description, then please manually update
-  </p>
-  <p className="text-xs text-orange-600 font-normal">
-    TikTok → If video has no ingredients in description, then please manually update
-  </p>
-  <p className="text-xs text-orange-600 font-normal">
-    YouTube → Coming Soon...
-  </p>
+          <CardContent className="space-y-3">
+           <div className="flex gap-2">
+  <div className="relative flex-1">
+    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
+   <Input
+  value={urlInput}
+  onChange={(e) => setUrlInput(e.target.value)}
+  placeholder="Paste recipe link..."
+  className="pl-10 h-10 text-sm placeholder:text-slate-400"
+  disabled={isExtracting}
+  onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+/>
+  </div>
+  <Button
+    type="button"
+    onClick={async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        setUrlInput(text);
+        toast.success('Pasted!');
+      } catch (err) {
+        toast.error('Failed to paste. Copy a URL first.');
+      }
+    }}
+    disabled={isExtracting}
+    variant="outline"
+    className="h-10"
+  >
+    Paste
+  </Button>
 </div>
+
+
+
+            <Button
+              type="button"
+              onClick={handleUrlExtract}
+              disabled={isExtracting || !urlInput.trim()}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
+            >
+              {isExtracting ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Extracting...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Extract Recipe
+                </>
+              )}
+            </Button>
+
+            {/* Instructions moved below the action buttons */}
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="space-y-2 text-xs leading-relaxed">
+                {/* Underlined solid black INSTRUCTIONS */}
+                <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
+                  INSTRUCTIONS
+                </p>
+
+                {/* Numbered steps */}
+                <ol className="space-y-1.5 text-black ml-0.5">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">1.</span>
+                    <span>
+                      <span className="font-bold text-black">COPY</span> a link from online/social media &amp;{' '}
+                      <span className="font-bold text-black">PASTE</span> above
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">2.</span>
+                    <span>Click <span className="font-bold text-blue-600">"Extract Recipe"</span></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">3.</span>
+                    <span>Update as needed — AI does its best, some recipes may need manual editing</span>
+                  </li>
+                </ol>
+                <div className="mt-3 pt-2 border-t border-slate-200 space-y-1 text-xs">
+                  <p className="text-emerald-600 font-semibold">Supported: All recipe websites & most blogs</p>
+                  <p className="text-orange-600">Warning: Instagram & TikTok (may take 30–60 seconds)</p>
+                  <p className="text-slate-500">Coming Soon: YouTube videos</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -515,24 +652,24 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             <span className="w-full border-t border-slate-200" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-gradient-to-br from-slate-50 via-white to-slate-50 px-2 text-slate-500">Or enter manually</span>
+            <span className="bg-gradient-to-br from-slate-50 via-white to-slate-50 px-3 py-1 text-slate-500">Or enter manually</span>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 pb-32">
-
+        <form onSubmit={handleSubmit} className="space-y-4 pb-24 lg:pb-6">
+          {/* Error Summary */}
           {showErrors && Object.keys(errors).length > 0 && (
             <Card className="border-red-200 bg-red-50">
-              <CardContent className="pt-6">
+              <CardContent className="pt-4 pb-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
-                    <span className="text-red-600 text-xs font-bold">!</span>
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
+                    <span className="text-red-600 text-sm font-bold">!</span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-red-900 mb-2">Please fix the following errors:</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-red-900 mb-2">Please fix these errors:</h3>
                     <ul className="space-y-1">
                       {Object.values(errors).map((error, idx) => (
-                        <li key={idx} className="text-sm text-red-700">• {error}</li>
+                        <li key={idx} className="text-sm text-red-700 break-words">• {error}</li>
                       ))}
                     </ul>
                   </div>
@@ -541,10 +678,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </Card>
           )}
 
+          {/* Basic Information */}
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>The essential details about your recipe</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Basic Information</CardTitle>
+              <CardDescription className="text-xs">Review extracted info</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -553,30 +691,30 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Grandma's Chocolate Chip Cookies"
-                  className={`mt-1.5 ${errors.title ? 'border-red-500' : ''}`}
+                  placeholder="ex. Chocolate Chip Cookies"
+                  className={`mt-1.5 text-base ${errors.title ? 'border-red-500' : ''}`}
                 />
-                {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
+                {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
               </div>
 
+              {/* Image Preview - Mobile optimized */}
               {(uploadedImageUrl || imageUrl) && (
-  <div className="space-y-2">
-    <div className="relative w-48 h-48 mx-auto rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
-      <img
-        src={uploadedImageUrl || imageUrl}
-        alt={title || 'Recipe'}
-        className="w-full h-full object-cover"
+                <div className="space-y-2">
+                  <div className="relative w-full max-w-xs mx-auto aspect-square rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
+                    <img
+                      src={uploadedImageUrl || imageUrl}
+                      alt={title || 'Recipe'}
+                      className="w-full h-full object-cover"
                       onError={(e) => {
-                        console.error('[AddRecipe] Image failed to load:', uploadedImageUrl || imageUrl);
                         const parent = (e.target as HTMLImageElement).parentElement;
                         if (parent) {
                           parent.innerHTML = `
-                            <div class="w-full h-full flex flex-col items-center justify-center text-slate-500">
-                              <svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-full h-full flex flex-col items-center justify-center text-slate-500 p-4 text-center">
+                              <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
-                              <p class="text-sm font-medium">Image cannot be displayed</p>
-                              <p class="text-xs">(Instagram images may not work)</p>
+                              <p class="text-xs font-medium">Image unavailable</p>
+                              <p class="text-xs text-slate-400">(Instagram images may not work)</p>
                             </div>
                           `;
                         }
@@ -593,21 +731,22 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                           setUploadedImageFile(null);
                           setUploadedImageUrl('');
                         }}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs"
                       >
-                        <X className="w-4 h-4 mr-1" />
-                        Remove uploaded image
+                        <X className="w-3 h-3 mr-1" />
+                        Remove image
                       </Button>
                     </div>
                   )}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Time and Servings - Mobile grid */}
+              <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <Label htmlFor="prepTime" className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    Prep Time (min) *
+                  <Label htmlFor="prepTime" className="text-xs font-medium flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Prep (min) *
                   </Label>
                   <Input
                     id="prepTime"
@@ -615,15 +754,14 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                     value={prepTime}
                     onChange={(e) => setPrepTime(e.target.value)}
                     placeholder="15"
-                    className={`mt-1.5 ${errors.prepTime ? 'border-red-500' : ''}`}
+                    className={`mt-1 text-base ${errors.prepTime ? 'border-red-500' : ''}`}
                   />
-                  {errors.prepTime && <p className="text-sm text-red-500 mt-1">{errors.prepTime}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="cookTime" className="text-sm font-medium flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    Cook Time (min) *
+                  <Label htmlFor="cookTime" className="text-xs font-medium flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Cook (min) *
                   </Label>
                   <Input
                     id="cookTime"
@@ -631,14 +769,13 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                     value={cookTime}
                     onChange={(e) => setCookTime(e.target.value)}
                     placeholder="30"
-                    className={`mt-1.5 ${errors.cookTime ? 'border-red-500' : ''}`}
+                    className={`mt-1 text-base ${errors.cookTime ? 'border-red-500' : ''}`}
                   />
-                  {errors.cookTime && <p className="text-sm text-red-500 mt-1">{errors.cookTime}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="servings" className="text-sm font-medium flex items-center gap-2">
-                    <Users className="w-4 h-4" />
+                  <Label htmlFor="servings" className="text-xs font-medium flex items-center gap-1">
+                    <Users className="w-3 h-3" />
                     Servings *
                   </Label>
                   <Input
@@ -647,13 +784,13 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                     value={servings}
                     onChange={(e) => setServings(e.target.value)}
                     placeholder="4"
-                    className={`mt-1.5 ${errors.servings ? 'border-red-500' : ''}`}
+                    className={`mt-1 text-base ${errors.servings ? 'border-red-500' : ''}`}
                   />
-                  {errors.servings && <p className="text-sm text-red-500 mt-1">{errors.servings}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Cuisine and Difficulty */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="cuisineType" className="text-sm font-medium">Cuisine Type *</Label>
                   <Select value={cuisineType} onValueChange={setCuisineType}>
@@ -666,7 +803,6 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.cuisineType && <p className="text-sm text-red-500 mt-1">{errors.cuisineType}</p>}
                 </div>
 
                 <div>
@@ -687,50 +823,47 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              {/* Image Upload Section - Mobile friendly */}
+              <div className="space-y-3">
                 <div>
                   <Label className="text-sm font-medium flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" />
                     Recipe Image
                   </Label>
-                  <p className="text-xs text-slate-500 mt-1 mb-3">Upload your own image or paste a URL</p>
+                  <p className="text-xs text-slate-500 mt-1 mb-2">Upload or paste URL</p>
 
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <input
-                        type="file"
-                        id="imageUpload"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        disabled={isUploadingImage}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => document.getElementById('imageUpload')?.click()}
-                        disabled={isUploadingImage}
-                        className="w-full"
-                      >
-                        {isUploadingImage ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Uploading...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload Image
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+                  <input
+                    type="file"
+                    id="imageUpload"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={isUploadingImage}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('imageUpload')?.click()}
+                    disabled={isUploadingImage}
+                    className="w-full h-12"
+                  >
+                    {isUploadingImage ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Image
+                      </>
+                    )}
+                  </Button>
 
                   {uploadedImageFile && (
-                    <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                      <ImageIcon className="w-3 h-3" />
-                      {uploadedImageFile.name}
+                    <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1 truncate">
+                      <ImageIcon className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{uploadedImageFile.name}</span>
                     </p>
                   )}
                 </div>
@@ -755,21 +888,22 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                       setUploadedImageUrl('');
                     }}
                     placeholder="https://example.com/image.jpg"
-                    className="mt-1.5"
+                    className="mt-1.5 text-base"
                     disabled={!!uploadedImageFile}
                   />
                   {uploadedImageFile && (
-                    <p className="text-xs text-slate-500 mt-1">Clear uploaded image to use URL instead</p>
+                    <p className="text-xs text-slate-500 mt-1">Clear uploaded image to use URL</p>
                   )}
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Meal Types */}
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle>Meal Types *</CardTitle>
-              <CardDescription>When is this recipe typically served?</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Meal Types *</CardTitle>
+              <CardDescription className="text-xs">When is this served?</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
@@ -777,21 +911,22 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                   <Badge
                     key={type}
                     variant={selectedMealTypes.includes(type) ? "default" : "outline"}
-                    className="cursor-pointer transition-all hover:scale-105"
+                    className="cursor-pointer transition-all hover:scale-105 text-sm py-1.5 px-3"
                     onClick={() => toggleMealType(type)}
                   >
                     {type}
                   </Badge>
                 ))}
               </div>
-              {errors.mealTypes && <p className="text-sm text-red-500 mt-2">{errors.mealTypes}</p>}
+              {errors.mealTypes && <p className="text-xs text-red-500 mt-2">{errors.mealTypes}</p>}
             </CardContent>
           </Card>
 
+          {/* Dietary Tags */}
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle>Dietary Tags</CardTitle>
-              <CardDescription>Select any that apply to this recipe</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Dietary Tags</CardTitle>
+              <CardDescription className="text-xs">Select any that apply</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
@@ -799,7 +934,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                   <Badge
                     key={tag}
                     variant={selectedDietaryTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer transition-all hover:scale-105"
+                    className="cursor-pointer transition-all hover:scale-105 text-sm py-1.5 px-3"
                     onClick={() => toggleDietaryTag(tag)}
                   >
                     {tag}
@@ -809,28 +944,27 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </CardContent>
           </Card>
 
+          {/* Ingredients - Mobile optimized */}
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle>Ingredients *</CardTitle>
-              <CardDescription>List all ingredients (quantities optional)</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Ingredients *</CardTitle>
+              <CardDescription className="text-xs">List all ingredients</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {ingredients.map((ingredient, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <div className="w-20">
+                <div key={index} className="space-y-2">
+                  <div className="flex gap-2 items-center">
                     <Input
                       value={ingredient.quantity}
                       onChange={(e) => updateIngredient(index, 'quantity', e.target.value)}
                       placeholder="1"
-                      className="text-center"
+                      className="w-16 text-center text-base"
                     />
-                  </div>
-                  <div className="w-28">
                     <Select
                       value={ingredient.unit}
                       onValueChange={(val) => updateIngredient(index, 'unit', val)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="w-24">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -839,32 +973,31 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                         ))}
                       </SelectContent>
                     </Select>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeIngredient(index)}
+                      disabled={ingredients.length === 1}
+                      className="shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <div className="flex-1">
-                    <Input
-                      value={ingredient.name}
-                      onChange={(e) => updateIngredient(index, 'name', e.target.value)}
-                      placeholder="Ingredient name"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeIngredient(index)}
-                    disabled={ingredients.length === 1}
-                    className="shrink-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+                  <Input
+                    value={ingredient.name}
+                    onChange={(e) => updateIngredient(index, 'name', e.target.value)}
+                    placeholder="Ingredient name"
+                    className="text-base"
+                  />
                 </div>
               ))}
-              {errors.ingredients && <p className="text-sm text-red-500">{errors.ingredients}</p>}
+              {errors.ingredients && <p className="text-xs text-red-500">{errors.ingredients}</p>}
               <Button
                 type="button"
                 variant="outline"
                 onClick={addIngredient}
-                className="w-full mt-2"
+                className="w-full mt-2 h-11"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Ingredient
@@ -872,22 +1005,23 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </CardContent>
           </Card>
 
+          {/* Instructions - Mobile optimized */}
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle>Instructions *</CardTitle>
-              <CardDescription>Step-by-step cooking instructions</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Instructions *</CardTitle>
+              <CardDescription className="text-xs">Step-by-step instructions</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {instructions.map((instruction, index) => (
                 <div key={index} className="flex gap-2 items-start">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-700 mt-1">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-700 mt-2">
                     {index + 1}
                   </div>
                   <Textarea
                     value={instruction}
                     onChange={(e) => updateInstruction(index, e.target.value)}
                     placeholder="Describe this step..."
-                    className="flex-1 min-h-[80px]"
+                    className="flex-1 min-h-[100px] text-base"
                   />
                   <Button
                     type="button"
@@ -895,18 +1029,18 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                     size="icon"
                     onClick={() => removeInstruction(index)}
                     disabled={instructions.length === 1}
-                    className="shrink-0"
+                    className="shrink-0 mt-2"
                   >
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
-              {errors.instructions && <p className="text-sm text-red-500">{errors.instructions}</p>}
+              {errors.instructions && <p className="text-xs text-red-500">{errors.instructions}</p>}
               <Button
                 type="button"
                 variant="outline"
                 onClick={addInstruction}
-                className="w-full mt-2"
+                className="w-full mt-2 h-11"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Step
@@ -914,76 +1048,54 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             </CardContent>
           </Card>
 
+          {/* Notes */}
+         {/* Notes */}
           <Card className="border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle>Notes</CardTitle>
-              <CardDescription>Any additional tips or variations</CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Notes</CardTitle>
+              <CardDescription className="text-xs">Tips or variations</CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add any helpful notes, tips, or variations..."
-                className="min-h-[100px]"
+                placeholder="Add any helpful notes..."
+                className="min-h-[120px] text-base"
               />
             </CardContent>
           </Card>
+        </form>  {/* ← ADD THIS CLOSING FORM TAG HERE */}
+         
 
-        </form>
-
-        <div className="fixed bottom-24 left-0 right-0 z-50 pointer-events-none">
-          <div className="flex justify-center items-center gap-3 pointer-events-auto">
-            {onNavigate && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onNavigate('my-recipes')}
-                className="bg-white shadow-2xl border-2 border-gray-300 hover:bg-gray-50 px-6 py-6 text-base font-semibold rounded-full"
-              >
-                Cancel
-              </Button>
-            )}
-            <Button
-              type="submit"
-              onClick={handleSubmit}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-base font-semibold shadow-2xl rounded-full transition-all transform hover:scale-105"
-            >
-              Create Recipe
-            </Button>
-          </div>
-        </div>
-
+        {/* Preview Dialog - Mobile optimized */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-4xl max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle className="text-2xl flex items-center gap-2">
-                <Sparkles className="w-6 h-6 text-blue-600" />
-                Review Extracted Recipe
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] p-0">
+            <DialogHeader className="p-4 pb-3 border-b">
+              <DialogTitle className="text-xl flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <span className="leading-tight">Review Recipe</span>
               </DialogTitle>
-              <DialogDescription>
-                Review and edit the extracted recipe details before adding to your collection
-              </DialogDescription>
+         ]
             </DialogHeader>
 
             {extractedData && (
-              <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
-                <div className="space-y-6 py-4">
-                 {extractedData.imageUrl && (
-  <div className="relative w-48 h-48 rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100 mx-auto">
-    <img
-      src={extractedData.imageUrl}
-      alt={extractedData.title}
-      className="w-full h-full object-cover"
+              <ScrollArea className="max-h-[calc(90vh-180px)]">
+                <div className="space-y-4 p-4">
+                  {extractedData.imageUrl && (
+                    <div className="relative w-full max-w-xs mx-auto aspect-square rounded-lg overflow-hidden border-2 border-slate-200 bg-slate-100">
+                      <img
+                        src={extractedData.imageUrl}
+                        alt={extractedData.title}
+                        className="w-full h-full object-cover"
                         onError={(e) => {
-                          console.error('[Preview] Image failed to load:', extractedData.imageUrl);
                           const parent = (e.target as HTMLImageElement).parentElement;
                           if (parent) {
                             parent.innerHTML = `
-                              <div class="w-full h-full flex flex-col items-center justify-center text-slate-500">
-                                <svg class="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <div class="w-full h-full flex flex-col items-center justify-center text-slate-500 p-4">
+                                <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                <p class="text-xs font-medium">No image</p>
+                                <p class="text-xs">No image</p>
                               </div>
                             `;
                           }
@@ -992,61 +1104,61 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                     </div>
                   )}
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <h3 className="text-xl font-bold text-slate-900 mb-2">{extractedData.title}</h3>
+                      <h3 className="text-lg font-bold text-slate-900 mb-1 leading-tight">{extractedData.title}</h3>
                       {extractedData.description && (
-                        <p className="text-sm text-slate-600 leading-relaxed">{extractedData.description}</p>
+                        <p className="text-xs text-slate-600 leading-relaxed">{extractedData.description}</p>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-4 h-4 text-slate-600" />
-                          <span className="text-xs font-medium text-slate-600">Prep Time</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-slate-50 rounded-lg p-2 border border-slate-200">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <Clock className="w-3 h-3 text-slate-600" />
+                          <span className="text-xs font-medium text-slate-600">Prep</span>
                         </div>
-                        <p className="text-lg font-bold text-slate-900">{extractedData.prepTime} min</p>
+                        <p className="text-sm font-bold text-slate-900">{extractedData.prepTime} min</p>
                       </div>
-                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-4 h-4 text-slate-600" />
-                          <span className="text-xs font-medium text-slate-600">Cook Time</span>
+                      <div className="bg-slate-50 rounded-lg p-2 border border-slate-200">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <Clock className="w-3 h-3 text-slate-600" />
+                          <span className="text-xs font-medium text-slate-600">Cook</span>
                         </div>
-                        <p className="text-lg font-bold text-slate-900">{extractedData.cookTime} min</p>
+                        <p className="text-sm font-bold text-slate-900">{extractedData.cookTime} min</p>
                       </div>
-                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Users className="w-4 h-4 text-slate-600" />
-                          <span className="text-xs font-medium text-slate-600">Servings</span>
+                      <div className="bg-slate-50 rounded-lg p-2 border border-slate-200">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <Users className="w-3 h-3 text-slate-600" />
+                          <span className="text-xs font-medium text-slate-600">Serves</span>
                         </div>
-                        <p className="text-lg font-bold text-slate-900">{extractedData.servings}</p>
+                        <p className="text-sm font-bold text-slate-900">{extractedData.servings}</p>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
                         {extractedData.cuisineType}
                       </Badge>
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
                         {extractedData.difficulty}
                       </Badge>
                       {extractedData.mealTypes.map(type => (
-                        <Badge key={type} variant="outline">{type}</Badge>
+                        <Badge key={type} variant="outline" className="text-xs">{type}</Badge>
                       ))}
                       {extractedData.dietaryTags.map(tag => (
-                        <Badge key={tag} variant="outline" className="bg-amber-50 text-amber-700">{tag}</Badge>
+                        <Badge key={tag} variant="outline" className="bg-amber-50 text-amber-700 text-xs">{tag}</Badge>
                       ))}
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-slate-900 mb-3">Ingredients</h4>
-                      <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                        <ul className="space-y-2">
+                      <h4 className="font-semibold text-slate-900 mb-2 text-sm">Ingredients</h4>
+                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                        <ul className="space-y-1.5">
                           {extractedData.ingredients.map((ingredient, index) => (
-                            <li key={index} className="flex items-start gap-2 text-sm">
-                              <span className="text-slate-400 mt-0.5">•</span>
-                              <span className="text-slate-700">
+                            <li key={index} className="flex items-start gap-2 text-xs">
+                              <span className="text-slate-400 mt-0.5 flex-shrink-0">•</span>
+                              <span className="text-slate-700 break-words">
                                 <span className="font-semibold">{ingredient.quantity} {ingredient.unit}</span> {ingredient.name}
                               </span>
                             </li>
@@ -1056,15 +1168,15 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
                     </div>
 
                     <div>
-                      <h4 className="font-semibold text-slate-900 mb-3">Instructions</h4>
-                      <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                        <ol className="space-y-3">
+                      <h4 className="font-semibold text-slate-900 mb-2 text-sm">Instructions</h4>
+                      <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                        <ol className="space-y-2">
                           {extractedData.instructions.map((instruction, index) => (
-                            <li key={index} className="flex gap-3 text-sm">
-                              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">
+                            <li key={index} className="flex gap-2 text-xs">
+                              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-bold">
                                 {index + 1}
                               </span>
-                              <span className="text-slate-700 pt-0.5">{instruction}</span>
+                              <span className="text-slate-700 pt-0.5 break-words">{instruction}</span>
                             </li>
                           ))}
                         </ol>
@@ -1073,17 +1185,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
                     {extractedData.notes && (
                       <div>
-                        <h4 className="font-semibold text-slate-900 mb-2">Notes</h4>
-                        <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                          <p className="text-sm text-slate-700">{extractedData.notes}</p>
+                        <h4 className="font-semibold text-slate-900 mb-1.5 text-sm">Notes</h4>
+                        <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                          <p className="text-xs text-slate-700 break-words">{extractedData.notes}</p>
                         </div>
-                      </div>
-                    )}
-
-                    {extractedData.sourceUrl && (
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <Link2 className="w-3 h-3" />
-                        <span>Source: {extractedData.sourceUrl}</span>
                       </div>
                     )}
                   </div>
@@ -1091,24 +1196,148 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               </ScrollArea>
             )}
 
-            <DialogFooter className="flex justify-center gap-2">
+          <DialogFooter className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 md:p-6 flex flex-col sm:flex-row justify-center items-center gap-3 shadow-2xl z-50">
+  <div className="w-full max-w-md flex flex-col sm:flex-row gap-3">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={handleCancelExtraction}
+      className="w-full sm:w-auto px-8 h-12 sm:h-14 text-base font-semibold rounded-full border-2 hover:bg-gray-50 active:scale-95 transition-transform"
+    >
+      Cancel
+    </Button>
+    <Button
+      type="button"
+      onClick={handleAcceptExtraction}
+      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-12 h-12 sm:h-14 text-base font-semibold rounded-full shadow-lg active:scale-95 transition-transform"
+    >
+      Use This Recipe
+    </Button>
+  </div>
+</DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Conflict Dialog - Mobile optimized */}
+        <Dialog open={showConflictDialog} onOpenChange={setShowConflictDialog}>
+          <DialogContent className="max-w-[95vw] sm:max-w-5xl max-h-[90vh] p-0">
+            <DialogHeader className="p-4 pb-3 border-b">
+              <DialogTitle className="text-lg leading-tight">Multiple Versions Found</DialogTitle>
+              <DialogDescription className="text-xs">
+                Choose which version to use:
+              </DialogDescription>
+            </DialogHeader>
+
+            <ScrollArea className="h-[60vh] p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {extractedData?.structuredVersion && (
+                  <Card className="cursor-pointer hover:border-blue-500 transition-colors" onClick={() => {
+                    if (extractedData.structuredVersion) {
+                      setExtractedData(extractedData.structuredVersion);
+                      setShowConflictDialog(false);
+                      setShowPreview(true);
+                      toast.success('Using recipe card version');
+                    }
+                  }}>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Recipe Card</CardTitle>
+                      <CardDescription className="text-xs">From structured data</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex flex-wrap gap-1.5 text-xs">
+                        <Badge variant="secondary">{extractedData.structuredVersion.servings} servings</Badge>
+                        <Badge variant="secondary">{extractedData.structuredVersion.prepTime}min</Badge>
+                        <Badge variant="secondary">{extractedData.structuredVersion.cookTime}min</Badge>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-xs mb-1.5">Ingredients ({extractedData.structuredVersion.ingredients.length}):</p>
+                        <ul className="space-y-1 text-xs text-slate-600 max-h-32 overflow-y-auto">
+                          {extractedData.structuredVersion.ingredients.slice(0, 6).map((ing: Ingredient, idx: number) => (
+                            <li key={idx} className="break-words">• {ing.quantity} {ing.unit} {ing.name}</li>
+                          ))}
+                          {extractedData.structuredVersion.ingredients.length > 6 && (
+                            <li className="text-slate-400">+ {extractedData.structuredVersion.ingredients.length - 6} more...</li>
+                          )}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {extractedData?.aiVersion && (
+                  <Card className="cursor-pointer hover:border-green-500 transition-colors" onClick={() => {
+                    if (extractedData.aiVersion) {
+                      setExtractedData(extractedData.aiVersion);
+                      setShowConflictDialog(false);
+                      setShowPreview(true);
+                      toast.success('Using blog content version');
+                    }
+                  }}>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base">Blog Content</CardTitle>
+                      <CardDescription className="text-xs">From blog post</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex flex-wrap gap-1.5 text-xs">
+                        <Badge variant="secondary">{extractedData.aiVersion.servings} servings</Badge>
+                        <Badge variant="secondary">{extractedData.aiVersion.prepTime}min</Badge>
+                        <Badge variant="secondary">{extractedData.aiVersion.cookTime}min</Badge>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-xs mb-1.5">Ingredients ({extractedData.aiVersion.ingredients.length}):</p>
+                        <ul className="space-y-1 text-xs text-slate-600 max-h-32 overflow-y-auto">
+                          {extractedData.aiVersion.ingredients.slice(0, 6).map((ing: Ingredient, idx: number) => (
+                            <li key={idx} className="break-words">• {ing.quantity} {ing.unit} {ing.name}</li>
+                          ))}
+                          {extractedData.aiVersion.ingredients.length > 6 && (
+                            <li className="text-slate-400">+ {extractedData.aiVersion.ingredients.length - 6} more...</li>
+                          )}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="p-4 border-t">
+              <Button variant="outline" onClick={() => setShowConflictDialog(false)} className="w-full sm:w-auto">
+                Cancel
+              </Button>
+            </DialogFooter>
+</DialogContent>
+        </Dialog>
+          </div>
+        </div>
+
+        {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
+        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[100] lg:z-10">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3">
+            {onNavigate && (
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleCancelExtraction}
+                onClick={() => onNavigate('my-recipes')}
+                className="bg-white shadow-md border-2 border-gray-300 hover:bg-gray-50 px-6 h-12 text-base font-semibold rounded-full"
               >
                 Cancel
               </Button>
-              <Button
-                type="button"
-                onClick={handleAcceptExtraction}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Review and Edit
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            )}
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                const form = document.querySelector('form');
+                if (form) {
+                  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                }
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 text-base font-semibold shadow-lg rounded-full transition-all transform active:scale-95"
+            >
+              {isEditMode ? 'Update Recipe' : 'Create Recipe'}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
