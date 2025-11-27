@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SubscriptionProvider } from './context/SubscriptionContext';
+import { SubscriptionGate } from './components/SubscriptionGate';
 import Layout from './components/Layout';
 import { Discover as DiscoverRecipes } from './pages/DiscoverRecipes';
 import { Discover } from './pages/Discover';
@@ -262,15 +264,60 @@ useEffect(() => {
     }
     switch (currentPage) {
       case 'discover-recipes': return <DiscoverRecipes onNavigate={handleNavigate} />;
-      case 'discover': return <Discover onNavigate={handleNavigate} />;
-      case 'my-recipes': return <MyRecipes />;
-      case 'add-recipe': return <AddRecipe onNavigate={handleNavigate} />;
-      case 'meal-planner': return <MealPlanner onNavigate={handleNavigate} />;
-      case 'grocery-list': return <GroceryList onNavigate={handleNavigate} />;
-      case 'cart': return <Cart onNavigate={handleNavigate} />;
-      case 'upload': return <Upload onNavigate={handleNavigate} />;
-      case 'profile': return <Profile />;
-      case 'messages': return <Messages onBack={() => handleNavigate('discover')} />;
+      case 'discover':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="Social Feed">
+            <Discover onNavigate={handleNavigate} />
+          </SubscriptionGate>
+        );
+      case 'my-recipes':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="My Recipes">
+            <MyRecipes />
+          </SubscriptionGate>
+        );
+      case 'add-recipe':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="Add Recipe">
+            <AddRecipe onNavigate={handleNavigate} />
+          </SubscriptionGate>
+        );
+      case 'meal-planner':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="Meal Planner">
+            <MealPlanner onNavigate={handleNavigate} />
+          </SubscriptionGate>
+        );
+      case 'grocery-list':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="Grocery List">
+            <GroceryList onNavigate={handleNavigate} />
+          </SubscriptionGate>
+        );
+      case 'cart':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="Shopping Cart">
+            <Cart onNavigate={handleNavigate} />
+          </SubscriptionGate>
+        );
+      case 'upload':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="Upload">
+            <Upload onNavigate={handleNavigate} />
+          </SubscriptionGate>
+        );
+      case 'profile':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="Profile">
+            <Profile />
+          </SubscriptionGate>
+        );
+      case 'messages':
+        return (
+          <SubscriptionGate onNavigate={handleNavigate} featureName="Messages">
+            <Messages onBack={() => handleNavigate('discover')} />
+          </SubscriptionGate>
+        );
       case 'settings': return <Settings onNavigate={handleNavigate} />;
       case 'subscription': return <Subscription onNavigate={handleNavigate} />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;
@@ -325,9 +372,11 @@ useEffect(() => {
 function App() {
   return (
     <AuthProvider>
-      <RecipeProvider>
-        <AppContent />
-      </RecipeProvider>
+      <SubscriptionProvider>
+        <RecipeProvider>
+          <AppContent />
+        </RecipeProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 }

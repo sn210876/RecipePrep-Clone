@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabase';
+import { SubscriptionBanner } from './SubscriptionBanner';
 
 interface LayoutProps {
   currentPage: string;
@@ -363,6 +364,9 @@ const loadUnreadCount = async (userId: string) => {
 
         {/* Main Content - Add bottom padding for fixed nav */}
         <main className={`${socialPages.includes(currentPage) ? 'pt-16' : 'pt-16 lg:pt-0'} pb-20`}>
+          <div className="px-4 pt-4">
+            <SubscriptionBanner onNavigate={onNavigate} />
+          </div>
           {children}
         </main>
 
