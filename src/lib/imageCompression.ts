@@ -15,11 +15,11 @@ export interface CompressionResult {
 }
 
 const DEFAULT_OPTIONS = {
-  maxSizeMB: 0.5, // 500KB
-  maxWidthOrHeight: 1200,
+  maxSizeMB: 1.0,
+  maxWidthOrHeight: 1600,
   useWebWorker: true,
   fileType: 'image/jpeg',
-  initialQuality: 0.85,
+  initialQuality: 0.75,
 };
 
 /**
@@ -33,27 +33,23 @@ export async function compressImage(
   onProgress?: (progress: CompressionProgress) => void
 ): Promise<CompressionResult> {
   const originalSize = file.size;
+  const originalSizeMB = originalSize / (1024 * 1024);
 
-  // If file is already small enough and dimensions are good, skip compression
-  if (originalSize <= DEFAULT_OPTIONS.maxSizeMB * 1024 * 1024) {
-    const img = await createImageBitmap(file);
-    if (img.width <= DEFAULT_OPTIONS.maxWidthOrHeight && img.height <= DEFAULT_OPTIONS.maxWidthOrHeight) {
-      onProgress?.({
-        percent: 100,
-        originalSize,
-        currentSize: originalSize,
-        isCompressing: false,
-      });
-      return {
-        file,
-        originalSize,
-        compressedSize: originalSize,
-        compressionRatio: 1,
-      };
-    }
+  if (originalSizeMB <= 2.0) {
+    onProgress?.({
+      percent: 100,
+      originalSize,
+      currentSize: originalSize,
+      isCompressing: false,
+    });
+    return {
+      file,
+      originalSize,
+      compressedSize: originalSize,
+      compressionRatio: 0,
+    };
   }
 
-  // Notify compression started
   onProgress?.({
     percent: 0,
     originalSize,
@@ -75,7 +71,6 @@ export async function compressImage(
     const compressedSize = compressedFile.size;
     const compressionRatio = (compressedSize / originalSize) * 100;
 
-    // Notify compression complete
     onProgress?.({
       percent: 100,
       originalSize,
@@ -96,7 +91,7 @@ export async function compressImage(
 }
 
 /**
- * Compresses multiple images in sequence
+ * Compresses multiple images in parallel
  * @param files - Array of image files to compress
  * @param onProgress - Optional callback for overall progress
  * @returns Promise with array of compression results
@@ -105,16 +100,13 @@ export async function compressMultipleImages(
   files: File[],
   onProgress?: (currentIndex: number, total: number, progress: CompressionProgress) => void
 ): Promise<CompressionResult[]> {
-  const results: CompressionResult[] = [];
+  const compressionPromises = files.map((file, index) =>
+    compressImage(file, (progress) => {
+      onProgress?.(index, files.length, progress);
+    })
+  );
 
-  for (let i = 0; i < files.length; i++) {
-    const result = await compressImage(files[i], (progress) => {
-      onProgress?.(i, files.length, progress);
-    });
-    results.push(result);
-  }
-
-  return results;
+  return Promise.all(compressionPromises);
 }
 
 /**

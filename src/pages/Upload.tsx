@@ -277,60 +277,60 @@ if (selectedFiles.length === 0) {      toast.error('Please select an image or vi
         });
       }
 
-      // Compress and upload all files
-      const toastId = toast.loading('Processing files...', { duration: 0 });
+      const toastId = toast.loading('Preparing files...', { duration: 0 });
       const uploadedImageUrls: string[] = [];
       const uploadedVideoUrls: string[] = [];
 
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        let fileToUpload = file;
-        const isVideo = isVideoFile(file);
-        const isImage = isImageFile(file);
+      const imageFiles = selectedFiles.filter(isImageFile);
+      const videoFiles = selectedFiles.filter(isVideoFile);
 
-        if (isImage) {
-          toast.loading(`Compressing image ${i + 1}/${selectedFiles.length}...`, { id: toastId });
-          const results = await compressMultipleImages([file]);
-          fileToUpload = results[0].file;
-          const savedMB = ((file.size - fileToUpload.size) / (1024 * 1024)).toFixed(1);
-          console.log(`Image compressed: ${formatFileSize(file.size)} → ${formatFileSize(fileToUpload.size)} (saved ${savedMB}MB)`);
-        } else if (isVideo) {
-          toast.loading(`Analyzing video ${i + 1}/${selectedFiles.length}...`, { id: toastId });
-          try {
-            const result = await compressVideo(file, (progress) => {
-              toast.loading(`Analyzing video... ${Math.round(progress.percent)}%`, { id: toastId });
-            });
-            fileToUpload = result.file;
+      let compressedImages: File[] = [];
+      if (imageFiles.length > 0) {
+        toast.loading(`Compressing ${imageFiles.length} image(s)...`, { id: toastId });
+        const results = await compressMultipleImages(imageFiles);
+        compressedImages = results.map(r => r.file);
+        const totalSaved = results.reduce((sum, r) => sum + (r.originalSize - r.compressedSize), 0);
+        console.log(`Images compressed: saved ${formatFileSize(totalSaved)}`);
+      }
 
-            const fileSizeMB = result.originalSize / (1024 * 1024);
-            if (fileSizeMB > 10) {
-              toast.loading(`Video is ${fileSizeMB.toFixed(1)}MB. This may take longer to upload.`, { id: toastId, duration: 2000 });
-            }
-            console.log(`Video checked: ${formatFileSize(result.originalSize)}`);
-          } catch (error) {
-            console.warn('Video analysis failed, using original:', error);
-          }
-        }
+      const allFilesToUpload = [...compressedImages, ...videoFiles];
+      const totalFiles = allFilesToUpload.length;
+      let completedUploads = 0;
 
-        toast.loading(`Uploading file ${i + 1}/${selectedFiles.length}...`, { id: toastId });
+      toast.loading(`Uploading ${totalFiles} file(s)...`, { id: toastId });
 
+      const uploadPromises = allFilesToUpload.map(async (fileToUpload) => {
         const fileExt = fileToUpload.name.split('.').pop()?.toLowerCase();
         const fileName = `${userData.user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+
         const { error: uploadError } = await supabase.storage
           .from('posts')
           .upload(fileName, fileToUpload, { cacheControl: '3600', upsert: false });
+
         if (uploadError) throw uploadError;
+
+        completedUploads++;
+        toast.loading(`Uploaded ${completedUploads}/${totalFiles} file(s)...`, { id: toastId });
 
         const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
 
-        if (isVideo) {
-          uploadedVideoUrls.push(urlData.publicUrl);
-        } else {
-          uploadedImageUrls.push(urlData.publicUrl);
-        }
-      }
+        return {
+          url: urlData.publicUrl,
+          isVideo: isVideoFile(fileToUpload)
+        };
+      });
 
-      toast.success('Files uploaded successfully!', { id: toastId });
+      const uploadResults = await Promise.all(uploadPromises);
+
+      uploadResults.forEach(result => {
+        if (result.isVideo) {
+          uploadedVideoUrls.push(result.url);
+        } else {
+          uploadedImageUrls.push(result.url);
+        }
+      });
+
+      toast.success('Upload complete!', { id: toastId });
 
 // Format URLs as JSON arrays if multiple, or single string if one
 const imageUrlForDb = uploadedImageUrls.length > 1
@@ -403,32 +403,10 @@ const mainImageUrl = uploadedImageUrls[0] || uploadedVideoUrls[0];
 
         const hashtagTexts = extractHashtags(caption);
         if (hashtagTexts.length > 0 && newPost) {
-          for (const tag of hashtagTexts) {
-            const { data: existingTag } = await supabase
-              .from('hashtags')
-              .select('id, usage_count')
-              .eq('tag', tag)
-              .maybeSingle();
-
-            let hashtagId: string;
-            if (existingTag) {
-              hashtagId = existingTag.id;
-              await supabase
-                .from('hashtags')
-                .update({ usage_count: existingTag.usage_count + 1 })
-                .eq('id', existingTag.id);
-            } else {
-              const { data: newTag } = await supabase
-                .from('hashtags')
-                .insert({ tag, usage_count: 1 })
-                .select()
-                .single();
-              hashtagId = newTag!.id;
-            }
-            await supabase
-              .from('post_hashtags')
-              .insert({ post_id: newPost.id, hashtag_id: hashtagId });
-          }
+          await supabase.rpc('process_post_hashtags', {
+            p_post_id: newPost.id,
+            p_hashtags: hashtagTexts
+          });
         }
 
         toast.success('Post uploaded successfully!');
