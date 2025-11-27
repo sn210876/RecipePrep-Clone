@@ -201,30 +201,6 @@ export default function Settings({ onNavigate }: SettingsProps) {
             </CardHeader>
           </Card>
 
-          {/* Subscription Card - NEW */}
-          <Card className="border-purple-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 border-b border-purple-100 p-4 sm:p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-                  <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900">Subscription & Referrals</CardTitle>
-                  <CardDescription className="text-xs sm:text-sm text-slate-600">
-                    Manage your plan, earn free access
-                  </CardDescription>
-                </div>
-                <Button
-                  onClick={() => onNavigate('subscription')}
-                  className="bg-purple-600 hover:bg-purple-700 text-white shrink-0 text-xs sm:text-sm"
-                  size="sm"
-                >
-                  View
-                </Button>
-              </div>
-            </CardHeader>
-          </Card>
-
           {/* Timezone Card */}
           <Card className="border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-100 p-4 sm:p-6">
