@@ -198,6 +198,7 @@ const [followersModalType, setFollowersModalType] = useState<'followers' | 'foll
     caption: string;
     recipeUrl: string;
     photoUrl: string;
+    isVideo: boolean;
   } | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
@@ -530,7 +531,10 @@ useEffect(() => {
     const file = e.target.files?.[0];
     if (!file || !editingPost) return;
 
-    if (!isImageFile(file) && !file.type.startsWith('video/')) {
+    const isVideo = file.type.startsWith('video/');
+    const isImage = isImageFile(file);
+
+    if (!isImage && !isVideo) {
       toast.error('Please select an image or video file');
       return;
     }
@@ -541,7 +545,7 @@ useEffect(() => {
     try {
       let fileToUpload = file;
 
-      if (isImageFile(file)) {
+      if (isImage) {
         const originalSize = file.size;
 
         const result = await compressImageWithOptions(
@@ -576,7 +580,7 @@ useEffect(() => {
         .from('posts')
         .getPublicUrl(filePath);
 
-      setEditingPost(prev => prev ? { ...prev, photoUrl: publicUrl } : null);
+      setEditingPost(prev => prev ? { ...prev, photoUrl: publicUrl, isVideo } : null);
       toast.success('File uploaded!', { id: toastId });
     } catch (error) {
       console.error('Upload error:', error);
@@ -595,16 +599,30 @@ useEffect(() => {
     if (!editingPost) return;
 
     try {
+      const mediaUrl = editingPost.photoUrl?.trim() || null;
+
+      const updateData: any = {
+        caption: editingPost.caption.trim() || null,
+        recipe_url: editingPost.recipeUrl.trim() || null,
+      };
+
+      if (editingPost.isVideo) {
+        updateData.video_url = mediaUrl;
+        updateData.image_url = null;
+      } else {
+        updateData.image_url = mediaUrl;
+        updateData.video_url = null;
+      }
+
       const { error } = await supabase
         .from('posts')
-        .update({
-          caption: editingPost.caption.trim() || null,
-          recipe_url: editingPost.recipeUrl.trim() || null,
-          image_url: editingPost.photoUrl.trim() || null,
-        })
+        .update(updateData)
         .eq('id', editingPost.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       setPosts(prev =>
         prev.map(p =>
@@ -612,7 +630,8 @@ useEffect(() => {
             ? {
                 ...p,
                 caption: editingPost.caption.trim() || null,
-                image_url: editingPost.photoUrl.trim() || null,
+                image_url: editingPost.isVideo ? null : mediaUrl,
+                video_url: editingPost.isVideo ? mediaUrl : null,
                 recipe_url: editingPost.recipeUrl.trim() || null,
               }
             : p
@@ -621,9 +640,9 @@ useEffect(() => {
 
       toast.success('Post updated!');
       setEditingPost(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Edit error:', error);
-      toast.error('Failed to update post');
+      toast.error(error?.message || 'Failed to update post');
     }
   };
 
@@ -953,7 +972,8 @@ if (loading) {
                       title: post.title || '',
                       caption: post.caption || '',
                       recipeUrl: post.recipe_url || '',
-                      photoUrl: post.image_url || post.video_url || ''
+                      photoUrl: post.image_url || post.video_url || '',
+                      isVideo: !!post.video_url && !post.image_url
                     });
                   }}
                   className="cursor-pointer"
@@ -1093,6 +1113,7 @@ if (loading) {
                           caption: post.caption || '',
                           recipeUrl: post.recipe_url || '',
                           photoUrl: post.image_url || post.video_url || '',
+                          isVideo: !!post.video_url && !post.image_url
                         });
                       }
                       setSelectedPostId(null);
