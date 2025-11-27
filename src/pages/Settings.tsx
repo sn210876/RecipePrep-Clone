@@ -13,12 +13,56 @@ import { toast } from 'sonner';
 import { isAdmin } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
-// Mock timezone data
 const COMMON_TIMEZONES = [
+  { label: '--- Americas ---', value: 'header-americas', isHeader: true },
   { label: 'Eastern Time (ET)', value: 'America/New_York' },
   { label: 'Central Time (CT)', value: 'America/Chicago' },
   { label: 'Mountain Time (MT)', value: 'America/Denver' },
   { label: 'Pacific Time (PT)', value: 'America/Los_Angeles' },
+  { label: 'Alaska Time (AKT)', value: 'America/Anchorage' },
+  { label: 'Hawaii Time (HT)', value: 'Pacific/Honolulu' },
+  { label: 'Toronto', value: 'America/Toronto' },
+  { label: 'Mexico City', value: 'America/Mexico_City' },
+  { label: 'São Paulo', value: 'America/Sao_Paulo' },
+  { label: 'Buenos Aires', value: 'America/Argentina/Buenos_Aires' },
+  { label: 'Santiago', value: 'America/Santiago' },
+
+  { label: '--- Europe ---', value: 'header-europe', isHeader: true },
+  { label: 'London (GMT/BST)', value: 'Europe/London' },
+  { label: 'Paris (CET/CEST)', value: 'Europe/Paris' },
+  { label: 'Berlin (CET/CEST)', value: 'Europe/Berlin' },
+  { label: 'Rome (CET/CEST)', value: 'Europe/Rome' },
+  { label: 'Madrid (CET/CEST)', value: 'Europe/Madrid' },
+  { label: 'Amsterdam (CET/CEST)', value: 'Europe/Amsterdam' },
+  { label: 'Stockholm (CET/CEST)', value: 'Europe/Stockholm' },
+  { label: 'Athens (EET/EEST)', value: 'Europe/Athens' },
+  { label: 'Moscow (MSK)', value: 'Europe/Moscow' },
+  { label: 'Istanbul (TRT)', value: 'Europe/Istanbul' },
+
+  { label: '--- Asia ---', value: 'header-asia', isHeader: true },
+  { label: 'Dubai (GST)', value: 'Asia/Dubai' },
+  { label: 'Mumbai (IST)', value: 'Asia/Kolkata' },
+  { label: 'Bangkok (ICT)', value: 'Asia/Bangkok' },
+  { label: 'Singapore (SGT)', value: 'Asia/Singapore' },
+  { label: 'Hong Kong (HKT)', value: 'Asia/Hong_Kong' },
+  { label: 'Shanghai (CST)', value: 'Asia/Shanghai' },
+  { label: 'Tokyo (JST)', value: 'Asia/Tokyo' },
+  { label: 'Seoul (KST)', value: 'Asia/Seoul' },
+  { label: 'Manila (PHT)', value: 'Asia/Manila' },
+  { label: 'Jakarta (WIB)', value: 'Asia/Jakarta' },
+
+  { label: '--- Africa ---', value: 'header-africa', isHeader: true },
+  { label: 'Cairo (EET)', value: 'Africa/Cairo' },
+  { label: 'Johannesburg (SAST)', value: 'Africa/Johannesburg' },
+  { label: 'Lagos (WAT)', value: 'Africa/Lagos' },
+  { label: 'Nairobi (EAT)', value: 'Africa/Nairobi' },
+
+  { label: '--- Oceania ---', value: 'header-oceania', isHeader: true },
+  { label: 'Sydney (AEST/AEDT)', value: 'Australia/Sydney' },
+  { label: 'Melbourne (AEST/AEDT)', value: 'Australia/Melbourne' },
+  { label: 'Brisbane (AEST)', value: 'Australia/Brisbane' },
+  { label: 'Perth (AWST)', value: 'Australia/Perth' },
+  { label: 'Auckland (NZST/NZDT)', value: 'Pacific/Auckland' },
 ];
 
 interface SettingsProps {
@@ -183,11 +227,17 @@ export default function Settings({ onNavigate }: SettingsProps) {
                       <SelectValue placeholder="Select your timezone" />
                     </SelectTrigger>
                     <SelectContent>
-                      {COMMON_TIMEZONES.map((tz) => (
-                        <SelectItem key={tz.value} value={tz.value} className="text-sm sm:text-base">
-                          {tz.label}
-                        </SelectItem>
-                      ))}
+                      {COMMON_TIMEZONES.map((tz) =>
+                        tz.isHeader ? (
+                          <div key={tz.value} className="px-2 py-1.5 text-xs font-semibold text-slate-500 bg-slate-50">
+                            {tz.label}
+                          </div>
+                        ) : (
+                          <SelectItem key={tz.value} value={tz.value} className="text-sm sm:text-base">
+                            {tz.label}
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                   <p className="text-xs sm:text-sm text-slate-500 mt-2">

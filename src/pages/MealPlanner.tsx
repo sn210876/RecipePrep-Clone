@@ -417,7 +417,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
               {isMobile && (
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="flex items-center gap-2 px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 border-2 border-green-500 text-green-700 hover:border-green-600 hover:bg-green-50 rounded-lg transition-colors"
                 >
                   <Menu className="w-5 h-5" />
                   <span className="text-sm font-medium">Add by Recipe</span>
