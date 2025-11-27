@@ -16,6 +16,8 @@ const GRACE_PERIOD_DAYS = 7;
 
 export async function checkSubscriptionAccess(userId: string): Promise<SubscriptionStatus> {
   try {
+    console.log('[SubscriptionService] Checking access for user:', userId);
+
     const { data: subscription, error } = await supabase
       .from('subscriptions')
       .select('*')
@@ -23,13 +25,21 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
       .maybeSingle();
 
     if (error) {
-      console.error('Error checking subscription:', error);
+      console.error('[SubscriptionService] Error checking subscription:', error);
       return createDefaultAccess(false);
     }
 
     if (!subscription) {
+      console.warn('[SubscriptionService] No subscription found for user:', userId);
       return createDefaultAccess(false);
     }
+
+    console.log('[SubscriptionService] Subscription data:', {
+      type: subscription.subscription_type,
+      status: subscription.status,
+      trial_ends_at: subscription.trial_ends_at,
+      expires_at: subscription.expires_at,
+    });
 
     const now = new Date();
     const trialEndsAt = subscription.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
@@ -54,18 +64,33 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
     // Early bird trial
     if (subscription.subscription_type === 'early_bird') {
       if (!trialEndsAt) {
+        console.log('[SubscriptionService] Early bird without trial_ends_at, granting access');
         return createDefaultAccess(true);
       }
 
       const isTrialExpired = now > trialEndsAt;
       const daysRemaining = Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
+      console.log('[SubscriptionService] Early bird trial check:', {
+        now: now.toISOString(),
+        trialEndsAt: trialEndsAt.toISOString(),
+        isTrialExpired,
+        daysRemaining,
+      });
+
       if (isTrialExpired) {
         const daysSinceExpired = Math.abs(daysRemaining);
         const isInGracePeriod = daysSinceExpired <= GRACE_PERIOD_DAYS;
 
+        console.log('[SubscriptionService] Trial expired:', {
+          daysSinceExpired,
+          isInGracePeriod,
+          gracePeriodDays: GRACE_PERIOD_DAYS,
+          hasAccess: isInGracePeriod,
+        });
+
         return {
-          hasAccess: isInGracePeriod, // Allow access during grace period
+          hasAccess: isInGracePeriod,
           subscriptionType: subscription.subscription_type,
           status: subscription.status,
           trialEndsAt,
@@ -77,6 +102,7 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
         };
       }
 
+      console.log('[SubscriptionService] Trial active, granting access');
       return {
         hasAccess: true,
         subscriptionType: subscription.subscription_type,
