@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,6 +64,8 @@ interface AddRecipeProps {
 
 export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const { dispatch } = useRecipes();
+  const [editRecipeId, setEditRecipeId] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [title, setTitle] = useState('');
   const [ingredients, setIngredients] = useState<Ingredient[]>([
@@ -90,6 +92,51 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
+
+  // Load recipe for editing if edit parameter is present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get('edit');
+
+    if (editId) {
+      setEditRecipeId(editId);
+      setIsEditMode(true);
+      loadRecipeForEdit(editId);
+    }
+  }, []);
+
+  const loadRecipeForEdit = async (recipeId: string) => {
+    try {
+      const { getRecipeById } = await import('@/services/recipeService');
+      const recipe = await getRecipeById(recipeId);
+
+      if (recipe) {
+        setTitle(recipe.title);
+        setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : [{ quantity: '', unit: 'cup', name: '' }]);
+        setInstructions(recipe.instructions.length > 0 ? recipe.instructions : ['']);
+        setPrepTime(String(recipe.prepTime));
+        setCookTime(String(recipe.cookTime));
+        setServings(String(recipe.servings));
+        setCuisineType(recipe.cuisineType);
+        setDifficulty(recipe.difficulty);
+        setSelectedMealTypes(recipe.mealType || []);
+        setSelectedDietaryTags(recipe.dietaryTags || []);
+        setImageUrl(recipe.imageUrl || '');
+        setVideoUrl(recipe.videoUrl || '');
+        setNotes(recipe.notes || '');
+        toast.success('Recipe loaded for editing');
+      } else {
+        toast.error('Recipe not found');
+        setIsEditMode(false);
+        setEditRecipeId(null);
+      }
+    } catch (error) {
+      console.error('Failed to load recipe:', error);
+      toast.error('Failed to load recipe');
+      setIsEditMode(false);
+      setEditRecipeId(null);
+    }
+  };
 
   const addIngredient = () => {
     setIngredients([...ingredients, { quantity: '', unit: 'cup', name: '' }]);
@@ -360,10 +407,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
     try {
       // Show loading toast
-      const loadingToastId = toast.loading('Creating recipe...');
+      const loadingToastId = toast.loading(isEditMode ? 'Updating recipe...' : 'Creating recipe...');
 
-      // 1. First, create the recipe to get an ID
-      const { createRecipe } = await import('@/services/recipeService');
+      // 1. Create or update the recipe
+      const { createRecipe, updateRecipe } = await import('@/services/recipeService');
       const tempRecipe = {
         title: title.trim(),
         ingredients: validIngredients,
@@ -383,8 +430,11 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         isSaved: true
       };
 
-      const createdRecipe = await createRecipe(tempRecipe);
-      console.log('[AddRecipe] Recipe created with ID:', createdRecipe.id);
+      const createdRecipe = isEditMode && editRecipeId
+        ? await updateRecipe(editRecipeId, tempRecipe)
+        : await createRecipe(tempRecipe);
+
+      console.log(`[AddRecipe] Recipe ${isEditMode ? 'updated' : 'created'} with ID:`, createdRecipe.id);
 
       // 2. If it's an Instagram URL, download and store it permanently
       if (needsDownload && finalImageUrl) {
@@ -444,16 +494,16 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
           if (postError) {
             console.error('[AddRecipe] Post creation failed:', postError);
-            toast.success('Recipe created successfully!', { id: loadingToastId });
+            toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
           } else {
-            toast.success('Recipe created and posted to your profile!', { id: loadingToastId });
+            toast.success(isEditMode ? 'Recipe updated and posted to your profile!' : 'Recipe created and posted to your profile!', { id: loadingToastId });
           }
         } else {
-          toast.success('Recipe created successfully!', { id: loadingToastId });
+          toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
         }
       } catch (postError) {
         console.error('[AddRecipe] Post creation error:', postError);
-        toast.success('Recipe created successfully!', { id: loadingToastId });
+        toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
       }
 
       // 5. Add to local state
@@ -1281,7 +1331,7 @@ return (
               }}
               className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 text-base font-semibold shadow-lg rounded-full transition-all transform active:scale-95"
             >
-              Create Recipe
+              {isEditMode ? 'Update Recipe' : 'Create Recipe'}
             </Button>
           </div>
         </div>

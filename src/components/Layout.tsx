@@ -267,11 +267,11 @@ const loadUnreadCount = async (userId: string) => {
         {/* Top Header - Mobile Optimized */}
         <header className="sticky top-0 z-[100] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
           <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden h-9 w-9 sm:h-10 sm:w-10"
+              className="lg:hidden h-9 w-9 sm:h-10 sm:w-10 relative z-[150]"
             >
               <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
             </Button>
