@@ -123,14 +123,18 @@ export function RecipeDetailModal({
         <div className="h-full overflow-y-auto overscroll-contain">
           <div className="relative min-h-full">
             {/* Close Button - Fixed Position with higher z-index */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="fixed top-2 right-2 z-[95] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="w-5 h-5" />
-            </Button>
+           <Button
+  variant="ghost"
+  size="icon"
+  className="absolute top-2 right-2 z-[9999] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
+  onClick={(e) => {
+    e.stopPropagation();
+    onOpenChange(false);
+  }}
+  style={{ position: 'fixed', zIndex: 9999 }}
+>
+  <X className="w-5 h-5" />
+</Button>
 
             {/* Hero Image Section */}
             <div className="relative w-full h-56 sm:h-64 bg-gray-100">
