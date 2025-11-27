@@ -22,15 +22,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CookMode } from './CookMode';
-// Add this after imports, before the component
-const modalOverlayStyle = `
-  [data-radix-dialog-overlay] {
-    z-index: 90 !important;
-  }
-  [data-radix-dialog-content] {
-    z-index: 90 !important;
-  }
-`;
 
 interface RecipeDetailModalProps {
   recipe: Recipe;
@@ -121,31 +112,22 @@ export function RecipeDetailModal({
   };
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: modalOverlayStyle }} />
-      <Dialog open={open} onOpenChange={onOpenChange}>
-  <DialogContent 
-    className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0"
-    style={{ zIndex: 90 }}
-    onPointerDownOutside={(e) => e.preventDefault()}
-    onInteractOutside={(e) => e.preventDefault()}
-  >
+          <style dangerouslySetInnerHTML={{ __html: modalOverlayStyle }} />
+
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0">
         <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
         <div className="h-full overflow-y-auto overscroll-contain">
           <div className="relative min-h-full">
             {/* Close Button - Fixed Position with higher z-index */}
-           <Button
-  variant="ghost"
-  size="icon"
-  className="absolute top-2 right-2 z-[9999] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
-  onClick={(e) => {
-    e.stopPropagation();
-    onOpenChange(false);
-  }}
-  style={{ position: 'fixed', zIndex: 9999 }}
->
-  <X className="w-5 h-5" />
-</Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="fixed top-2 right-2 z-[100] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
+              onClick={() => onOpenChange(false)}
+            >
+              <X className="w-5 h-5" />
+            </Button>
 
             {/* Hero Image Section */}
             <div className="relative w-full h-56 sm:h-64 bg-gray-100">
