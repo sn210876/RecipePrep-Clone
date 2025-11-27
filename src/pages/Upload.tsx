@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '../components/ui/select';
 import { compressMultipleImages, isImageFile, formatFileSize } from '../lib/imageCompression';
+import { compressVideo, isVideoFile, getVideoInfo } from '../lib/videoCompression';
 
 interface UploadProps {
   onNavigate: (page: string) => void;
@@ -276,28 +277,56 @@ if (selectedFiles.length === 0) {      toast.error('Please select an image or vi
         });
       }
 
-    // Upload all files and separate by type
-const uploadedImageUrls: string[] = [];
-const uploadedVideoUrls: string[] = [];
+      // Compress and upload all files
+      const toastId = toast.loading('Processing files...', { duration: 0 });
+      const uploadedImageUrls: string[] = [];
+      const uploadedVideoUrls: string[] = [];
 
-for (const file of selectedFiles) {
-  const fileExt = file.name.split('.').pop()?.toLowerCase();
-  const fileName = `${userData.user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-  const { error: uploadError } = await supabase.storage
-    .from('posts')
-    .upload(fileName, file, { cacheControl: '3600', upsert: false });
-  if (uploadError) throw uploadError;
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        let fileToUpload = file;
+        const isVideo = isVideoFile(file);
+        const isImage = isImageFile(file);
 
-  const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+        if (isImage) {
+          toast.loading(`Compressing image ${i + 1}/${selectedFiles.length}...`, { id: toastId });
+          const results = await compressMultipleImages([file]);
+          fileToUpload = results[0].file;
+          const savedMB = ((file.size - fileToUpload.size) / (1024 * 1024)).toFixed(1);
+          console.log(`Image compressed: ${formatFileSize(file.size)} → ${formatFileSize(fileToUpload.size)} (saved ${savedMB}MB)`);
+        } else if (isVideo) {
+          toast.loading(`Compressing video ${i + 1}/${selectedFiles.length}...`, { id: toastId });
+          try {
+            const result = await compressVideo(file, (progress) => {
+              toast.loading(`Compressing video... ${Math.round(progress.percent)}%`, { id: toastId });
+            });
+            fileToUpload = result.file;
+            const savedMB = ((result.originalSize - result.compressedSize) / (1024 * 1024)).toFixed(1);
+            console.log(`Video compressed: ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (saved ${savedMB}MB)`);
+          } catch (error) {
+            console.warn('Video compression failed, using original:', error);
+          }
+        }
 
-  // Determine if it's an image or video by file extension
-  const isVideo = ['mp4', 'mov', 'webm', 'avi', 'mkv'].includes(fileExt || '');
-  if (isVideo) {
-    uploadedVideoUrls.push(urlData.publicUrl);
-  } else {
-    uploadedImageUrls.push(urlData.publicUrl);
-  }
-}
+        toast.loading(`Uploading file ${i + 1}/${selectedFiles.length}...`, { id: toastId });
+
+        const fileExt = fileToUpload.name.split('.').pop()?.toLowerCase();
+        const fileName = `${userData.user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('posts')
+          .upload(fileName, fileToUpload, { cacheControl: '3600', upsert: false });
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+
+        if (isVideo) {
+          uploadedVideoUrls.push(urlData.publicUrl);
+        } else {
+          uploadedImageUrls.push(urlData.publicUrl);
+        }
+      }
+
+      toast.success('Files uploaded successfully!', { id: toastId });
 
 // Format URLs as JSON arrays if multiple, or single string if one
 const imageUrlForDb = uploadedImageUrls.length > 1

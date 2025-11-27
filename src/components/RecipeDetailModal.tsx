@@ -139,8 +139,8 @@ export function RecipeDetailModal({
                 <X className="w-5 h-5" />
               </Button>
 
-              {/* Hero Image Section */}
-              <div className="relative w-full h-48 sm:h-56 bg-gray-100">
+              {/* Hero Image Section with Header */}
+              <div className="relative w-full h-48 sm:h-56 bg-gray-100 mb-4">
                 <img
                   src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
                     ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
@@ -149,8 +149,8 @@ export function RecipeDetailModal({
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white z-10">
                   <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight pr-12">{recipe.title}</h1>
                   <div className="flex flex-wrap gap-1 sm:gap-1.5">
                     <Badge className="bg-white/95 text-gray-900 hover:bg-white text-[10px] sm:text-xs px-2 py-0.5">
@@ -181,9 +181,9 @@ export function RecipeDetailModal({
               </div>
 
               {/* Content */}
-              <div className="p-4 sm:p-6 pb-8">
+              <div className="p-4 sm:p-6 pb-8 bg-white relative z-20">
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-3 gap-2 mb-2 sm:mb-3">
+                <div className="grid grid-cols-3 gap-2 mb-4 sm:mb-6">
                   <div className="flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg border border-orange-100">
                     <div className="bg-primary p-1.5 sm:p-2 rounded-lg">
                       <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
