@@ -25,6 +25,9 @@ export interface ExtractedRecipeData {
   videoUrl?: string;
   notes: string;
   sourceUrl: string;
+  hasConflict?: boolean;
+  structuredVersion?: any;
+  aiVersion?: any;
 }
 
 export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipeData> {
@@ -89,16 +92,45 @@ if (isSocial) {
     // Normalize ingredients
     const ingredients = (data.ingredients || []).map((ing: string) => {
       const cleaned = decodeHtmlEntities(ing.trim());
-      if (!cleaned) return { quantity: '', unit: 'cup', name: '' };
+      if (!cleaned) return { quantity: '', unit: '', name: '' };
 
-      const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)\s*/);
+      const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
       const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
       const quantity = normalizeQuantity(rawQty);
 
       let rest = cleaned.slice(rawQty.length).trim();
-      const unitMatch = rest.match(/^(cup|cups|tbsp|tablespoon|tsp|teaspoon|oz|ounce|lb|pound|g|gram|kg|ml|l|pinch|dash)\s+/i);
-      const unit = unitMatch ? unitMatch[1].toLowerCase().replace(/s$/, '') : 'cup';
-      if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
+
+      const unitMatch = rest.match(/^(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|kilograms?|ml|milliliters?|l|liters?|pinch|dash|piece|pieces|clove|cloves|slice|slices|can|cans)\s+/i);
+
+      let unit = '';
+      if (unitMatch) {
+        const matchedUnit = unitMatch[1].toLowerCase();
+        rest = rest.slice(unitMatch[0].length).trim();
+
+        if (matchedUnit === 'g' || matchedUnit === 'gram' || matchedUnit === 'grams') {
+          unit = 'g';
+        } else if (matchedUnit === 'kg' || matchedUnit === 'kilogram' || matchedUnit === 'kilograms') {
+          unit = 'kg';
+        } else if (matchedUnit === 'ml' || matchedUnit === 'milliliter' || matchedUnit === 'milliliters') {
+          unit = 'ml';
+        } else if (matchedUnit === 'l' || matchedUnit === 'liter' || matchedUnit === 'liters') {
+          unit = 'l';
+        } else if (matchedUnit.startsWith('cup')) {
+          unit = 'cup';
+        } else if (matchedUnit.startsWith('tbsp') || matchedUnit.startsWith('tablespoon')) {
+          unit = 'tbsp';
+        } else if (matchedUnit.startsWith('tsp') || matchedUnit.startsWith('teaspoon')) {
+          unit = 'tsp';
+        } else if (matchedUnit === 'oz' || matchedUnit.startsWith('ounce')) {
+          unit = 'oz';
+        } else if (matchedUnit.startsWith('lb') || matchedUnit.startsWith('pound')) {
+          unit = 'lb';
+        } else {
+          unit = matchedUnit;
+        }
+      } else {
+        unit = quantity ? 'piece' : '';
+      }
 
       return { quantity, unit, name: rest || cleaned };
     });
@@ -112,10 +144,15 @@ if (isSocial) {
     };
 
     console.log('[Extractor] Final image URL being returned:', finalImageUrl);
-
+//test
     return {
       title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
-      description: 'Extracted from video',
+     description: decodeHtmlEntities(
+    data.description ||
+    data.shortDescription ||
+    data.content ||
+    ''
+        ),
       creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
       ingredients,
       instructions: (data.instructions || []).map((i: string) => decodeHtmlEntities(i)),
@@ -127,8 +164,8 @@ if (isSocial) {
       mealTypes: ['Dinner'],
       dietaryTags: [],
       imageUrl: finalImageUrl, // ✅ Now using proxied URL
-      videoUrl: url,
-      notes: 'Extracted using your Render server',
+      videoUrl: undefined, // ❌ Don't save video URL
+      notes: `Recipe from ${data.channel || data.creator || 'video'}`,
       sourceUrl: url,
     };
   } catch (err: any) {
@@ -158,19 +195,59 @@ if (isSocial) {
 
   const data = await response.json();
 
-  const ingredients = (data.ingredients || []).map((ing: string) => {
+  const parseIngredients = (ingredientList: string[]) => {
+    return ingredientList.map((ing: string) => {
     const cleaned = decodeHtmlEntities(ing.trim());
+
     const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
     const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
     const quantity = normalizeQuantity(rawQty);
-    let rest = cleaned.slice(rawQty.length).trim();
-    const unitMatch = rest.match(/^(cup|cups|tbsp|tsp|oz|g|kg|ml|l|pinch|dash)\s+/i);
-    const unit = unitMatch ? unitMatch[1].toLowerCase() : 'cup';
-    if (unitMatch) rest = rest.slice(unitMatch[0].length).trim();
-    return { quantity, unit, name: rest || cleaned };
-  });
 
-  return {
+    let rest = cleaned.slice(rawQty.length).trim();
+
+    const unitMatch = rest.match(/^(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|kilograms?|ml|milliliters?|l|liters?|pinch|dash|piece|pieces|clove|cloves|slice|slices|can|cans)\s+/i);
+
+    let unit = '';
+    if (unitMatch) {
+      const matchedUnit = unitMatch[1].toLowerCase();
+      rest = rest.slice(unitMatch[0].length).trim();
+
+      if (matchedUnit === 'g' || matchedUnit === 'gram' || matchedUnit === 'grams') {
+        unit = 'g';
+      } else if (matchedUnit === 'kg' || matchedUnit === 'kilogram' || matchedUnit === 'kilograms') {
+        unit = 'kg';
+      } else if (matchedUnit === 'ml' || matchedUnit === 'milliliter' || matchedUnit === 'milliliters') {
+        unit = 'ml';
+      } else if (matchedUnit === 'l' || matchedUnit === 'liter' || matchedUnit === 'liters') {
+        unit = 'l';
+      } else if (matchedUnit.startsWith('cup')) {
+        unit = 'cup';
+      } else if (matchedUnit.startsWith('tbsp') || matchedUnit.startsWith('tablespoon')) {
+        unit = 'tbsp';
+      } else if (matchedUnit.startsWith('tsp') || matchedUnit.startsWith('teaspoon')) {
+        unit = 'tsp';
+      } else if (matchedUnit === 'oz' || matchedUnit.startsWith('ounce')) {
+        unit = 'oz';
+      } else if (matchedUnit.startsWith('lb') || matchedUnit.startsWith('pound')) {
+        unit = 'lb';
+      } else {
+        unit = matchedUnit;
+      }
+    } else {
+      unit = quantity ? 'piece' : '';
+    }
+
+      return {
+        quantity,
+        unit,
+        name: rest || cleaned
+      };
+    });
+  };
+
+  const ingredients = parseIngredients(data.ingredients || []);
+
+  const result: ExtractedRecipeData = {
     title: decodeHtmlEntities(data.title || 'Untitled Recipe'),
     description: 'Extracted recipe',
     creator: decodeHtmlEntities(data.author || 'Unknown'),
@@ -188,6 +265,30 @@ if (isSocial) {
     notes: data.notes || '',
     sourceUrl: url,
   };
+
+  if (data.hasConflict) {
+    result.hasConflict = true;
+    result.structuredVersion = {
+      ...result,
+      ingredients: parseIngredients(data.structuredVersion?.ingredients || []),
+      instructions: (data.structuredVersion?.instructions || []).map(decodeHtmlEntities),
+      prepTime: data.structuredVersion?.prep_time ? `${data.structuredVersion.prep_time} mins` : '30 mins',
+      cookTime: data.structuredVersion?.cook_time ? `${data.structuredVersion.cook_time} mins` : '45 mins',
+      servings: String(data.structuredVersion?.yield || '4'),
+      notes: '',
+    };
+    result.aiVersion = {
+      ...result,
+      ingredients: parseIngredients(data.aiVersion?.ingredients || []),
+      instructions: (data.aiVersion?.instructions || []).map(decodeHtmlEntities),
+      prepTime: data.aiVersion?.prep_time ? `${data.aiVersion.prep_time} mins` : '30 mins',
+      cookTime: data.aiVersion?.cook_time ? `${data.aiVersion.cook_time} mins` : '45 mins',
+      servings: String(data.aiVersion?.yield || '4'),
+      notes: '',
+    };
+  }
+
+  return result;
 }
 
 export function isValidUrl(url: string): boolean {
@@ -204,4 +305,91 @@ export function getPlatformFromUrl(url: string): string {
   if (url.includes('instagram.com')) return 'Instagram';
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
   return 'Website';
+}
+
+export async function extractRecipeFromText(text: string): Promise<ExtractedRecipeData> {
+  await new Promise(resolve => setTimeout(resolve, 1500));
+
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+  let title = 'Imported Recipe';
+  const ingredients: Ingredient[] = [];
+  const instructions: string[] = [];
+  let currentSection: 'none' | 'ingredients' | 'instructions' = 'none';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lowerLine = line.toLowerCase();
+
+    if (i === 0 && !lowerLine.includes('ingredient') && !lowerLine.includes('instruction')) {
+      title = line;
+      continue;
+    }
+
+    if (lowerLine.includes('ingredient')) {
+      currentSection = 'ingredients';
+      continue;
+    }
+
+    if (lowerLine.includes('instruction') || lowerLine.includes('direction') || lowerLine.includes('step')) {
+      currentSection = 'instructions';
+      continue;
+    }
+
+    if (currentSection === 'ingredients') {
+      const ingredientMatch = line.match(/^(\d+\/?\d*)\s*(\w+)?\s+(.+)$/);
+      if (ingredientMatch) {
+        ingredients.push({
+          quantity: ingredientMatch[1],
+          unit: ingredientMatch[2] || 'piece',
+          name: ingredientMatch[3]
+        });
+      } else {
+        ingredients.push({
+          quantity: '1',
+          unit: 'piece',
+          name: line
+        });
+      }
+    }
+
+    if (currentSection === 'instructions') {
+      const cleanedLine = line.replace(/^\d+[\.)]\s*/, '');
+      if (cleanedLine.length > 0) {
+        instructions.push(cleanedLine);
+      }
+    }
+  }
+
+  if (ingredients.length === 0) {
+    ingredients.push(
+      { quantity: '2', unit: 'cup', name: 'All-purpose flour' },
+      { quantity: '1', unit: 'tsp', name: 'Salt' }
+    );
+  }
+
+  if (instructions.length === 0) {
+    instructions.push(
+      'Combine ingredients in a bowl.',
+      'Mix well and follow your recipe as written.'
+    );
+  }
+
+  return {
+    title,
+    description: 'Imported from text',
+    creator: 'Unknown',
+    ingredients,
+    instructions,
+    prepTime: '15',
+    cookTime: '30',
+    servings: '4',
+    cuisineType: 'International',
+    difficulty: 'Medium',
+    mealTypes: ['Dinner'],
+    dietaryTags: [],
+    imageUrl: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+    notes: 'Imported from text',
+    sourceUrl: ''
+  };
 }
