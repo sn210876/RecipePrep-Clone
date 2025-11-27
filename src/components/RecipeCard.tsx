@@ -109,7 +109,13 @@ useEffect(() => {
     <>
      <Card
   className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white cursor-pointer active:scale-[0.98] flex flex-col h-full"
-  onClick={() => {
+  onClick={(e) => {
+    // Only open modal if clicking the card itself, not buttons or menu
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[role="menuitem"]')) {
+      return;
+    }
+
     if (requireAuth && !user) {
       toast.error('Please sign up or log in to view recipe details');
       return;
@@ -146,36 +152,46 @@ useEffect(() => {
                   <MoreVertical className="w-4 h-4 text-gray-700" />
                 </button>
                 {showMenu && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                    {onEdit && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowMenu(false);
-                          onEdit(recipe.id);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-50 text-left text-sm text-gray-700 rounded-t-lg"
-                      >
-                        <Edit className="w-4 h-4" />
-                        Edit Recipe
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowMenu(false);
-                          if (confirm('Are you sure you want to delete this recipe?')) {
-                            onDelete(recipe.id);
-                          }
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-red-50 text-left text-sm text-red-600 rounded-b-lg"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete
-                      </button>
-                    )}
-                  </div>
+                  <>
+                    {/* Backdrop to close menu when clicking outside */}
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                      }}
+                    />
+                    <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                      {onEdit && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenu(false);
+                            onEdit(recipe.id);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-50 text-left text-sm text-gray-700 rounded-t-lg"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit Recipe
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenu(false);
+                            if (confirm('Are you sure you want to delete this recipe?')) {
+                              onDelete(recipe.id);
+                            }
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-3 hover:bg-red-50 text-left text-sm text-red-600 rounded-b-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             )}

@@ -113,25 +113,28 @@ export function RecipeDetailModal({
       <style>
         {`
           [data-radix-dialog-overlay] {
-            z-index: 55 !important;
+            z-index: 9998 !important;
           }
           [data-radix-dialog-content] {
-            z-index: 60 !important;
+            z-index: 9999 !important;
           }
         `}
       </style>
-      
-      <Dialog open={open} onOpenChange={onOpenChange}>
+
+      <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
         <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0">
           <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
           <div className="h-full overflow-y-auto overscroll-contain">
             <div className="relative min-h-full">
-              {/* Close Button - Fixed Position with z-index below menu */}
+              {/* Close Button - Fixed Position with highest z-index */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="fixed top-2 right-2 z-[70] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
-                onClick={() => onOpenChange(false)}
+                className="fixed top-2 right-2 z-[10000] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenChange(false);
+                }}
               >
                 <X className="w-5 h-5" />
               </Button>
