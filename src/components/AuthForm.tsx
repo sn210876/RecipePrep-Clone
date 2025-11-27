@@ -89,22 +89,16 @@ export default function AuthForm() {
 
         // Track referral after signup if code exists
         if (referralCode && data.user) {
-          console.log('🎯 Tracking referral signup with code:', referralCode, 'for user:', data.user.id);
+          console.log('🎯 Tracking referral signup with code:', referralCode);
           try {
-            const { data: trackResult, error: trackError } = await supabase.rpc('track_referral_signup', {
+            await supabase.rpc('track_referral_signup', {
               p_user_id: data.user.id,
               p_referral_code: referralCode
             });
-            if (trackError) {
-              console.error('⚠️ Referral tracking error:', trackError);
-            } else {
-              console.log('✅ Referral tracked successfully, result:', trackResult);
-            }
+            console.log('✅ Referral tracked successfully');
           } catch (refError) {
-            console.error('⚠️ Referral tracking exception:', refError);
+            console.error('⚠️ Referral tracking failed:', refError);
           }
-        } else {
-          console.log('ℹ️ No referral code in URL or no user');
         }
 
         console.log('✅ Sign up successful - check email');

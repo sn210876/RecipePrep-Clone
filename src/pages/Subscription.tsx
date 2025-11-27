@@ -81,14 +81,11 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
         });
 
         if (!error && newCode) {
-          // Reload from database to get all fields
-          const { data: freshData } = await supabase
-            .from('referral_codes')
-            .select('*')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-          refData = freshData;
+          refData = {
+            code: newCode,
+            successful_signups: 0,
+            years_earned: 0
+          };
         }
       }
 

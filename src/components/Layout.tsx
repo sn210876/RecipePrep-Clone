@@ -13,8 +13,7 @@ import {
   Camera,
   PiggyBank,
   User,
-  MessageSquare,
-  Crown
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabase';
@@ -42,7 +41,6 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
     { id: 'grocery-list', label: 'Grocery List', icon: ShoppingCart },
     { id: 'cart', label: 'Cart', icon: PiggyBank },
     { id: 'blog', label: 'Blog', icon: MessageSquare },
-    { id: 'subscription', label: 'Subscription', icon: Crown },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
