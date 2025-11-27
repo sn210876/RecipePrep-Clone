@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { migrateExistingPosts } from '@/lib/imageStorage';
 import { toast } from 'sonner';
 import { isAdmin } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 // Mock timezone data
 const COMMON_TIMEZONES = [
@@ -25,6 +26,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ onNavigate }: SettingsProps) {
+  const { signOut, user } = useAuth();
   const [forwardingEmail, setForwardingEmail] = useState('user-demo123@mealscrape.app');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -139,11 +141,11 @@ export default function Settings({ onNavigate }: SettingsProps) {
                 <div className="flex-1 min-w-0">
                   <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900 truncate">Account</CardTitle>
                   <CardDescription className="text-xs sm:text-sm text-slate-600 truncate">
-                    user@example.com
+                    {user?.email || 'user@example.com'}
                   </CardDescription>
                 </div>
                 <Button
-                  onClick={() => console.log('Logout')}
+                  onClick={signOut}
                   variant="outline"
                   size="sm"
                   className="border-red-300 text-red-700 hover:bg-red-50 shrink-0 text-xs sm:text-sm"
