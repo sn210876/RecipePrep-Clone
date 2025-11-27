@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download } from 'lucide-react';
+import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download, Crown } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -196,6 +196,30 @@ export default function Settings({ onNavigate }: SettingsProps) {
                 >
                   <LogOut className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Log Out</span>
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Subscription Card - NEW */}
+          <Card className="border-purple-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 border-b border-purple-100 p-4 sm:p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                  <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900">Subscription & Referrals</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm text-slate-600">
+                    Manage your plan, earn free access
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={() => onNavigate('subscription')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white shrink-0 text-xs sm:text-sm"
+                  size="sm"
+                >
+                  View
                 </Button>
               </div>
             </CardHeader>

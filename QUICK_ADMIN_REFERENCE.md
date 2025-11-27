@@ -1,20 +1,34 @@
 # Quick Admin Reference - Family Code Generation
 
-## Generate a Single Family Code
+## ✅ WORKING METHOD: Direct INSERT (Easiest!)
+
+### Generate a Single Family Code
 
 ```sql
-SELECT public.generate_family_code('For [Name/Reason]');
+INSERT INTO public.family_codes (code, notes)
+VALUES (
+  'FAMILY-' || upper(encode(gen_random_bytes(6), 'hex')),
+  'For Mom - Jane Smith'
+)
+RETURNING code, notes;
 ```
 
-**Examples:**
+**More Examples:**
 ```sql
 -- For family
-SELECT public.generate_family_code('For Mom - Jane Smith');
-SELECT public.generate_family_code('For Brother - Mike');
+INSERT INTO public.family_codes (code, notes)
+VALUES ('FAMILY-' || upper(encode(gen_random_bytes(6), 'hex')), 'For Brother Mike')
+RETURNING code;
 
--- For friends
-SELECT public.generate_family_code('For Friend - Sarah Johnson');
-SELECT public.generate_family_code('For Beta Tester - Alex');
+-- For a friend
+INSERT INTO public.family_codes (code, notes)
+VALUES ('FAMILY-' || upper(encode(gen_random_bytes(6), 'hex')), 'For Friend Sarah')
+RETURNING code;
+
+-- Without notes
+INSERT INTO public.family_codes (code)
+VALUES ('FAMILY-' || upper(encode(gen_random_bytes(6), 'hex')))
+RETURNING code;
 ```
 
 ---
@@ -22,9 +36,21 @@ SELECT public.generate_family_code('For Beta Tester - Alex');
 ## Generate Multiple Codes at Once
 
 ```sql
+-- Generate 5 codes
+INSERT INTO public.family_codes (code, notes)
+SELECT
+  'FAMILY-' || upper(encode(gen_random_bytes(6), 'hex')),
+  'Batch 1 - Code ' || i
+FROM generate_series(1, 5) AS i
+RETURNING code, notes;
+
 -- Generate 10 codes
-SELECT public.generate_family_code('Batch 1 - Code ' || i)
-FROM generate_series(1, 10) AS i;
+INSERT INTO public.family_codes (code, notes)
+SELECT
+  'FAMILY-' || upper(encode(gen_random_bytes(6), 'hex')),
+  'Code #' || i
+FROM generate_series(1, 10) AS i
+RETURNING code, notes;
 ```
 
 ---
