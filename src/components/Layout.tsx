@@ -265,16 +265,16 @@ const loadUnreadCount = async (userId: string) => {
       <div className="lg:ml-56">
         
         {/* Top Header - Mobile Optimized */}
-        <header className="sticky top-0 z-[100] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
-          <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden h-9 w-9 sm:h-10 sm:w-10 relative z-[150]"
-            >
-              <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
-            </Button>
+<header className="sticky top-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
+  <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      className="lg:hidden h-9 w-9 sm:h-10 sm:w-10 relative z-[200]"
+    >
+      <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+    </Button>
             
          {!socialPages.includes(currentPage) && (
   <div className="flex-1 flex items-center justify-center lg:justify-start gap-2">
