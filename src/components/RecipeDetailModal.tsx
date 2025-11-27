@@ -22,6 +22,15 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CookMode } from './CookMode';
+// Add this after imports, before the component
+const modalOverlayStyle = `
+  [data-radix-dialog-overlay] {
+    z-index: 90 !important;
+  }
+  [data-radix-dialog-content] {
+    z-index: 90 !important;
+  }
+`;
 
 interface RecipeDetailModalProps {
   recipe: Recipe;
