@@ -130,6 +130,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
   const [filterHashtag, setFilterHashtag] = useState<string | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -161,6 +162,22 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       }
     });
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
 
   useEffect(() => {
     const openPostFromUrl = () => {
@@ -1024,32 +1041,32 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
               )}
             </div>
 
-            <button
-              onClick={async (e) => {
-                e.stopPropagation();
-                setShowNotifications(!showNotifications);
-                if (!showNotifications && currentUserId) {
-                  await supabase
-                    .from('notifications')
-                    .update({ read: true })
-                    .eq('user_id', currentUserId)
-                    .eq('read', false);
-                  setUnreadNotifications(0);
-                }
-              }}
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-            >
-              <Bell className="w-6 h-6 text-gray-700" />
-              {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
-                </span>
-              )}
-            </button>
-          </div>
+            <div ref={notificationRef} className="relative">
+              <button
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setShowNotifications(!showNotifications);
+                  if (!showNotifications && currentUserId) {
+                    await supabase
+                      .from('notifications')
+                      .update({ read: true })
+                      .eq('user_id', currentUserId)
+                      .eq('read', false);
+                    setUnreadNotifications(0);
+                  }
+                }}
+                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              >
+                <Bell className="w-6 h-6 text-gray-700" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                  </span>
+                )}
+              </button>
 
-          {showNotifications && (
-            <div className="absolute left-4 right-4 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto shadow-lg z-50">
+              {showNotifications && (
+                <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto shadow-lg z-50">
               {notifications.length === 0 ? (
                 <div className="p-4 text-center text-gray-500 text-sm">No notifications yet</div>
               ) : (
@@ -1089,8 +1106,10 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
                   </div>
                 ))
               )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         <div className="pt-24" style={{ paddingTop: 'calc(5rem + env(safe-area-inset-top))' }}>

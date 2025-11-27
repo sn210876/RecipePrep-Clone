@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3, MoreVertical } from 'lucide-react';
+import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3, MoreVertical, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { Input } from '../components/ui/input';
@@ -530,15 +530,45 @@ useEffect(() => {
     const file = e.target.files?.[0];
     if (!file || !editingPost) return;
 
+    if (!isImageFile(file) && !file.type.startsWith('video/')) {
+      toast.error('Please select an image or video file');
+      return;
+    }
+
     setUploadingPhoto(true);
+    const toastId = toast.loading('Processing file...', { duration: 0 });
+
     try {
-      const fileExt = file.name.split('.').pop();
+      let fileToUpload = file;
+
+      if (isImageFile(file)) {
+        const originalSize = file.size;
+
+        const result = await compressImageWithOptions(
+          file,
+          { maxWidthOrHeight: 1200, maxSizeMB: 0.5 },
+          (progress) => {
+            if (progress.isCompressing) {
+              toast.loading(`Compressing image... ${Math.round(progress.percent)}%`, { id: toastId, duration: 0 });
+            }
+          }
+        );
+
+        fileToUpload = result.file;
+
+        const savedMB = ((originalSize - result.compressedSize) / (1024 * 1024)).toFixed(1);
+        toast.loading(`Uploading compressed image...`, { id: toastId, duration: 0 });
+      } else {
+        toast.loading('Uploading video...', { id: toastId, duration: 0 });
+      }
+
+      const fileExt = fileToUpload.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${currentUserId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('posts')
-        .upload(filePath, file);
+        .upload(filePath, fileToUpload);
 
       if (uploadError) throw uploadError;
 
@@ -547,13 +577,18 @@ useEffect(() => {
         .getPublicUrl(filePath);
 
       setEditingPost(prev => prev ? { ...prev, photoUrl: publicUrl } : null);
-      toast.success('Photo uploaded!');
+      toast.success('File uploaded!', { id: toastId });
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload photo');
+      toast.error('Failed to upload file. Please try again.', { id: toastId });
     } finally {
       setUploadingPhoto(false);
     }
+  };
+
+  const handleRemovePhoto = () => {
+    setEditingPost(prev => prev ? { ...prev, photoUrl: '' } : null);
+    toast.success('Photo removed');
   };
 
   const handleEditPost = async () => {
@@ -1126,12 +1161,21 @@ if (loading) {
               />
               {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
               {editingPost?.photoUrl && (
-               <img
-  src={editingPost.photoUrl}
-  alt="Preview"
-  className="mt-2 w-32 h-32 object-cover rounded-lg"
-  loading="lazy"
-/>
+                <div className="relative mt-3 inline-block">
+                  <img
+                    src={editingPost.photoUrl}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-lg"
+                    loading="lazy"
+                  />
+                  <button
+                    onClick={handleRemovePhoto}
+                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg transition-colors"
+                    type="button"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               )}
             </div>
           </div>

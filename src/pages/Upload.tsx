@@ -733,10 +733,10 @@ disabled={selectedFiles.length === 0 || (postType === 'post' && !title.trim()) |
 
       {/* Music Picker Modal */}
       {showMusicPicker && (
-  <div className="fixed inset-0 bg-black/70 z-50 flex items-end md:items-center justify-center">
-          <div 
-            className="bg-white w-full md:max-w-lg md:rounded-2xl flex flex-col"
-            style={{ 
+  <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div
+            className="bg-white w-full md:max-w-lg rounded-2xl flex flex-col"
+            style={{
               maxHeight: '85vh',
               paddingBottom: 'env(safe-area-inset-bottom)'
             }}
