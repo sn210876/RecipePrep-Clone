@@ -129,11 +129,11 @@ export function RecipeDetailModal({
         <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
         <div className="h-full overflow-y-auto overscroll-contain">
           <div className="relative min-h-full">
-            {/* Close Button - Fixed Position */}
+            {/* Close Button - Fixed Position with higher z-index */}
             <Button
               variant="ghost"
               size="icon"
-              className="fixed top-2 right-2 z-50 bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95"
+              className="fixed top-2 right-2 z-[100] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
               onClick={() => onOpenChange(false)}
             >
               <X className="w-5 h-5" />
@@ -242,12 +242,11 @@ export function RecipeDetailModal({
               <div className="grid grid-cols-2 gap-2 mb-3 sm:mb-4">
                 <Button
                   size="lg"
-                  variant={isSaved ? 'outline' : 'default'}
                   onClick={handleSaveRecipe}
-                  className={`gap-2 min-h-[44px] sm:min-h-[48px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm ${
+                  className={`gap-2 min-h-[44px] sm:min-h-[48px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold ${
                     isSaved
-                      ? 'border-2 border-secondary text-secondary hover:bg-orange-50'
-                      : 'bg-secondary hover:bg-secondary/90 text-white'
+                      ? 'bg-orange-500 hover:bg-orange-600 text-white border-2 border-orange-600'
+                      : 'bg-orange-500 hover:bg-orange-600 text-white border-2 border-orange-600'
                   }`}
                 >
                   <Bookmark
@@ -258,9 +257,8 @@ export function RecipeDetailModal({
 
                 <Button
                   size="lg"
-                  variant="outline"
                   onClick={handleAddToMealPlan}
-                  className="gap-2 border-2 hover:bg-blue-50 hover:border-blue-500 hover:text-blue-700 min-h-[44px] sm:min-h-[48px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm"
+                  className="gap-2 bg-blue-500 hover:bg-blue-600 text-white border-2 border-blue-600 min-h-[44px] sm:min-h-[48px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold"
                 >
                   <Calendar className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">Meal Plan</span>
@@ -270,9 +268,8 @@ export function RecipeDetailModal({
               {/* Secondary Actions */}
               <div className="flex gap-2 mb-4 sm:mb-6">
                 <Button
-                  variant="outline"
                   onClick={handleAddToGroceryList}
-                  className="flex-1 gap-2 hover:bg-orange-50 hover:border-primary hover:text-primary min-h-[40px] sm:min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm"
+                  className="flex-1 gap-2 bg-green-500 hover:bg-green-600 text-white border-2 border-green-600 min-h-[40px] sm:min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold"
                 >
                   <ShoppingCart className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">Grocery List</span>

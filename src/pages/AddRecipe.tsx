@@ -603,7 +603,7 @@ return (
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 pb-24 lg:pb-6">
           {/* Error Summary */}
           {showErrors && Object.keys(errors).length > 0 && (
             <Card className="border-red-200 bg-red-50">
@@ -1257,8 +1257,8 @@ return (
           </div>
         </div>
 
-        {/* RECIPE ACTION BUTTONS - Fixed above nav icons, z-[70] */}
-        <div className="fixed bottom-[80px] left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[70] lg:hidden">
+        {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
+        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[100] lg:z-10">
           <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3">
             {onNavigate && (
               <Button
