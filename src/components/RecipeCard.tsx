@@ -315,11 +315,11 @@ useEffect(() => {
 </CardFooter>
       </Card>
 
-      <RecipeDetailModal
-        recipe={recipe}
-        open={showDetail}
-        onOpenChange={setShowDetail}
-      />
+     <RecipeDetailModal
+  recipe={recipe}
+  open={showDetail}
+  onOpenChange={setShowDetail}
+/>
 
       <ReviewForm
         recipe={recipe}
