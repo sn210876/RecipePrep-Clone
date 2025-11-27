@@ -121,7 +121,7 @@ export function RecipeDetailModal({
             <Button
               variant="ghost"
               size="icon"
-              className="fixed top-2 right-2 z-[100] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
+              className="fixed top-2 right-2 z-[95] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
               onClick={() => onOpenChange(false)}
             >
               <X className="w-5 h-5" />
