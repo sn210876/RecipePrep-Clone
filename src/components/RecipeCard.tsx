@@ -40,6 +40,20 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, onEdit, showRevie
   const isSaved = state.savedRecipes.some(r => r.id === recipe.id);
 const [loadingReviews, setLoadingReviews] = useState(false);
   const isOwner = user && recipe.userId === user.id;
+
+  // Debug logging
+  useEffect(() => {
+    if (user && recipe.userId) {
+      console.log('[RecipeCard Debug]', {
+        recipeId: recipe.id,
+        recipeTitle: recipe.title,
+        recipeUserId: recipe.userId,
+        currentUserId: user.id,
+        isOwner,
+        isAdmin
+      });
+    }
+  }, [recipe.id, recipe.userId, user, isOwner, isAdmin]);
   const difficultyColors = {
     Easy: 'bg-orange-100 text-orange-700 border-orange-200',
     Medium: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -133,18 +147,18 @@ useEffect(() => {
               </div>
             )}
             {(isOwner || isAdmin) && (
-              <div className="relative">
+              <div className="relative z-[110]">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowMenu(!showMenu);
                   }}
-                  className="bg-white/95 backdrop-blur-sm rounded-full p-2.5 shadow-lg hover:bg-gray-100 active:scale-95 transition-all touch-manipulation"
+                  className="bg-white/95 backdrop-blur-sm rounded-full p-2.5 shadow-lg hover:bg-gray-100 active:scale-95 transition-all touch-manipulation relative z-[110]"
                 >
                   <MoreVertical className="w-4 h-4 text-gray-700" />
                 </button>
                 {showMenu && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                  <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 z-[120]">
                     {isOwner && onEdit && (
                       <button
                         onClick={(e) => {

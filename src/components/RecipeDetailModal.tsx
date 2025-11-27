@@ -4,7 +4,7 @@ import { useRecipes } from '../context/RecipeContext';
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Checkbox } from './ui/checkbox';
+// Checkbox removed - not needed for discover recipes
 import { Separator } from './ui/separator';
 import {
   Clock,
@@ -35,9 +35,7 @@ export function RecipeDetailModal({
   onOpenChange,
 }: RecipeDetailModalProps) {
   const { state, dispatch } = useRecipes();
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
-    new Set()
-  );
+  // Checkbox state removed - not needed
   const [cookMode, setCookMode] = useState(false);
 
   const isSaved = state.savedRecipes.some((r) => r.id === recipe.id);
@@ -59,17 +57,7 @@ export function RecipeDetailModal({
     return <CookMode recipe={recipe} onClose={() => setCookMode(false)} />;
   }
 
-  const handleToggleIngredient = (index: number) => {
-    setCheckedIngredients((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
-  };
+  // handleToggleIngredient removed - checkboxes not needed
 
   const handleSaveRecipe = () => {
     if (isSaved) {
@@ -306,25 +294,12 @@ export function RecipeDetailModal({
                         key={index}
                         className="flex items-start gap-2 sm:gap-3 p-2 rounded-lg hover:bg-orange-50 transition-colors min-h-[40px] sm:min-h-[44px]"
                       >
-                        <Checkbox
-                          id={`ingredient-${index}`}
-                          checked={checkedIngredients.has(index)}
-                          onCheckedChange={() => handleToggleIngredient(index)}
-                          className="mt-1 min-w-[18px] min-h-[18px] sm:min-w-[20px] sm:min-h-[20px] touch-manipulation"
-                        />
-                        <label
-                          htmlFor={`ingredient-${index}`}
-                          className={`flex-1 text-xs sm:text-sm text-gray-700 cursor-pointer leading-relaxed ${
-                            checkedIngredients.has(index)
-                              ? 'line-through text-gray-400'
-                              : ''
-                          }`}
-                        >
+                        <div className="flex-1 text-xs sm:text-sm text-gray-700 leading-relaxed">
                           <span className="font-semibold text-primary">
                             {ingredient.quantity} {ingredient.unit}
                           </span>{' '}
                           {ingredient.name}
-                        </label>
+                        </div>
                       </div>
                     ))}
                   </div>
