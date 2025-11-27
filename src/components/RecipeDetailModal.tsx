@@ -108,9 +108,22 @@ export function RecipeDetailModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0 z-[60]">
-        <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
+    <>
+      <style>
+        {`
+          [data-state="open"] [role="dialog"] {
+            z-index: 60 !important;
+          }
+          [data-state="open"] + [data-radix-dialog-overlay] {
+            z-index: 55 !important;
+          }
+        `}
+      </style>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent 
+          className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0"
+          style={{ zIndex: 60 }}
+        >        <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
         <div className="h-full overflow-y-auto overscroll-contain">
           <div className="relative min-h-full">
             {/* Close Button - Fixed Position with z-index below menu */}
@@ -381,5 +394,6 @@ export function RecipeDetailModal({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
