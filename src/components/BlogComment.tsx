@@ -15,7 +15,7 @@ interface BlogCommentProps {
   postId: string;
   onCommentAdded: () => void;
   depth?: number;
-  onNavigate?: (page: string, userId?: string) => void;
+  onNavigate?: (page: string) => void;
 }
 
 export function BlogComment({ comment, postId, onCommentAdded, depth = 0, onNavigate }: BlogCommentProps) {
@@ -142,14 +142,17 @@ export function BlogComment({ comment, postId, onCommentAdded, depth = 0, onNavi
 
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Avatar className="h-6 w-6">
+            <Avatar
+              className="h-6 w-6 cursor-pointer"
+              onClick={() => comment.author.username && onNavigate?.(`profile:${comment.author.username}`)}
+            >
               <AvatarImage src={comment.author.avatar_url || undefined} />
               <AvatarFallback>
                 {comment.author.username?.charAt(0).toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <button
-              onClick={() => onNavigate?.('profile', comment.author.id)}
+              onClick={() => comment.author.username && onNavigate?.(`profile:${comment.author.username}`)}
               className="text-sm font-medium text-gray-900 hover:text-orange-600 hover:underline cursor-pointer transition-colors"
             >
               {comment.author.username || 'Anonymous'}

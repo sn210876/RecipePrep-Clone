@@ -272,16 +272,22 @@ export function BlogPostPage({ slug, onNavigate }: BlogPostPageProps) {
 
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
+              <Avatar
+                className="h-10 w-10 cursor-pointer"
+                onClick={() => post.author?.username && onNavigate(`profile:${post.author.username}`)}
+              >
                 <AvatarImage src={post.author?.avatar_url || undefined} />
                 <AvatarFallback>
                   {post.author?.username?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium text-gray-900">
+                <button
+                  onClick={() => post.author?.username && onNavigate(`profile:${post.author.username}`)}
+                  className="font-medium text-gray-900 hover:text-orange-600 hover:underline cursor-pointer transition-colors"
+                >
                   {post.author?.username || 'Anonymous'}
-                </p>
+                </button>
                 <p className="text-sm text-gray-500">
                   {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
                 </p>

@@ -216,15 +216,27 @@ export function Blog({ onNavigate }: BlogPageProps) {
                   )}
 
                   <div className="flex items-center gap-3 mb-3">
-                    <Avatar className="h-6 w-6">
+                    <Avatar
+                      className="h-6 w-6 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (post.author?.username) onNavigate(`profile:${post.author.username}`);
+                      }}
+                    >
                       <AvatarImage src={post.author?.avatar_url || undefined} />
                       <AvatarFallback>
                         {post.author?.username?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium text-gray-700">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (post.author?.username) onNavigate(`profile:${post.author.username}`);
+                      }}
+                      className="text-sm font-medium text-gray-700 hover:text-orange-600 hover:underline cursor-pointer transition-colors"
+                    >
                       {post.author?.username || 'Anonymous'}
-                    </span>
+                    </button>
                     <span className="text-sm text-gray-500">
                       {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
                     </span>
