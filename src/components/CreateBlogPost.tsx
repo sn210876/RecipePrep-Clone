@@ -134,23 +134,25 @@ export function CreateBlogPost({ open, onClose, onPostCreated }: CreateBlogPostP
               />
             </div>
             {coverImage && (
-              <div className="relative mt-2">
-                <img
-                  src={coverImage}
-                  alt="Cover preview"
-                  className="w-full h-48 object-cover rounded-lg"
-                />
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={() => {
-                    setCoverImage(null);
-                    setImageFile(null);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+              <div className="relative mt-2 flex justify-center">
+                <div className="relative w-full max-w-xs">
+                  <img
+                    src={coverImage}
+                    alt="Cover preview"
+                    className="w-full aspect-square object-cover rounded-lg"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => {
+                      setCoverImage(null);
+                      setImageFile(null);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -179,7 +181,8 @@ export function CreateBlogPost({ open, onClose, onPostCreated }: CreateBlogPostP
                     __html: content
                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-orange-600 hover:underline">$1</a>')
+                      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-orange-600 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+                      .replace(/(?<!href="|src=")(https?:\/\/[^\s<]+)/g, '<a href="$1" class="text-orange-600 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
                       .replace(/^- (.+)$/gm, '<li>$1</li>')
                       .replace(/(<li>.*<\/li>\n?)+/g, '<ul class="list-disc pl-4">$&</ul>')
                       .replace(/\n\n/g, '</p><p class="mt-2">')

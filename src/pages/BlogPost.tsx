@@ -240,7 +240,8 @@ export function BlogPostPage({ slug, onNavigate }: BlogPostPageProps) {
             __html: content.html
               .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
               .replace(/\*(.*?)\*/g, '<em>$1</em>')
-              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-orange-600 hover:underline">$1</a>')
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-orange-600 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
+              .replace(/(?<!href="|src=")(https?:\/\/[^\s<]+)/g, '<a href="$1" class="text-orange-600 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
               .replace(/^- (.+)$/gm, '<li>$1</li>')
               .replace(/(<li>.*<\/li>\n?)+/g, '<ul class="list-disc pl-4 my-4">$&</ul>')
               .replace(/\n\n/g, '</p><p class="mt-4">')
@@ -305,11 +306,13 @@ export function BlogPostPage({ slug, onNavigate }: BlogPostPageProps) {
           </div>
 
           {post.cover_image && (
-            <img
-              src={post.cover_image}
-              alt={post.title}
-              className="w-full h-96 object-cover rounded-xl mb-8"
-            />
+            <div className="flex justify-center mb-8">
+              <img
+                src={post.cover_image}
+                alt={post.title}
+                className="w-full max-w-md aspect-square object-cover rounded-xl shadow-lg"
+              />
+            </div>
           )}
 
           <div className="prose prose-lg max-w-none mb-8">
