@@ -98,6 +98,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     const params = new URLSearchParams(window.location.search);
     const editId = params.get('edit');
 
+    console.log('[AddRecipe] Checking for edit param:', editId);
+    console.log('[AddRecipe] Current URL:', window.location.href);
+
     if (editId) {
       setEditRecipeId(editId);
       setIsEditMode(true);
