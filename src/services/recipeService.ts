@@ -32,6 +32,7 @@ export interface DBRecipe {
 function dbRecipeToRecipe(dbRecipe: DBRecipe): Recipe {
   return {
     id: dbRecipe.id,
+    userId: dbRecipe.user_id,
     title: dbRecipe.title,
     ingredients: dbRecipe.ingredients,
     instructions: dbRecipe.instructions,
@@ -53,6 +54,7 @@ function dbRecipeToRecipe(dbRecipe: DBRecipe): Recipe {
 
 function recipeToDBRecipe(recipe: Omit<Recipe, 'id'>): Omit<DBRecipe, 'id' | 'created_at' | 'updated_at'> {
   return {
+    user_id: recipe.userId,
     title: recipe.title,
     ingredients: recipe.ingredients,
     instructions: recipe.instructions,

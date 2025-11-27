@@ -16,6 +16,7 @@ export interface RecipeStep {
 
 export interface Recipe {
   id: string;
+  userId?: string;
   title: string;
   ingredients: Ingredient[];
   instructions: string[];

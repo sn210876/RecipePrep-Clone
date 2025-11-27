@@ -201,6 +201,10 @@ useEffect(() => {
     }
   };
 
+  const handleEditRecipe = (recipeId: string) => {
+    onNavigate(`add-recipe?edit=${recipeId}`);
+  };
+
   const cuisines = useMemo(() => {
     const cuisineSet = new Set(allRecipes.map((r) => r.cuisineType));
     return Array.from(cuisineSet).sort();
@@ -346,6 +350,7 @@ useEffect(() => {
     onSave={handleSave}
     onCook={handleCook}
     onDelete={handleDeleteRecipe}
+    onEdit={handleEditRecipe}
     isAdmin={isAdmin}
     showReviewButton={true}
     preloadedSocialPost={socialPostsMap.get(recipe.id) || null}
@@ -627,6 +632,7 @@ useEffect(() => {
     onSave={handleSave}
     onCook={handleCook}
     onDelete={handleDeleteRecipe}
+    onEdit={handleEditRecipe}
     isAdmin={isAdmin}
     showReviewButton={true}
     preloadedSocialPost={socialPostsMap.get(recipe.id) || null}

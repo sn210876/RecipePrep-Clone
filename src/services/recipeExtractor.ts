@@ -164,8 +164,8 @@ if (isSocial) {
       mealTypes: ['Dinner'],
       dietaryTags: [],
       imageUrl: finalImageUrl, // ✅ Now using proxied URL
-      videoUrl: url,
-      notes: 'Extracted using your Render server',
+      videoUrl: undefined, // ❌ Don't save video URL
+      notes: `Recipe from ${data.channel || data.creator || 'video'}`,
       sourceUrl: url,
     };
   } catch (err: any) {

@@ -236,6 +236,16 @@ useEffect(() => {
       setCurrentPage(page);
       return;
     }
+
+    // Handle pages with query parameters (e.g., add-recipe?edit=123)
+    if (page.includes('?')) {
+      const [pageName, queryString] = page.split('?');
+      const url = routes[pageName] || '/';
+      window.history.pushState({}, '', `${url}?${queryString}`);
+      setCurrentPage(page);
+      return;
+    }
+
     const url = routes[page] || '/';
     window.history.pushState({}, '', url);
     setCurrentPage(page);
