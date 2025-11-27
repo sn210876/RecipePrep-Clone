@@ -122,15 +122,15 @@ export function RecipeDetailModal({
       </style>
 
       <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
-        <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0">
+        <DialogContent className="max-w-2xl w-[90%] max-h-[85vh] p-0 gap-0 overflow-hidden rounded-xl border">
           <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
           <div className="h-full overflow-y-auto overscroll-contain">
             <div className="relative min-h-full">
-              {/* Close Button - Fixed Position with highest z-index */}
+              {/* Close Button - Absolute Position with highest z-index */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="fixed top-2 right-2 z-[10000] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
+                className="absolute top-2 right-2 z-[10000] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpenChange(false);
@@ -140,7 +140,7 @@ export function RecipeDetailModal({
               </Button>
 
               {/* Hero Image Section */}
-              <div className="relative w-full h-56 sm:h-64 bg-gray-100">
+              <div className="relative w-full h-40 sm:h-48 bg-gray-100">
                 <img
                   src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
                     ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
@@ -181,9 +181,9 @@ export function RecipeDetailModal({
               </div>
 
               {/* Content */}
-              <div className="p-3 sm:p-4 pb-32 sm:pb-24">
+              <div className="p-3 sm:p-4 pb-6">
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-3 gap-2 mb-3 sm:mb-4">
+                <div className="grid grid-cols-3 gap-2 mb-2 sm:mb-3">
                   <div className="flex flex-col items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg border border-orange-100">
                     <div className="bg-primary p-1.5 sm:p-2 rounded-lg">
                       <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
@@ -223,7 +223,7 @@ export function RecipeDetailModal({
 
                 {/* Start Cooking Button */}
                 {hasSteps && (
-                  <div className="mb-3 sm:mb-4">
+                  <div className="mb-2 sm:mb-3">
                     <Button
                       size="lg"
                       onClick={() => setCookMode(true)}
@@ -239,7 +239,7 @@ export function RecipeDetailModal({
                 )}
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-2 mb-3 sm:mb-4">
+                <div className="grid grid-cols-2 gap-2 mb-2 sm:mb-3">
                   <Button
                     size="lg"
                     onClick={handleSaveRecipe}
@@ -266,7 +266,7 @@ export function RecipeDetailModal({
                 </div>
 
                 {/* Secondary Actions */}
-                <div className="flex gap-2 mb-4 sm:mb-6">
+                <div className="flex gap-2 mb-3 sm:mb-4">
                   <Button
                     onClick={handleAddToGroceryList}
                     className="flex-1 gap-2 bg-green-500 hover:bg-green-600 text-white border-2 border-green-600 min-h-[40px] sm:min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold"
@@ -287,7 +287,7 @@ export function RecipeDetailModal({
                   )}
                 </div>
 
-                <Separator className="my-4 sm:my-6" />
+                <Separator className="my-3 sm:my-4" />
 
                 {/* Ingredients Section */}
                 <div className="mb-6">
@@ -347,7 +347,7 @@ export function RecipeDetailModal({
                 {/* Notes Section */}
                 {recipe.notes && (
                   <>
-                    <Separator className="my-4 sm:my-6" />
+                    <Separator className="my-3 sm:my-4" />
                     <div className="mb-6">
                       <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
                         Notes
@@ -364,7 +364,7 @@ export function RecipeDetailModal({
                 {/* Source Link */}
                 {recipe.sourceUrl && (
                   <>
-                    <Separator className="my-4 sm:my-6" />
+                    <Separator className="my-3 sm:my-4" />
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
                       <div>
                         <h3 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1">
