@@ -13,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import { compressMultipleImages, isImageFile, formatFileSize } from '../lib/imageCompression';
+import { compressVideo, isVideoFile, getVideoInfo } from '../lib/videoCompression';
 
 interface UploadProps {
   onNavigate: (page: string) => void;
@@ -25,8 +27,8 @@ interface UserRecipe {
 }
 
 export function Upload({ onNavigate }: UploadProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [fileType, setFileType] = useState<'image' | 'video' | null>(null);
   const [postType, setPostType] = useState<'post' | 'daily'>('post');
   const [title, setTitle] = useState('');
@@ -64,48 +66,141 @@ export function Upload({ onNavigate }: UploadProps) {
       console.error('Error loading recipes:', error);
     }
   };
+const getVideoDuration = (file: File): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.type.startsWith('image/')) {
-        if (file.size > 10 * 1024 * 1024) {
-          toast.error('Image size must be less than 10MB');
-          return;
-        }
-        setFileType('image');
-        setSelectedFile(file);
-        setPreviewUrl(URL.createObjectURL(file));
-      } else if (file.type.startsWith('video/')) {
-        const video = document.createElement('video');
-        video.preload = 'metadata';
-        video.onloadedmetadata = () => {
-          window.URL.revokeObjectURL(video.src);
-          const duration = Math.floor(video.duration);
-          setVideoDuration(duration);
-          if (postType === 'daily' && duration > 30) {
-            toast.error('Daily videos must be 30 seconds or less');
-            return;
-          }
-          setFileType('video');
-          setSelectedFile(file);
-          setPreviewUrl(URL.createObjectURL(file));
-        };
-        video.src = URL.createObjectURL(file);
+    video.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(video.src);
+      const duration = Math.floor(video.duration);
+      
+      if (isNaN(duration) || duration === 0) {
+        reject(new Error('Invalid video duration'));
       } else {
-        toast.error('Please select an image or video file');
+        resolve(duration);
+      }
+    };
+
+    video.onerror = () => {
+      window.URL.revokeObjectURL(video.src);
+      reject(new Error('Failed to load video metadata'));
+    };
+
+    video.src = URL.createObjectURL(file);
+  });
+};
+ const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+
+  // Filter for images and videos
+  const allMediaFiles = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+
+  if (allMediaFiles.length === 0) {
+    toast.error('Please select at least one image or video');
+    return;
+  }
+
+  // Limit to 4 total media files
+  if (allMediaFiles.length > 4) {
+    toast.error('You can only upload up to 4 images/videos total');
+    return;
+  }
+
+  const validFiles: File[] = [];
+  const validPreviews: string[] = [];
+  let hasVideo = false;
+
+  const imageFiles: File[] = [];
+  const videoFiles: File[] = [];
+
+  for (const file of allMediaFiles) {
+    const isImage = isImageFile(file);
+    const isVideo = file.type.startsWith('video/');
+
+    if (isImage) {
+      imageFiles.push(file);
+    } else if (isVideo) {
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 100MB for videos)`);
+        continue;
+      }
+
+      try {
+        const duration = await getVideoDuration(file);
+
+        if (postType === 'daily' && duration > 30) {
+          toast.error(`${file.name}: Daily videos must be 30 seconds or less`);
+          continue;
+        }
+
+        hasVideo = true;
+        videoFiles.push(file);
+      } catch (error) {
+        console.error('Video load error:', error);
+        toast.error(`Failed to load ${file.name}`);
+        continue;
       }
     }
-  };
+  }
 
-  const handleClearImage = () => {
-    setSelectedFile(null);
-    setFileType(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
+  if (imageFiles.length > 0) {
+    const toastId = toast.loading('Compressing images...', { duration: 0 });
+
+    try {
+      const compressedResults = await compressMultipleImages(imageFiles, (index, total, progress) => {
+        if (progress.isCompressing) {
+          toast.loading(
+            `Compressing image ${index + 1}/${total}... ${Math.round(progress.percent)}%`,
+            { id: toastId, duration: 0 }
+          );
+        }
+      });
+
+      const totalSaved = compressedResults.reduce((sum, r) => sum + (r.originalSize - r.compressedSize), 0);
+
+      toast.success(
+        `Images compressed! Saved ${formatFileSize(totalSaved)}`,
+        { id: toastId, duration: 3000 }
+      );
+
+      for (const result of compressedResults) {
+        validFiles.push(result.file);
+        validPreviews.push(URL.createObjectURL(result.file));
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to compress images', { id: toastId });
+      return;
     }
-  };
+  }
+
+  for (const file of videoFiles) {
+    validFiles.push(file);
+    validPreviews.push(URL.createObjectURL(file));
+  }
+
+  if (validFiles.length === 0) {
+    toast.error('No valid files to upload');
+    return;
+  }
+
+  setSelectedFiles(validFiles);
+  setPreviewUrls(validPreviews);
+  setFileType(hasVideo ? 'video' : 'image');
+};
+
+    
+  // ✅ Better file type validation
+ 
+
+ const handleClearImage = () => {
+  previewUrls.forEach(url => URL.revokeObjectURL(url));
+  setSelectedFiles([]);
+  setPreviewUrls([]);
+  setFileType(null);
+};
+
 
   const togglePreview = () => {
     if (audioPreviewRef.current) {
@@ -152,159 +247,242 @@ export function Upload({ onNavigate }: UploadProps) {
   };
 
   const handleUpload = async () => {
-  if (!selectedFile) {
-    toast.error('Please select an image or video');
-    return;
-  }
-  if (postType === 'post' && !title.trim()) {
-    toast.error('Please enter a title');
-    return;
-  }
-  if (postType === 'daily' && fileType === 'video' && videoDuration > 30) {
-    toast.error('Daily videos must be 30 seconds or less');
-    return;
-  }
-
-  setUploading(true);
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) throw new Error('Not authenticated');
-
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', userData.user.id)
-      .maybeSingle();
-    if (!existingProfile) {
-      await supabase.from('profiles').insert({
-        id: userData.user.id,
-        username: userData.user.email?.split('@')[0] || 'user',
-        avatar_url: null,
-      });
+if (selectedFiles.length === 0) {      toast.error('Please select an image or video');
+      return;
+    }
+    if (postType === 'post' && !title.trim()) {
+      toast.error('Please enter a title');
+      return;
+    }
+    if (postType === 'daily' && fileType === 'video' && videoDuration > 30) {
+      toast.error('Daily videos must be 30 seconds or less');
+      return;
     }
 
-    const fileExt = selectedFile.name.split('.').pop();
-    const fileName = `${userData.user.id}/${Date.now()}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage
-      .from('posts')
-      .upload(fileName, selectedFile, { cacheControl: '3600', upsert: false });
-    if (uploadError) throw uploadError;
+    setUploading(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('Not authenticated');
 
-    const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userData.user.id)
+        .maybeSingle();
+      if (!existingProfile) {
+        await supabase.from('profiles').insert({
+          id: userData.user.id,
+          username: userData.user.email?.split('@')[0] || 'user',
+          avatar_url: null,
+        });
+      }
 
-    // Music data for both posts & dailies
-    const musicData: any = {
-      spotify_track_id: selectedTrack?.id || null,
-      spotify_track_name: selectedTrack?.name || null,
-      spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
-      spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
-      spotify_preview_url: selectedTrack?.preview_url || null,
-    };
+      // Compress and upload all files
+      const toastId = toast.loading('Processing files...', { duration: 0 });
+      const uploadedImageUrls: string[] = [];
+      const uploadedVideoUrls: string[] = [];
 
-    if (postType === 'daily') {
-      const dailyData: any = {
-        user_id: userData.user.id,
-        media_url: urlData.publicUrl,
-        media_type: fileType === 'image' ? 'photo' : 'video',
-        caption: caption.trim() || null,
-        duration: fileType === 'video' ? videoDuration : null,
-        ...musicData,
-      };
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        let fileToUpload = file;
+        const isVideo = isVideoFile(file);
+        const isImage = isImageFile(file);
 
-      const { error: insertError } = await supabase.from('dailies').insert(dailyData);
-      if (insertError) throw insertError;
-
-      await supabase.from('posts').insert({
-        user_id: userData.user.id,
-        title: 'Daily',
-        caption: caption.trim() || null,
-        [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
-        ...musicData,
-      });
-
-      toast.success('Daily posted successfully!');
-    } else {
-      let recipeLink = selectedRecipeId
-        ? `${window.location.origin}/#recipe/${selectedRecipeId}`
-        : null;
-
-      const postData: any = {
-        user_id: userData.user.id,
-        title: title.trim(),
-        caption: caption.trim() || null,
-        recipe_url: recipeLink,
-        [fileType === 'image' ? 'image_url' : 'video_url']: urlData.publicUrl,
-        ...musicData,
-      };
-
-      const { data: newPost, error: insertError } = await supabase
-        .from('posts')
-        .insert(postData)
-        .select()
-        .single();
-      if (insertError) throw insertError;
-
-      const hashtagTexts = extractHashtags(caption);
-      if (hashtagTexts.length > 0 && newPost) {
-        for (const tag of hashtagTexts) {
-          const { data: existingTag } = await supabase
-            .from('hashtags')
-            .select('id, usage_count')
-            .eq('tag', tag)
-            .maybeSingle();
-
-          let hashtagId: string;
-          if (existingTag) {
-            hashtagId = existingTag.id;
-            await supabase
-              .from('hashtags')
-              .update({ usage_count: existingTag.usage_count + 1 })
-              .eq('id', existingTag.id);
-          } else {
-            const { data: newTag } = await supabase
-              .from('hashtags')
-              .insert({ tag, usage_count: 1 })
-              .select()
-              .single();
-            hashtagId = newTag!.id;
+        if (isImage) {
+          toast.loading(`Compressing image ${i + 1}/${selectedFiles.length}...`, { id: toastId });
+          const results = await compressMultipleImages([file]);
+          fileToUpload = results[0].file;
+          const savedMB = ((file.size - fileToUpload.size) / (1024 * 1024)).toFixed(1);
+          console.log(`Image compressed: ${formatFileSize(file.size)} → ${formatFileSize(fileToUpload.size)} (saved ${savedMB}MB)`);
+        } else if (isVideo) {
+          toast.loading(`Compressing video ${i + 1}/${selectedFiles.length}...`, { id: toastId });
+          try {
+            const result = await compressVideo(file, (progress) => {
+              toast.loading(`Compressing video... ${Math.round(progress.percent)}%`, { id: toastId });
+            });
+            fileToUpload = result.file;
+            const savedMB = ((result.originalSize - result.compressedSize) / (1024 * 1024)).toFixed(1);
+            console.log(`Video compressed: ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (saved ${savedMB}MB)`);
+          } catch (error) {
+            console.warn('Video compression failed, using original:', error);
           }
-          await supabase
-            .from('post_hashtags')
-            .insert({ post_id: newPost.id, hashtag_id: hashtagId });
+        }
+
+        toast.loading(`Uploading file ${i + 1}/${selectedFiles.length}...`, { id: toastId });
+
+        const fileExt = fileToUpload.name.split('.').pop()?.toLowerCase();
+        const fileName = `${userData.user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('posts')
+          .upload(fileName, fileToUpload, { cacheControl: '3600', upsert: false });
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+
+        if (isVideo) {
+          uploadedVideoUrls.push(urlData.publicUrl);
+        } else {
+          uploadedImageUrls.push(urlData.publicUrl);
         }
       }
 
-      toast.success('Post uploaded successfully!');
-    }
+      toast.success('Files uploaded successfully!', { id: toastId });
 
-    handleClearImage();
-    setTitle('');
-    setCaption('');
-    setSelectedRecipeId('');
-    setSelectedTrack(null);
-    onNavigate('discover');
-  } catch (error: any) {
-    console.error('Upload error:', error);
-    toast.error(error.message || 'Failed to upload');
-  } finally {
-    setUploading(false);
-  }
-};
-    
+// Format URLs as JSON arrays if multiple, or single string if one
+const imageUrlForDb = uploadedImageUrls.length > 1
+  ? JSON.stringify(uploadedImageUrls)
+  : uploadedImageUrls.length === 1
+    ? uploadedImageUrls[0]
+    : null;
+
+const videoUrlForDb = uploadedVideoUrls.length > 1
+  ? JSON.stringify(uploadedVideoUrls)
+  : uploadedVideoUrls.length === 1
+    ? uploadedVideoUrls[0]
+    : null;
+
+// For dailies/single file posts, use the first uploaded file
+const mainImageUrl = uploadedImageUrls[0] || uploadedVideoUrls[0];
+
+      // Music data for both posts & dailies
+      const musicData: any = {
+        spotify_track_id: selectedTrack?.id || null,
+        spotify_track_name: selectedTrack?.name || null,
+        spotify_artist_name: selectedTrack?.artists?.[0]?.name || null,
+        spotify_album_art: selectedTrack?.album?.images?.[0]?.url || null,
+        spotify_preview_url: selectedTrack?.preview_url || null,
+      };
+
+      if (postType === 'daily') {
+        const dailyData: any = {
+          user_id: userData.user.id,
+          media_url: mainImageUrl,
+          media_type: fileType === 'image' ? 'photo' : 'video',
+          caption: caption.trim() || null,
+          duration: fileType === 'video' ? videoDuration : null,
+          ...musicData,
+        };
+
+        const { error: insertError } = await supabase.from('dailies').insert(dailyData);
+        if (insertError) throw insertError;
+
+        await supabase.from('posts').insert({
+          user_id: userData.user.id,
+          title: 'Daily',
+          caption: caption.trim() || null,
+          [fileType === 'image' ? 'image_url' : 'video_url']: mainImageUrl,
+          ...musicData,
+        });
+
+        toast.success('Daily posted successfully!');
+      } else {
+        let recipeLink = selectedRecipeId
+          ? `${window.location.origin}/#recipe/${selectedRecipeId}`
+          : null;
+
+        const postData: any = {
+          user_id: userData.user.id,
+          title: title.trim(),
+          caption: caption.trim() || null,
+          recipe_url: recipeLink,
+          image_url: imageUrlForDb,
+          video_url: videoUrlForDb,
+          ...musicData,
+        };
+
+        const { data: newPost, error: insertError } = await supabase
+          .from('posts')
+          .insert(postData)
+          .select()
+          .single();
+        if (insertError) throw insertError;
+
+        const hashtagTexts = extractHashtags(caption);
+        if (hashtagTexts.length > 0 && newPost) {
+          for (const tag of hashtagTexts) {
+            const { data: existingTag } = await supabase
+              .from('hashtags')
+              .select('id, usage_count')
+              .eq('tag', tag)
+              .maybeSingle();
+
+            let hashtagId: string;
+            if (existingTag) {
+              hashtagId = existingTag.id;
+              await supabase
+                .from('hashtags')
+                .update({ usage_count: existingTag.usage_count + 1 })
+                .eq('id', existingTag.id);
+            } else {
+              const { data: newTag } = await supabase
+                .from('hashtags')
+                .insert({ tag, usage_count: 1 })
+                .select()
+                .single();
+              hashtagId = newTag!.id;
+            }
+            await supabase
+              .from('post_hashtags')
+              .insert({ post_id: newPost.id, hashtag_id: hashtagId });
+          }
+        }
+
+        toast.success('Post uploaded successfully!');
+      }
+handleClearImage();
+setTitle('');
+setCaption('');
+setSelectedRecipeId('');
+setSelectedTrack(null);
+
+// Properly navigate to discover with clean URL
+window.history.replaceState({}, '', '/discover');
+onNavigate('discover');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32">
-      <div className="sticky top-0 bg-white border-b border-gray-200 z-40">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <button onClick={() => onNavigate('discover')} className="text-gray-600 hover:text-gray-900 font-medium">
-            Cancel
-          </button>
-          <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
-          <div className="w-16"></div>
+    <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent md:relative">
+      <div
+        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gray-50 md:min-h-screen overflow-hidden md:overflow-visible rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
+        style={{
+          maxHeight: window.innerWidth >= 768 ? 'none' : '90vh',
+          paddingBottom: 'max(10rem, env(safe-area-inset-bottom))'
+        }}
+      >
+        {/* Grabber handle - mobile only */}
+        <div className="flex md:hidden items-center justify-center pt-3 pb-2 bg-white">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
-      </div>
 
-      <div className="max-w-lg mx-auto p-4 space-y-4">
+        <div
+          className="sticky top-0 bg-white border-b border-gray-200 z-20"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        >
+          <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate('discover');
+              }}
+              className="text-gray-600 hover:text-gray-900 font-medium active:scale-95 transition-transform"
+            >
+              Cancel
+            </button>
+            <h1 className="text-lg font-semibold">New {postType === 'daily' ? 'Daily' : 'Post'}</h1>
+            <div className="w-16"></div>
+          </div>
+        </div>
+
+        {/* Scrollable content container */}
+        <div className="overflow-y-auto max-h-[calc(90vh-4rem)] md:overflow-visible md:max-h-none overscroll-contain">
+          <div className="max-w-lg mx-auto p-4 space-y-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <label className="text-sm font-medium text-gray-700 mb-2 block">Post Type</label>
           <div className="flex gap-2">
@@ -336,41 +514,109 @@ export function Upload({ onNavigate }: UploadProps) {
           )}
         </div>
 
-        {!previewUrl ? (
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
+{previewUrls.length === 0 ? (
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 sm:p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
             <label className="cursor-pointer">
-              <input type="file" accept="image/*,video/*" onChange={handleFileSelect} className="hidden" />
+      <input 
+  type="file" 
+  accept="image/*,video/*" 
+  multiple 
+  onChange={handleFileSelect} 
+  className="hidden" 
+/>
               <div className="space-y-4">
-                <div className="flex gap-4 justify-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
-                    <ImageIcon className="w-10 h-10 text-white" />
+                <div className="flex gap-3 sm:gap-4 justify-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
+                    <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg">
-                    <Video className="w-10 h-10 text-white" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg">
+                    <Video className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-lg font-semibold text-gray-900 mb-1">Upload a photo or video</p>
-                  <p className="text-sm text-gray-500">Click to select a file from your device</p>
+                  <p className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Upload a photo or video</p>
+                  <p className="text-xs sm:text-sm text-gray-500">Click to select a file from your device</p>
                 </div>
               </div>
             </label>
           </div>
-        ) : (
-          <div className="relative">
-            {fileType === 'image' ? (
-              <img src={previewUrl} alt="Preview" className="w-full aspect-square object-cover rounded-xl" />
-            ) : (
-              <video src={previewUrl} controls className="w-full aspect-square object-cover rounded-xl" />
+    ) : (
+  <div className="space-y-2">
+    {previewUrls.map((url, index) => {
+      const file = selectedFiles[index];
+      const isVideo = file?.type.startsWith('video/');
+      
+      return (
+        <div key={index} className="relative">
+          {isVideo ? (
+            <video 
+              src={url} 
+              controls 
+              className="w-full aspect-square object-cover rounded-xl"
+            />
+          ) : (
+            <img
+              src={url}
+              alt={`Preview ${index + 1}`}
+              className="w-full aspect-square object-cover rounded-xl"
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          <button
+            onClick={handleClearImage}
+            className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      );
+    })}
+    {selectedFiles.length < 4 && (
+              <label className="cursor-pointer">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  multiple 
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    const remainingSlots = 4 - selectedFiles.length;
+                    const newFiles = files.slice(0, remainingSlots);
+                    
+                    const validFiles: File[] = [];
+                    const validPreviews: string[] = [];
+                    
+                    for (const file of newFiles) {
+                      if (file.size > 10 * 1024 * 1024) {
+                        toast.error(`${file.name} is too large (max 10MB)`);
+                        continue;
+                      }
+                      if (!file.type.startsWith('image/')) {
+                        toast.error(`${file.name} is not an image`);
+                        continue;
+                      }
+                      validFiles.push(file);
+                      validPreviews.push(URL.createObjectURL(file));
+                    }
+                    
+                    if (validFiles.length > 0) {
+                      setSelectedFiles([...selectedFiles, ...validFiles]);
+                      setPreviewUrls([...previewUrls, ...validPreviews]);
+                      toast.success(`Added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`);
+                    }
+                  }}
+                  className="hidden" 
+                />
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-500 transition-colors">
+                  <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm font-medium text-gray-600">Add More Photos</p>
+                  <p className="text-xs text-gray-400 mt-1">{selectedFiles.length}/4 selected</p>
+                </div>
+              </label>
             )}
-            <button
-              onClick={handleClearImage}
-              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </div>
         )}
+       
 
         {/* Music Section */}
         <div className="bg-white rounded-xl p-4 shadow-sm space-y-3">
@@ -389,6 +635,8 @@ export function Upload({ onNavigate }: UploadProps) {
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
               <img
                 src={selectedTrack.album.images[0]?.url}
+                loading="lazy"
+                decoding="async"
                 alt="album"
                 className="w-12 h-12 rounded object-cover"
               />
@@ -465,7 +713,7 @@ export function Upload({ onNavigate }: UploadProps) {
                       <SelectItem key={recipe.id} value={recipe.id}>
                         <div className="flex items-center gap-2">
                           {recipe.image_url && (
-                            <img src={recipe.image_url} alt={recipe.title} className="w-8 h-8 rounded object-cover" />
+                            <img src={recipe.image_url} alt={recipe.title} className="w-8 h-8 rounded object-cover" loading="lazy" decoding="async" />
                           )}
                           <span>{recipe.title}</span>
                         </div>
@@ -478,44 +726,58 @@ export function Upload({ onNavigate }: UploadProps) {
           )}
         </div>
 
-        {selectedFile && (
+{selectedFiles.length > 0 && (
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
             <div className="flex items-start gap-3">
               <UploadIcon className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-orange-900">Ready to post</p>
-                <p className="text-xs text-orange-700 mt-1 truncate">{selectedFile.name}</p>
-              </div>
+<p className="text-xs text-orange-700 mt-1 truncate">
+  {selectedFiles.length} image{selectedFiles.length > 1 ? 's' : ''} selected
+</p>              </div>
             </div>
           </div>
         )}
       </div>
 
-     {/* Submit Button at Bottom */}
-      <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-white via-white to-transparent z-40">
+      {/* Submit Button at Bottom */}
+   <div 
+  className="fixed left-0 right-0 px-4 pb-6 bg-gradient-to-t from-white via-white to-transparent z-[60] lg:z-10 lg:bottom-0"
+  style={{ 
+    bottom: '80px',
+    paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))'
+  }}
+>
         <div className="max-w-lg mx-auto flex justify-center">
           <Button
             onClick={handleUpload}
-            disabled={!selectedFile || (postType === 'post' && !title.trim()) || uploading}
-            className="px-16 py-6 text-lg font-semibold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg rounded-full"
+disabled={selectedFiles.length === 0 || (postType === 'post' && !title.trim()) || uploading}
+            className="px-12 sm:px-16 py-5 sm:py-6 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg rounded-full"
           >
             {uploading ? 'Submitting...' : 'Submit'}
           </Button>
+        </div>
         </div>
       </div>
 
       {/* Music Picker Modal */}
       {showMusicPicker && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-end md:items-center justify-center">
-          <div className="bg-white w-full md:max-w-lg md:rounded-2xl md:max-h-[80vh] flex flex-col">
-            <div className="p-4 border-b flex items-center justify-between">
+  <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div
+            className="bg-white w-full md:max-w-lg rounded-2xl flex flex-col"
+            style={{
+              maxHeight: '85vh',
+              paddingBottom: 'env(safe-area-inset-bottom)'
+            }}
+          >
+            <div className="p-4 border-b flex items-center justify-between flex-shrink-0">
               <h3 className="font-semibold text-lg">Choose Music</h3>
               <button onClick={() => setShowMusicPicker(false)}>
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="p-4">
+            <div className="p-4 flex-shrink-0">
               <input
                 type="text"
                 value={musicSearch}
@@ -529,7 +791,7 @@ export function Upload({ onNavigate }: UploadProps) {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 pb-20 md:pb-4 space-y-2">
+            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
               {searchingMusic && <p className="text-center text-gray-500 py-8">Searching...</p>}
               {musicResults.map((track) => (
                 <button
@@ -543,16 +805,18 @@ export function Upload({ onNavigate }: UploadProps) {
                 >
                   <img
                     src={track.album.images[0]?.url || '/placeholder.png'}
+                    loading="lazy"
+                    decoding="async"
                     alt="album"
-                    className="w-12 h-12 rounded"
+                    className="w-12 h-12 rounded flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{track.name}</p>
-                    <p className="text-sm text-gray-600 truncate">
+                    <p className="font-medium text-sm truncate">{track.name}</p>
+                    <p className="text-xs text-gray-600 truncate">
                       {track.artists.map((a: any) => a.name).join(', ')}
                     </p>
                   </div>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">30s Preview</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded flex-shrink-0">30s Preview</span>
                 </button>
               ))}
               {musicSearch && musicResults.length === 0 && !searchingMusic && (
@@ -562,6 +826,7 @@ export function Upload({ onNavigate }: UploadProps) {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
