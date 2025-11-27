@@ -221,7 +221,6 @@ useEffect(() => {
       'messages': '/messages',
       'settings': '/settings',
      'subscription': '/subscription',  // ← ADD THIS LINE
-
       'onboarding': '/onboarding',
       'blog': '/blog',
     };
