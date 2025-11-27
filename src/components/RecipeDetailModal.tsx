@@ -385,7 +385,8 @@ export function RecipeDetailModal({
             </div>
           </div>
         </div>
-      </DialogContent>
+     </DialogContent>
     </Dialog>
+    </>
   );
 }
