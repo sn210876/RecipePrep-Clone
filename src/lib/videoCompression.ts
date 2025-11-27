@@ -22,18 +22,16 @@ export async function compressVideo(
   const originalSize = file.size;
   const originalSizeMB = originalSize / (1024 * 1024);
 
-  onProgress?.({ percent: 5, stage: 'loading' });
+  onProgress?.({ percent: 10, stage: 'loading' });
 
   const videoInfo = await getVideoInfo(file);
 
-  onProgress?.({ percent: 15, stage: 'analyzing' });
+  onProgress?.({ percent: 30, stage: 'analyzing' });
 
-  const needsCompression =
-    originalSizeMB > MAX_VIDEO_SIZE_MB ||
-    videoInfo.width > MAX_WIDTH ||
-    videoInfo.height > MAX_HEIGHT;
+  const isTooBig = originalSizeMB > MAX_VIDEO_SIZE_MB;
+  const isTooLarge = videoInfo.width > MAX_WIDTH || videoInfo.height > MAX_HEIGHT;
 
-  if (!needsCompression) {
+  if (!isTooBig && !isTooLarge) {
     onProgress?.({ percent: 100, stage: 'complete' });
     return {
       file,
@@ -43,29 +41,22 @@ export async function compressVideo(
     };
   }
 
-  onProgress?.({ percent: 25, stage: 'compressing' });
-
-  try {
-    const compressedFile = await processVideoWithMediaRecorder(file, videoInfo, onProgress);
-
-    onProgress?.({ percent: 100, stage: 'complete' });
-
-    return {
-      file: compressedFile,
-      originalSize,
-      compressedSize: compressedFile.size,
-      compressionRatio: ((originalSize - compressedFile.size) / originalSize) * 100,
-    };
-  } catch (error) {
-    console.warn('Video compression failed, using original file:', error);
-    onProgress?.({ percent: 100, stage: 'complete' });
-    return {
-      file,
-      originalSize,
-      compressedSize: originalSize,
-      compressionRatio: 0,
-    };
+  if (isTooBig) {
+    console.warn(`Video is ${originalSizeMB.toFixed(1)}MB (max ${MAX_VIDEO_SIZE_MB}MB). Using original with audio preserved.`);
   }
+
+  if (isTooLarge) {
+    console.warn(`Video is ${videoInfo.width}x${videoInfo.height} (max ${MAX_WIDTH}x${MAX_HEIGHT}). Using original with audio preserved.`);
+  }
+
+  onProgress?.({ percent: 100, stage: 'complete' });
+
+  return {
+    file,
+    originalSize,
+    compressedSize: originalSize,
+    compressionRatio: 0,
+  };
 }
 
 async function processVideoWithMediaRecorder(

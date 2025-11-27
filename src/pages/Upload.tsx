@@ -295,16 +295,20 @@ if (selectedFiles.length === 0) {      toast.error('Please select an image or vi
           const savedMB = ((file.size - fileToUpload.size) / (1024 * 1024)).toFixed(1);
           console.log(`Image compressed: ${formatFileSize(file.size)} → ${formatFileSize(fileToUpload.size)} (saved ${savedMB}MB)`);
         } else if (isVideo) {
-          toast.loading(`Compressing video ${i + 1}/${selectedFiles.length}...`, { id: toastId });
+          toast.loading(`Analyzing video ${i + 1}/${selectedFiles.length}...`, { id: toastId });
           try {
             const result = await compressVideo(file, (progress) => {
-              toast.loading(`Compressing video... ${Math.round(progress.percent)}%`, { id: toastId });
+              toast.loading(`Analyzing video... ${Math.round(progress.percent)}%`, { id: toastId });
             });
             fileToUpload = result.file;
-            const savedMB = ((result.originalSize - result.compressedSize) / (1024 * 1024)).toFixed(1);
-            console.log(`Video compressed: ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)} (saved ${savedMB}MB)`);
+
+            const fileSizeMB = result.originalSize / (1024 * 1024);
+            if (fileSizeMB > 10) {
+              toast.loading(`Video is ${fileSizeMB.toFixed(1)}MB. This may take longer to upload.`, { id: toastId, duration: 2000 });
+            }
+            console.log(`Video checked: ${formatFileSize(result.originalSize)}`);
           } catch (error) {
-            console.warn('Video compression failed, using original:', error);
+            console.warn('Video analysis failed, using original:', error);
           }
         }
 
