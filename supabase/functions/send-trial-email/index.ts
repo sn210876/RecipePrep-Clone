@@ -7,6 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+const GRACE_PERIOD_DAYS = 3;
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -55,8 +57,8 @@ Deno.serve(async (req: Request) => {
       const shouldNotify = (
         (daysRemaining >= 1 && daysRemaining <= 7) ||
         (daysRemaining === 0) ||
-        (daysRemaining >= -7 && daysRemaining < 0) ||
-        (daysRemaining === -8)
+        (daysRemaining >= -GRACE_PERIOD_DAYS && daysRemaining < 0) ||
+        (daysRemaining === -(GRACE_PERIOD_DAYS + 1))
       );
 
       if (!shouldNotify) continue;
@@ -164,7 +166,7 @@ async function sendEmailViaResend(
 function getNotificationCategory(daysRemaining: number): string {
   if (daysRemaining > 0) return "trial_warning";
   if (daysRemaining === 0) return "trial_expired";
-  if (daysRemaining >= -7) return "grace_period";
+  if (daysRemaining >= -GRACE_PERIOD_DAYS) return "grace_period";
   return "access_blocked";
 }
 
@@ -173,8 +175,8 @@ function getEmailSubject(daysRemaining: number): string {
     return `🔔 ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} left in your MealScrape trial`;
   } else if (daysRemaining === 0) {
     return "⏰ Your MealScrape trial expires today!";
-  } else if (daysRemaining >= -7) {
-    const daysLeft = 7 + daysRemaining;
+  } else if (daysRemaining >= -GRACE_PERIOD_DAYS) {
+    const daysLeft = GRACE_PERIOD_DAYS + daysRemaining;
     return `⚠️ Grace Period: ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left to subscribe`;
   } else {
     return "🔒 Subscription Required - Restore Your Access";
@@ -202,8 +204,8 @@ function getEmailHTML(daysRemaining: number): string {
       <p style="font-size: 18px; font-weight: bold;">This is your last day of free access.</p>
       <p>Subscribe now to keep all your recipes and continue using all features.</p>
     `;
-  } else if (daysRemaining >= -7) {
-    const daysLeft = 7 + daysRemaining;
+  } else if (daysRemaining >= -GRACE_PERIOD_DAYS) {
+    const daysLeft = GRACE_PERIOD_DAYS + daysRemaining;
     content = `
       <h1 style="color: #dc2626;">⚠️ Trial Expired - Grace Period</h1>
       <p style="font-size: 18px; font-weight: bold; color: #dc2626;">You have ${daysLeft} day${daysLeft !== 1 ? "s" : ""} of grace period left!</p>

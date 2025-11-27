@@ -12,7 +12,7 @@ export interface SubscriptionStatus {
   needsPayment: boolean;
 }
 
-const GRACE_PERIOD_DAYS = 7;
+const GRACE_PERIOD_DAYS = 3;
 
 export async function checkSubscriptionAccess(userId: string): Promise<SubscriptionStatus> {
   try {

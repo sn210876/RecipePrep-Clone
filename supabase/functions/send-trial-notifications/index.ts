@@ -7,7 +7,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const ADMIN_EMAIL = "mealscrapeapp@gmail.com";
+const ADMIN_USER_ID = "d298f0c2-8748-4a0a-bb0c-9c8605595c58";
+const GRACE_PERIOD_DAYS = 3;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -23,27 +24,7 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log("[send-trial-notifications] Starting notification check");
-
-    // Get admin user ID
-    const { data: adminProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", ADMIN_EMAIL)
-      .maybeSingle();
-
-    if (!adminProfile) {
-      console.error("[send-trial-notifications] Admin user not found:", ADMIN_EMAIL);
-      return new Response(
-        JSON.stringify({ error: "Admin user not found" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const adminId = adminProfile.id;
-    console.log("[send-trial-notifications] Admin ID:", adminId);
+    console.log("[send-trial-notifications] Admin ID:", ADMIN_USER_ID);
 
     const now = new Date();
     const results = {
@@ -52,7 +33,7 @@ Deno.serve(async (req: Request) => {
       errors: [] as string[],
     };
 
-    // Get all active early bird subscriptions
+    // Get all early bird subscriptions
     const { data: subscriptions, error: subError } = await supabase
       .from("subscriptions")
       .select("user_id, trial_ends_at")
@@ -74,17 +55,18 @@ Deno.serve(async (req: Request) => {
       // Send notifications for:
       // - Days 7 through 1 before expiration
       // - Day 0 (expiration day)
-      // - Days -1 through -7 (grace period)
-      // - Day -8 and beyond (access blocked)
+      // - Days -1 through -3 (grace period - 3 DAYS)
+      // - Day -4 and beyond (access blocked)
 
       const shouldNotify = (
         (daysRemaining >= 1 && daysRemaining <= 7) || // 7 days countdown
         (daysRemaining === 0) ||                      // Expiration day
-        (daysRemaining >= -7 && daysRemaining < 0) || // Grace period
-        (daysRemaining === -8)                        // First day of blocked access
+        (daysRemaining >= -GRACE_PERIOD_DAYS && daysRemaining < 0) || // Grace period (3 days)
+        (daysRemaining === -(GRACE_PERIOD_DAYS + 1))  // First day of blocked access
       );
 
       if (!shouldNotify) {
+        console.log(`[send-trial-notifications] Skipping user ${sub.user_id} - no notification needed`);
         continue;
       }
 
@@ -107,7 +89,7 @@ Deno.serve(async (req: Request) => {
       // Send DM
       const dmSuccess = await sendDM(
         supabase,
-        adminId,
+        ADMIN_USER_ID,
         sub.user_id,
         daysRemaining
       );
@@ -129,9 +111,6 @@ Deno.serve(async (req: Request) => {
       } else {
         results.errors.push(`Failed to send DM to user ${sub.user_id}`);
       }
-
-      // TODO: Send email notification
-      // Would integrate with Resend or SendGrid here
     }
 
     console.log("[send-trial-notifications] Completed:", results);
@@ -166,6 +145,8 @@ async function sendDM(
   daysRemaining: number
 ): Promise<boolean> {
   try {
+    console.log(`[sendDM] Attempting to send DM from ${adminId} to ${userId}`);
+
     // Get or create conversation
     const { data: existingConvo } = await supabase
       .from("conversations")
@@ -176,6 +157,7 @@ async function sendDM(
     let conversationId = existingConvo?.id;
 
     if (!conversationId) {
+      console.log(`[sendDM] Creating new conversation between ${adminId} and ${userId}`);
       const { data: newConvo, error: convoError } = await supabase
         .from("conversations")
         .insert({
@@ -187,11 +169,14 @@ async function sendDM(
         .single();
 
       if (convoError) {
-        console.error("Error creating conversation:", convoError);
+        console.error("[sendDM] Error creating conversation:", convoError);
         return false;
       }
 
       conversationId = newConvo.id;
+      console.log(`[sendDM] Created conversation: ${conversationId}`);
+    } else {
+      console.log(`[sendDM] Using existing conversation: ${conversationId}`);
     }
 
     // Send message
@@ -206,7 +191,7 @@ async function sendDM(
       });
 
     if (msgError) {
-      console.error("Error sending DM:", msgError);
+      console.error("[sendDM] Error sending DM:", msgError);
       return false;
     }
 
@@ -216,9 +201,10 @@ async function sendDM(
       .update({ last_message_at: new Date().toISOString() })
       .eq("id", conversationId);
 
+    console.log(`[sendDM] Successfully sent DM to user ${userId}`);
     return true;
   } catch (error) {
-    console.error("Error in sendDM:", error);
+    console.error("[sendDM] Error:", error);
     return false;
   }
 }
@@ -228,7 +214,7 @@ function getNotificationCategory(daysRemaining: number): string {
     return "trial_warning";
   } else if (daysRemaining === 0) {
     return "trial_expired";
-  } else if (daysRemaining >= -7) {
+  } else if (daysRemaining >= -GRACE_PERIOD_DAYS) {
     return "grace_period";
   } else {
     return "access_blocked";
@@ -240,9 +226,10 @@ function getTrialExpirationMessage(daysRemaining: number): string {
     return `🔔 Trial Reminder: You have ${daysRemaining} day${daysRemaining !== 1 ? "s" : ""} left in your free trial!\n\nSubscribe now to continue enjoying all features. Pay what you want - starting at just $1/month.\n\nVisit the Subscription page to choose your plan.`;
   } else if (daysRemaining === 0) {
     return `⏰ Your trial expires today!\n\nDon't lose access to your recipes and features. Subscribe now to continue - pay what you want, starting at $1/month.\n\nVisit the Subscription page to choose your plan.`;
-  } else if (daysRemaining >= -7) {
+  } else if (daysRemaining >= -GRACE_PERIOD_DAYS) {
     const daysInGrace = Math.abs(daysRemaining);
-    return `⚠️ Trial Expired - Grace Period (${7 - daysInGrace} days left)\n\nYour trial has ended, but you still have ${7 - daysInGrace} day${(7 - daysInGrace) !== 1 ? "s" : ""} of access.\n\nSubscribe now to avoid losing access to all features. Pay what you want - starting at $1/month.\n\nVisit the Subscription page to choose your plan.`;
+    const daysLeft = GRACE_PERIOD_DAYS - daysInGrace;
+    return `⚠️ Trial Expired - Grace Period (${daysLeft} day${daysLeft !== 1 ? "s" : ""} left)\n\nYour trial has ended, but you still have ${daysLeft} day${daysLeft !== 1 ? "s" : ""} of access.\n\nSubscribe now to avoid losing access to all features. Pay what you want - starting at $1/month.\n\nVisit the Subscription page to choose your plan.`;
   } else {
     return `🔒 Subscription Required\n\nYour trial and grace period have ended. Subscribe now to regain access to all features.\n\nPay what you want - starting at just $1/month.\n\nVisit the Subscription page to choose your plan.`;
   }
