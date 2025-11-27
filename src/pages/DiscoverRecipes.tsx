@@ -202,7 +202,10 @@ useEffect(() => {
   };
 
   const handleEditRecipe = (recipeId: string) => {
-    onNavigate(`add-recipe?edit=${recipeId}`);
+    // Update URL with query parameter
+    window.history.pushState({}, '', `/add-recipe?edit=${recipeId}`);
+    // Navigate to add-recipe page
+    onNavigate('add-recipe');
   };
 
   const cuisines = useMemo(() => {
