@@ -114,8 +114,9 @@ export function RecipeDetailModal({
   return (
           <style dangerouslySetInnerHTML={{ __html: modalOverlayStyle }} />
 
+
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0">
+      <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0 z-[60]">overflow-hidden m-0 rounded-none border-0">
         <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
         <div className="h-full overflow-y-auto overscroll-contain">
           <div className="relative min-h-full">
