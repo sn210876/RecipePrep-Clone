@@ -158,6 +158,10 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
   const getSubscriptionStatus = () => {
     if (!subscription) return { title: 'No Subscription', color: 'gray' };
 
+    if (subscription.subscription_type === 'referral_lifetime') {
+      return { title: '👑 Lifetime Free (50 Referrals!)', color: 'green', icon: Crown };
+    }
+
     if (subscription.subscription_type === 'family_code') {
       return { title: '🔥 Lifetime Free', color: 'green', icon: Crown };
     }
@@ -257,7 +261,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
               <Users className="w-6 h-6 text-purple-600" />
               Earn Free Access
             </CardTitle>
-            <CardDescription>Get 3 friends to sign up = 1 year free!</CardDescription>
+            <CardDescription>3 referrals = 2 months free • 50 referrals = Lifetime!</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Progress */}
@@ -273,7 +277,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
                 />
               </div>
               <p className="text-sm text-gray-600 mt-2">
-                {nextRewardIn === 0 ? '🎉 You earned a free year!' : `${nextRewardIn} more referral${nextRewardIn > 1 ? 's' : ''} to earn a free year!`}
+                {nextRewardIn === 0 ? '🎉 You earned 2 months free!' : `${nextRewardIn} more referral${nextRewardIn > 1 ? 's' : ''} to earn 2 months free!`}
               </p>
             </div>
 
@@ -284,8 +288,8 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
                 <div className="text-sm text-gray-600">Total Referrals</div>
               </div>
               <div className="bg-white rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-pink-600">{referralCode?.years_earned || 0}</div>
-                <div className="text-sm text-gray-600">Years Earned</div>
+                <div className="text-3xl font-bold text-pink-600">{(referralCode?.years_earned || 0) * 2}</div>
+                <div className="text-sm text-gray-600">Months Earned</div>
               </div>
             </div>
 
@@ -321,8 +325,8 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
               <ul className="text-sm text-purple-800 mt-2 space-y-1">
                 <li>✅ Share your link with friends</li>
                 <li>✅ They sign up using your link</li>
-                <li>✅ Every 3 signups = 1 year free for you!</li>
-                <li>✅ Keep earning - no limit!</li>
+                <li>✅ Every 3 signups = 2 months free!</li>
+                <li>🏆 50 total signups = Lifetime FREE!</li>
               </ul>
             </div>
           </CardContent>

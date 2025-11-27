@@ -68,18 +68,39 @@ export default function AuthForm() {
       } else {
         // Sign Up
         console.log('📝 Attempting sign up...');
-        const { error } = await supabase.auth.signUp({
+
+        // Check for referral code in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const referralCode = urlParams.get('ref');
+
+        const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
             data: {
               full_name: formData.name,
+              referral_code: referralCode || null,
             },
             emailRedirectTo: getRedirectUrl(),
           },
         });
 
         if (error) throw error;
+
+        // Track referral after signup if code exists
+        if (referralCode && data.user) {
+          console.log('🎯 Tracking referral signup with code:', referralCode);
+          try {
+            await supabase.rpc('track_referral_signup', {
+              p_user_id: data.user.id,
+              p_referral_code: referralCode
+            });
+            console.log('✅ Referral tracked successfully');
+          } catch (refError) {
+            console.error('⚠️ Referral tracking failed:', refError);
+          }
+        }
+
         console.log('✅ Sign up successful - check email');
         setMessage('Check your email for the verification link!');
       }

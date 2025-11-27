@@ -114,17 +114,18 @@ When they enter a family code in the app:
 | **Early Bird** | 6 months free trial | Then $1+ per month | Sign up during early bird period |
 | **Family Code** | **LIFETIME** free | $0 forever | Admin generates and gives code |
 | **Regular** | Monthly | $1+ per month | Choose amount and pay |
-| **Referral Reward** | 1 year per 3 referrals | $0 during reward period | Share referral code |
+| **Referral Reward** | 2 months per 3 referrals | $0 during reward period | Share referral code |
+| **Referral Lifetime** | 50 total referrals | FREE forever | Earn through referrals |
 
 ---
 
 ## Referral System
 
-- **3 successful signups** = 1 year free
-- **Another 3 signups** = Another year free
-- **Unlimited stacking** - keep earning!
+- **3 successful signups** = 2 months free
+- **Another 3 signups** = Another 2 months free
+- **50 total signups** = Lifetime FREE! 👑
+- **Unlimited stacking** - keep earning months!
 - Works for **everyone** (early birds, paying users, family code users)
-- Does NOT give lifetime access (only family codes do)
 
 ---
 
