@@ -138,11 +138,15 @@ export async function updateRecipe(id: string, updates: Partial<Recipe>): Promis
     .update({ ...dbUpdates, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('Error updating recipe:', error);
     throw new Error('Failed to update recipe');
+  }
+
+  if (!data) {
+    throw new Error('Recipe not found or you do not have permission to update it');
   }
 
   return dbRecipeToRecipe(data);
