@@ -13,6 +13,7 @@ import CommentModal from '../components/CommentModal';
 import { FollowersModal } from '../components/FollowersModal';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
+import { compressImageWithOptions, formatFileSize, isImageFile } from '../lib/imageCompression';
 // ✅ ADD THIS - Loading skeleton component
 const ProfileSkeleton = () => (
   <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden animate-pulse">
@@ -352,19 +353,32 @@ useEffect(() => {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !currentUserId) return;
-    if (!file.type.startsWith('image/')) {
+    if (!isImageFile(file)) {
       toast.error('Please select an image');
       return;
     }
     setUploading(true);
-    toast.loading('Resizing & uploading avatar...', { duration: 0 });
+    const toastId = toast.loading('Compressing avatar...', { duration: 0 });
     try {
-      const resizedFile = await resizeImage(file, 1080, 1080, 0.9);
-      const fileExt = resizedFile.name.split('.').pop() || 'jpg';
+      const originalSize = file.size;
+
+      const result = await compressImageWithOptions(
+        file,
+        { maxWidthOrHeight: 1080, maxSizeMB: 0.3 },
+        (progress) => {
+          if (progress.isCompressing) {
+            toast.loading(`Compressing... ${Math.round(progress.percent)}%`, { id: toastId, duration: 0 });
+          }
+        }
+      );
+
+      toast.loading('Uploading avatar...', { id: toastId, duration: 0 });
+
+      const fileExt = 'jpg';
       const fileName = `${currentUserId}/avatar.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, resizedFile, { upsert: true });
+        .upload(fileName, result.file, { upsert: true });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
       const { error: updateError } = await supabase
@@ -373,11 +387,14 @@ useEffect(() => {
         .eq('id', currentUserId);
       if (updateError) throw updateError;
       setProfile(prev => prev ? { ...prev, avatar_url: publicUrl + '?t=' + Date.now() } : null);
-      toast.dismiss();
-      toast.success('Avatar updated instantly!');
+
+      const savedPercent = Math.round(((originalSize - result.compressedSize) / originalSize) * 100);
+      toast.success(
+        `Avatar updated! ${formatFileSize(originalSize)} → ${formatFileSize(result.compressedSize)} (${savedPercent}% smaller)`,
+        { id: toastId, duration: 4000 }
+      );
     } catch (err: any) {
-      toast.dismiss();
-      toast.error('Upload failed: ' + err.message);
+      toast.error('Upload failed: ' + err.message, { id: toastId });
     } finally {
       setUploading(false);
     }
@@ -386,19 +403,32 @@ useEffect(() => {
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !currentUserId) return;
-    if (!file.type.startsWith('image/')) {
+    if (!isImageFile(file)) {
       toast.error('Please select an image');
       return;
     }
     setUploading(true);
-    toast.loading('Resizing & uploading banner...', { duration: 0 });
+    const toastId = toast.loading('Compressing banner...', { duration: 0 });
     try {
-      const resizedFile = await resizeImage(file, 1920, 600, 0.9);
-      const fileExt = resizedFile.name.split('.').pop() || 'jpg';
+      const originalSize = file.size;
+
+      const result = await compressImageWithOptions(
+        file,
+        { maxWidthOrHeight: 1920, maxSizeMB: 0.5 },
+        (progress) => {
+          if (progress.isCompressing) {
+            toast.loading(`Compressing... ${Math.round(progress.percent)}%`, { id: toastId, duration: 0 });
+          }
+        }
+      );
+
+      toast.loading('Uploading banner...', { id: toastId, duration: 0 });
+
+      const fileExt = 'jpg';
       const fileName = `${currentUserId}/banner.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from('banners')
-        .upload(fileName, resizedFile, { upsert: true });
+        .upload(fileName, result.file, { upsert: true });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(fileName);
       const { error: updateError } = await supabase
@@ -407,11 +437,14 @@ useEffect(() => {
         .eq('id', currentUserId);
       if (updateError) throw updateError;
       setProfile(prev => prev ? { ...prev, banner_url: publicUrl + '?t=' + Date.now() } : null);
-      toast.dismiss();
-      toast.success('Banner updated instantly!');
+
+      const savedPercent = Math.round(((originalSize - result.compressedSize) / originalSize) * 100);
+      toast.success(
+        `Banner updated! Saved ${savedPercent}% bandwidth`,
+        { id: toastId, duration: 3000 }
+      );
     } catch (err: any) {
-      toast.dismiss();
-      toast.error('Upload failed: ' + err.message);
+      toast.error('Upload failed: ' + err.message, { id: toastId });
     } finally {
       setUploading(false);
     }

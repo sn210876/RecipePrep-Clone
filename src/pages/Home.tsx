@@ -26,6 +26,7 @@ export function Home({ onNavigate }: HomeProps) {
                 src="/favicon.ico.jpg"
                 alt="Meal Scrape Logo"
                 className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
+                loading="lazy"
               />
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-3 px-4">

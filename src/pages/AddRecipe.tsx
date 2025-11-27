@@ -13,7 +13,8 @@ import { toast } from 'sonner';
 import { extractRecipeFromUrl, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { downloadAndStoreImage } from '@/lib/imageStorage'; // ← NEW IMPORT
+import { downloadAndStoreImage } from '@/lib/imageStorage';
+import { compressImage, formatFileSize, isImageFile } from '@/lib/imageCompression';
 
 
 function parseTimeValue(value: string | number): number {
@@ -142,32 +143,46 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    if (!isImageFile(file)) {
       toast.error('Please select an image file');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
-      return;
-    }
-
     setIsUploadingImage(true);
+    const toastId = toast.loading('Compressing image...', { duration: 0 });
+
     try {
+      const originalSize = file.size;
+
+      const result = await compressImage(file, (progress) => {
+        if (progress.isCompressing) {
+          toast.loading(
+            `Compressing image... ${Math.round(progress.percent)}%`,
+            { id: toastId, duration: 0 }
+          );
+        }
+      });
+
+      const compressedFile = result.file;
+      const savedBytes = originalSize - result.compressedSize;
+      const savedPercent = Math.round(((savedBytes) / originalSize) * 100);
+
+      toast.loading('Uploading compressed image...', { id: toastId, duration: 0 });
+
       const { supabase } = await import('@/lib/supabase');
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        toast.error('You must be logged in to upload images');
+        toast.error('You must be logged in to upload images', { id: toastId });
         return;
       }
 
-      const fileExt = file.name.split('.').pop();
+      const fileExt = 'jpg';
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
       const { error } = await supabase.storage
         .from('recipe-images')
-        .upload(fileName, file, {
+        .upload(fileName, compressedFile, {
           cacheControl: '3600',
           upsert: false
         });
@@ -178,10 +193,14 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         .from('recipe-images')
         .getPublicUrl(fileName);
 
-      setUploadedImageFile(file);
+      setUploadedImageFile(compressedFile);
       setUploadedImageUrl(publicUrl);
       setImageUrl('');
-      toast.success('Image uploaded successfully!');
+
+      toast.success(
+        `Image uploaded! Reduced ${formatFileSize(originalSize)} → ${formatFileSize(result.compressedSize)} (${savedPercent}% smaller)`,
+        { id: toastId, duration: 4000 }
+      );
     } catch (error: any) {
       toast.error(error.message || 'Failed to upload image');
     } finally {

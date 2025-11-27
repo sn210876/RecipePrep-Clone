@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import { compressMultipleImages, isImageFile, formatFileSize } from '../lib/imageCompression';
 
 interface UploadProps {
   onNavigate: (page: string) => void;
@@ -93,10 +94,8 @@ const getVideoDuration = (file: File): Promise<number> => {
   if (files.length === 0) return;
 
   // Filter for images and videos
-  const imageFiles = files.filter(f => f.type.startsWith('image/'));
-  const videoFiles = files.filter(f => f.type.startsWith('video/'));
-  const allMediaFiles = [...imageFiles, ...videoFiles];
-  
+  const allMediaFiles = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+
   if (allMediaFiles.length === 0) {
     toast.error('Please select at least one image or video');
     return;
@@ -112,39 +111,70 @@ const getVideoDuration = (file: File): Promise<number> => {
   const validPreviews: string[] = [];
   let hasVideo = false;
 
+  const imageFiles: File[] = [];
+  const videoFiles: File[] = [];
+
   for (const file of allMediaFiles) {
-    const isImage = file.type.startsWith('image/');
+    const isImage = isImageFile(file);
     const isVideo = file.type.startsWith('video/');
 
-    // Validate size
-    if (isImage && file.size > 10 * 1024 * 1024) {
-      toast.error(`${file.name} is too large (max 10MB for images)`);
-      continue;
-    }
+    if (isImage) {
+      imageFiles.push(file);
+    } else if (isVideo) {
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error(`${file.name} is too large (max 100MB for videos)`);
+        continue;
+      }
 
-    if (isVideo && file.size > 100 * 1024 * 1024) {
-      toast.error(`${file.name} is too large (max 100MB for videos)`);
-      continue;
-    }
-
-    // Handle video duration check
-    if (isVideo) {
       try {
         const duration = await getVideoDuration(file);
-        
+
         if (postType === 'daily' && duration > 30) {
           toast.error(`${file.name}: Daily videos must be 30 seconds or less`);
           continue;
         }
-        
+
         hasVideo = true;
+        videoFiles.push(file);
       } catch (error) {
         console.error('Video load error:', error);
         toast.error(`Failed to load ${file.name}`);
         continue;
       }
     }
+  }
 
+  if (imageFiles.length > 0) {
+    const toastId = toast.loading('Compressing images...', { duration: 0 });
+
+    try {
+      const compressedResults = await compressMultipleImages(imageFiles, (index, total, progress) => {
+        if (progress.isCompressing) {
+          toast.loading(
+            `Compressing image ${index + 1}/${total}... ${Math.round(progress.percent)}%`,
+            { id: toastId, duration: 0 }
+          );
+        }
+      });
+
+      const totalSaved = compressedResults.reduce((sum, r) => sum + (r.originalSize - r.compressedSize), 0);
+
+      toast.success(
+        `Images compressed! Saved ${formatFileSize(totalSaved)}`,
+        { id: toastId, duration: 3000 }
+      );
+
+      for (const result of compressedResults) {
+        validFiles.push(result.file);
+        validPreviews.push(URL.createObjectURL(result.file));
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to compress images', { id: toastId });
+      return;
+    }
+  }
+
+  for (const file of videoFiles) {
     validFiles.push(file);
     validPreviews.push(URL.createObjectURL(file));
   }
