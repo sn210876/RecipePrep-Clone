@@ -4,7 +4,6 @@ import { useRecipes } from '../context/RecipeContext';
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-// Checkbox removed - not needed for discover recipes
 import { Separator } from './ui/separator';
 import {
   Clock,
@@ -35,7 +34,6 @@ export function RecipeDetailModal({
   onOpenChange,
 }: RecipeDetailModalProps) {
   const { state, dispatch } = useRecipes();
-  // Checkbox state removed - not needed
   const [cookMode, setCookMode] = useState(false);
 
   const isSaved = state.savedRecipes.some((r) => r.id === recipe.id);
@@ -56,8 +54,6 @@ export function RecipeDetailModal({
   if (cookMode && hasSteps) {
     return <CookMode recipe={recipe} onClose={() => setCookMode(false)} />;
   }
-
-  // handleToggleIngredient removed - checkboxes not needed
 
   const handleSaveRecipe = () => {
     if (isSaved) {
@@ -112,19 +108,16 @@ export function RecipeDetailModal({
   };
 
   return (
-          <style dangerouslySetInnerHTML={{ __html: modalOverlayStyle }} />
-
-
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0 z-[60]">overflow-hidden m-0 rounded-none border-0">
+      <DialogContent className="max-w-full w-full h-[100dvh] max-h-[100dvh] p-0 gap-0 overflow-hidden m-0 rounded-none border-0 z-[60]">
         <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
         <div className="h-full overflow-y-auto overscroll-contain">
           <div className="relative min-h-full">
-            {/* Close Button - Fixed Position with higher z-index */}
+            {/* Close Button - Fixed Position with z-index below menu */}
             <Button
               variant="ghost"
               size="icon"
-              className="fixed top-2 right-2 z-[100] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
+              className="fixed top-2 right-2 z-[70] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
               onClick={() => onOpenChange(false)}
             >
               <X className="w-5 h-5" />
@@ -386,8 +379,7 @@ export function RecipeDetailModal({
             </div>
           </div>
         </div>
-     </DialogContent>
+      </DialogContent>
     </Dialog>
-    </>
   );
 }
