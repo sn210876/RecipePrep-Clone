@@ -535,7 +535,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                   : 'border-gray-200'
               }`}>
                 {/* Content wrapper with padding for floating buttons */}
-                <div className="px-12 sm:px-16 -mx-4 sm:-mx-6 md:-mx-8">
+                <div className="px-16 sm:px-20 md:px-24 -mx-4 sm:-mx-6 md:-mx-8">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                     <Checkbox
