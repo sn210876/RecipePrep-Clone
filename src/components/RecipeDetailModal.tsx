@@ -11,7 +11,6 @@ import {
   ChefHat,
   Bookmark,
   Trash2,
-  Calendar,
   ShoppingCart,
   ExternalLink,
   X,
@@ -91,17 +90,6 @@ export function RecipeDetailModal({
     toast.success('Ingredients added to grocery list');
   };
 
-  const handleAddToMealPlan = () => {
-    const mealPlanEntry = {
-      id: `${recipe.id}-${Date.now()}`,
-      recipeId: recipe.id,
-      date: new Date().toISOString().split('T')[0],
-      mealType: (recipe.mealType[0] as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack') || 'Dinner',
-      servings: recipe.servings,
-    };
-    dispatch({ type: 'ADD_MEAL_PLAN', payload: mealPlanEntry });
-    toast.success('Recipe added to meal plan');
-  };
 
   const handleDelete = () => {
     if (isSaved) {
@@ -253,7 +241,7 @@ export function RecipeDetailModal({
                 )}
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-2 mb-2 sm:mb-3">
+                <div className="grid grid-cols-2 gap-2 mb-3 sm:mb-4">
                   <Button
                     size="lg"
                     onClick={handleSaveRecipe}
@@ -270,36 +258,28 @@ export function RecipeDetailModal({
                   </Button>
 
                   <Button
-                    size="lg"
-                    onClick={handleAddToMealPlan}
-                    className="gap-2 bg-blue-500 hover:bg-blue-600 text-white border-2 border-blue-600 min-h-[44px] sm:min-h-[48px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold"
-                  >
-                    <Calendar className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate">Meal Plan</span>
-                  </Button>
-                </div>
-
-                {/* Secondary Actions */}
-                <div className="flex gap-2 mb-3 sm:mb-4">
-                  <Button
                     onClick={handleAddToGroceryList}
-                    className="flex-1 gap-2 bg-green-500 hover:bg-green-600 text-white border-2 border-green-600 min-h-[40px] sm:min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold"
+                    size="lg"
+                    className="gap-2 bg-green-500 hover:bg-green-600 text-white border-2 border-green-600 min-h-[44px] sm:min-h-[48px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold"
                   >
                     <ShoppingCart className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">Grocery List</span>
                   </Button>
+                </div>
 
-                  {isSaved && (
+                {/* Delete Button */}
+                {isSaved && (
+                  <div className="flex gap-2 mb-3 sm:mb-4">
                     <Button
                       variant="outline"
-                      size="icon"
                       onClick={handleDelete}
-                      className="hover:bg-rose-50 hover:border-rose-500 hover:text-rose-700 min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] touch-manipulation active:scale-95 transition-all"
+                      className="w-full gap-2 hover:bg-rose-50 hover:border-rose-500 hover:text-rose-700 min-h-[40px] sm:min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold border-2"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">Remove from Saved</span>
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 <Separator className="my-3 sm:my-4" />
 
