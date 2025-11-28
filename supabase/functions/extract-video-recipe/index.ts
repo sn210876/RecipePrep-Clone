@@ -20,6 +20,12 @@ interface RecipeExtractionResult {
   thumbnail: string;
   transcript?: string;
 }
+async function extractAudioUrlWithApify(videoUrl: string): Promise<{
+  audioUrl: string;
+  title: string;
+  thumbnail: string;
+  duration: number;
+}>
 
 async function extractVideoId(url: string): Promise<{ platform: string; videoId: string; embedUrl: string }> {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
