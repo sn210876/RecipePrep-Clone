@@ -4,10 +4,7 @@ import { decodeHtmlEntities, normalizeQuantity } from '@/lib/utils';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
-
-// YOUR LOCAL/BACKEND SERVER
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-const RENDER_SERVER = `${BACKEND_URL}/api/extract-recipe-from-video`;
+const VIDEO_API_URL = `${SUPABASE_URL}/functions/v1/extract-video-recipe`;
 
 
 export interface ExtractedRecipeData {
@@ -39,18 +36,21 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   const isSocial = /tiktok\.com|instagram\.com|youtube\.com|youtu\.be/i.test(url);
 
-  // ALL SOCIAL MEDIA (YouTube, TikTok, Instagram) → YOUR RENDER SERVER ONLY
-  // ALL SOCIAL MEDIA (YouTube, TikTok, Instagram) → YOUR RENDER SERVER ONLY
+  // ALL SOCIAL MEDIA (YouTube, TikTok, Instagram) → AssemblyAI Edge Function
 if (isSocial) {
   try {
-    console.log('[Extractor] Sending to Render server:', url);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 50000);
+    console.log('[Extractor] Sending to AssemblyAI edge function:', url);
 
-    const response = await fetch(RENDER_SERVER, {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+    const response = await fetch(VIDEO_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
       body: JSON.stringify({ url: url.trim() }),
       signal: controller.signal,
     });
@@ -58,17 +58,14 @@ if (isSocial) {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.error('[Extractor] Server response not OK:', response.status);
-      if (response.status >= 500 || response.status === 429) {
-        throw new Error('Server waking up — try again in 20 seconds');
-      }
+      console.error('[Extractor] Edge function response not OK:', response.status);
       const errorText = await response.text();
       console.error('[Extractor] Error response:', errorText);
-      throw new Error('Video extraction failed');
+      throw new Error('Video extraction failed - please try again');
     }
 
     const data = await response.json();
-    console.log('[Extractor] Raw data from server:', data);
+    console.log('[Extractor] Raw data from edge function:', data);
 
     // Get the raw image URL
     const rawImageUrl = data.thumbnail || data.image || '';
@@ -173,9 +170,9 @@ if (isSocial) {
   } catch (err: any) {
     console.error('[Extractor] Catch block error:', err);
     if (err.name === 'AbortError') {
-      throw new Error('Server is waking up — please wait 20-30 seconds and try again');
+      throw new Error('Video processing timeout - transcription may take 1-2 minutes. Please try again.');
     }
-    throw new Error('Video extraction temporarily unavailable — try again soon');
+    throw err;
   }
 }
 
