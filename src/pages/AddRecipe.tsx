@@ -537,7 +537,8 @@ return (
         </div>
 
         {/* Title section - sticky on desktop */}
-      <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6 fixed top-14 left-0 right-0 z-[60]">
+    {/* Title section - sticky on desktop */}
+<div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6 sticky top-14 left-0 right-0 z-[60] md:static md:top-0">
 
 
           <div className="max-w-4xl mx-auto px-4">
@@ -547,7 +548,8 @@ return (
         </div>
 
         {/* Scrollable content container */}
-       <div className="overflow-y-auto max-h-[calc(95vh-6rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6">
+<div className="overflow-y-auto max-h-[calc(95vh-6rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6 pt-4">
+
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* URL Import Section - Mobile optimized */}
