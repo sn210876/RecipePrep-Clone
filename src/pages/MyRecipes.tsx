@@ -84,27 +84,19 @@ export function MyRecipes() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pt-safe pb-safe">
       {/* Mobile-optimized header with proper spacing */}
       <div className="max-w-7xl mx-auto px-4 pt-2 pb-28 sm:pb-24">
-        {/* Header section - improved mobile layout */}
-        <div className="mb-6 sm:mb-6 flex items-start sm:items-center justify-between gap-3 sm:gap-4">
-          {/* Text content - flexible and responsive */}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 leading-tight">
-              My Recipes
-            </h1>
-            <p className="text-sm sm:text-base md:text-xl text-gray-600 flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-emerald-600">
-                {filteredRecipes.length}
-              </span>
-              <span>
-                {selectedRecipe !== 'all' || searchQuery ? 'matching' : 'saved'} recipe{filteredRecipes.length !== 1 ? 's' : ''}
-              </span>
-            </p>
-          </div>
-
-          {/* Icon badge - responsive sizing */}
-          <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-3 sm:p-3 md:p-4 rounded-2xl sm:rounded-full shadow-md shrink-0">
-            <ChefHat className="w-6 h-6 sm:w-6 sm:h-6 md:w-8 md:h-8 text-emerald-600" />
-          </div>
+       {/* Header section - centered layout */}
+        <div className="mb-6 sm:mb-6 flex flex-col items-center text-center gap-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+            My Recipes
+          </h1>
+          <p className="text-sm sm:text-base md:text-xl text-gray-600 flex items-center gap-2">
+            <span className="font-semibold text-emerald-600">
+              {filteredRecipes.length}
+            </span>
+            <span>
+              {selectedRecipe !== 'all' || searchQuery ? 'matching' : 'saved'} recipe{filteredRecipes.length !== 1 ? 's' : ''}
+            </span>
+          </p>
         </div>
 
         {/* Search and Filter Section */}
