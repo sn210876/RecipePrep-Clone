@@ -36,7 +36,7 @@ export function MyRecipes() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pt-safe pb-safe">
         {/* Mobile-optimized empty state */}
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 pb-28 sm:pb-24">
+        <div className="max-w-7xl mx-auto px-4 pt-2 pb-28 sm:pb-24">
           {/* Header - responsive sizing */}
           <div className="mb-8 sm:mb-6">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
@@ -83,7 +83,7 @@ export function MyRecipes() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pt-safe pb-safe">
       {/* Mobile-optimized header with proper spacing */}
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 pb-28 sm:pb-24">
+      <div className="max-w-7xl mx-auto px-4 pt-2 pb-28 sm:pb-24">
         {/* Header section - improved mobile layout */}
         <div className="mb-6 sm:mb-6 flex items-start sm:items-center justify-between gap-3 sm:gap-4">
           {/* Text content - flexible and responsive */}
