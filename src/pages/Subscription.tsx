@@ -415,17 +415,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
                 </ul>
               </div>
 
-              {/* Family Code */}
-              <div className="border-2 border-amber-300 rounded-lg p-4 bg-amber-50">
-                <div className="text-lg font-bold text-amber-900 mb-2">👑 Lifetime</div>
-                <div className="text-3xl font-bold text-amber-600 mb-2">FREE</div>
-                <div className="text-sm text-amber-700 mb-4">forever</div>
-                <ul className="text-sm space-y-2 text-amber-800">
-                  <li>✓ Family code needed</li>
-                  <li>✓ Never expires</li>
-                  <li>✓ For friends & family</li>
-                </ul>
-              </div>
+         
             </div>
           </CardContent>
         </Card>
