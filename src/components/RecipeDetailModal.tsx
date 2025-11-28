@@ -35,9 +35,19 @@ export function RecipeDetailModal({
 }: RecipeDetailModalProps) {
   const { state, dispatch } = useRecipes();
   const [cookMode, setCookMode] = useState(false);
+  const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
+  const [checkedInstructions, setCheckedInstructions] = useState<Record<number, boolean>>({});
 
   const isSaved = state.savedRecipes.some((r) => r.id === recipe.id);
   const hasSteps = recipe.steps && recipe.steps.length > 0;
+
+  useEffect(() => {
+    if (open) {
+      setCheckedIngredients({});
+      setCheckedInstructions({});
+      setCookMode(false);
+    }
+  }, [open, recipe.id]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -122,7 +132,11 @@ export function RecipeDetailModal({
       </style>
 
       <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
-        <DialogContent className="max-w-4xl w-[85%] h-[85vh] p-0 gap-0 overflow-hidden rounded-xl border">
+        <DialogContent
+          className="max-w-4xl w-[85%] h-[85vh] p-0 gap-0 overflow-hidden rounded-xl border"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
           <div className="h-full overflow-y-auto overscroll-contain scroll-smooth">
             <div className="relative">
@@ -302,17 +316,28 @@ export function RecipeDetailModal({
                   <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-lg p-3 sm:p-4">
                     <div className="space-y-2">
                       {recipe.ingredients.map((ingredient, index) => (
-                        <div
+                        <label
                           key={index}
-                          className="flex items-start gap-2 sm:gap-3 p-2 rounded-lg hover:bg-orange-50 transition-colors min-h-[40px] sm:min-h-[44px]"
+                          className="flex items-start gap-2 sm:gap-3 p-2 rounded-lg hover:bg-orange-50 transition-colors min-h-[40px] sm:min-h-[44px] cursor-pointer"
                         >
-                          <div className="flex-1 text-xs sm:text-sm text-gray-700 leading-relaxed">
+                          <input
+                            type="checkbox"
+                            checked={checkedIngredients[index] || false}
+                            onChange={(e) => {
+                              setCheckedIngredients(prev => ({
+                                ...prev,
+                                [index]: e.target.checked
+                              }));
+                            }}
+                            className="mt-1 w-4 h-4 sm:w-5 sm:h-5 text-primary border-gray-300 rounded focus:ring-primary focus:ring-2 cursor-pointer flex-shrink-0"
+                          />
+                          <div className={`flex-1 text-xs sm:text-sm text-gray-700 leading-relaxed transition-all ${checkedIngredients[index] ? 'line-through opacity-50' : ''}`}>
                             <span className="font-semibold text-primary">
                               {ingredient.quantity} {ingredient.unit}
                             </span>{' '}
                             {ingredient.name}
                           </div>
-                        </div>
+                        </label>
                       ))}
                     </div>
                   </div>
@@ -332,12 +357,25 @@ export function RecipeDetailModal({
                     <ol className="space-y-3 sm:space-y-4">
                       {recipe.instructions.map((instruction, index) => (
                         <li key={index} className="flex gap-2 sm:gap-3">
-                          <div className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-md">
-                            {index + 1}
-                          </div>
-                          <p className="text-xs sm:text-sm text-gray-700 pt-0.5 leading-relaxed">
-                            {instruction}
-                          </p>
+                          <label className="flex gap-2 sm:gap-3 items-start cursor-pointer w-full min-h-[40px] sm:min-h-[44px] p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={checkedInstructions[index] || false}
+                              onChange={(e) => {
+                                setCheckedInstructions(prev => ({
+                                  ...prev,
+                                  [index]: e.target.checked
+                                }));
+                              }}
+                              className="mt-1 w-4 h-4 sm:w-5 sm:h-5 text-primary border-gray-300 rounded focus:ring-primary focus:ring-2 cursor-pointer flex-shrink-0"
+                            />
+                            <div className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-md">
+                              {index + 1}
+                            </div>
+                            <p className={`text-xs sm:text-sm text-gray-700 pt-0.5 leading-relaxed transition-all ${checkedInstructions[index] ? 'line-through opacity-50' : ''}`}>
+                              {instruction}
+                            </p>
+                          </label>
                         </li>
                       ))}
                     </ol>
