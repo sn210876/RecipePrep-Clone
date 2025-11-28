@@ -379,11 +379,7 @@ const loadUnreadCount = async (userId: string) => {
   {children}
 </main>
 
-          <div className="px-1 pt-1">
-            <SubscriptionBanner onNavigate={onNavigate} />
-          </div>
-          {children}
-        </main>
+         
 
        {/* Bottom Navigation - ALWAYS VISIBLE (Mobile & Desktop) */}
 <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
