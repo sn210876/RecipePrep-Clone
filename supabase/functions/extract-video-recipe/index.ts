@@ -36,7 +36,8 @@ async function extractVideoId(url: string): Promise<{ platform: string; videoId:
       videoId = url.split('v=')[1].split('&')[0];
     }
     return {
-      platform: 'youtube',
+      pla
+        tform: 'youtube',
       videoId,
       embedUrl: `https://www.youtube.com/watch?v=${videoId}`
     };
