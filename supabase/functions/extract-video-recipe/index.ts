@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const ASSEMBLYAI_API_KEY = Deno.env.get("ASSEMBLYAI_API_KEY") || "";
+const APIFY_API_TOKEN = Deno.env.get("APIFY_API_TOKEN") || "";
 
 interface RecipeExtractionResult {
   title: string;
@@ -25,7 +26,52 @@ async function extractAudioUrlWithApify(videoUrl: string): Promise<{
   title: string;
   thumbnail: string;
   duration: number;
-}>
+}> {
+  console.log('[Apify] Extracting audio from:', videoUrl);
+
+  if (!APIFY_API_TOKEN) {
+    throw new Error('Apify API token not configured');
+  }
+
+  const response = await fetch(
+    `https://api.apify.com/v2/acts/red.cars~universal-content-extractor/run-sync-get-dataset-items?token=${APIFY_API_TOKEN}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls: [videoUrl] }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[Apify] Extraction failed:', response.status, errorText);
+    throw new Error(`Apify extraction failed: ${response.status}`);
+  }
+
+  const items = await response.json();
+  console.log('[Apify] Response items:', items.length);
+
+  if (!items || items.length === 0) {
+    throw new Error('No results returned from Apify');
+  }
+
+  const item = items[0];
+  console.log('[Apify] Item keys:', Object.keys(item));
+
+  if (!item.audioUrl) {
+    console.error('[Apify] No audio URL in response. Item:', JSON.stringify(item));
+    throw new Error('No audio URL returned from Apify');
+  }
+
+  console.log('[Apify] Successfully extracted audio URL');
+
+  return {
+    audioUrl: item.audioUrl,
+    title: item.title || 'Video Recipe',
+    thumbnail: item.thumbnail || '',
+    duration: item.duration || 0,
+  };
+}
 
 async function extractVideoId(url: string): Promise<{ platform: string; videoId: string; embedUrl: string }> {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -36,8 +82,7 @@ async function extractVideoId(url: string): Promise<{ platform: string; videoId:
       videoId = url.split('v=')[1].split('&')[0];
     }
     return {
-      pla
-        tform: 'youtube',
+      platform: 'youtube',
       videoId,
       embedUrl: `https://www.youtube.com/watch?v=${videoId}`
     };
@@ -62,8 +107,28 @@ async function extractVideoId(url: string): Promise<{ platform: string; videoId:
   throw new Error('Unsupported video platform');
 }
 
-async function transcribeVideo(videoUrl: string): Promise<{ transcript: string; thumbnail?: string }> {
-  console.log('[AssemblyAI] Starting transcription for:', videoUrl);
+async function transcribeVideo(videoUrl: string, metadata?: any): Promise<{ transcript: string; thumbnail?: string; metadata?: any }> {
+  console.log('[Transcription] Starting for:', videoUrl);
+
+  let audioUrl = videoUrl;
+  let extractedMetadata = metadata || {};
+
+  try {
+    const apifyResult = await extractAudioUrlWithApify(videoUrl);
+    audioUrl = apifyResult.audioUrl;
+    extractedMetadata = {
+      ...extractedMetadata,
+      title: apifyResult.title,
+      thumbnail: apifyResult.thumbnail,
+      duration: apifyResult.duration,
+    };
+    console.log('[Transcription] Using Apify audio URL:', audioUrl);
+  } catch (apifyError) {
+    console.warn('[Transcription] Apify failed, trying direct URL:', apifyError.message);
+    audioUrl = videoUrl;
+  }
+
+  console.log('[AssemblyAI] Starting transcription for audio URL:', audioUrl);
 
   const transcriptResponse = await fetch('https://api.assemblyai.com/v2/transcript', {
     method: 'POST',
@@ -72,7 +137,7 @@ async function transcribeVideo(videoUrl: string): Promise<{ transcript: string; 
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      audio_url: videoUrl,
+      audio_url: audioUrl,
       language_code: 'en',
     }),
   });
@@ -116,7 +181,7 @@ async function transcribeVideo(videoUrl: string): Promise<{ transcript: string; 
   }
 
   console.log('[AssemblyAI] Transcription completed, length:', transcript.length);
-  return { transcript };
+  return { transcript, metadata: extractedMetadata };
 }
 
 async function extractRecipeWithLeMUR(transcript: string, videoMetadata: any): Promise<RecipeExtractionResult> {
@@ -267,7 +332,11 @@ Deno.serve(async (req: Request) => {
       videoMetadata = await getYouTubeMetadata(embedUrl);
     }
 
-    const { transcript } = await transcribeVideo(embedUrl);
+    const { transcript, metadata: extractedMetadata } = await transcribeVideo(embedUrl, videoMetadata);
+
+    if (extractedMetadata) {
+      videoMetadata = { ...videoMetadata, ...extractedMetadata };
+    }
 
     const recipe = await extractRecipeWithLeMUR(transcript, videoMetadata);
 
