@@ -310,6 +310,11 @@ const loadUnreadCount = async (userId: string) => {
         <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       </div>
     )}
+    {currentPage === 'subscription' && (
+      <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
+        <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+      </div>
+    )}
     {currentPage === 'settings' && (
       <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
         <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
