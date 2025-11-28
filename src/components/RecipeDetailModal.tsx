@@ -39,7 +39,7 @@ export function RecipeDetailModal({
   const [checkedInstructions, setCheckedInstructions] = useState<Record<number, boolean>>({});
 
   const isSaved = state.savedRecipes.some((r) => r.id === recipe.id);
-  const hasSteps = recipe.steps && recipe.steps.length > 0;
+  const hasSteps = (recipe.steps && recipe.steps.length > 0) || (recipe.instructions && recipe.instructions.length > 0);
 
   useEffect(() => {
     if (open) {

@@ -40,7 +40,14 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
 
-  const steps = recipe.steps || [];
+  const steps = recipe.steps && recipe.steps.length > 0
+    ? recipe.steps
+    : recipe.instructions.map((instruction, index) => ({
+        stepNumber: index + 1,
+        instruction,
+        technique: '',
+        duration: undefined,
+      }));
 
   // Timer effect
   useEffect(() => {
