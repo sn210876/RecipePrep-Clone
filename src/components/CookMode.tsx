@@ -180,13 +180,61 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
 
   const getIngredientEmoji = (ingredientName) => {
     const name = ingredientName.toLowerCase();
-    const emojiMap = {
-      flour: '🌾', sugar: '🍯', butter: '🧈', egg: '🥚',
-      chocolate: '🍫', vanilla: '🟫', baking: '🧂',
-    };
-    for (const [key, emoji] of Object.entries(emojiMap)) {
-      if (name.includes(key)) return emoji;
-    }
+
+    // Comprehensive emoji mapping
+    if (name.includes('salt')) return '🧂';
+    if (name.includes('pepper')) return '🌶️';
+    if (name.includes('water')) return '💧';
+    if (name.includes('oil') || name.includes('olive')) return '🫒';
+    if (name.includes('vinegar')) return '🍾';
+    if (name.includes('soy sauce') || name.includes('sauce')) return '🥫';
+    if (name.includes('honey')) return '🍯';
+    if (name.includes('garlic') || name.includes('clove')) return '🧄';
+    if (name.includes('ginger')) return '🫚';
+    if (name.includes('onion')) return '🧅';
+    if (name.includes('tomato')) return '🍅';
+    if (name.includes('lemon') || name.includes('lime')) return '🍋';
+    if (name.includes('orange')) return '🍊';
+    if (name.includes('apple')) return '🍎';
+    if (name.includes('banana')) return '🍌';
+    if (name.includes('strawberry') || name.includes('berry')) return '🍓';
+    if (name.includes('carrot')) return '🥕';
+    if (name.includes('potato')) return '🥔';
+    if (name.includes('broccoli')) return '🥦';
+    if (name.includes('mushroom')) return '🍄';
+    if (name.includes('avocado')) return '🥑';
+    if (name.includes('corn')) return '🌽';
+    if (name.includes('eggplant')) return '🍆';
+    if (name.includes('cucumber')) return '🥒';
+    if (name.includes('lettuce') || name.includes('salad')) return '🥗';
+    if (name.includes('cheese')) return '🧀';
+    if (name.includes('milk')) return '🥛';
+    if (name.includes('cream')) return '🍦';
+    if (name.includes('butter')) return '🧈';
+    if (name.includes('egg')) return '🥚';
+    if (name.includes('chicken')) return '🍗';
+    if (name.includes('beef') || name.includes('steak')) return '🥩';
+    if (name.includes('pork') || name.includes('bacon')) return '🥓';
+    if (name.includes('fish') || name.includes('salmon')) return '🐟';
+    if (name.includes('shrimp') || name.includes('prawn')) return '🦐';
+    if (name.includes('rice')) return '🍚';
+    if (name.includes('pasta') || name.includes('noodle')) return '🍝';
+    if (name.includes('bread')) return '🍞';
+    if (name.includes('flour')) return '🌾';
+    if (name.includes('sugar')) return '🍬';
+    if (name.includes('chocolate')) return '🍫';
+    if (name.includes('vanilla')) return '🟫';
+    if (name.includes('cinnamon') || name.includes('spice')) return '🌰';
+    if (name.includes('basil') || name.includes('herb')) return '🌿';
+    if (name.includes('parsley') || name.includes('cilantro')) return '🌿';
+    if (name.includes('chili') || name.includes('jalapeno')) return '🌶️';
+    if (name.includes('coconut')) return '🥥';
+    if (name.includes('peanut') || name.includes('nut')) return '🥜';
+    if (name.includes('wine')) return '🍷';
+    if (name.includes('beer')) return '🍺';
+    if (name.includes('coffee')) return '☕';
+    if (name.includes('tea')) return '🍵';
+
     return '🥘';
   };
 
