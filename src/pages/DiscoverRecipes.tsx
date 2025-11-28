@@ -434,7 +434,7 @@ useEffect(() => {
             Discover Amazing Recipes
           </h1>
           <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto mb-2">
-            Recipes scraped from <span className="font-semibold text-blue-600">social media</span> and the <span className="font-semibold text-blue-600">web</span>
+            Recipes scraped from <span className="font-semibold text-blue-600">Social Media</span> and the <span className="font-semibold text-blue-600">Web</span>
           </p>
           <p className="text-xs md:text-sm text-gray-500 max-w-2xl mx-auto">
    Meal Calendar • Shopping List • Social Community
