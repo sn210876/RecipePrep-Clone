@@ -364,7 +364,7 @@ const loadUnreadCount = async (userId: string) => {
 
         {/* Main Content - Add bottom padding for fixed nav */}
         <main className={`${socialPages.includes(currentPage) ? 'pt-16' : 'pt-16 lg:pt-0'} pb-20`}>
-          <div className="px-4 pt-4">
+          <div className="px-1 pt-1">
             <SubscriptionBanner onNavigate={onNavigate} />
           </div>
           {children}
