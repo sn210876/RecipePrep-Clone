@@ -37,8 +37,8 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [voiceModeActive, setVoiceModeActive] = useState(false);
   const [servings, setServings] = useState(recipe.servings || 4);
-  const touchStartX = useRef(null);
-  const touchEndX = useRef(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   const steps = recipe.steps && recipe.steps.length > 0
     ? recipe.steps
@@ -83,11 +83,11 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
     oscillator.stop(audioContext.currentTime + 0.5);
   };
 
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     touchStartX.current = e.touches[0].clientX;
   };
 
-  const handleTouchMove = (e) => {
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     touchEndX.current = e.touches[0].clientX;
   };
 
@@ -485,16 +485,16 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               size="lg"
               onClick={handlePrevStep}
               disabled={currentStep === 0}
-              className="gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 h-10 sm:h-11"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm px-4 sm:px-6 min-h-[44px] sm:min-h-[48px] touch-manipulation active:scale-95 transition-all font-semibold"
             >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden xs:inline">Previous</span>
               <span className="xs:hidden">Prev</span>
             </Button>
 
-            <div className="flex-1 text-center">
-              <p className="text-[10px] sm:text-xs text-gray-600">
-                {voiceModeActive ? 'Say "Next" or swipe' : 'Swipe to navigate'}
+            <div className="flex-1 text-center px-2">
+              <p className="text-[10px] sm:text-xs text-gray-600 font-medium">
+                {voiceModeActive ? 'Say "Next" or swipe' : '👈 Swipe to navigate 👉'}
               </p>
             </div>
 
@@ -502,7 +502,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               size="lg"
               onClick={handleNextStep}
               disabled={currentStep === steps.length - 1}
-              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 gap-1 sm:gap-2 text-xs sm:text-sm px-3 sm:px-4 h-10 sm:h-11"
+              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 gap-1 sm:gap-2 text-xs sm:text-sm px-4 sm:px-6 min-h-[44px] sm:min-h-[48px] touch-manipulation active:scale-95 transition-all font-semibold shadow-md"
             >
               <span>Next</span>
               <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
