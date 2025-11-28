@@ -192,6 +192,49 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const allIngredientsChecked = checkedIngredients.size === recipe.ingredients.length;
   const progress = ((currentStep + 1) / steps.length) * 100;
 
+  const scaleIngredient = (quantity: string, unit: string) => {
+    const originalServings = recipe.servings || 4;
+    const scaleFactor = servings / originalServings;
+
+    const quantityNum = parseFloat(quantity);
+    if (isNaN(quantityNum)) {
+      return { quantity, unit };
+    }
+
+    const scaledQuantity = quantityNum * scaleFactor;
+
+    if (scaledQuantity % 1 === 0) {
+      return { quantity: scaledQuantity.toString(), unit };
+    } else if (scaledQuantity < 1) {
+      const fraction = scaledQuantity;
+      if (Math.abs(fraction - 0.25) < 0.05) return { quantity: '1/4', unit };
+      if (Math.abs(fraction - 0.33) < 0.05) return { quantity: '1/3', unit };
+      if (Math.abs(fraction - 0.5) < 0.05) return { quantity: '1/2', unit };
+      if (Math.abs(fraction - 0.67) < 0.05) return { quantity: '2/3', unit };
+      if (Math.abs(fraction - 0.75) < 0.05) return { quantity: '3/4', unit };
+      return { quantity: scaledQuantity.toFixed(2), unit };
+    } else {
+      const whole = Math.floor(scaledQuantity);
+      const fractional = scaledQuantity - whole;
+
+      if (fractional < 0.05) {
+        return { quantity: whole.toString(), unit };
+      } else if (Math.abs(fractional - 0.25) < 0.05) {
+        return { quantity: `${whole} 1/4`, unit };
+      } else if (Math.abs(fractional - 0.33) < 0.05) {
+        return { quantity: `${whole} 1/3`, unit };
+      } else if (Math.abs(fractional - 0.5) < 0.05) {
+        return { quantity: `${whole} 1/2`, unit };
+      } else if (Math.abs(fractional - 0.67) < 0.05) {
+        return { quantity: `${whole} 2/3`, unit };
+      } else if (Math.abs(fractional - 0.75) < 0.05) {
+        return { quantity: `${whole} 3/4`, unit };
+      } else {
+        return { quantity: scaledQuantity.toFixed(2), unit };
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-hidden">
       <div className="h-full flex flex-col">
@@ -345,45 +388,48 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                 </span>
               </div>
               <div className="space-y-2">
-                {recipe.ingredients.map((ingredient, index) => (
-                  <div
-                    key={index}
-                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg transition-all ${
-                      checkedIngredients.has(index)
-                        ? 'bg-orange-100 border border-orange-300'
-                        : 'bg-white border border-gray-200'
-                    }`}
-                  >
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
-                      {getIngredientEmoji(ingredient.name)}
-                    </div>
-                    <Checkbox
-                      id={`ingredient-${index}`}
-                      checked={checkedIngredients.has(index)}
-                      onCheckedChange={() => toggleIngredient(index)}
-                      className="flex-shrink-0"
-                    />
-                    <label
-                      htmlFor={`ingredient-${index}`}
-                      className={`text-xs sm:text-sm cursor-pointer flex-1 min-w-0 ${
+                {recipe.ingredients.map((ingredient, index) => {
+                  const scaled = scaleIngredient(ingredient.quantity, ingredient.unit);
+                  return (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg transition-all ${
                         checkedIngredients.has(index)
-                          ? 'text-gray-500 line-through'
-                          : 'text-gray-900'
+                          ? 'bg-orange-100 border border-orange-300'
+                          : 'bg-white border border-gray-200'
                       }`}
                     >
-                      <span className="font-semibold">
-                        {ingredient.quantity} {ingredient.unit}
-                      </span>{' '}
-                      {ingredient.name}
-                    </label>
-                  </div>
-                ))}
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg sm:text-xl flex-shrink-0">
+                        {getIngredientEmoji(ingredient.name)}
+                      </div>
+                      <Checkbox
+                        id={`ingredient-${index}`}
+                        checked={checkedIngredients.has(index)}
+                        onCheckedChange={() => toggleIngredient(index)}
+                        className="flex-shrink-0"
+                      />
+                      <label
+                        htmlFor={`ingredient-${index}`}
+                        className={`text-xs sm:text-sm cursor-pointer flex-1 min-w-0 ${
+                          checkedIngredients.has(index)
+                            ? 'text-gray-500 line-through'
+                            : 'text-gray-900'
+                        }`}
+                      >
+                        <span className="font-semibold">
+                          {scaled.quantity} {scaled.unit}
+                        </span>{' '}
+                        {ingredient.name}
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {/* Current Step - Swipeable */}
             <div
-              className="touch-pan-y select-none"
+              className="touch-pan-y select-none relative"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -472,6 +518,37 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                 <p className="text-[10px] sm:text-xs text-gray-400 text-center mt-4 sm:mt-6">
                   👆 Swipe left or right to navigate
                 </p>
+              </div>
+
+              {/* Floating Navigation Buttons */}
+              <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 pointer-events-none px-2 sm:px-4">
+                <div className="flex items-center justify-between">
+                  {/* Previous Button */}
+                  {currentStep > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handlePrevStep}
+                      className="pointer-events-auto bg-white/60 hover:bg-white/80 backdrop-blur-sm shadow-lg rounded-full w-12 h-12 sm:w-14 sm:h-14 touch-manipulation active:scale-95 transition-all z-50"
+                    >
+                      <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 text-gray-900" />
+                    </Button>
+                  )}
+
+                  <div className="flex-1" />
+
+                  {/* Next Button */}
+                  {currentStep < steps.length - 1 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleNextStep}
+                      className="pointer-events-auto bg-orange-500/60 hover:bg-orange-500/80 backdrop-blur-sm shadow-lg rounded-full w-12 h-12 sm:w-14 sm:h-14 touch-manipulation active:scale-95 transition-all z-50"
+                    >
+                      <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
