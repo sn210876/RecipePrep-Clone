@@ -37,6 +37,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [voiceModeActive, setVoiceModeActive] = useState(false);
   const [servings, setServings] = useState(recipe.servings || 4);
+  const [isMetric, setIsMetric] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
@@ -192,46 +193,112 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
   const allIngredientsChecked = checkedIngredients.size === recipe.ingredients.length;
   const progress = ((currentStep + 1) / steps.length) * 100;
 
+  const convertToMetric = (quantity: number, unit: string) => {
+    const unitLower = unit.toLowerCase();
+
+    // Volume conversions
+    if (unitLower.includes('cup')) {
+      return { quantity: Math.round(quantity * 240), unit: 'ml' };
+    }
+    if (unitLower.includes('tablespoon') || unitLower.includes('tbsp')) {
+      return { quantity: Math.round(quantity * 15), unit: 'ml' };
+    }
+    if (unitLower.includes('teaspoon') || unitLower.includes('tsp')) {
+      return { quantity: Math.round(quantity * 5), unit: 'ml' };
+    }
+    if (unitLower.includes('fluid ounce') || unitLower.includes('fl oz')) {
+      return { quantity: Math.round(quantity * 30), unit: 'ml' };
+    }
+    if (unitLower.includes('pint')) {
+      return { quantity: Math.round(quantity * 473), unit: 'ml' };
+    }
+    if (unitLower.includes('quart')) {
+      return { quantity: Math.round(quantity * 946), unit: 'ml' };
+    }
+    if (unitLower.includes('gallon')) {
+      return { quantity: (quantity * 3.785).toFixed(2), unit: 'L' };
+    }
+
+    // Weight conversions
+    if (unitLower.includes('pound') || unitLower.includes('lb')) {
+      return { quantity: Math.round(quantity * 454), unit: 'g' };
+    }
+    if (unitLower.includes('ounce') || unitLower.includes('oz')) {
+      return { quantity: Math.round(quantity * 28), unit: 'g' };
+    }
+
+    // Temperature
+    if (unitLower.includes('°f') || unitLower.includes('fahrenheit')) {
+      const celsius = Math.round((quantity - 32) * 5 / 9);
+      return { quantity: celsius, unit: '°C' };
+    }
+
+    return { quantity, unit };
+  };
+
   const scaleIngredient = (quantity: string, unit: string) => {
     const originalServings = recipe.servings || 4;
     const scaleFactor = servings / originalServings;
 
-    const quantityNum = parseFloat(quantity);
+    // Parse fraction or decimal
+    let quantityNum = parseFloat(quantity);
+    if (quantity.includes('/')) {
+      const parts = quantity.split(' ');
+      let whole = 0;
+      let fraction = parts[parts.length - 1];
+      if (parts.length > 1) {
+        whole = parseFloat(parts[0]);
+      }
+      const [numerator, denominator] = fraction.split('/').map(parseFloat);
+      quantityNum = whole + (numerator / denominator);
+    }
+
     if (isNaN(quantityNum)) {
       return { quantity, unit };
     }
 
-    const scaledQuantity = quantityNum * scaleFactor;
+    let scaledQuantity = quantityNum * scaleFactor;
+    let finalUnit = unit;
 
+    // Convert to metric if enabled
+    if (isMetric) {
+      const converted = convertToMetric(scaledQuantity, unit);
+      scaledQuantity = typeof converted.quantity === 'string' ? parseFloat(converted.quantity) : converted.quantity;
+      finalUnit = converted.unit;
+    }
+
+    // Format the quantity
     if (scaledQuantity % 1 === 0) {
-      return { quantity: scaledQuantity.toString(), unit };
-    } else if (scaledQuantity < 1) {
+      return { quantity: scaledQuantity.toString(), unit: finalUnit };
+    } else if (scaledQuantity < 1 && !isMetric) {
       const fraction = scaledQuantity;
-      if (Math.abs(fraction - 0.25) < 0.05) return { quantity: '1/4', unit };
-      if (Math.abs(fraction - 0.33) < 0.05) return { quantity: '1/3', unit };
-      if (Math.abs(fraction - 0.5) < 0.05) return { quantity: '1/2', unit };
-      if (Math.abs(fraction - 0.67) < 0.05) return { quantity: '2/3', unit };
-      if (Math.abs(fraction - 0.75) < 0.05) return { quantity: '3/4', unit };
-      return { quantity: scaledQuantity.toFixed(2), unit };
-    } else {
+      if (Math.abs(fraction - 0.25) < 0.05) return { quantity: '1/4', unit: finalUnit };
+      if (Math.abs(fraction - 0.33) < 0.05) return { quantity: '1/3', unit: finalUnit };
+      if (Math.abs(fraction - 0.5) < 0.05) return { quantity: '1/2', unit: finalUnit };
+      if (Math.abs(fraction - 0.67) < 0.05) return { quantity: '2/3', unit: finalUnit };
+      if (Math.abs(fraction - 0.75) < 0.05) return { quantity: '3/4', unit: finalUnit };
+      return { quantity: scaledQuantity.toFixed(2), unit: finalUnit };
+    } else if (scaledQuantity >= 1 && !isMetric) {
       const whole = Math.floor(scaledQuantity);
       const fractional = scaledQuantity - whole;
 
       if (fractional < 0.05) {
-        return { quantity: whole.toString(), unit };
+        return { quantity: whole.toString(), unit: finalUnit };
       } else if (Math.abs(fractional - 0.25) < 0.05) {
-        return { quantity: `${whole} 1/4`, unit };
+        return { quantity: `${whole} 1/4`, unit: finalUnit };
       } else if (Math.abs(fractional - 0.33) < 0.05) {
-        return { quantity: `${whole} 1/3`, unit };
+        return { quantity: `${whole} 1/3`, unit: finalUnit };
       } else if (Math.abs(fractional - 0.5) < 0.05) {
-        return { quantity: `${whole} 1/2`, unit };
+        return { quantity: `${whole} 1/2`, unit: finalUnit };
       } else if (Math.abs(fractional - 0.67) < 0.05) {
-        return { quantity: `${whole} 2/3`, unit };
+        return { quantity: `${whole} 2/3`, unit: finalUnit };
       } else if (Math.abs(fractional - 0.75) < 0.05) {
-        return { quantity: `${whole} 3/4`, unit };
+        return { quantity: `${whole} 3/4`, unit: finalUnit };
       } else {
-        return { quantity: scaledQuantity.toFixed(2), unit };
+        return { quantity: scaledQuantity.toFixed(2), unit: finalUnit };
       }
+    } else {
+      return { quantity: scaledQuantity.toFixed(1), unit: finalUnit };
     }
   };
 
@@ -336,8 +403,8 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               </p>
             </div>
 
-            {/* Servings Adjuster */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-emerald-200 shadow-sm">
+            {/* Servings & Units Controls */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-emerald-200 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
@@ -365,8 +432,36 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                   </Button>
                 </div>
               </div>
+
+              {/* Unit System Toggle */}
+              <div className="flex items-center justify-between pt-2 border-t border-emerald-200">
+                <span className="text-xs sm:text-sm font-semibold text-gray-900">Units</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={!isMetric ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setIsMetric(false)}
+                    className={`h-7 px-2 sm:px-3 text-xs sm:text-sm ${
+                      !isMetric ? 'bg-emerald-600 hover:bg-emerald-700' : ''
+                    }`}
+                  >
+                    US
+                  </Button>
+                  <Button
+                    variant={isMetric ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setIsMetric(true)}
+                    className={`h-7 px-2 sm:px-3 text-xs sm:text-sm ${
+                      isMetric ? 'bg-emerald-600 hover:bg-emerald-700' : ''
+                    }`}
+                  >
+                    Metric
+                  </Button>
+                </div>
+              </div>
+
               {servings !== recipe.servings && (
-                <p className="text-[10px] sm:text-xs text-emerald-700 mt-2 text-center">
+                <p className="text-[10px] sm:text-xs text-emerald-700 text-center">
                   Scaled from original {recipe.servings} servings
                 </p>
               )}
@@ -439,6 +534,8 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                   ? 'border-orange-600 bg-orange-50'
                   : 'border-gray-200'
               }`}>
+                {/* Content wrapper with padding for floating buttons */}
+                <div className="px-12 sm:px-16 -mx-4 sm:-mx-6 md:-mx-8">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                     <Checkbox
@@ -518,6 +615,7 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                 <p className="text-[10px] sm:text-xs text-gray-400 text-center mt-4 sm:mt-6">
                   👆 Swipe left or right to navigate
                 </p>
+                </div>
               </div>
 
               {/* Floating Navigation Buttons */}
