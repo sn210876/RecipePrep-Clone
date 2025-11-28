@@ -14,8 +14,8 @@ import {
   PiggyBank,
   User,
   MessageSquare,
-  Crown
   TrendingUp,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabase';
