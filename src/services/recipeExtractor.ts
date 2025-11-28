@@ -5,9 +5,10 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
-// YOUR RENDER SERVER ONLY — 100% FINAL VERSION
+// YOUR LOCAL/BACKEND SERVER
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-const RENDER_SERVER = `${BACKEND_URL}/api/extract-video`;
+const RENDER_SERVER = `${BACKEND_URL}/api/extract-recipe-from-video`;
+
 
 export interface ExtractedRecipeData {
   title: string;
