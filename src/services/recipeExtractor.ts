@@ -6,7 +6,8 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 // YOUR RENDER SERVER ONLY — 100% FINAL VERSION
-const RENDER_SERVER = 'https://recipe-backend-nodejs-1.onrender.com/extract';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const RENDER_SERVER = `${BACKEND_URL}/api/extract-video`;
 
 export interface ExtractedRecipeData {
   title: string;
