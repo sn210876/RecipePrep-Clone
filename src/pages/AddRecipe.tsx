@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon, Camera } from 'lucide-react';
+import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon, Camera, FileText, Edit } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
 import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
@@ -98,6 +98,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [descriptionInput, setDescriptionInput] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
   const [isExtractingFromDescription, setIsExtractingFromDescription] = useState(false);
+  const [activeTab, setActiveTab] = useState<'url' | 'description' | 'photo' | 'manual'>('url');
 
   // Load recipe for editing if edit parameter is present
   useEffect(() => {
@@ -501,6 +502,7 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
 
     setShowPreview(false);
     setExtractedData(null);
+    setActiveTab('manual');
 
     toast.success('Recipe loaded! Edit any details as needed.');
   };
@@ -766,10 +768,62 @@ return (
 
         {/* Scrollable content container */}
         <div className="flex-1 overflow-y-auto overscroll-contain pb-32 md:pb-6 pt-4">
-          <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+          <div className="max-w-4xl mx-auto px-4 py-6">
 
-        {/* URL Import Section - Mobile optimized */}
-        <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+          <button
+            onClick={() => setActiveTab('url')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-t-lg border-b-4 transition-all whitespace-nowrap ${
+              activeTab === 'url'
+                ? 'bg-blue-50 border-blue-500 font-bold text-blue-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Link2 className="w-5 h-5 flex-shrink-0" />
+            <span className="hidden sm:inline">Import From URL</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('description')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-t-lg border-b-4 transition-all whitespace-nowrap ${
+              activeTab === 'description'
+                ? 'bg-purple-50 border-purple-500 font-bold text-purple-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <FileText className="w-5 h-5 flex-shrink-0" />
+            <span className="hidden sm:inline">Paste Notes</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('photo')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-t-lg border-b-4 transition-all whitespace-nowrap ${
+              activeTab === 'photo'
+                ? 'bg-emerald-50 border-emerald-500 font-bold text-emerald-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Camera className="w-5 h-5 flex-shrink-0" />
+            <span className="hidden sm:inline">Upload Photo</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('manual')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-t-lg border-b-4 transition-all whitespace-nowrap ${
+              activeTab === 'manual'
+                ? 'bg-slate-50 border-slate-500 font-bold text-slate-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Edit className="w-5 h-5 flex-shrink-0" />
+            <span className="hidden sm:inline">Input Manually</span>
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'url' && (
+        <Card className="border-2 border-blue-500 shadow-sm bg-gradient-to-br from-blue-50 to-white">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
@@ -865,9 +919,11 @@ return (
             </div>
           </CardContent>
         </Card>
+        )}
 
-        {/* Manual Description Paste Section - For YouTube bot detection */}
-        <Card className="border-purple-200 shadow-sm bg-gradient-to-br from-purple-50 to-white">
+        {/* Manual Description Paste Tab */}
+        {activeTab === 'description' && (
+        <Card className="border-2 border-purple-500 shadow-sm bg-gradient-to-br from-purple-50 to-white">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Sparkles className="w-5 h-5 text-purple-600 flex-shrink-0" />
@@ -960,9 +1016,11 @@ return (
             </div>
           </CardContent>
         </Card>
+        )}
 
-        {/* Photo Scan Section - NEW! */}
-        <Card className="border-emerald-200 shadow-sm bg-gradient-to-br from-emerald-50 to-white">
+        {/* Photo Scan Tab */}
+        {activeTab === 'photo' && (
+        <Card className="border-2 border-emerald-500 shadow-sm bg-gradient-to-br from-emerald-50 to-white">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Camera className="w-5 h-5 text-emerald-600 flex-shrink-0" />
@@ -1074,40 +1132,13 @@ return (
             </div>
           </CardContent>
         </Card>
+        )}
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-200" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-gradient-to-br from-slate-50 via-white to-slate-50 px-3 py-1 text-slate-500">Or enter manually</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 pb-24 lg:pb-6">
-          {/* Error Summary */}
-          {showErrors && Object.keys(errors).length > 0 && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
-                    <span className="text-red-600 text-sm font-bold">!</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-red-900 mb-2">Please fix these errors:</h3>
-                    <ul className="space-y-1">
-                      {Object.values(errors).map((error, idx) => (
-                        <li key={idx} className="text-sm text-red-700 break-words">• {error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
+          {/* Manual Input Tab */}
+          {activeTab === 'manual' && (
+          <form onSubmit={handleSubmit} className="space-y-4 pb-24 lg:pb-6">
           {/* Basic Information */}
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-2 border-slate-500 shadow-sm bg-gradient-to-br from-slate-50 to-white">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Basic Information</CardTitle>
               <CardDescription className="text-xs">Review extracted info</CardDescription>
@@ -1734,7 +1765,9 @@ return (
             </DialogFooter>
 </DialogContent>
         </Dialog>
-     
+
+          </form>
+          )}
 
         {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
         <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[100] lg:z-10">
@@ -1764,7 +1797,6 @@ return (
             </Button>
         </div>
         </div>
-        </form>
           </div>
         </div>
       </div>

@@ -15,7 +15,8 @@ import {
   User,
   MessageSquare,
   TrendingUp,
-  Crown
+  Crown,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabase';
@@ -45,6 +46,7 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
     { id: 'cart', label: 'Cart', icon: PiggyBank },
     { id: 'blog', label: 'Blog', icon: MessageSquare },
     { id: 'subscription', label: 'Subscription', icon: Crown },
+    { id: 'faq', label: 'FAQ', icon: HelpCircle },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 

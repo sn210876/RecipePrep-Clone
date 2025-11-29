@@ -19,6 +19,7 @@ import { VerifyEmail } from './pages/VerifyEmail';
 import { Messages } from './pages/Messages';
 import { Blog } from './pages/Blog';
 import { BlogPostPage } from './pages/BlogPost';
+import { FAQ } from './pages/FAQ';
 import { Toaster } from './components/ui/sonner';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -52,6 +53,7 @@ function AppContent() {
   if (path === '/messages') return 'messages';
   if (path === '/settings') return 'settings';
   if (path === '/subscription') return 'subscription';
+  if (path === '/faq') return 'faq';
   if (path === '/onboarding') return 'onboarding';
   if (path === '/blog') return 'blog';
   if (path.startsWith('/blog/') && path !== '/blog') {
@@ -320,6 +322,7 @@ useEffect(() => {
         );
       case 'settings': return <Settings onNavigate={handleNavigate} />;
       case 'subscription': return <Subscription onNavigate={handleNavigate} />;
+      case 'faq': return <FAQ />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;
       default: return <DiscoverRecipes onNavigate={handleNavigate} />;
     }
