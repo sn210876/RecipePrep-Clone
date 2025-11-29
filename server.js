@@ -129,35 +129,37 @@ CRITICAL EXTRACTION RULES:
 7. Each sentence or instruction in the transcript should typically become one step
 8. Do NOT make up or infer information - only use what was actually said
 
-Extract and return ONLY a valid JSON object with this exact structure (no markdown, no code blocks, just raw JSON):
+RESPONSE FORMAT REQUIREMENT:
+You MUST respond with ONLY a valid JSON object. NO markdown formatting, NO code blocks, NO backticks, NO explanation text.
+Just the raw JSON object starting with { and ending with }.
+
+The JSON structure MUST be exactly:
 {
-  "title": "string - recipe name from video",
-  "description": "string - brief description from video",
+  "title": "recipe name from video",
+  "description": "brief description from video",
   "ingredients": [
-    {
-      "quantity": "string - EXACT amount from transcript",
-      "unit": "string - EXACT unit from transcript (cup, tbsp, pinch, to taste, etc)",
-      "name": "string - EXACT ingredient name from transcript"
-    }
+    {"quantity": "2", "unit": "cup", "name": "flour"},
+    {"quantity": "1", "unit": "tsp", "name": "salt"}
   ],
   "instructions": [
-    "string - step 1 EXACTLY as said in transcript",
-    "string - step 2 EXACTLY as said in transcript"
+    "First step exactly as said",
+    "Second step exactly as said"
   ],
-  "prepTime": number - minutes (estimate if not mentioned),
-  "cookTime": number - minutes (estimate if not mentioned),
-  "servings": number - servings mentioned or estimate,
-  "cuisine": "string - cuisine type",
-  "difficulty": "Easy|Medium|Hard",
-  "dietaryTags": ["string - tags like Vegetarian, Vegan, etc"]
+  "prepTime": 15,
+  "cookTime": 30,
+  "servings": 4,
+  "cuisine": "cuisine type",
+  "difficulty": "Easy",
+  "dietaryTags": []
 }
 
-Remember: The transcript is the truth - extract from it verbatim. Do not create, invent, or modify ingredients or steps.`;
+IMPORTANT: Each ingredient MUST be an object with "quantity", "unit", and "name" properties. Never use strings.`;
 
   try {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       max_tokens: 3000,
+      response_format: { type: 'json_object' },
       messages: [
         {
           role: 'user',
@@ -167,17 +169,29 @@ Remember: The transcript is the truth - extract from it verbatim. Do not create,
     });
 
     const content = response.choices[0].message.content;
+    console.log('Raw GPT response:', content);
 
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('No valid JSON found in response');
+    let recipe;
+    try {
+      recipe = JSON.parse(content);
+    } catch (parseError) {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+      recipe = JSON.parse(jsonMatch[0]);
     }
 
-    const recipe = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(recipe.ingredients)) {
+      console.error('Invalid ingredients format:', recipe.ingredients);
+      recipe.ingredients = [];
+    }
+
     recipe.imageUrl = `data:image/jpeg;base64,${thumbnailBase64}`;
 
     return recipe;
   } catch (error) {
+    console.error('Failed to extract recipe:', error);
     throw new Error(`Failed to extract recipe: ${error.message}`);
   }
 }
@@ -226,15 +240,23 @@ app.post('/extract', async (req, res) => {
 
     const recipe = await extractRecipeFromTranscript(transcript, thumbnailBase64, videoMetadata);
 
+    console.log('Raw recipe from GPT:', JSON.stringify(recipe, null, 2));
+    console.log('Transcript was:', transcript.substring(0, 500) + '...');
+
     await cleanupFiles(videoId);
 
     const ingredientStrings = recipe.ingredients?.map(ing => {
+      if (typeof ing === 'string') {
+        return ing;
+      }
       const parts = [];
       if (ing.quantity) parts.push(ing.quantity);
       if (ing.unit) parts.push(ing.unit);
       if (ing.name) parts.push(ing.name);
       return parts.join(' ').trim();
     }) || [];
+
+    console.log('Formatted ingredients:', ingredientStrings);
 
     res.json({
       title: recipe.title || videoMetadata.title,
