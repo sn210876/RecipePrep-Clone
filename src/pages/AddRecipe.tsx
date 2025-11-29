@@ -540,7 +540,7 @@ return (
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
-    {/* Title section - static (scrolls away on mobile and desktop) */}
+    {/* Title section - scrolls away naturally */}
         <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6">
           <div className="max-w-4xl mx-auto px-4">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
@@ -549,7 +549,7 @@ return (
         </div>
 
         {/* Scrollable content container */}
-        <div className="overflow-y-auto max-h-[calc(95vh-6rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6 pt-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain pb-32 md:pb-6 pt-4">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* URL Import Section - Mobile optimized */}
