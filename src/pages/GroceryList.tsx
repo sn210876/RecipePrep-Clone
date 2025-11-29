@@ -572,7 +572,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                     <Trash2 className="w-4 h-4 mr-1" />
                     Clear All
                   </Button>
-                  <<Button
                     onClick={handleSendToCart}
                     className="h-10 text-sm bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                   >
