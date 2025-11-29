@@ -531,35 +531,34 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
               {checkedCount} of {totalCount} items checked
             </p>
           </div>
-          
-          {/* Mobile-optimized button layout */}
-          <div className="flex flex-wrap gap-2">
+       {/* Mobile-optimized button layout */}
+          <div className="grid grid-cols-2 gap-2">
             <Button
               onClick={() => setShowAddItemDialog(true)}
-              className="flex-1 min-w-[140px] h-12"
+              className="h-10 text-sm"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-1" />
               Add Item
             </Button>
             <Button
               variant="outline"
               onClick={() => setShowAddRecipeDialog(true)}
-              className="flex-1 min-w-[140px] h-12"
+              className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-50"
             >
-              <ChefHat className="w-4 h-4 mr-2" />
+              <ChefHat className="w-4 h-4 mr-1" />
               Add Recipe
             </Button>
           </div>
 
           {(checkedCount > 0 || totalCount > 0) && (
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {checkedCount > 0 && (
                 <Button 
                   variant="outline" 
                   onClick={handleClearChecked}
-                  className="flex-1 h-12"
+                  className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-50"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-4 h-4 mr-1" />
                   Clear Checked
                 </Button>
               )}
@@ -568,16 +567,16 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                   <Button 
                     variant="destructive" 
                     onClick={handleClearAll}
-                    className="flex-1 h-12"
+                    className="h-10 text-sm"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-4 h-4 mr-1" />
                     Clear All
                   </Button>
                   <Button
                     onClick={handleSendToCart}
-                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    className="col-span-2 h-10 text-sm bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                   >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    <ShoppingCart className="w-4 h-4 mr-1" />
                     Send to Cart
                   </Button>
                 </>
