@@ -74,6 +74,8 @@ export async function extractRecipeFromDescription(data: {
 }): Promise<any> {
   const RENDER_SERVER = import.meta.env.VITE_API_URL || 'https://recipe-backend-nodejs-1.onrender.com';
 
+  console.log('[YouTube Service] Extracting recipe from description...');
+
   const response = await fetch(`${RENDER_SERVER}/extract-from-description`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -82,9 +84,18 @@ export async function extractRecipeFromDescription(data: {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('[YouTube Service] Description extraction failed:', errorText);
+    console.error('[YouTube Service] Description extraction failed:', response.status, errorText);
+
+    // Check if endpoint doesn't exist (backend not deployed)
+    if (response.status === 404) {
+      throw new Error('Backend server needs update. Please redeploy the server to Render with the latest code.');
+    }
+
     throw new Error('Failed to extract recipe from description');
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('[YouTube Service] ✅ Recipe extracted from description:', result.title);
+
+  return result;
 }
