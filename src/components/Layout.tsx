@@ -317,9 +317,14 @@ const loadUnreadCount = async (userId: string) => {
         <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       </div>
     )}
-    {currentPage === 'settings' && (
+   {currentPage === 'settings' && (
       <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
         <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+      </div>
+    )}
+    {currentPage === 'faq' && (
+      <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
+        <HelpCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       </div>
     )}
     <span className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 truncate">
