@@ -93,20 +93,44 @@ export async function getSavedRecipes(userId: string): Promise<Recipe[]> {
 }
 
 export async function saveRecipeToCloud(userId: string, recipe: Recipe): Promise<void> {
-  const { error } = await supabase
-    .from('saved_recipes')
-    .upsert({
-      user_id: userId,
-      recipe_id: recipe.id,
-      recipe_data: { ...recipe, isSaved: true },
-      updated_at: new Date().toISOString()
-    }, {
-      onConflict: 'user_id,recipe_id'
-    });
+  try {
+    const existingRecord = await supabase
+      .from('saved_recipes')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('recipe_id', recipe.id)
+      .maybeSingle();
 
-  if (error) {
-    console.error('Error saving recipe:', error);
-    throw new Error('Failed to save recipe');
+    if (existingRecord.data) {
+      const { error } = await supabase
+        .from('saved_recipes')
+        .update({
+          recipe_data: { ...recipe, isSaved: true },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingRecord.data.id);
+
+      if (error) {
+        console.error('Error updating recipe:', error);
+        throw new Error('Failed to update recipe');
+      }
+    } else {
+      const { error } = await supabase
+        .from('saved_recipes')
+        .insert({
+          user_id: userId,
+          recipe_id: recipe.id,
+          recipe_data: { ...recipe, isSaved: true }
+        });
+
+      if (error) {
+        console.error('Error saving recipe:', error);
+        throw new Error('Failed to save recipe');
+      }
+    }
+  } catch (error: any) {
+    console.error('Error in saveRecipeToCloud:', error);
+    throw new Error(error.message || 'Failed to save recipe');
   }
 }
 
