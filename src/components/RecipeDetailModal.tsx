@@ -283,9 +283,7 @@ export function RecipeDetailModal({
                       onClick={handleDelete}
                       className="w-full gap-2 hover:bg-rose-50 hover:border-rose-500 hover:text-rose-700 min-h-[40px] sm:min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold border-2"
                     >
-                      <Trash2 className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">Remove from Saved</span>
-                    </Button>
+                     
                   </div>
                 )}
 
