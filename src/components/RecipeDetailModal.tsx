@@ -32,7 +32,7 @@ export function RecipeDetailModal({
   open,
   onOpenChange,
 }: RecipeDetailModalProps) {
-  const { state, dispatch } = useRecipes();
+  const { state, dispatch, saveRecipe, removeRecipe } = useRecipes();
   const [cookMode, setCookMode] = useState(false);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
   const [checkedInstructions, setCheckedInstructions] = useState<Record<number, boolean>>({});
@@ -64,13 +64,17 @@ export function RecipeDetailModal({
     return <CookMode recipe={recipe} onClose={() => setCookMode(false)} />;
   }
 
-  const handleSaveRecipe = () => {
-    if (isSaved) {
-      dispatch({ type: 'REMOVE_RECIPE', payload: recipe.id });
-      toast.success('Recipe removed from your collection');
-    } else {
-      dispatch({ type: 'SAVE_RECIPE', payload: recipe });
-      toast.success('Recipe saved to your collection');
+  const handleSaveRecipe = async () => {
+    try {
+      if (isSaved) {
+        await removeRecipe(recipe.id);
+        toast.success('Recipe removed from your collection');
+      } else {
+        await saveRecipe(recipe);
+        toast.success('Recipe saved to your collection');
+      }
+    } catch (error) {
+      toast.error('Failed to update recipe');
     }
   };
 
@@ -91,11 +95,15 @@ export function RecipeDetailModal({
   };
 
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (isSaved) {
-      dispatch({ type: 'REMOVE_RECIPE', payload: recipe.id });
-      toast.success('Recipe deleted');
-      onOpenChange(false);
+      try {
+        await removeRecipe(recipe.id);
+        toast.success('Recipe deleted');
+        onOpenChange(false);
+      } catch (error) {
+        toast.error('Failed to delete recipe');
+      }
     }
   };
 

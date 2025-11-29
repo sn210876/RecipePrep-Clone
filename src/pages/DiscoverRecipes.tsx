@@ -36,7 +36,7 @@ interface DiscoverProps {
 }
 
 export function Discover({ onNavigate }: DiscoverProps) {
-  const { state, dispatch } = useRecipes();
+  const { state, dispatch, saveRecipe, removeRecipe } = useRecipes();
   const { user, isAdmin } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(null);
@@ -294,7 +294,7 @@ useEffect(() => {
     return getRecommendationInsights(state.savedRecipes);
   }, [state.savedRecipes]);
 
-  const handleSave = (recipeId: string) => {
+  const handleSave = async (recipeId: string) => {
     if (!user) {
       toast.error('Please sign up or log in to save recipes');
       return;
@@ -302,10 +302,16 @@ useEffect(() => {
     const recipe = allRecipes.find(r => r.id === recipeId);
     if (recipe) {
       const isAlreadySaved = state.savedRecipes.some(r => r.id === recipeId);
-      if (isAlreadySaved) {
-        dispatch({ type: 'REMOVE_RECIPE', payload: recipeId });
-      } else {
-        dispatch({ type: 'SAVE_RECIPE', payload: recipe });
+      try {
+        if (isAlreadySaved) {
+          await removeRecipe(recipeId);
+          toast.success('Recipe removed from collection');
+        } else {
+          await saveRecipe(recipe);
+          toast.success('Recipe saved to your collection');
+        }
+      } catch (error) {
+        toast.error('Failed to update recipe');
       }
     }
   };

@@ -74,6 +74,55 @@ function recipeToDBRecipe(recipe: Omit<Recipe, 'id'>): Omit<DBRecipe, 'id' | 'cr
   };
 }
 
+export async function getSavedRecipes(userId: string): Promise<Recipe[]> {
+  const { data, error } = await supabase
+    .from('saved_recipes')
+    .select('recipe_data')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching saved recipes:', error);
+    throw new Error('Failed to fetch saved recipes');
+  }
+
+  return (data || []).map(item => ({
+    ...item.recipe_data,
+    isSaved: true
+  }));
+}
+
+export async function saveRecipeToCloud(userId: string, recipe: Recipe): Promise<void> {
+  const { error } = await supabase
+    .from('saved_recipes')
+    .upsert({
+      user_id: userId,
+      recipe_id: recipe.id,
+      recipe_data: { ...recipe, isSaved: true },
+      updated_at: new Date().toISOString()
+    }, {
+      onConflict: 'user_id,recipe_id'
+    });
+
+  if (error) {
+    console.error('Error saving recipe:', error);
+    throw new Error('Failed to save recipe');
+  }
+}
+
+export async function removeRecipeFromCloud(userId: string, recipeId: string): Promise<void> {
+  const { error } = await supabase
+    .from('saved_recipes')
+    .delete()
+    .eq('user_id', userId)
+    .eq('recipe_id', recipeId);
+
+  if (error) {
+    console.error('Error removing recipe:', error);
+    throw new Error('Failed to remove recipe');
+  }
+}
+
 export async function createRecipe(recipe: Omit<Recipe, 'id'>): Promise<Recipe> {
   const dbRecipe = recipeToDBRecipe(recipe);
 

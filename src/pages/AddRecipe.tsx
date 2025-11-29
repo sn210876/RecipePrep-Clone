@@ -63,7 +63,7 @@ interface AddRecipeProps {
 }
 
 export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
-  const { dispatch } = useRecipes();
+  const { dispatch, saveRecipe } = useRecipes();
   const [editRecipeId, setEditRecipeId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -509,8 +509,12 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
       }
 
-      // 5. Add to local state
-      dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+      // 5. Add to saved recipes
+      try {
+        await saveRecipe(createdRecipe);
+      } catch (saveError) {
+        console.error('[AddRecipe] Failed to save recipe:', saveError);
+      }
 
       // 6. Navigate to my recipes
       if (onNavigate) {

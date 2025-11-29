@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { Recipe, MealPlanEntry, GroceryListItem, UserPreferences } from '../types/recipe';
 import { buildUserProfile, UserProfile, trackRecipeInteraction, updateUserPreferenceAnalytics } from '../services/recommendationService';
+import { getSavedRecipes, saveRecipeToCloud, removeRecipeFromCloud } from '../services/recipeService';
+import { useAuth } from './AuthContext';
 
 interface RecipeState {
   savedRecipes: Recipe[];
@@ -25,7 +27,8 @@ type RecipeAction =
   | { type: 'UPDATE_GROCERY_LIST'; payload: GroceryListItem[] }
   | { type: 'UPDATE_PREFERENCES'; payload: Partial<UserPreferences> }
   | { type: 'COMPLETE_ONBOARDING' }
-  | { type: 'LOAD_STATE'; payload: RecipeState };
+  | { type: 'LOAD_STATE'; payload: RecipeState }
+  | { type: 'SET_SAVED_RECIPES'; payload: Recipe[] };
 
 const initialState: RecipeState = {
   savedRecipes: [],
@@ -50,14 +53,22 @@ const initialState: RecipeState = {
   hasSeenOnboarding: true
 };
 
-const RecipeContext = createContext<{
+interface RecipeContextValue {
   state: RecipeState;
   dispatch: React.Dispatch<RecipeAction>;
-} | undefined>(undefined);
+  syncRecipesFromCloud: () => Promise<void>;
+  saveRecipe: (recipe: Recipe) => Promise<void>;
+  removeRecipe: (recipeId: string) => Promise<void>;
+}
+
+const RecipeContext = createContext<RecipeContextValue | undefined>(undefined);
 
 function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
   switch (action.type) {
     case 'SAVE_RECIPE': {
+      const exists = state.savedRecipes.some(r => r.id === action.payload.id);
+      if (exists) return state;
+
       const updatedSavedRecipes = [...state.savedRecipes, { ...action.payload, isSaved: true }];
       const updatedProfile = buildUserProfile(updatedSavedRecipes);
 
@@ -146,6 +157,14 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
         userProfile: profile
       };
     }
+    case 'SET_SAVED_RECIPES': {
+      const profile = buildUserProfile(action.payload);
+      return {
+        ...state,
+        savedRecipes: action.payload,
+        userProfile: profile
+      };
+    }
     default:
       return state;
   }
@@ -153,29 +172,86 @@ function recipeReducer(state: RecipeState, action: RecipeAction): RecipeState {
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(recipeReducer, initialState);
+  const auth = useAuth();
 
-  useEffect(() => {
-    const savedState = localStorage.getItem('recipeAppState');
-    if (savedState) {
+  const syncRecipesFromCloud = async () => {
+    if (!auth?.user) return;
+
+    try {
+      const cloudRecipes = await getSavedRecipes(auth.user.id);
+      dispatch({ type: 'SET_SAVED_RECIPES', payload: cloudRecipes });
+    } catch (error) {
+      console.error('Failed to sync recipes from cloud:', error);
+    }
+  };
+
+  const saveRecipe = async (recipe: Recipe) => {
+    dispatch({ type: 'SAVE_RECIPE', payload: recipe });
+
+    if (auth?.user) {
       try {
-        const parsedState = JSON.parse(savedState);
-        dispatch({ type: 'LOAD_STATE', payload: { ...parsedState, discoveryRecipes: [] } });
-      } catch (e) {
-        console.error('Failed to load state from localStorage', e);
+        await saveRecipeToCloud(auth.user.id, recipe);
+      } catch (error) {
+        console.error('Failed to save recipe to cloud:', error);
+        dispatch({ type: 'REMOVE_RECIPE', payload: recipe.id });
+        throw error;
       }
     }
-  }, []);
+  };
+
+  const removeRecipe = async (recipeId: string) => {
+    const removedRecipe = state.savedRecipes.find(r => r.id === recipeId);
+    dispatch({ type: 'REMOVE_RECIPE', payload: recipeId });
+
+    if (auth?.user) {
+      try {
+        await removeRecipeFromCloud(auth.user.id, recipeId);
+      } catch (error) {
+        console.error('Failed to remove recipe from cloud:', error);
+        if (removedRecipe) {
+          dispatch({ type: 'SAVE_RECIPE', payload: removedRecipe });
+        }
+        throw error;
+      }
+    }
+  };
 
   useEffect(() => {
-    const stateToSave = {
-      ...state,
-      discoveryRecipes: []
-    };
-    localStorage.setItem('recipeAppState', JSON.stringify(stateToSave));
-  }, [state]);
+    if (auth?.user) {
+      syncRecipesFromCloud();
+    } else {
+      const savedState = localStorage.getItem('recipeAppState');
+      if (savedState) {
+        try {
+          const parsedState = JSON.parse(savedState);
+          dispatch({ type: 'LOAD_STATE', payload: { ...parsedState, discoveryRecipes: [] } });
+        } catch (e) {
+          console.error('Failed to load state from localStorage', e);
+        }
+      }
+    }
+  }, [auth?.user]);
+
+  useEffect(() => {
+    if (!auth?.user) {
+      const stateToSave = {
+        ...state,
+        discoveryRecipes: []
+      };
+      localStorage.setItem('recipeAppState', JSON.stringify(stateToSave));
+    }
+  }, [state, auth?.user]);
+
+  const value: RecipeContextValue = {
+    state,
+    dispatch,
+    syncRecipesFromCloud,
+    saveRecipe,
+    removeRecipe
+  };
 
   return (
-    <RecipeContext.Provider value={{ state, dispatch }}>
+    <RecipeContext.Provider value={value}>
       {children}
     </RecipeContext.Provider>
   );
