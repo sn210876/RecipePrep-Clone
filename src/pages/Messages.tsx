@@ -375,7 +375,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* CHAT HEADER */}
-        <div className="fixed top-16 left-0 right-0 z-[60] bg-white border-b-2 border-gray-300 px-3 py-2.5 shadow-md">
+        <div className="fixed top-16 left-0 right-0 z-[60] bg-white border-b-2 border-gray-300 shadow-md">
+          <div className="max-w-sm lg:max-w-md mx-auto px-3 py-2.5">
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
@@ -409,10 +410,12 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
               <span className="font-semibold">{selectedConversation.other_user.username}</span>
             </div>
           </div>
+          </div>
         </div>
 
         {/* MESSAGES */}
-<div className="pt-32 flex-1 overflow-y-auto px-4 pb-32 lg:pb-24">
+<div className="pt-32 flex-1 overflow-y-auto pb-32 lg:pb-24">
+  <div className="max-w-sm lg:max-w-md mx-auto px-4">
   <div className="space-y-4 py-4">
     {messages.map((message) => (
       <div
@@ -482,11 +485,12 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     ))}
     <div ref={messagesEndRef} />
   </div>
+  </div>
 </div>
 
         {/* INPUT BAR - Fixed footer above bottom nav */}
-        <div className="fixed bottom-0 left-0 right-0 lg:left-56 bg-white border-t border-gray-200 px-4 py-3 z-40 mb-16 lg:mb-0 shadow-lg">
-          <div className="max-w-4xl mx-auto flex gap-2">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 z-40 mb-16 lg:mb-0 shadow-lg">
+          <div className="max-w-sm lg:max-w-md mx-auto px-4 flex gap-2">
             <input
               type="text"
               value={newMessage}
@@ -514,6 +518,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     <div className="min-h-screen bg-gray-50">
       {/* TOP BAR */}
       <div className="fixed top-14 sm:top-16 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-sm lg:max-w-md mx-auto">
         <div className="flex items-center gap-3 px-4 py-3">
           {onBack && (
             <button
@@ -541,10 +546,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             />
           </div>
         </div>
+        </div>
       </div>
 
       {/* SEARCH RESULTS OR CONVERSATION LIST */}
-      <div className="pt-40 sm:pt-44 pb-20 px-4">
+      <div className="pt-40 sm:pt-44 pb-20 px-4 max-w-sm lg:max-w-md mx-auto">
         {searchQuery.trim() ? (
           // Show search results
           <div className="space-y-2">

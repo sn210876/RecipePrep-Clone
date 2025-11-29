@@ -996,8 +996,8 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden">
-      <div className="max-w-4xl mx-auto w-full" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-        <div className="fixed top-14 left-0 right-0 z-20 bg-white border-b border-gray-200 p-3 lg:px-6 max-w-4xl mx-auto shadow-sm">
+      <div className="max-w-sm lg:max-w-md mx-auto w-full" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
+        <div className="fixed top-14 left-0 right-0 z-20 bg-white border-b border-gray-200 p-3 lg:px-6 max-w-sm lg:max-w-md mx-auto shadow-sm">
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
