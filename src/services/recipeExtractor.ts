@@ -6,6 +6,7 @@ import {
   hasRecipeInDescription,
   extractRecipeFromDescription
 } from './youtubeService';
+import { trackExtraction } from './extractionMonitor';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -324,17 +325,27 @@ async function extractFromYouTubeHybrid(url: string, videoId: string): Promise<E
     // STEP 1: Try fast description extraction first
     console.log('[Extractor] Attempting YouTube description extraction...');
 
-    const videoData = await getYouTubeVideoData(videoId);
+    const videoData = await trackExtraction(
+      url,
+      'YouTube',
+      'metadata',
+      () => getYouTubeVideoData(videoId)
+    );
 
     if (hasRecipeInDescription(videoData.description)) {
       console.log('[Extractor] ✅ Recipe found in description! Using fast extraction...');
 
-      const descriptionRecipe = await extractRecipeFromDescription({
-        title: videoData.title,
-        description: videoData.description,
-        thumbnail: videoData.thumbnail,
-        channelTitle: videoData.channelTitle,
-      });
+      const descriptionRecipe = await trackExtraction(
+        url,
+        'YouTube',
+        'description',
+        () => extractRecipeFromDescription({
+          title: videoData.title,
+          description: videoData.description,
+          thumbnail: videoData.thumbnail,
+          channelTitle: videoData.channelTitle,
+        })
+      );
 
       // Format the response to match ExtractedRecipeData
       return formatDescriptionRecipe(descriptionRecipe, url, videoData);
@@ -343,7 +354,12 @@ async function extractFromYouTubeHybrid(url: string, videoId: string): Promise<E
     console.log('[Extractor] No recipe in description, falling back to audio transcription...');
 
     // STEP 2: Fall back to audio transcription (slow & expensive)
-    return await extractFromRenderServer(url);
+    return await trackExtraction(
+      url,
+      'YouTube',
+      'audio',
+      () => extractFromRenderServer(url)
+    );
 
   } catch (error: any) {
     console.error('[Extractor] YouTube hybrid extraction error:', error);
@@ -357,7 +373,12 @@ async function extractFromYouTubeHybrid(url: string, videoId: string): Promise<E
     // STEP 3: Last resort - try audio extraction
     if (error.message?.includes('quota') || error.message?.includes('API')) {
       console.log('[Extractor] YouTube API issue, falling back to audio extraction...');
-      return await extractFromRenderServer(url);
+      return await trackExtraction(
+        url,
+        'YouTube',
+        'audio-fallback',
+        () => extractFromRenderServer(url)
+      );
     }
 
     throw error;
@@ -383,18 +404,28 @@ async function extractFromRenderServer(url: string): Promise<ExtractedRecipeData
 
     if (!response.ok) {
       console.error('[Extractor] Server response not OK:', response.status);
-      if (response.status >= 500 || response.status === 429) {
-        throw new Error('Server waking up — try again in 20 seconds');
-      }
       const errorText = await response.text();
       console.error('[Extractor] Error response:', errorText);
 
-      // Better error message for bot detection
-      if (errorText.includes('Sign in to confirm') || errorText.includes('bot')) {
-        throw new Error('YouTube blocked access. Please try pasting the video description instead.');
+      // Enhanced error detection and user guidance
+      if (response.status === 403) {
+        if (errorText.includes('bot detection') || errorText.includes('Sign in to confirm') || errorText.includes('not a bot')) {
+          throw new Error('🤖 YouTube detected automated access. Try these alternatives:\n\n1. Wait 5 minutes and retry\n2. Copy the video description from YouTube and paste it in the manual entry form\n3. Try a different YouTube video');
+        }
+        if (errorText.includes('Age-restricted')) {
+          throw new Error('❌ This video is age-restricted and cannot be extracted automatically. Please copy the recipe from the video description.');
+        }
       }
 
-      throw new Error('Video extraction failed');
+      if (response.status === 404) {
+        throw new Error('❌ Video not found or is private. Please check the URL and try again.');
+      }
+
+      if (response.status >= 500 || response.status === 429) {
+        throw new Error('⏳ Server is waking up or busy. Please wait 20-30 seconds and try again.');
+      }
+
+      throw new Error('Video extraction failed. Please try the manual description paste method.');
     }
 
     const data = await response.json();
@@ -474,10 +505,16 @@ async function extractFromRenderServer(url: string): Promise<ExtractedRecipeData
     console.error('[Extractor] Render server error:', err);
 
     if (err.name === 'AbortError') {
-      throw new Error('Server is waking up — please wait 20-30 seconds and try again');
+      throw new Error('⏳ Request timed out. The server may be busy or the video may be too long. Please try again or use the manual description paste method.');
     }
 
-    throw err;
+    // Re-throw with existing message if it's already formatted
+    if (err.message?.includes('🤖') || err.message?.includes('❌') || err.message?.includes('⏳')) {
+      throw err;
+    }
+
+    // Generic fallback
+    throw new Error(`Extraction failed: ${err.message || 'Unknown error'}. Try pasting the video description manually.`);
   }
 }
 
