@@ -202,6 +202,62 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.post('/extract', async (req, res) => {
+  try {
+    const { url } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+
+    const videoId = `video_${Date.now()}`;
+
+    const audioPath = await downloadAudio(url, videoId);
+    const thumbnailPath = await downloadThumbnail(url, videoId);
+    const videoMetadata = await getVideoMetadata(url, videoId);
+
+    const transcript = await transcribeAudio(audioPath);
+
+    const thumbnailBase64 = await convertImageToBase64(thumbnailPath);
+
+    const recipe = await extractRecipeFromTranscript(transcript, thumbnailBase64, videoMetadata);
+
+    await cleanupFiles(videoId);
+
+    const ingredientStrings = recipe.ingredients?.map(ing => {
+      const parts = [];
+      if (ing.quantity) parts.push(ing.quantity);
+      if (ing.unit) parts.push(ing.unit);
+      if (ing.name) parts.push(ing.name);
+      return parts.join(' ').trim();
+    }) || [];
+
+    res.json({
+      title: recipe.title || videoMetadata.title,
+      channel: videoMetadata.uploader,
+      creator: videoMetadata.uploader,
+      ingredients: ingredientStrings,
+      instructions: recipe.instructions || [],
+      prep_time: recipe.prepTime || 15,
+      cook_time: recipe.cookTime || 30,
+      servings: String(recipe.servings || 4),
+      yield: String(recipe.servings || 4),
+      thumbnail: recipe.imageUrl || '',
+      image: recipe.imageUrl || '',
+      notes: 'extracted from video'
+    });
+  } catch (error) {
+    console.error('Error processing video:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to process video',
+    });
+  }
+});
+
 app.post('/api/extract-recipe-from-video', async (req, res) => {
   try {
     const { url } = req.body;
