@@ -43,6 +43,15 @@ INSTAGRAM_COOKIES = """# Netscape HTTP Cookie File
 class ExtractRequest(BaseModel):
     url: str
 
+class YouTubeMetadataRequest(BaseModel):
+    videoId: str
+
+class DescriptionExtractionRequest(BaseModel):
+    title: str
+    description: str
+    thumbnail: str = ""
+    channelTitle: str = ""
+
 def parse_with_ai(text: str):
     if not text.strip():
         return [], [], ""
@@ -121,6 +130,151 @@ async def extract_recipe(request: ExtractRequest):
         if cookie_file and os.path.exists(cookie_file):
             os.unlink(cookie_file)
 
+@app.post("/youtube-metadata")
+async def youtube_metadata(request: YouTubeMetadataRequest):
+    """Fetch YouTube video metadata using YouTube Data API"""
+    video_id = request.videoId
+    api_key = os.getenv("YOUTUBE_API_KEY")
+
+    if not api_key:
+        raise HTTPException(status_code=500, detail="YouTube API key not configured")
+
+    print(f"Fetching YouTube metadata for: {video_id}")
+
+    try:
+        url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet&id={video_id}&key={api_key}"
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=f"YouTube API error: {response.text}")
+
+        data = response.json()
+
+        if not data.get("items") or len(data["items"]) == 0:
+            raise HTTPException(status_code=404, detail="Video not found")
+
+        video = data["items"][0]
+        snippet = video["snippet"]
+
+        result = {
+            "title": snippet.get("title", ""),
+            "description": snippet.get("description", ""),
+            "thumbnail": snippet.get("thumbnails", {}).get("high", {}).get("url", "") or
+                        snippet.get("thumbnails", {}).get("default", {}).get("url", ""),
+            "channelTitle": snippet.get("channelTitle", "")
+        }
+
+        print(f"YouTube metadata retrieved: {result['title']}")
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching YouTube metadata: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch YouTube metadata: {str(e)}")
+
+@app.post("/extract-from-description")
+async def extract_from_description(request: DescriptionExtractionRequest):
+    """Extract recipe from YouTube video description using GPT-4o-mini"""
+
+    if not request.description:
+        raise HTTPException(status_code=400, detail="Description is required")
+
+    if not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+
+    print("Extracting recipe from description...")
+
+    prompt = f"""Extract a structured recipe from this YouTube video description.
+
+Video Title: {request.title or 'Unknown'}
+Channel: {request.channelTitle or 'Unknown'}
+
+Description:
+{request.description}
+
+EXTRACTION RULES:
+1. Extract ALL ingredients with their measurements exactly as written
+2. Extract ALL cooking instructions in order
+3. Extract prep time, cook time, and servings if mentioned
+4. If times aren't specified, estimate based on recipe complexity
+5. Identify cuisine type and difficulty level
+6. Extract any dietary tags (vegetarian, vegan, gluten-free, etc.)
+
+RESPONSE FORMAT:
+Respond with ONLY a valid JSON object (no markdown, no code blocks):
+{{
+  "title": "recipe title from description or video title",
+  "description": "brief description of the dish",
+  "prepTime": number (minutes),
+  "cookTime": number (minutes),
+  "servings": number,
+  "difficulty": "Easy" or "Medium" or "Hard",
+  "cuisineType": "type of cuisine",
+  "ingredients": [
+    {{"name": "ingredient name", "quantity": "amount", "unit": "unit"}}
+  ],
+  "instructions": ["step 1", "step 2", ...],
+  "dietaryTags": ["tag1", "tag2", ...],
+  "notes": "any additional notes"
+}}"""
+
+    try:
+        response = client.chat.completions.create(
+            model='gpt-4o-mini',
+            messages=[
+                {"role": "system", "content": "You are a recipe extraction expert. Extract recipes from text descriptions accurately."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.3,
+        )
+
+        recipe_data = json.loads(response.choices[0].message.content)
+
+        print(f"Description extraction successful: {recipe_data.get('title', 'Unknown')}")
+
+        # Format ingredients as strings
+        ingredients = []
+        for ing in recipe_data.get("ingredients", []):
+            if isinstance(ing, str):
+                ingredients.append(ing)
+            else:
+                parts = []
+                if ing.get("quantity"):
+                    parts.append(str(ing["quantity"]))
+                if ing.get("unit"):
+                    parts.append(ing["unit"])
+                if ing.get("name"):
+                    parts.append(ing["name"])
+                ingredients.append(" ".join(parts).strip())
+
+        result = {
+            "title": recipe_data.get("title") or request.title,
+            "description": recipe_data.get("description", ""),
+            "creator": request.channelTitle or "YouTube",
+            "ingredients": ingredients,
+            "instructions": recipe_data.get("instructions", []),
+            "prep_time": recipe_data.get("prepTime", 15),
+            "cook_time": recipe_data.get("cookTime", 30),
+            "servings": str(recipe_data.get("servings", 4)),
+            "yield": str(recipe_data.get("servings", 4)),
+            "difficulty": recipe_data.get("difficulty", "Medium"),
+            "cuisineType": recipe_data.get("cuisineType", "Global"),
+            "dietaryTags": recipe_data.get("dietaryTags", []),
+            "thumbnail": request.thumbnail or "",
+            "image": request.thumbnail or "",
+            "imageUrl": request.thumbnail or "",
+            "notes": recipe_data.get("notes", "Extracted from video description"),
+            "extractionMethod": "description"
+        }
+
+        return result
+
+    except Exception as e:
+        print(f"Error extracting from description: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to extract recipe from description: {str(e)}")
+
 @app.get("/")
 async def root():
-    return {"status": "ok", "version": "2025-11-19"}A
+    return {"status": "ok", "version": "2025-11-29"}
