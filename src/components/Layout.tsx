@@ -180,18 +180,21 @@ const loadUnreadCount = async (userId: string) => {
   return (
     <div className="min-h-screen bg-white">
       
-           {/* Mobile Sidebar Overlay */}
-      {isMobileMenuOpen && (
+           {/* Sidebar Overlay - for both mobile and desktop */}
+      {(isMobileMenuOpen || isDesktopSidebarOpen) && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
+          className="fixed inset-0 z-40 bg-black/50"
+          onClick={() => {
+            setIsMobileMenuOpen(false);
+            setIsDesktopSidebarOpen(false);
+          }}
         />
       )}
 
-      {/* Sidebar - Mobile Optimized */}
- <aside className={`fixed left-0 top-0 z-[90] h-screen w-60 sm:w-60 lg:w-56 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      } ${isDesktopSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'}`}>
+      {/* Sidebar - works same on mobile and desktop */}
+ <aside className={`fixed left-0 top-0 z-[90] h-screen w-60 sm:w-60 lg:w-64 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+        (isMobileMenuOpen || isDesktopSidebarOpen) ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         <div className="flex h-full flex-col">
 
        {/* Logo/Brand - Mobile Optimized */}
@@ -216,18 +219,17 @@ const loadUnreadCount = async (userId: string) => {
     </div>
   </div>
 
-  {/* Close button - mobile: X, desktop: Menu toggle */}
+  {/* Close button */}
   <Button
     variant="ghost"
     size="icon"
     onClick={() => {
       setIsMobileMenuOpen(false);
-      setIsDesktopSidebarOpen(!isDesktopSidebarOpen);
+      setIsDesktopSidebarOpen(false);
     }}
     className="h-8 w-8 flex-shrink-0"
   >
-    <X className="h-5 w-5 lg:hidden" />
-    <Menu className="h-5 w-5 hidden lg:block" />
+    <X className="h-5 w-5" />
   </Button>
 </div>
 
@@ -270,7 +272,7 @@ const loadUnreadCount = async (userId: string) => {
       </aside>
 
       {/* Main Content Area */}
-      <div className={`transition-all duration-300 ${isDesktopSidebarOpen ? 'lg:ml-56' : 'lg:ml-0'}`}>
+      <div>
         
         {/* Top Header - Mobile Optimized */}
 <header className="sticky top-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">

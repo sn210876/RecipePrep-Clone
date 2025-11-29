@@ -513,7 +513,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   return (
     <div className="min-h-screen bg-gray-50">
       {/* TOP BAR */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+      <div className="fixed top-14 sm:top-16 left-0 right-0 z-50 bg-white border-b border-gray-200">
         <div className="flex items-center gap-3 px-4 py-3">
           {onBack && (
             <button
@@ -544,7 +544,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       </div>
 
       {/* SEARCH RESULTS OR CONVERSATION LIST */}
-      <div className="pt-32 pb-20 px-4">
+      <div className="pt-40 sm:pt-44 pb-20 px-4">
         {searchQuery.trim() ? (
           // Show search results
           <div className="space-y-2">
