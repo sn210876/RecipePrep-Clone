@@ -284,12 +284,12 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       const data = await extractRecipeFromUrl(urlInput);
       setExtractedData(data);
 
-      if (data.hasConflict) {
+    if (data.hasConflict) {
         setShowConflictDialog(true);
-        toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract' });
+        toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract', duration: 2000 });
       } else {
         setShowPreview(true);
-        toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract' });
+        toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
       }
       setIsExtracting(false);
     } catch (error: any) {
