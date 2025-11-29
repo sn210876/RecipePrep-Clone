@@ -1043,7 +1043,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
             <div ref={notificationRef} className="relative">
               <button
-              onClick={async (e) => {
+             onClick={async (e) => {
   e.stopPropagation();
   setShowNotifications(!showNotifications);
   if (!showNotifications && currentUserId) {
