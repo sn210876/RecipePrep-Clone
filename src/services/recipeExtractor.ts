@@ -1,5 +1,11 @@
 import { Ingredient } from '@/types/recipe';
 import { decodeHtmlEntities, normalizeQuantity } from '@/lib/utils';
+import {
+  extractVideoId,
+  getYouTubeVideoData,
+  hasRecipeInDescription,
+  extractRecipeFromDescription
+} from './youtubeService';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -7,6 +13,7 @@ const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 // YOUR RENDER SERVER ONLY — 100% FINAL VERSION
 const RENDER_SERVER = 'https://recipe-backend-nodejs-1.onrender.com/extract';
+const SUPABASE_PHOTO_FUNCTION = `${SUPABASE_URL}/functions/v1/extract-recipe-photo`;
 
 export interface ExtractedRecipeData {
   title: string;
@@ -35,10 +42,21 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
     throw new Error('Please enter a valid URL');
   }
 
+  // Check if it's a YouTube URL first - try fast description extraction
+  const videoId = extractVideoId(url);
+  if (videoId) {
+    console.log('[Extractor] YouTube video detected:', videoId);
+    try {
+      return await extractFromYouTubeHybrid(url, videoId);
+    } catch (error) {
+      console.error('[Extractor] YouTube hybrid extraction failed:', error);
+      // Fall through to regular social media extraction
+    }
+  }
+
   const isSocial = /tiktok\.com|instagram\.com|youtube\.com|youtu\.be/i.test(url);
 
-  // ALL SOCIAL MEDIA (YouTube, TikTok, Instagram) → YOUR RENDER SERVER ONLY
-  // ALL SOCIAL MEDIA (YouTube, TikTok, Instagram) → YOUR RENDER SERVER ONLY
+  // ALL OTHER SOCIAL MEDIA (TikTok, Instagram) → YOUR RENDER SERVER ONLY
 if (isSocial) {
   try {
     console.log('[Extractor] Sending to Render server:', url);
@@ -300,11 +318,389 @@ export function isValidUrl(url: string): boolean {
   }
 }
 
+// Hybrid YouTube extraction: Try description first, fall back to audio
+async function extractFromYouTubeHybrid(url: string, videoId: string): Promise<ExtractedRecipeData> {
+  try {
+    // STEP 1: Try fast description extraction first
+    console.log('[Extractor] Attempting YouTube description extraction...');
+
+    const videoData = await getYouTubeVideoData(videoId);
+
+    if (hasRecipeInDescription(videoData.description)) {
+      console.log('[Extractor] ✅ Recipe found in description! Using fast extraction...');
+
+      const descriptionRecipe = await extractRecipeFromDescription({
+        title: videoData.title,
+        description: videoData.description,
+        thumbnail: videoData.thumbnail,
+        channelTitle: videoData.channelTitle,
+      });
+
+      // Format the response to match ExtractedRecipeData
+      return formatDescriptionRecipe(descriptionRecipe, url, videoData);
+    }
+
+    console.log('[Extractor] No recipe in description, falling back to audio transcription...');
+
+    // STEP 2: Fall back to audio transcription (slow & expensive)
+    return await extractFromRenderServer(url);
+
+  } catch (error: any) {
+    console.error('[Extractor] YouTube hybrid extraction error:', error);
+
+    // STEP 3: Last resort - try audio extraction
+    if (error.message?.includes('quota') || error.message?.includes('API')) {
+      console.log('[Extractor] YouTube API issue, falling back to audio extraction...');
+      return await extractFromRenderServer(url);
+    }
+
+    throw error;
+  }
+}
+
+// Extract from Render server (audio transcription)
+async function extractFromRenderServer(url: string): Promise<ExtractedRecipeData> {
+  console.log('[Extractor] Sending to Render server for audio extraction:', url);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+  try {
+    const response = await fetch(RENDER_SERVER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url.trim() }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error('[Extractor] Server response not OK:', response.status);
+      if (response.status >= 500 || response.status === 429) {
+        throw new Error('Server waking up — try again in 20 seconds');
+      }
+      const errorText = await response.text();
+      console.error('[Extractor] Error response:', errorText);
+
+      // Better error message for bot detection
+      if (errorText.includes('Sign in to confirm') || errorText.includes('bot')) {
+        throw new Error('YouTube blocked access. Please try pasting the video description instead.');
+      }
+
+      throw new Error('Video extraction failed');
+    }
+
+    const data = await response.json();
+    console.log('[Extractor] Raw data from server:', data);
+
+    // Get the raw image URL
+    const rawImageUrl = data.thumbnail || data.image || '';
+
+    // Check if it's an Instagram/Facebook CDN URL that needs proxying
+    let finalImageUrl = rawImageUrl;
+    if (rawImageUrl) {
+      const needsProxy = rawImageUrl.includes('cdninstagram.com') ||
+                         rawImageUrl.includes('fbcdn.net') ||
+                         rawImageUrl.includes('instagram.com');
+
+      if (needsProxy) {
+        const cleanUrl = rawImageUrl.replace(/&amp;/g, '&');
+        finalImageUrl = `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
+      }
+    }
+
+    // Normalize ingredients
+    const ingredients = (data.ingredients || []).map((ing: string) => {
+      const cleaned = decodeHtmlEntities(ing.trim());
+      if (!cleaned) return { quantity: '', unit: '', name: '' };
+
+      const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
+      const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
+      const quantity = normalizeQuantity(rawQty);
+
+      let rest = cleaned.slice(rawQty.length).trim();
+      const unitMatch = rest.match(/^(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|kilograms?|ml|milliliters?|l|liters?|pinch|dash|piece|pieces|clove|cloves|slice|slices|can|cans)\s+/i);
+
+      let unit = '';
+      if (unitMatch) {
+        const matchedUnit = unitMatch[1].toLowerCase();
+        rest = rest.slice(unitMatch[0].length).trim();
+
+        const unitMap: Record<string, string> = {
+          'cups': 'cup', 'cup': 'cup',
+          'tablespoons': 'tbsp', 'tablespoon': 'tbsp', 'tbsp': 'tbsp', 'tbsps': 'tbsp',
+          'teaspoons': 'tsp', 'teaspoon': 'tsp', 'tsp': 'tsp', 'tsps': 'tsp',
+          'ounces': 'oz', 'ounce': 'oz', 'oz': 'oz',
+          'pounds': 'lb', 'pound': 'lb', 'lbs': 'lb', 'lb': 'lb',
+          'grams': 'g', 'gram': 'g', 'g': 'g',
+          'kilograms': 'kg', 'kilogram': 'kg', 'kg': 'kg',
+          'milliliters': 'ml', 'milliliter': 'ml', 'ml': 'ml',
+          'liters': 'l', 'liter': 'l', 'l': 'l',
+        };
+
+        unit = unitMap[matchedUnit] || matchedUnit;
+      }
+
+      return { quantity, unit, name: rest };
+    });
+
+    return {
+      title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
+      description: decodeHtmlEntities(data.description || data.shortDescription || data.content || ''),
+      creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
+      ingredients,
+      instructions: (data.instructions || []).map((i: string) => decodeHtmlEntities(i)),
+      prepTime: formatTime(data.prep_time || 15),
+      cookTime: formatTime(data.cook_time || 35),
+      servings: data.servings || data.yield || '4',
+      cuisineType: 'Global',
+      difficulty: 'Medium',
+      mealTypes: ['Dinner'],
+      dietaryTags: [],
+      imageUrl: finalImageUrl,
+      videoUrl: undefined,
+      notes: `Recipe from ${data.channel || data.creator || 'video'}`,
+      sourceUrl: url,
+    };
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    console.error('[Extractor] Render server error:', err);
+
+    if (err.name === 'AbortError') {
+      throw new Error('Server is waking up — please wait 20-30 seconds and try again');
+    }
+
+    throw err;
+  }
+}
+
+// Format description-extracted recipe to match ExtractedRecipeData interface
+function formatDescriptionRecipe(recipe: any, sourceUrl: string, videoData: any): ExtractedRecipeData {
+  // Parse ingredients from description extraction
+  const ingredients = (recipe.ingredients || []).map((ing: any) => {
+    if (typeof ing === 'string') {
+      // Parse string ingredient
+      const cleaned = decodeHtmlEntities(ing.trim());
+      const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
+      const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
+      const quantity = normalizeQuantity(rawQty);
+      let rest = cleaned.slice(rawQty.length).trim();
+
+      const unitMatch = rest.match(/^(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|ml|l|pinch|dash|piece|pieces|clove|cloves|slice|slices|can|cans)\s+/i);
+      let unit = '';
+      if (unitMatch) {
+        unit = unitMatch[1].toLowerCase();
+        rest = rest.slice(unitMatch[0].length).trim();
+      }
+
+      return { quantity, unit, name: rest };
+    }
+
+    // Already structured
+    return {
+      quantity: normalizeQuantity(ing.quantity || ''),
+      unit: ing.unit || '',
+      name: decodeHtmlEntities(ing.name || '')
+    };
+  });
+
+  return {
+    title: decodeHtmlEntities(recipe.title || videoData.title || 'YouTube Recipe'),
+    description: decodeHtmlEntities(recipe.description || ''),
+    creator: decodeHtmlEntities(recipe.creator || videoData.channelTitle || 'Unknown'),
+    ingredients,
+    instructions: (recipe.instructions || []).map((i: string) => decodeHtmlEntities(i)),
+    prepTime: formatTime(recipe.prepTime || recipe.prep_time || 15),
+    cookTime: formatTime(recipe.cookTime || recipe.cook_time || 30),
+    servings: String(recipe.servings || 4),
+    cuisineType: recipe.cuisineType || recipe.cuisine || 'Global',
+    difficulty: (recipe.difficulty || 'Medium') as 'Easy' | 'Medium' | 'Hard',
+    mealTypes: recipe.mealTypes || ['Dinner'],
+    dietaryTags: recipe.dietaryTags || recipe.tags || [],
+    imageUrl: recipe.imageUrl || videoData.thumbnail || '',
+    videoUrl: sourceUrl,
+    notes: recipe.notes || `Recipe from ${videoData.channelTitle || 'YouTube'}`,
+    sourceUrl: sourceUrl,
+  };
+}
+
+function formatTime(minutes: number | string): string {
+  const mins = typeof minutes === 'string' ? parseInt(minutes) : minutes;
+  if (isNaN(mins)) return '30 mins';
+  return `${mins} mins`;
+}
+
 export function getPlatformFromUrl(url: string): string {
   if (url.includes('tiktok.com')) return 'TikTok';
   if (url.includes('instagram.com')) return 'Instagram';
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
   return 'Website';
+}
+
+export async function extractRecipeFromPhoto(imageFiles: File[]): Promise<ExtractedRecipeData> {
+  try {
+    if (!imageFiles || imageFiles.length === 0) {
+      throw new Error('Please select at least one photo');
+    }
+
+    if (imageFiles.length > 4) {
+      throw new Error('Maximum 4 photos allowed');
+    }
+
+    console.log(`[Photo Extractor] Processing ${imageFiles.length} image(s)`);
+
+    const compressImage = async (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            const maxDimension = 2000;
+            if (width > height && width > maxDimension) {
+              height = (height * maxDimension) / width;
+              width = maxDimension;
+            } else if (height > maxDimension) {
+              width = (width * maxDimension) / height;
+              height = maxDimension;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              reject(new Error('Failed to get canvas context'));
+              return;
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const quality = file.size > 1000000 ? 0.7 : 0.85;
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = reject;
+          img.src = e.target?.result as string;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const compressedImages = await Promise.all(
+      imageFiles.map(file => compressImage(file))
+    );
+
+    console.log('[Photo Extractor] Images compressed, sending to server...');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+
+    const response = await fetch(SUPABASE_PHOTO_FUNCTION, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({ images: compressedImages }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error('[Photo Extractor] Server response not OK:', response.status);
+      if (response.status >= 500 || response.status === 429) {
+        throw new Error('Server is processing - try again in 30 seconds');
+      }
+      const errorText = await response.text();
+      console.error('[Photo Extractor] Error response:', errorText);
+      throw new Error('Photo extraction failed');
+    }
+
+    const data = await response.json();
+    console.log('[Photo Extractor] Raw data from server:', data);
+
+    const formatTime = (mins: number): string => {
+      if (!mins || mins <= 0) return '30 mins';
+      if (mins < 60) return `${mins} mins`;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return m ? `${h} hr ${m} mins` : `${h} hr`;
+    };
+
+    return {
+      title: decodeHtmlEntities(data.title || 'Recipe from Photo'),
+      description: decodeHtmlEntities(data.description || 'Scanned from photo'),
+      creator: 'Photo Scan',
+      ingredients: (data.ingredients || []).map((ing: string) => {
+        const cleaned = decodeHtmlEntities(ing.trim());
+        if (!cleaned) return { quantity: '', unit: '', name: '' };
+
+        const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
+        const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
+        const quantity = normalizeQuantity(rawQty);
+
+        let rest = cleaned.slice(rawQty.length).trim();
+
+        const unitMatch = rest.match(/^(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|kilograms?|ml|milliliters?|l|liters?|pinch|dash|piece|pieces|clove|cloves|slice|slices|can|cans)\s+/i);
+
+        let unit = '';
+        if (unitMatch) {
+          const matchedUnit = unitMatch[1].toLowerCase();
+          rest = rest.slice(unitMatch[0].length).trim();
+
+          if (matchedUnit === 'g' || matchedUnit === 'gram' || matchedUnit === 'grams') {
+            unit = 'g';
+          } else if (matchedUnit === 'kg' || matchedUnit === 'kilogram' || matchedUnit === 'kilograms') {
+            unit = 'kg';
+          } else if (matchedUnit === 'ml' || matchedUnit === 'milliliter' || matchedUnit === 'milliliters') {
+            unit = 'ml';
+          } else if (matchedUnit === 'l' || matchedUnit === 'liter' || matchedUnit === 'liters') {
+            unit = 'l';
+          } else if (matchedUnit.startsWith('cup')) {
+            unit = 'cup';
+          } else if (matchedUnit.startsWith('tbsp') || matchedUnit.startsWith('tablespoon')) {
+            unit = 'tbsp';
+          } else if (matchedUnit.startsWith('tsp') || matchedUnit.startsWith('teaspoon')) {
+            unit = 'tsp';
+          } else if (matchedUnit === 'oz' || matchedUnit.startsWith('ounce')) {
+            unit = 'oz';
+          } else if (matchedUnit.startsWith('lb') || matchedUnit.startsWith('pound')) {
+            unit = 'lb';
+          } else {
+            unit = matchedUnit;
+          }
+        } else {
+          unit = quantity ? 'piece' : '';
+        }
+
+        return { quantity, unit, name: rest || cleaned };
+      }),
+      instructions: (data.instructions || []).map((i: string) => decodeHtmlEntities(i)),
+      prepTime: formatTime(data.prep_time || 15),
+      cookTime: formatTime(data.cook_time || 35),
+      servings: data.servings || '4',
+      cuisineType: data.cuisine || 'Global',
+      difficulty: data.difficulty || 'Medium',
+      mealTypes: ['Dinner'],
+      dietaryTags: data.dietary_tags || [],
+      imageUrl: compressedImages[0],
+      videoUrl: undefined,
+      notes: data.notes || `Scanned from ${imageFiles.length} photo${imageFiles.length > 1 ? 's' : ''}`,
+      sourceUrl: ''
+    };
+  } catch (err: any) {
+    console.error('[Photo Extractor] Catch block error:', err);
+    if (err.name === 'AbortError') {
+      throw new Error('Server is processing — please wait 30-45 seconds and try again');
+    }
+    throw new Error(err.message || 'Photo extraction temporarily unavailable — try again soon');
+  }
 }
 
 export async function extractRecipeFromText(text: string): Promise<ExtractedRecipeData> {
