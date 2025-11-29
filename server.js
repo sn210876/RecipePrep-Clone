@@ -322,6 +322,56 @@ app.post('/api/extract-recipe-from-video', async (req, res) => {
   }
 });
 
+app.post('/youtube-metadata', async (req, res) => {
+  try {
+    const { videoId } = req.body;
+
+    if (!videoId) {
+      return res.status(400).json({ error: 'Video ID is required' });
+    }
+
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'YouTube API key not configured' });
+    }
+
+    console.log('Fetching YouTube metadata for:', videoId);
+
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('YouTube API error:', errorText);
+      return res.status(response.status).json({ error: 'YouTube API error', detail: errorText });
+    }
+
+    const data = await response.json();
+
+    if (!data.items || data.items.length === 0) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+
+    const video = data.items[0];
+    const result = {
+      title: video.snippet.title,
+      description: video.snippet.description,
+      thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.default?.url || '',
+      channelTitle: video.snippet.channelTitle,
+    };
+
+    console.log('YouTube metadata retrieved:', result.title);
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching YouTube metadata:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to fetch YouTube metadata',
+    });
+  }
+});
+
 app.post('/extract-from-description', async (req, res) => {
   try {
     const { title, description, thumbnail, channelTitle } = req.body;

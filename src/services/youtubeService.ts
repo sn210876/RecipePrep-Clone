@@ -13,34 +13,30 @@ export function extractVideoId(url: string): string | null {
   return null;
 }
 
-// Fetch video data from YouTube Data API
+// Fetch video data from YouTube Data API via backend proxy
 export async function getYouTubeVideoData(videoId: string) {
-  const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
-  
-  if (!apiKey) {
-    throw new Error('YouTube API key not configured');
-  }
+  const RENDER_SERVER = import.meta.env.VITE_API_URL || 'https://recipe-backend-nodejs-1.onrender.com';
 
-  const response = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`
-  );
+  // Call backend to proxy YouTube API request (avoids referrer restrictions)
+  const response = await fetch(`${RENDER_SERVER}/youtube-metadata`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ videoId }),
+  });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[YouTube Service] Failed to fetch metadata:', errorText);
     throw new Error(`YouTube API error: ${response.status}`);
   }
 
   const data = await response.json();
-  
-  if (!data.items || data.items.length === 0) {
-    throw new Error('Video not found');
-  }
 
-  const video = data.items[0];
   return {
-    title: video.snippet.title,
-    description: video.snippet.description,
-    thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.default.url,
-    channelTitle: video.snippet.channelTitle,
+    title: data.title,
+    description: data.description,
+    thumbnail: data.thumbnail,
+    channelTitle: data.channelTitle,
   };
 }
 
