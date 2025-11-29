@@ -6,11 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon, Camera } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
 import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
-import { extractRecipeFromUrl, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
+import { extractRecipeFromUrl, extractRecipeFromPhoto, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { downloadAndStoreImage } from '@/lib/imageStorage';
@@ -92,6 +92,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
+  const [isScanningPhoto, setIsScanningPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
 
   // Load recipe for editing if edit parameter is present
   useEffect(() => {
@@ -255,6 +257,45 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       toast.error(error.message || 'Failed to upload image');
     } finally {
       setIsUploadingImage(false);
+    }
+  };
+
+  const handlePhotoScan = async (file: File) => {
+    if (!file) {
+      toast.error('Please select a photo');
+      return;
+    }
+
+    if (!isImageFile(file)) {
+      toast.error('Please upload a valid image file (JPG, PNG, WEBP)');
+      return;
+    }
+
+    setIsScanningPhoto(true);
+    const reader = new FileReader();
+    reader.onload = (e) => setPhotoPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+
+    try {
+      toast.loading('Scanning recipe photo...', { id: 'scan-photo' });
+      const data = await extractRecipeFromPhoto(file);
+      setExtractedData(data);
+      setShowPreview(true);
+      toast.success('Recipe extracted from photo!', { id: 'scan-photo', duration: 2000 });
+    } catch (error: any) {
+      console.error('Photo scan error:', error);
+      const errorMessage = error?.message || 'Failed to scan photo. Please try again.';
+      toast.error(errorMessage, { id: 'scan-photo' });
+      setPhotoPreview('');
+    } finally {
+      setIsScanningPhoto(false);
+    }
+  };
+
+  const handlePhotoInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handlePhotoScan(file);
     }
   };
 
@@ -642,6 +683,87 @@ return (
                   <p className="text-emerald-600 font-semibold">Supported: All recipe websites & most blogs</p>
                   <p className="text-orange-600">Warning: Instagram & TikTok (may take 30–60 seconds)</p>
                   <p className="text-slate-500">Coming Soon: YouTube videos</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Photo Scan Section - NEW! */}
+        <Card className="border-emerald-200 shadow-sm bg-gradient-to-br from-emerald-50 to-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Camera className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <span className="leading-tight">Scan Recipe Photo</span>
+              <Badge variant="secondary" className="ml-auto bg-emerald-100 text-emerald-700 border-emerald-200">
+                ✨ NEW!
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {photoPreview && (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-slate-100 border-2 border-emerald-200">
+                <img src={photoPreview} alt="Recipe preview" className="w-full h-full object-contain" />
+              </div>
+            )}
+
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoInput}
+              disabled={isScanningPhoto}
+              className="hidden"
+              id="photo-upload"
+            />
+
+            <Button
+              type="button"
+              onClick={() => document.getElementById('photo-upload')?.click()}
+              disabled={isScanningPhoto}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12"
+            >
+              {isScanningPhoto ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Scanning photo...
+                </>
+              ) : (
+                <>
+                  <Camera className="w-5 h-5 mr-2" />
+                  Take or Upload Photo
+                </>
+              )}
+            </Button>
+
+            <div className="mt-4 pt-4 border-t border-emerald-200">
+              <div className="space-y-2 text-xs leading-relaxed">
+                <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
+                  WHAT YOU CAN SCAN
+                </p>
+
+                <ol className="space-y-1.5 text-black ml-0.5">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
+                    <span>Recipe cards (printed or handwritten)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
+                    <span>Cookbook pages</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
+                    <span>Handwritten recipes from grandma</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
+                    <span>Screenshots of recipes</span>
+                  </li>
+                </ol>
+
+                <div className="mt-3 pt-2 border-t border-emerald-200 space-y-1 text-xs">
+                  <p className="text-emerald-600 font-semibold">AI-powered OCR extracts text from any image</p>
+                  <p className="text-slate-500">Works best with clear, well-lit photos</p>
                 </div>
               </div>
             </div>

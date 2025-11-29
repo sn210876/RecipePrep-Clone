@@ -322,6 +322,133 @@ app.post('/api/extract-recipe-from-video', async (req, res) => {
   }
 });
 
+app.post('/api/extract-photo', async (req, res) => {
+  try {
+    const { imageBase64 } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({ error: 'Image data is required' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+
+    console.log('Processing recipe photo...');
+
+    const prompt = `You are a recipe extraction expert. Analyze this image which contains a recipe (could be from a recipe card, cookbook page, handwritten note, or screen capture).
+
+Extract ALL visible recipe information with extreme precision:
+
+CRITICAL EXTRACTION RULES:
+1. Extract EXACTLY what you see - word for word, number for number
+2. If measurements are written as fractions (1/2, 1/4, etc.), keep them as fractions
+3. If measurements use abbreviations (tbsp, tsp, oz, etc.), use those exact abbreviations
+4. Preserve ALL cooking instructions in their original order and wording
+5. If there are section headers or notes, include them
+6. If nutrition facts are visible, extract them
+7. If the recipe mentions cook time, prep time, servings, extract them
+8. If ingredients have special notes (e.g., "divided", "plus extra for dusting"), include those
+
+Return ONLY a valid JSON object with this structure (no markdown, no code blocks):
+{
+  "title": "exact recipe title from image",
+  "description": "brief description if visible",
+  "ingredients": [
+    {"quantity": "exact amount", "unit": "exact unit", "name": "exact ingredient with any notes"}
+  ],
+  "instructions": [
+    "step 1 exactly as written",
+    "step 2 exactly as written"
+  ],
+  "prepTime": number in minutes or 0 if not specified,
+  "cookTime": number in minutes or 0 if not specified,
+  "totalTime": number in minutes or 0 if not specified,
+  "servings": number or 0 if not specified,
+  "yield": "serving description if specified",
+  "difficulty": "Easy" or "Medium" or "Hard" (estimate if not specified),
+  "cuisine": "cuisine type if mentioned or 'Other'",
+  "dietaryTags": ["tags if mentioned, like Vegetarian, Gluten-Free, etc"],
+  "notes": "any additional notes, tips, or special instructions",
+  "nutrition": {
+    "calories": number or null,
+    "protein": number or null,
+    "carbs": number or null,
+    "fat": number or null,
+    "fiber": number or null,
+    "sugar": number or null
+  }
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      max_tokens: 3000,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageBase64.startsWith('data:') ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`,
+                detail: 'high'
+              }
+            }
+          ]
+        }
+      ],
+      response_format: { type: 'json_object' }
+    });
+
+    const content = response.choices[0].message.content;
+    console.log('Raw GPT response:', content);
+
+    let recipe;
+    try {
+      recipe = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Failed to parse JSON:', parseError);
+      throw new Error('Failed to parse recipe from image');
+    }
+
+    const ingredientStrings = (recipe.ingredients || []).map(ing => {
+      if (typeof ing === 'string') return ing;
+      const parts = [];
+      if (ing.quantity) parts.push(ing.quantity);
+      if (ing.unit) parts.push(ing.unit);
+      if (ing.name) parts.push(ing.name);
+      return parts.join(' ').trim();
+    });
+
+    res.json({
+      title: recipe.title || 'Recipe from Photo',
+      description: recipe.description || '',
+      channel: 'Photo Scan',
+      creator: 'Photo Scan',
+      ingredients: ingredientStrings,
+      instructions: recipe.instructions || [],
+      prep_time: recipe.prepTime || 0,
+      cook_time: recipe.cookTime || 0,
+      total_time: recipe.totalTime || 0,
+      servings: String(recipe.servings || 4),
+      yield: recipe.yield || String(recipe.servings || 4),
+      difficulty: recipe.difficulty || 'Medium',
+      cuisine: recipe.cuisine || 'Other',
+      dietary_tags: recipe.dietaryTags || [],
+      notes: recipe.notes || 'Scanned from photo',
+      nutrition: recipe.nutrition || {},
+      thumbnail: imageBase64,
+      image: imageBase64
+    });
+  } catch (error) {
+    console.error('Error processing photo:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to process photo',
+    });
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({

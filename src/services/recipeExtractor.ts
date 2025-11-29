@@ -7,6 +7,7 @@ const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 // YOUR RENDER SERVER ONLY — 100% FINAL VERSION
 const RENDER_SERVER = 'https://recipe-backend-nodejs-1.onrender.com/extract';
+const PHOTO_EXTRACT_SERVER = 'https://recipe-backend-nodejs-1.onrender.com/api/extract-photo';
 
 export interface ExtractedRecipeData {
   title: string;
@@ -305,6 +306,122 @@ export function getPlatformFromUrl(url: string): string {
   if (url.includes('instagram.com')) return 'Instagram';
   if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
   return 'Website';
+}
+
+export async function extractRecipeFromPhoto(imageFile: File): Promise<ExtractedRecipeData> {
+  try {
+    console.log('[Photo Extractor] Processing image:', imageFile.name);
+
+    const reader = new FileReader();
+    const imageBase64 = await new Promise<string>((resolve, reject) => {
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(imageFile);
+    });
+
+    console.log('[Photo Extractor] Sending to server...');
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    const response = await fetch(PHOTO_EXTRACT_SERVER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64 }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.error('[Photo Extractor] Server response not OK:', response.status);
+      if (response.status >= 500 || response.status === 429) {
+        throw new Error('Server is processing - try again in 20 seconds');
+      }
+      const errorText = await response.text();
+      console.error('[Photo Extractor] Error response:', errorText);
+      throw new Error('Photo extraction failed');
+    }
+
+    const data = await response.json();
+    console.log('[Photo Extractor] Raw data from server:', data);
+
+    const formatTime = (mins: number): string => {
+      if (!mins || mins <= 0) return '30 mins';
+      if (mins < 60) return `${mins} mins`;
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return m ? `${h} hr ${m} mins` : `${h} hr`;
+    };
+
+    return {
+      title: decodeHtmlEntities(data.title || 'Recipe from Photo'),
+      description: decodeHtmlEntities(data.description || 'Scanned from photo'),
+      creator: 'Photo Scan',
+      ingredients: (data.ingredients || []).map((ing: string) => {
+        const cleaned = decodeHtmlEntities(ing.trim());
+        if (!cleaned) return { quantity: '', unit: '', name: '' };
+
+        const qtyMatch = cleaned.match(/^([\d¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞\/\.\-\s\,]+)\s*/);
+        const rawQty = qtyMatch ? qtyMatch[1].trim() : '';
+        const quantity = normalizeQuantity(rawQty);
+
+        let rest = cleaned.slice(rawQty.length).trim();
+
+        const unitMatch = rest.match(/^(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|kg|kilograms?|ml|milliliters?|l|liters?|pinch|dash|piece|pieces|clove|cloves|slice|slices|can|cans)\s+/i);
+
+        let unit = '';
+        if (unitMatch) {
+          const matchedUnit = unitMatch[1].toLowerCase();
+          rest = rest.slice(unitMatch[0].length).trim();
+
+          if (matchedUnit === 'g' || matchedUnit === 'gram' || matchedUnit === 'grams') {
+            unit = 'g';
+          } else if (matchedUnit === 'kg' || matchedUnit === 'kilogram' || matchedUnit === 'kilograms') {
+            unit = 'kg';
+          } else if (matchedUnit === 'ml' || matchedUnit === 'milliliter' || matchedUnit === 'milliliters') {
+            unit = 'ml';
+          } else if (matchedUnit === 'l' || matchedUnit === 'liter' || matchedUnit === 'liters') {
+            unit = 'l';
+          } else if (matchedUnit.startsWith('cup')) {
+            unit = 'cup';
+          } else if (matchedUnit.startsWith('tbsp') || matchedUnit.startsWith('tablespoon')) {
+            unit = 'tbsp';
+          } else if (matchedUnit.startsWith('tsp') || matchedUnit.startsWith('teaspoon')) {
+            unit = 'tsp';
+          } else if (matchedUnit === 'oz' || matchedUnit.startsWith('ounce')) {
+            unit = 'oz';
+          } else if (matchedUnit.startsWith('lb') || matchedUnit.startsWith('pound')) {
+            unit = 'lb';
+          } else {
+            unit = matchedUnit;
+          }
+        } else {
+          unit = quantity ? 'piece' : '';
+        }
+
+        return { quantity, unit, name: rest || cleaned };
+      }),
+      instructions: (data.instructions || []).map((i: string) => decodeHtmlEntities(i)),
+      prepTime: formatTime(data.prep_time || 15),
+      cookTime: formatTime(data.cook_time || 35),
+      servings: data.servings || '4',
+      cuisineType: data.cuisine || 'Global',
+      difficulty: data.difficulty || 'Medium',
+      mealTypes: ['Dinner'],
+      dietaryTags: data.dietary_tags || [],
+      imageUrl: imageBase64,
+      videoUrl: undefined,
+      notes: data.notes || 'Scanned from photo',
+      sourceUrl: ''
+    };
+  } catch (err: any) {
+    console.error('[Photo Extractor] Catch block error:', err);
+    if (err.name === 'AbortError') {
+      throw new Error('Server is processing — please wait 20-30 seconds and try again');
+    }
+    throw new Error('Photo extraction temporarily unavailable — try again soon');
+  }
 }
 
 export async function extractRecipeFromText(text: string): Promise<ExtractedRecipeData> {
