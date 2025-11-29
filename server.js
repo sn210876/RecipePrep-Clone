@@ -322,6 +322,105 @@ app.post('/api/extract-recipe-from-video', async (req, res) => {
   }
 });
 
+app.post('/extract-from-description', async (req, res) => {
+  try {
+    const { title, description, thumbnail, channelTitle } = req.body;
+
+    if (!description) {
+      return res.status(400).json({ error: 'Description is required' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' });
+    }
+
+    console.log('Extracting recipe from description...');
+
+    const prompt = `Extract a structured recipe from this YouTube video description.
+
+Video Title: ${title || 'Unknown'}
+Channel: ${channelTitle || 'Unknown'}
+
+Description:
+${description}
+
+EXTRACTION RULES:
+1. Extract ALL ingredients with their measurements exactly as written
+2. Extract ALL cooking instructions in order
+3. Extract prep time, cook time, and servings if mentioned
+4. If times aren't specified, estimate based on recipe complexity
+5. Identify cuisine type and difficulty level
+6. Extract any dietary tags (vegetarian, vegan, gluten-free, etc.)
+
+RESPONSE FORMAT:
+Respond with ONLY a valid JSON object (no markdown, no code blocks):
+{
+  "title": "recipe title from description or video title",
+  "description": "brief description of the dish",
+  "prepTime": number (minutes),
+  "cookTime": number (minutes),
+  "servings": number,
+  "difficulty": "Easy" or "Medium" or "Hard",
+  "cuisineType": "type of cuisine",
+  "ingredients": [
+    {"name": "ingredient name", "quantity": "amount", "unit": "unit"}
+  ],
+  "instructions": ["step 1", "step 2", ...],
+  "dietaryTags": ["tag1", "tag2", ...],
+  "notes": "any additional notes"
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are a recipe extraction expert. Extract recipes from text descriptions accurately.' },
+        { role: 'user', content: prompt }
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.3,
+    });
+
+    const recipeData = JSON.parse(response.choices[0].message.content);
+
+    console.log('Description extraction successful:', recipeData.title);
+
+    const result = {
+      title: recipeData.title || title,
+      description: recipeData.description || '',
+      creator: channelTitle || 'YouTube',
+      ingredients: (recipeData.ingredients || []).map(ing => {
+        if (typeof ing === 'string') return ing;
+        const parts = [];
+        if (ing.quantity) parts.push(ing.quantity);
+        if (ing.unit) parts.push(ing.unit);
+        if (ing.name) parts.push(ing.name);
+        return parts.join(' ').trim();
+      }),
+      instructions: recipeData.instructions || [],
+      prep_time: recipeData.prepTime || 15,
+      cook_time: recipeData.cookTime || 30,
+      servings: String(recipeData.servings || 4),
+      yield: String(recipeData.servings || 4),
+      difficulty: recipeData.difficulty || 'Medium',
+      cuisineType: recipeData.cuisineType || 'Global',
+      dietaryTags: recipeData.dietaryTags || [],
+      thumbnail: thumbnail || '',
+      image: thumbnail || '',
+      imageUrl: thumbnail || '',
+      notes: recipeData.notes || 'Extracted from video description',
+      extractionMethod: 'description'
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error extracting from description:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to extract recipe from description',
+      detail: error.toString()
+    });
+  }
+});
+
 app.post('/api/extract-photo', async (req, res) => {
   try {
     const { imageBase64 } = req.body;

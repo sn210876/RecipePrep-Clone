@@ -74,14 +74,19 @@ export async function extractRecipeFromDescription(data: {
   title: string;
   description: string;
   thumbnail: string;
+  channelTitle?: string;
 }): Promise<any> {
-  const response = await fetch('/api/extract-from-description', {
+  const RENDER_SERVER = import.meta.env.VITE_API_URL || 'https://recipe-backend-nodejs-1.onrender.com';
+
+  const response = await fetch(`${RENDER_SERVER}/extract-from-description`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[YouTube Service] Description extraction failed:', errorText);
     throw new Error('Failed to extract recipe from description');
   }
 
