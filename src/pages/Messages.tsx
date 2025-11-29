@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
-import { ArrowLeft, Send as SendIcon } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { ArrowLeft, Send as SendIcon, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Conversation {
@@ -43,6 +44,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -483,8 +485,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   return (
     <div className="min-h-screen bg-gray-50">
       {/* TOP BAR */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center gap-3">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="flex items-center gap-3 px-4 py-3">
           {onBack && (
             <button
               onClick={onBack}
@@ -497,10 +499,24 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             {onBack ? 'Social Feed' : 'Messages'}
           </h1>
         </div>
+
+        {/* Search Bar */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-10 text-sm border-gray-300"
+            />
+          </div>
+        </div>
       </div>
 
       {/* CONVERSATION LIST */}
-      <div className="pt-16 pb-20 px-4">
+      <div className="pt-32 pb-20 px-4">
         {conversations.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">No conversations yet</p>
@@ -508,7 +524,13 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           </div>
         ) : (
           <div className="space-y-2">
-            {conversations.map((convo) => (
+            {conversations
+              .filter((convo) =>
+                searchQuery
+                  ? convo.other_user.username.toLowerCase().includes(searchQuery.toLowerCase())
+                  : true
+              )
+              .map((convo) => (
               <button
                 key={convo.id}
                 onClick={() => setSelectedConversation(convo)}

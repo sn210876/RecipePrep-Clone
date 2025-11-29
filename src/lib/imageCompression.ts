@@ -86,7 +86,19 @@ export async function compressImage(
     };
   } catch (error) {
     console.error('Image compression failed:', error);
-    throw new Error('Failed to compress image. Please try a different image.');
+    // If compression fails, return the original file
+    onProgress?.({
+      percent: 100,
+      originalSize,
+      currentSize: originalSize,
+      isCompressing: false,
+    });
+    return {
+      file,
+      originalSize,
+      compressedSize: originalSize,
+      compressionRatio: 100,
+    };
   }
 }
 
@@ -206,6 +218,18 @@ export async function compressImageWithOptions(
     };
   } catch (error) {
     console.error('Image compression failed:', error);
-    throw new Error('Failed to compress image. Please try a different image.');
+    // If compression fails, return the original file
+    onProgress?.({
+      percent: 100,
+      originalSize,
+      currentSize: originalSize,
+      isCompressing: false,
+    });
+    return {
+      file,
+      originalSize,
+      compressedSize: originalSize,
+      compressionRatio: 100,
+    };
   }
 }

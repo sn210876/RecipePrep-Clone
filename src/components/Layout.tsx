@@ -228,7 +228,7 @@ const loadUnreadCount = async (userId: string) => {
 </div>
 
           {/* Navigation Items - Mobile Optimized */}
-          <nav className="flex-1 space-y-0.5 sm:space-y-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
+          <nav className="flex-1 space-y-0 p-2 sm:p-3 lg:p-4 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -236,7 +236,7 @@ const loadUnreadCount = async (userId: string) => {
                 <button
                   key={item.id}
                   onClick={() => handleNavigate(item.id)}
-                  className={`flex w-full items-center gap-2 sm:gap-3 rounded-lg px-2.5 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 text-left transition-all touch-manipulation ${
+                  className={`flex w-full items-center gap-2 sm:gap-3 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 lg:px-4 lg:py-2.5 text-left transition-all touch-manipulation ${
                     isActive
                       ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg scale-[1.02]'
                       : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'

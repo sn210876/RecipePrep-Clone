@@ -495,8 +495,21 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
     if (extractedData.imageUrl) {
       setImageUrl(extractedData.imageUrl);
     }
-    
-    setVideoUrl(extractedData.videoUrl || '');
+
+    // Don't set video URL for YouTube/Instagram/TikTok - videos won't play in social feed
+    const isYouTubeOrSocial = urlInput && (
+      urlInput.includes('youtube.com') ||
+      urlInput.includes('youtu.be') ||
+      urlInput.includes('instagram.com') ||
+      urlInput.includes('tiktok.com')
+    );
+
+    if (!isYouTubeOrSocial && extractedData.videoUrl) {
+      setVideoUrl(extractedData.videoUrl);
+    } else {
+      setVideoUrl('');
+    }
+
     const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
     setNotes(sourceNote + (extractedData.notes || ''));
 
@@ -767,8 +780,8 @@ return (
         </div>
 
         {/* Scrollable content container */}
-        <div className="flex-1 overflow-y-auto overscroll-contain pb-32 md:pb-6 pt-4">
-          <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain pb-36 md:pb-24 pt-4">
+          <div className="max-w-4xl mx-auto px-4 py-6 mb-4">
 
         {/* Tab Navigation */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
@@ -1770,7 +1783,7 @@ return (
           )}
 
         {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
-        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[100] lg:z-10">
+        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.2)] z-[150] lg:z-10">
           <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3">
             {onNavigate && (
               <Button
