@@ -603,7 +603,7 @@ return (
               {isExtracting ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Extracting...
+                  Extracting... Can take up to a minute
                 </>
               ) : (
                 <>
