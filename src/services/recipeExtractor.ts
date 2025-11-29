@@ -348,6 +348,12 @@ async function extractFromYouTubeHybrid(url: string, videoId: string): Promise<E
   } catch (error: any) {
     console.error('[Extractor] YouTube hybrid extraction error:', error);
 
+    // Check if backend needs update or API issue
+    if (error.message?.includes('404') || error.message?.includes('YouTube API error')) {
+      console.log('[Extractor] YouTube metadata endpoint not available. Backend needs deployment.');
+      throw new Error('YouTube extraction temporarily unavailable. Please copy and paste the video description from YouTube into the recipe form manually, or wait for the server to update.');
+    }
+
     // STEP 3: Last resort - try audio extraction
     if (error.message?.includes('quota') || error.message?.includes('API')) {
       console.log('[Extractor] YouTube API issue, falling back to audio extraction...');
