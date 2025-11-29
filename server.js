@@ -42,19 +42,43 @@ async function ensureTempDir() {
 
 async function downloadAudio(videoUrl, videoId) {
   const audioPath = path.join(tempDir, `${videoId}_audio.mp3`);
-  const command = `yt-dlp -f "bestaudio" -x --audio-format mp3 -o "${audioPath.replace(/\.mp3$/, '')}" "${videoUrl}"`;
+
+  const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+  let cookiesArg = '';
+  try {
+    await fs.access(cookiesPath);
+    cookiesArg = `--cookies "${cookiesPath}"`;
+  } catch {
+    console.log('[Download] No cookies.txt found, proceeding without cookies');
+  }
+
+  const command = `yt-dlp -f "bestaudio" -x --audio-format mp3 ${cookiesArg} -o "${audioPath.replace(/\.mp3$/, '')}" "${videoUrl}"`;
 
   try {
-    await execPromise(command);
+    console.log('[Download] Running command:', command);
+    const { stdout, stderr } = await execPromise(command);
+    console.log('[Download] stdout:', stdout);
+    if (stderr) console.log('[Download] stderr:', stderr);
     return audioPath;
   } catch (error) {
+    console.error('[Download] Audio download failed:', error);
     throw new Error(`Failed to download audio: ${error.message}`);
   }
 }
 
 async function downloadThumbnail(videoUrl, videoId) {
   const thumbnailPath = path.join(tempDir, videoId);
-  const command = `yt-dlp --skip-download --write-thumbnail --convert-thumbnails jpg -o "${thumbnailPath}" "${videoUrl}"`;
+
+  const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+  let cookiesArg = '';
+  try {
+    await fs.access(cookiesPath);
+    cookiesArg = `--cookies "${cookiesPath}"`;
+  } catch {
+    console.log('[Download] No cookies.txt found for thumbnail');
+  }
+
+  const command = `yt-dlp --skip-download --write-thumbnail --convert-thumbnails jpg ${cookiesArg} -o "${thumbnailPath}" "${videoUrl}"`;
 
   try {
     await execPromise(command);
@@ -62,13 +86,24 @@ async function downloadThumbnail(videoUrl, videoId) {
     await fs.access(jpgPath);
     return jpgPath;
   } catch (error) {
+    console.error('[Download] Thumbnail download failed:', error);
     throw new Error(`Failed to download thumbnail: ${error.message}`);
   }
 }
 
 async function getVideoMetadata(videoUrl, videoId) {
   const infoPath = path.join(tempDir, `${videoId}.info.json`);
-  const command = `yt-dlp --skip-download --write-info-json -o "${path.join(tempDir, videoId)}" "${videoUrl}"`;
+
+  const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+  let cookiesArg = '';
+  try {
+    await fs.access(cookiesPath);
+    cookiesArg = `--cookies "${cookiesPath}"`;
+  } catch {
+    console.log('[Download] No cookies.txt found for metadata');
+  }
+
+  const command = `yt-dlp --skip-download --write-info-json ${cookiesArg} -o "${path.join(tempDir, videoId)}" "${videoUrl}"`;
 
   try {
     await execPromise(command);
@@ -78,7 +113,7 @@ async function getVideoMetadata(videoUrl, videoId) {
     return {
       description: metadata.description || '',
       title: metadata.title || '',
-      uploader: metadata.uploader || '',
+      uploader: metadata.uploader || metadata.uploader_id || '',
     };
   } catch (error) {
     console.error('Failed to get video metadata:', error);
@@ -214,17 +249,53 @@ app.post('/extract', async (req, res) => {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
+    console.log('[Extract] Processing URL:', url);
     const videoId = `video_${Date.now()}`;
 
+    console.log('[Extract] Downloading audio...');
     const audioPath = await downloadAudio(url, videoId);
+    console.log('[Extract] Audio downloaded:', audioPath);
+
+    console.log('[Extract] Downloading thumbnail...');
     const thumbnailPath = await downloadThumbnail(url, videoId);
+    console.log('[Extract] Thumbnail downloaded:', thumbnailPath);
+
+    console.log('[Extract] Getting metadata...');
     const videoMetadata = await getVideoMetadata(url, videoId);
+    console.log('[Extract] Metadata:', videoMetadata);
 
+    console.log('[Extract] Transcribing audio...');
     const transcript = await transcribeAudio(audioPath);
+    console.log('[Extract] Transcript length:', transcript?.length || 0);
+    console.log('[Extract] Transcript preview:', transcript?.substring(0, 200));
 
+    if (!transcript || transcript.trim().length < 20) {
+      console.error('[Extract] Transcript too short or empty');
+      return res.json({
+        title: videoMetadata.title || 'Video Recipe',
+        channel: videoMetadata.uploader || 'Unknown',
+        creator: videoMetadata.uploader || 'Unknown',
+        ingredients: [],
+        instructions: ['No audio found in video. Please try a different video or enter the recipe manually.'],
+        prep_time: 15,
+        cook_time: 30,
+        servings: '4',
+        yield: '4',
+        thumbnail: '',
+        image: '',
+        notes: 'Video has no audio or audio extraction failed'
+      });
+    }
+
+    console.log('[Extract] Converting thumbnail to base64...');
     const thumbnailBase64 = await convertImageToBase64(thumbnailPath);
 
+    console.log('[Extract] Extracting recipe with AI...');
     const recipe = await extractRecipeFromTranscript(transcript, thumbnailBase64, videoMetadata);
+    console.log('[Extract] Recipe extracted:', {
+      ingredientCount: recipe.ingredients?.length || 0,
+      instructionCount: recipe.instructions?.length || 0
+    });
 
     await cleanupFiles(videoId);
 
@@ -235,6 +306,8 @@ app.post('/extract', async (req, res) => {
       if (ing.name) parts.push(ing.name);
       return parts.join(' ').trim();
     }) || [];
+
+    console.log('[Extract] Final ingredient strings:', ingredientStrings);
 
     res.json({
       title: recipe.title || videoMetadata.title,
@@ -251,7 +324,7 @@ app.post('/extract', async (req, res) => {
       notes: 'extracted from video'
     });
   } catch (error) {
-    console.error('Error processing video:', error);
+    console.error('[Extract] Error:', error);
     res.status(500).json({
       error: error.message || 'Failed to process video',
     });
