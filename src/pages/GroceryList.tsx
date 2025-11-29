@@ -574,7 +574,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                   </Button>
                   <Button
                     onClick={handleSendToCart}
-                    className="col-span-2 h-10 text-sm bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    className="h-10 text-sm bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                   >
                     <ShoppingCart className="w-4 h-4 mr-1" />
                     Send to Cart
