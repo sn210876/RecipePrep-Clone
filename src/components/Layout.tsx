@@ -31,6 +31,7 @@ interface LayoutProps {
 export default function Layout({ currentPage: propCurrentPage, onNavigate, children }: LayoutProps) {
   const [currentPage, setCurrentPage] = useState(propCurrentPage);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -188,10 +189,9 @@ const loadUnreadCount = async (userId: string) => {
       )}
 
       {/* Sidebar - Mobile Optimized */}
- <aside className={`fixed left-0 top-0 z-[90] h-screen w-60 sm:w-60 lg:w-56 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      }`}>
+ <aside className={`fixed left-0 top-0 z-[90] h-screen w-60 sm:w-60 lg:w-56 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      } ${isDesktopSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'}`}>
         <div className="flex h-full flex-col">
 
        {/* Logo/Brand - Mobile Optimized */}
@@ -216,14 +216,18 @@ const loadUnreadCount = async (userId: string) => {
     </div>
   </div>
 
-  {/* Close button - mobile only */}
+  {/* Close button - mobile: X, desktop: Menu toggle */}
   <Button
     variant="ghost"
     size="icon"
-    onClick={() => setIsMobileMenuOpen(false)}
-    className="lg:hidden h-8 w-8 flex-shrink-0"
+    onClick={() => {
+      setIsMobileMenuOpen(false);
+      setIsDesktopSidebarOpen(!isDesktopSidebarOpen);
+    }}
+    className="h-8 w-8 flex-shrink-0"
   >
-    <X className="h-5 w-5" />
+    <X className="h-5 w-5 lg:hidden" />
+    <Menu className="h-5 w-5 hidden lg:block" />
   </Button>
 </div>
 
@@ -266,16 +270,27 @@ const loadUnreadCount = async (userId: string) => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="lg:ml-56">
+      <div className={`transition-all duration-300 ${isDesktopSidebarOpen ? 'lg:ml-56' : 'lg:ml-0'}`}>
         
         {/* Top Header - Mobile Optimized */}
 <header className="sticky top-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
   <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
+    {/* Mobile menu button */}
     <Button
       variant="ghost"
       size="icon"
       onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       className="lg:hidden h-9 w-9 sm:h-10 sm:w-10 relative z-[200]"
+    >
+      <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+    </Button>
+
+    {/* Desktop sidebar toggle */}
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
+      className="hidden lg:flex h-9 w-9 sm:h-10 sm:w-10 relative z-[200]"
     >
       <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
     </Button>
