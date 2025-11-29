@@ -1312,8 +1312,7 @@ return (
             </DialogFooter>
 </DialogContent>
         </Dialog>
-          </div>
-        </div>
+     
 
         {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
         <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[100] lg:z-10">
