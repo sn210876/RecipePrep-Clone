@@ -531,11 +531,12 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
               {checkedCount} of {totalCount} items checked
             </p>
           </div>
-       {/* Mobile-optimized button layout */}
+      {/* Mobile-optimized button layout */}
           <div className="grid grid-cols-2 gap-2">
             <Button
+              variant="outline"
               onClick={() => setShowAddItemDialog(true)}
-              className="h-10 text-sm"
+              className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-100"
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Item
@@ -543,7 +544,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <Button
               variant="outline"
               onClick={() => setShowAddRecipeDialog(true)}
-              className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-50"
+              className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-100"
             >
               <ChefHat className="w-4 h-4 mr-1" />
               Add Recipe
@@ -552,16 +553,38 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
           {(checkedCount > 0 || totalCount > 0) && (
             <div className="grid grid-cols-2 gap-2">
+              {totalCount > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={handleSendToCart}
+                  className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-100"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-1" />
+                  Send to Cart
+                </Button>
+              )}
+              {totalCount > 0 && (
+                <Button 
+                  variant="destructive" 
+                  onClick={handleClearAll}
+                  className="h-10 text-sm"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Clear All
+                </Button>
+              )}
               {checkedCount > 0 && (
                 <Button 
                   variant="outline" 
                   onClick={handleClearChecked}
-                  className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-50"
+                  className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-100 col-span-2"
                 >
                   <Trash2 className="w-4 h-4 mr-1" />
                   Clear Checked
                 </Button>
               )}
+            </div>
+          )}
               {totalCount > 0 && (
                 <>
                   <Button 
