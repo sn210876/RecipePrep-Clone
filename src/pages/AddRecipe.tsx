@@ -93,7 +93,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
   const [isScanningPhoto, setIsScanningPhoto] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string>('');
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [selectedPhotoFiles, setSelectedPhotoFiles] = useState<File[]>([]);
 
   // Load recipe for editing if edit parameter is present
   useEffect(() => {
@@ -260,43 +261,80 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     }
   };
 
-  const handlePhotoScan = async (file: File) => {
-    if (!file) {
-      toast.error('Please select a photo');
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    if (files.length === 0) {
+      toast.error('Please select at least one photo');
       return;
     }
 
-    if (!isImageFile(file)) {
-      toast.error('Please upload a valid image file (JPG, PNG, WEBP)');
+    if (files.length > 4) {
+      toast.error('Maximum 4 photos allowed');
+      return;
+    }
+
+    const invalidFiles = files.filter(f => !isImageFile(f));
+    if (invalidFiles.length > 0) {
+      toast.error('Please upload valid image files (JPG, PNG, WEBP)');
+      return;
+    }
+
+    setSelectedPhotoFiles(files);
+
+    const previews: string[] = [];
+    let loaded = 0;
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previews.push(e.target?.result as string);
+        loaded++;
+        if (loaded === files.length) {
+          setPhotoPreviews(previews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoScan = async () => {
+    if (selectedPhotoFiles.length === 0) {
+      toast.error('Please select photos first');
       return;
     }
 
     setIsScanningPhoto(true);
-    const reader = new FileReader();
-    reader.onload = (e) => setPhotoPreview(e.target?.result as string);
-    reader.readAsDataURL(file);
 
     try {
-      toast.loading('Scanning recipe photo...', { id: 'scan-photo' });
-      const data = await extractRecipeFromPhoto(file);
+      const message = selectedPhotoFiles.length === 1
+        ? 'Scanning recipe photo...'
+        : `Scanning ${selectedPhotoFiles.length} photos and combining...`;
+
+      toast.loading(message, { id: 'scan-photo' });
+      const data = await extractRecipeFromPhoto(selectedPhotoFiles);
       setExtractedData(data);
       setShowPreview(true);
-      toast.success('Recipe extracted from photo!', { id: 'scan-photo', duration: 2000 });
+
+      const successMsg = selectedPhotoFiles.length === 1
+        ? 'Recipe extracted from photo!'
+        : `Recipe extracted from ${selectedPhotoFiles.length} photos!`;
+
+      toast.success(successMsg, { id: 'scan-photo', duration: 2000 });
     } catch (error: any) {
       console.error('Photo scan error:', error);
       const errorMessage = error?.message || 'Failed to scan photo. Please try again.';
       toast.error(errorMessage, { id: 'scan-photo' });
-      setPhotoPreview('');
+      setPhotoPreviews([]);
+      setSelectedPhotoFiles([]);
     } finally {
       setIsScanningPhoto(false);
     }
   };
 
-  const handlePhotoInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handlePhotoScan(file);
-    }
+  const removePhoto = (index: number) => {
+    setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
+    setSelectedPhotoFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleUrlExtract = async () => {
@@ -439,10 +477,14 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
     let finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
     let postImageUrl = null;
 
+    // Check if it's a base64 data URL that needs to be uploaded
+    const isBase64Image = finalImageUrl && finalImageUrl.startsWith('data:image');
+
     // Check if it's an Instagram/external URL that needs to be stored permanently
-   const needsDownload = finalImageUrl && 
-                      !uploadedImageUrl && 
-                      (finalImageUrl.includes('instagram.com') || 
+   const needsDownload = finalImageUrl &&
+                      !uploadedImageUrl &&
+                      !isBase64Image &&
+                      (finalImageUrl.includes('instagram.com') ||
                        finalImageUrl.includes('cdninstagram.com') ||
                        finalImageUrl.includes('fbcdn.net') ||
                        finalImageUrl.includes('tiktok') ||
@@ -479,7 +521,65 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
 
       console.log(`[AddRecipe] Recipe ${isEditMode ? 'updated' : 'created'} with ID:`, createdRecipe.id);
 
-      // 2. If it's an Instagram URL, download and store it permanently
+      // 2. If it's a base64 image from photo scan, upload it to storage
+      if (isBase64Image && finalImageUrl) {
+        try {
+          toast.loading('Uploading scanned photo...', { id: loadingToastId });
+          console.log('[AddRecipe] Uploading base64 image to storage');
+
+          const { supabase } = await import('@/lib/supabase');
+
+          // Convert base64 to blob
+          const base64Response = await fetch(finalImageUrl);
+          const blob = await base64Response.blob();
+
+          // Generate unique filename
+          const fileExt = blob.type.split('/')[1] || 'jpg';
+          const fileName = `recipe-${createdRecipe.id}-${Date.now()}.${fileExt}`;
+          const filePath = `recipes/${fileName}`;
+
+          // Upload to Supabase Storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('recipe-images')
+            .upload(filePath, blob, {
+              contentType: blob.type,
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) {
+            console.error('[AddRecipe] Storage upload failed:', uploadError);
+            throw uploadError;
+          }
+
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from('recipe-images')
+            .getPublicUrl(filePath);
+
+          const permanentUrl = urlData.publicUrl;
+          console.log('[AddRecipe] Uploaded to storage:', permanentUrl);
+
+          // Update recipe with permanent URL
+          const { error: updateError } = await supabase
+            .from('public_recipes')
+            .update({ image_url: permanentUrl })
+            .eq('id', createdRecipe.id);
+
+          if (updateError) {
+            console.error('[AddRecipe] Failed to update with permanent URL:', updateError);
+          } else {
+            console.log('[AddRecipe] ✅ Updated recipe with permanent URL');
+            finalImageUrl = permanentUrl;
+            postImageUrl = permanentUrl;
+          }
+        } catch (imageError) {
+          console.error('[AddRecipe] Base64 image upload failed:', imageError);
+          // Continue with base64 URL if upload fails (not ideal but better than nothing)
+        }
+      }
+
+      // 3. If it's an Instagram URL, download and store it permanently
       if (needsDownload && finalImageUrl) {
         try {
           toast.loading('Downloading and storing image permanently...', { id: loadingToastId });
@@ -492,7 +592,7 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
 
           console.log('[AddRecipe] Permanent URL:', permanentUrl);
 
-          // 3. Update the recipe with the permanent URL
+          // 4. Update the recipe with the permanent URL
           if (permanentUrl !== finalImageUrl) {
             const { supabase } = await import('@/lib/supabase');
             const { error: updateError } = await supabase
@@ -514,7 +614,7 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
         }
       }
 
-      // 4. Create social post
+      // 5. Create social post
       try {
         const { supabase } = await import('@/lib/supabase');
         const { data: { user } } = await supabase.auth.getUser();
@@ -701,40 +801,73 @@ return (
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {photoPreview && (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-slate-100 border-2 border-emerald-200">
-                <img src={photoPreview} alt="Recipe preview" className="w-full h-full object-contain" />
+            {photoPreviews.length > 0 && (
+              <div className="grid grid-cols-2 gap-2">
+                {photoPreviews.map((preview, index) => (
+                  <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-slate-100 border-2 border-emerald-200">
+                    <img src={preview} alt={`Recipe photo ${index + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      disabled={isScanningPhoto}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
+            )}
+
+            {photoPreviews.length > 0 && (
+              <p className="text-sm text-center text-emerald-700 font-medium">
+                {photoPreviews.length} photo{photoPreviews.length > 1 ? 's' : ''} selected • {4 - photoPreviews.length} more allowed
+              </p>
             )}
 
             <input
               type="file"
               accept="image/*"
-              capture="environment"
-              onChange={handlePhotoInput}
+              multiple
+              onChange={handlePhotoSelect}
               disabled={isScanningPhoto}
               className="hidden"
               id="photo-upload"
             />
 
-            <Button
-              type="button"
-              onClick={() => document.getElementById('photo-upload')?.click()}
-              disabled={isScanningPhoto}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12"
-            >
-              {isScanningPhoto ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Scanning photo...
-                </>
-              ) : (
-                <>
-                  <Camera className="w-5 h-5 mr-2" />
-                  Take or Upload Photo
-                </>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => document.getElementById('photo-upload')?.click()}
+                disabled={isScanningPhoto || photoPreviews.length >= 4}
+                variant="outline"
+                className="flex-1 h-12 border-emerald-300"
+              >
+                <Upload className="w-5 h-5 mr-2" />
+                {photoPreviews.length > 0 ? 'Add More' : 'Select Photos'}
+              </Button>
+
+              {photoPreviews.length > 0 && (
+                <Button
+                  type="button"
+                  onClick={handlePhotoScan}
+                  disabled={isScanningPhoto}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-12"
+                >
+                  {isScanningPhoto ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Scanning...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Scan Recipe
+                    </>
+                  )}
+                </Button>
               )}
-            </Button>
+            </div>
 
             <div className="mt-4 pt-4 border-t border-emerald-200">
               <div className="space-y-2 text-xs leading-relaxed">
@@ -749,7 +882,7 @@ return (
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
-                    <span>Cookbook pages</span>
+                    <span>Cookbook pages (upload multiple if recipe spans pages)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
@@ -762,8 +895,8 @@ return (
                 </ol>
 
                 <div className="mt-3 pt-2 border-t border-emerald-200 space-y-1 text-xs">
-                  <p className="text-emerald-600 font-semibold">AI-powered OCR extracts text from any image</p>
-                  <p className="text-slate-500">Works best with clear, well-lit photos</p>
+                  <p className="text-emerald-600 font-semibold">✨ Upload up to 4 photos - AI combines them into one recipe</p>
+                  <p className="text-slate-500">Photos are compressed automatically • Works best with clear, well-lit images</p>
                 </div>
               </div>
             </div>
