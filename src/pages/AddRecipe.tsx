@@ -551,7 +551,6 @@ return (
         {/* Scrollable content container */}
         <div className="overflow-y-auto max-h-[calc(95vh-6rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6 pt-4">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
-          <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* URL Import Section - Mobile optimized */}
         <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
