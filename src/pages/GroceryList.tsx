@@ -536,7 +536,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <Button
               variant="outline"
               onClick={() => setShowAddItemDialog(true)}
-              className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-100"
+              className="h-10 text-sm border-2 border-gray-300 bg-white hover:bg-gray-100 hover:border-gray-500 hover:text-gray-900"
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Item
@@ -544,7 +544,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             <Button
               variant="outline"
               onClick={() => setShowAddRecipeDialog(true)}
-              className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-100"
+              className="h-10 text-sm border-2 border-gray-300 bg-white hover:bg-gray-100 hover:border-gray-500 hover:text-gray-900"
             >
               <ChefHat className="w-4 h-4 mr-1" />
               Add Recipe
@@ -557,34 +557,11 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                 <Button
                   variant="outline"
                   onClick={handleSendToCart}
-                  className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-100"
+                  className="h-10 text-sm border-2 border-gray-300 bg-white hover:bg-gray-100 hover:border-gray-500 hover:text-gray-900"
                 >
                   <ShoppingCart className="w-4 h-4 mr-1" />
                   Send to Cart
-                </Button>
-              )}
-              {totalCount > 0 && (
-                <Button 
-                  variant="destructive" 
-                  onClick={handleClearAll}
-                  className="h-10 text-sm"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Clear All
-                </Button>
-              )}
-              {checkedCount > 0 && (
-                <Button 
-                  variant="outline" 
-                  onClick={handleClearChecked}
-                  className="h-10 text-sm border-gray-300 bg-white hover:bg-gray-100 col-span-2"
-                >
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Clear Checked
-                </Button>
-              )}
-            </div>
-          )}
+                </But
         </div>
 
         {/* Meal planner date range - mobile optimized */}
