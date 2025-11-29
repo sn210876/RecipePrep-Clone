@@ -95,6 +95,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [isScanningPhoto, setIsScanningPhoto] = useState(false);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [selectedPhotoFiles, setSelectedPhotoFiles] = useState<File[]>([]);
+  const [descriptionInput, setDescriptionInput] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+  const [isExtractingFromDescription, setIsExtractingFromDescription] = useState(false);
 
   // Load recipe for editing if edit parameter is present
   useEffect(() => {
@@ -337,6 +340,79 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     setSelectedPhotoFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleDescriptionExtract = async () => {
+    if (!descriptionInput.trim()) {
+      toast.error('Please paste a video description');
+      return;
+    }
+
+    setIsExtractingFromDescription(true);
+
+    try {
+      toast.loading('Extracting recipe from description...', { id: 'extract-desc' });
+
+      const RENDER_SERVER = import.meta.env.VITE_API_URL || 'https://recipe-backend-nodejs-1.onrender.com';
+      const response = await fetch(`${RENDER_SERVER}/extract-manual-description`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: videoTitle.trim() || 'Recipe from Video',
+          description: descriptionInput.trim(),
+          thumbnail: '',
+          channelTitle: '',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Description Extract] Error:', errorText);
+        throw new Error('Failed to extract recipe from description');
+      }
+
+      const data = await response.json();
+
+      // Convert to ExtractedRecipeData format
+      const extractedRecipe: ExtractedRecipeData = {
+        title: data.title || videoTitle.trim() || 'Recipe from Video',
+        description: data.description || '',
+        creator: data.creator || 'Unknown',
+        ingredients: data.ingredients.map((ing: string) => {
+          const parts = ing.split(' ');
+          return {
+            quantity: parts[0] || '',
+            unit: parts[1] || 'piece',
+            name: parts.slice(2).join(' ') || ing
+          };
+        }),
+        instructions: data.instructions || [],
+        prepTime: String(data.prep_time || 15),
+        cookTime: String(data.cook_time || 30),
+        servings: String(data.servings || 4),
+        cuisineType: data.cuisineType || 'Global',
+        difficulty: data.difficulty || 'Medium',
+        mealTypes: ['Dinner'],
+        dietaryTags: data.dietaryTags || [],
+        imageUrl: data.image || data.imageUrl || '',
+        videoUrl: '',
+        notes: data.notes || 'Extracted from description',
+        sourceUrl: '',
+      };
+
+      setExtractedData(extractedRecipe);
+      setShowPreview(true);
+      toast.success('Recipe extracted from description! Review and edit before saving.', { id: 'extract-desc', duration: 2000 });
+      setIsExtractingFromDescription(false);
+
+      // Clear the inputs
+      setDescriptionInput('');
+      setVideoTitle('');
+    } catch (error: any) {
+      console.error('[Description Extract] Error:', error);
+      toast.error(error.message || 'Failed to extract recipe from description.', { id: 'extract-desc' });
+      setIsExtractingFromDescription(false);
+    }
+  };
+
   const handleUrlExtract = async () => {
     if (!urlInput.trim()) {
       toast.error('Please enter a URL');
@@ -374,7 +450,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     } catch (error: any) {
       if (error.message.includes('waking up')) {
         toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
-        
+
         setTimeout(async () => {
           try {
             toast.loading('Retrying extraction...', { id: 'extract' });
@@ -780,9 +856,105 @@ return (
                   </li>
                 </ol>
                 <div className="mt-3 pt-2 border-t border-slate-200 space-y-1 text-xs">
-                  <p className="text-emerald-600 font-semibold">Supported: All recipe websites & most blogs</p>
-                  <p className="text-orange-600">Warning: Instagram & TikTok (may take 30–60 seconds)</p>
-                  <p className="text-slate-500">Coming Soon: YouTube videos</p>
+                  <p className="text-emerald-600 font-semibold">✅ Supported: All recipe websites & most blogs</p>
+                  <p className="text-blue-600 font-semibold">✅ Supported: YouTube videos (with description fallback)</p>
+                  <p className="text-orange-600">⚠️ Warning: Instagram & TikTok (may take 30–60 seconds)</p>
+                  <p className="text-purple-600 font-medium">💡 YouTube blocked? Use "Paste Video Description" below!</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Manual Description Paste Section - For YouTube bot detection */}
+        <Card className="border-purple-200 shadow-sm bg-gradient-to-br from-purple-50 to-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="w-5 h-5 text-purple-600 flex-shrink-0" />
+              <span className="leading-tight">Paste Video Description</span>
+              <Badge variant="secondary" className="ml-auto bg-purple-100 text-purple-700 border-purple-200">
+                For YouTube
+              </Badge>
+            </CardTitle>
+            <CardDescription className="text-xs">
+              If automatic extraction fails, copy the video description from YouTube and paste it here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label htmlFor="video-title" className="text-xs font-medium text-slate-700">
+                Video Title (Optional)
+              </Label>
+              <Input
+                id="video-title"
+                value={videoTitle}
+                onChange={(e) => setVideoTitle(e.target.value)}
+                placeholder="e.g., Best Chocolate Cake Recipe"
+                className="mt-1 h-10 text-sm border-purple-200 focus:border-purple-500"
+                disabled={isExtractingFromDescription}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="description-input" className="text-xs font-medium text-slate-700">
+                Video Description *
+              </Label>
+              <Textarea
+                id="description-input"
+                value={descriptionInput}
+                onChange={(e) => setDescriptionInput(e.target.value)}
+                placeholder="Paste the full video description here, including ingredients and instructions..."
+                className="mt-1 min-h-[200px] text-sm border-purple-200 focus:border-purple-500 font-mono"
+                disabled={isExtractingFromDescription}
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Paste the complete description from the video (click "...more" on YouTube to see full description)
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleDescriptionExtract}
+              disabled={isExtractingFromDescription || !descriptionInput.trim()}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12"
+            >
+              {isExtractingFromDescription ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Extracting Recipe...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Extract Recipe from Description
+                </>
+              )}
+            </Button>
+
+            <div className="mt-4 pt-4 border-t border-purple-200">
+              <div className="space-y-2 text-xs leading-relaxed">
+                <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
+                  WHEN TO USE THIS
+                </p>
+                <ol className="space-y-1.5 text-black ml-0.5">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">•</span>
+                    <span>YouTube video extraction shows bot detection error</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">•</span>
+                    <span>Recipe is in the video description but not extracting</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">•</span>
+                    <span>You want faster extraction without waiting for audio processing</span>
+                  </li>
+                </ol>
+                <div className="mt-2 p-2 bg-purple-100 border border-purple-200 rounded text-xs">
+                  <p className="font-semibold text-purple-900">💡 Pro Tip:</p>
+                  <p className="text-purple-800 mt-1">
+                    On YouTube, click the "...more" button below the video to expand the full description, then copy everything and paste it here.
+                  </p>
                 </div>
               </div>
             </div>
