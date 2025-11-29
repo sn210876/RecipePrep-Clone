@@ -1043,18 +1043,22 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
 
             <div ref={notificationRef} className="relative">
               <button
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  setShowNotifications(!showNotifications);
-                  if (!showNotifications && currentUserId) {
-                    await supabase
-                      .from('notifications')
-                      .update({ read: true })
-                      .eq('user_id', currentUserId)
-                      .eq('read', false);
-                    setUnreadNotifications(0);
-                  }
-                }}
+              onClick={async (e) => {
+  e.stopPropagation();
+  setShowNotifications(!showNotifications);
+  if (!showNotifications && currentUserId) {
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', currentUserId)
+      .eq('read', false)
+      .neq('type', 'message');
+    setUnreadNotifications(0);
+    
+    // Update local notifications state to reflect read status
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }
+}}
                 className="relative p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               >
                 <Bell className="w-6 h-6 text-gray-700" />
