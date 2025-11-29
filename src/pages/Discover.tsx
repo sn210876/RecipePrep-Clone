@@ -997,17 +997,17 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   return (
     <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden">
       <div className="max-w-sm mx-auto w-full" onClick={() => { setShowNotifications(false); setShowSearchResults(false); }}>
-        <div className="fixed top-14 left-0 right-0 z-20 bg-white border-b border-gray-200 p-4 max-w-sm mx-auto">
-          <div className="flex items-center gap-2">
+        <div className="fixed top-14 left-0 right-0 z-20 bg-white border-b border-gray-200 p-3 max-w-sm mx-auto shadow-sm">
+          <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="Search users..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-colors"
               />
               {showSearchResults && (
                 <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg max-h-60 overflow-y-auto shadow-lg z-50">
@@ -1059,18 +1059,18 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }
 }}
-                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                className="relative p-2.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 bg-gray-50"
               >
-                <Bell className="w-6 h-6 text-gray-700" />
+                <Bell className="w-5 h-5 text-gray-700" />
                 {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
                     {unreadNotifications > 9 ? '9+' : unreadNotifications}
                   </span>
                 )}
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg max-h-96 overflow-y-auto shadow-lg z-50">
+                <div className="absolute right-0 top-full mt-3 w-80 bg-white border border-gray-200 rounded-xl max-h-80 overflow-y-auto shadow-2xl z-[100]">
               {notifications.length === 0 ? (
                 <div className="p-4 text-center text-gray-500 text-sm">No notifications yet</div>
               ) : (

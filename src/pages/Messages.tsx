@@ -375,7 +375,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* CHAT HEADER */}
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-white border-b-2 border-gray-300 px-3 py-2.5 shadow-md">
+        <div className="fixed top-16 left-0 right-0 z-[60] bg-white border-b-2 border-gray-300 px-3 py-2.5 shadow-md">
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
@@ -412,8 +412,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         </div>
 
         {/* MESSAGES */}
-      {/* MESSAGES */}
-<div className="pt-16 flex-1 overflow-y-auto px-4 pb-32 lg:pb-24">
+<div className="pt-32 flex-1 overflow-y-auto px-4 pb-32 lg:pb-24">
   <div className="space-y-4 py-4">
     {messages.map((message) => (
       <div
