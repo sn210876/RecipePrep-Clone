@@ -803,7 +803,7 @@ return (
                     <SelectTrigger className={`mt-1.5 ${errors.cuisineType ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Select cuisine" />
                     </SelectTrigger>
-                    <SelectContent className="z-[70]">
+                    <SelectContent className="z-[300]">
                       {CUISINE_TYPES.map(type => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
