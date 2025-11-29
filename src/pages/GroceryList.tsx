@@ -585,27 +585,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
               )}
             </div>
           )}
-              {totalCount > 0 && (
-                <>
-                  <Button 
-                    variant="destructive" 
-                    onClick={handleClearAll}
-                    className="h-10 text-sm"
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Clear All
-                  </Button>
-                  <Button
-                    onClick={handleSendToCart}
-                    className="h-10 text-sm bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-1" />
-                    Send to Cart
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Meal planner date range - mobile optimized */}
