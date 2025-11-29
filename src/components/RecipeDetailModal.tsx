@@ -275,16 +275,7 @@ export function RecipeDetailModal({
                   </Button>
                 </div>
 
-                {/* Delete Button */}
-                {isSaved && (
-                  <div className="flex gap-2 mb-3 sm:mb-4">
-                    <Button
-                      variant="outline"
-                      onClick={handleDelete}
-                      className="w-full gap-2 hover:bg-rose-50 hover:border-rose-500 hover:text-rose-700 min-h-[40px] sm:min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm font-semibold border-2"
-                    >
-                    
-                )}
+              
 
                 <Separator className="my-3 sm:my-4" />
 
