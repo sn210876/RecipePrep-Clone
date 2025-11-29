@@ -375,25 +375,26 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* CHAT HEADER */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
-          <div className="flex items-center gap-3">
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-white border-b-2 border-gray-300 px-3 py-2.5 shadow-md">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 setSelectedConversation(null);
                 setMessages([]);
+                setSearchQuery('');
                 if (onBack && recipientUserId) {
                   onBack();
                 } else if (currentUserId) {
                   loadConversations(currentUserId);
                 }
               }}
-              className="p-2 hover:bg-gray-100 rounded-full bg-gray-50 border border-gray-300"
+              className="p-2.5 hover:bg-gray-100 rounded-lg bg-blue-50 border-2 border-blue-500 shadow-sm active:scale-95 transition-transform"
               aria-label="Back to messages"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-700" />
+              <ArrowLeft className="w-6 h-6 text-blue-600 font-bold" strokeWidth={3} />
             </button>
 
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
                 {selectedConversation.other_user.avatar_url ? (
                   <img
