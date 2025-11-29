@@ -529,8 +529,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
 return (
     <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent md:relative">
-      <div
-        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gradient-to-br from-slate-50 via-white to-slate-50 md:min-h-screen overflow-hidden md:overflow-visible rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
+    <div
+        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gradient-to-br from-slate-50 via-white to-slate-50 md:min-h-screen overflow-hidden md:overflow-visible rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe flex flex-col"
         style={{
           maxHeight: window.innerWidth >= 768 ? 'none' : '90vh'
         }}
