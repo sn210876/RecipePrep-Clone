@@ -477,10 +477,14 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
     let finalImageUrl = uploadedImageUrl || imageUrl.trim() || undefined;
     let postImageUrl = null;
 
+    // Check if it's a base64 data URL that needs to be uploaded
+    const isBase64Image = finalImageUrl && finalImageUrl.startsWith('data:image');
+
     // Check if it's an Instagram/external URL that needs to be stored permanently
-   const needsDownload = finalImageUrl && 
-                      !uploadedImageUrl && 
-                      (finalImageUrl.includes('instagram.com') || 
+   const needsDownload = finalImageUrl &&
+                      !uploadedImageUrl &&
+                      !isBase64Image &&
+                      (finalImageUrl.includes('instagram.com') ||
                        finalImageUrl.includes('cdninstagram.com') ||
                        finalImageUrl.includes('fbcdn.net') ||
                        finalImageUrl.includes('tiktok') ||
@@ -517,7 +521,65 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
 
       console.log(`[AddRecipe] Recipe ${isEditMode ? 'updated' : 'created'} with ID:`, createdRecipe.id);
 
-      // 2. If it's an Instagram URL, download and store it permanently
+      // 2. If it's a base64 image from photo scan, upload it to storage
+      if (isBase64Image && finalImageUrl) {
+        try {
+          toast.loading('Uploading scanned photo...', { id: loadingToastId });
+          console.log('[AddRecipe] Uploading base64 image to storage');
+
+          const { supabase } = await import('@/lib/supabase');
+
+          // Convert base64 to blob
+          const base64Response = await fetch(finalImageUrl);
+          const blob = await base64Response.blob();
+
+          // Generate unique filename
+          const fileExt = blob.type.split('/')[1] || 'jpg';
+          const fileName = `recipe-${createdRecipe.id}-${Date.now()}.${fileExt}`;
+          const filePath = `recipes/${fileName}`;
+
+          // Upload to Supabase Storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('recipe-images')
+            .upload(filePath, blob, {
+              contentType: blob.type,
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) {
+            console.error('[AddRecipe] Storage upload failed:', uploadError);
+            throw uploadError;
+          }
+
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from('recipe-images')
+            .getPublicUrl(filePath);
+
+          const permanentUrl = urlData.publicUrl;
+          console.log('[AddRecipe] Uploaded to storage:', permanentUrl);
+
+          // Update recipe with permanent URL
+          const { error: updateError } = await supabase
+            .from('public_recipes')
+            .update({ image_url: permanentUrl })
+            .eq('id', createdRecipe.id);
+
+          if (updateError) {
+            console.error('[AddRecipe] Failed to update with permanent URL:', updateError);
+          } else {
+            console.log('[AddRecipe] ✅ Updated recipe with permanent URL');
+            finalImageUrl = permanentUrl;
+            postImageUrl = permanentUrl;
+          }
+        } catch (imageError) {
+          console.error('[AddRecipe] Base64 image upload failed:', imageError);
+          // Continue with base64 URL if upload fails (not ideal but better than nothing)
+        }
+      }
+
+      // 3. If it's an Instagram URL, download and store it permanently
       if (needsDownload && finalImageUrl) {
         try {
           toast.loading('Downloading and storing image permanently...', { id: loadingToastId });
@@ -530,7 +592,7 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
 
           console.log('[AddRecipe] Permanent URL:', permanentUrl);
 
-          // 3. Update the recipe with the permanent URL
+          // 4. Update the recipe with the permanent URL
           if (permanentUrl !== finalImageUrl) {
             const { supabase } = await import('@/lib/supabase');
             const { error: updateError } = await supabase
@@ -552,7 +614,7 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
         }
       }
 
-      // 4. Create social post
+      // 5. Create social post
       try {
         const { supabase } = await import('@/lib/supabase');
         const { data: { user } } = await supabase.auth.getUser();
