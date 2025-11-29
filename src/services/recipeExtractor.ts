@@ -7,7 +7,7 @@ const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 
 // YOUR RENDER SERVER ONLY — 100% FINAL VERSION
 const RENDER_SERVER = 'https://recipe-backend-nodejs-1.onrender.com/extract';
-const PHOTO_EXTRACT_SERVER = 'https://recipe-backend-nodejs-1.onrender.com/api/extract-photo';
+const SUPABASE_PHOTO_FUNCTION = `${SUPABASE_URL}/functions/v1/extract-recipe-photo`;
 
 export interface ExtractedRecipeData {
   title: string;
@@ -308,26 +308,75 @@ export function getPlatformFromUrl(url: string): string {
   return 'Website';
 }
 
-export async function extractRecipeFromPhoto(imageFile: File): Promise<ExtractedRecipeData> {
+export async function extractRecipeFromPhoto(imageFiles: File[]): Promise<ExtractedRecipeData> {
   try {
-    console.log('[Photo Extractor] Processing image:', imageFile.name);
+    if (!imageFiles || imageFiles.length === 0) {
+      throw new Error('Please select at least one photo');
+    }
 
-    const reader = new FileReader();
-    const imageBase64 = await new Promise<string>((resolve, reject) => {
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(imageFile);
-    });
+    if (imageFiles.length > 4) {
+      throw new Error('Maximum 4 photos allowed');
+    }
 
-    console.log('[Photo Extractor] Sending to server...');
+    console.log(`[Photo Extractor] Processing ${imageFiles.length} image(s)`);
+
+    const compressImage = async (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            const maxDimension = 2000;
+            if (width > height && width > maxDimension) {
+              height = (height * maxDimension) / width;
+              width = maxDimension;
+            } else if (height > maxDimension) {
+              width = (width * maxDimension) / height;
+              height = maxDimension;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              reject(new Error('Failed to get canvas context'));
+              return;
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const quality = file.size > 1000000 ? 0.7 : 0.85;
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = reject;
+          img.src = e.target?.result as string;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const compressedImages = await Promise.all(
+      imageFiles.map(file => compressImage(file))
+    );
+
+    console.log('[Photo Extractor] Images compressed, sending to server...');
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
-    const response = await fetch(PHOTO_EXTRACT_SERVER, {
+    const response = await fetch(SUPABASE_PHOTO_FUNCTION, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64 }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({ images: compressedImages }),
       signal: controller.signal,
     });
 
@@ -336,7 +385,7 @@ export async function extractRecipeFromPhoto(imageFile: File): Promise<Extracted
     if (!response.ok) {
       console.error('[Photo Extractor] Server response not OK:', response.status);
       if (response.status >= 500 || response.status === 429) {
-        throw new Error('Server is processing - try again in 20 seconds');
+        throw new Error('Server is processing - try again in 30 seconds');
       }
       const errorText = await response.text();
       console.error('[Photo Extractor] Error response:', errorText);
@@ -410,17 +459,17 @@ export async function extractRecipeFromPhoto(imageFile: File): Promise<Extracted
       difficulty: data.difficulty || 'Medium',
       mealTypes: ['Dinner'],
       dietaryTags: data.dietary_tags || [],
-      imageUrl: imageBase64,
+      imageUrl: compressedImages[0],
       videoUrl: undefined,
-      notes: data.notes || 'Scanned from photo',
+      notes: data.notes || `Scanned from ${imageFiles.length} photo${imageFiles.length > 1 ? 's' : ''}`,
       sourceUrl: ''
     };
   } catch (err: any) {
     console.error('[Photo Extractor] Catch block error:', err);
     if (err.name === 'AbortError') {
-      throw new Error('Server is processing — please wait 20-30 seconds and try again');
+      throw new Error('Server is processing — please wait 30-45 seconds and try again');
     }
-    throw new Error('Photo extraction temporarily unavailable — try again soon');
+    throw new Error(err.message || 'Photo extraction temporarily unavailable — try again soon');
   }
 }
 
