@@ -45,6 +45,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -170,6 +172,31 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
     setConversations(conversationsWithUsers);
   };
+
+  // Search users
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!searchQuery.trim() || !currentUserId) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+
+      setIsSearching(true);
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .ilike('username', `%${searchQuery}%`)
+        .neq('id', currentUserId)
+        .limit(20);
+
+      setSearchResults(data || []);
+      setIsSearching(false);
+    };
+
+    const timeoutId = setTimeout(searchUsers, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, currentUserId]);
 
   const startConversation = async (otherUserId: string, username: string, userId?: string) => {
     const activeUserId = userId || currentUserId;
@@ -348,7 +375,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         {/* CHAT HEADER */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
@@ -360,9 +387,10 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                   loadConversations(currentUserId);
                 }
               }}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 rounded-full bg-gray-50 border border-gray-300"
+              aria-label="Back to messages"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
             </button>
 
             <div className="flex items-center gap-2 flex-1">
@@ -506,7 +534,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
               type="text"
-              placeholder="Search conversations..."
+              placeholder="Search users to message..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-10 text-sm border-gray-300"
@@ -515,22 +543,53 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         </div>
       </div>
 
-      {/* CONVERSATION LIST */}
+      {/* SEARCH RESULTS OR CONVERSATION LIST */}
       <div className="pt-32 pb-20 px-4">
-        {conversations.length === 0 ? (
+        {searchQuery.trim() ? (
+          // Show search results
+          <div className="space-y-2">
+            {isSearching ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Searching users...</p>
+              </div>
+            ) : searchResults.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No users found</p>
+                <p className="text-sm text-gray-400 mt-2">Try a different search term</p>
+              </div>
+            ) : (
+              searchResults.map((user) => (
+                <button
+                  key={user.id}
+                  onClick={() => {
+                    setSearchQuery('');
+                    startConversation(user.id, user.username);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                    ) : (
+                      user.username.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <span className="font-semibold">{user.username}</span>
+                    <p className="text-sm text-gray-500">Start a conversation</p>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        ) : conversations.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">No conversations yet</p>
-            <p className="text-sm text-gray-400">Start a conversation from a user's profile</p>
+            <p className="text-sm text-gray-400">Search for users above to start messaging</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {conversations
-              .filter((convo) =>
-                searchQuery
-                  ? convo.other_user.username.toLowerCase().includes(searchQuery.toLowerCase())
-                  : true
-              )
-              .map((convo) => (
+            {conversations.map((convo) => (
               <button
                 key={convo.id}
                 onClick={() => setSelectedConversation(convo)}

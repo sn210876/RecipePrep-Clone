@@ -1783,8 +1783,8 @@ return (
           )}
 
         {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
-        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.2)] z-[150] lg:z-10">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3">
+        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 z-[150] lg:z-10 pointer-events-none">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3 pointer-events-auto">
             {onNavigate && (
               <Button
                 type="button"
