@@ -294,5 +294,3 @@ export function Blog({ onNavigate }: BlogPageProps) {
     </div>
   );
 }
-
-

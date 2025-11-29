@@ -484,5 +484,3 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
     </div>
   );
 }
-
-
