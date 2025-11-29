@@ -540,19 +540,16 @@ return (
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Title section - sticky on desktop */}
-   {/* Title section - static on mobile, sticky on desktop */}
-<div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6 md:sticky md:top-14 left-0 right-0 z-[60] md:static md:top-0">
-
-
-          <div className="max-w-4xl mx-auto px-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
-            <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
+      {/* Scrollable content container - includes title on mobile */}
+<div className="overflow-y-auto max-h-[calc(95vh-6rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6">
+        
+          {/* Title section - scrolls on mobile, sticky on desktop */}
+          <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6 md:sticky md:top-14 left-0 right-0 z-[60] md:static md:top-0">
+            <div className="max-w-4xl mx-auto px-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
+              <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
+            </div>
           </div>
-        </div>
-
-        {/* Scrollable content container */}
-<div className="overflow-y-auto max-h-[calc(95vh-6rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6 pt-4">
 
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
