@@ -6,11 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon, Camera } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
 import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
-import { extractRecipeFromUrl, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
+import { extractRecipeFromUrl, extractRecipeFromPhoto, isValidUrl, type ExtractedRecipeData } from '@/services/recipeExtractor';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { downloadAndStoreImage } from '@/lib/imageStorage';
@@ -63,7 +63,7 @@ interface AddRecipeProps {
 }
 
 export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
-  const { dispatch } = useRecipes();
+  const { dispatch, saveRecipe } = useRecipes();
   const [editRecipeId, setEditRecipeId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -92,6 +92,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
+  const [isScanningPhoto, setIsScanningPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
 
   // Load recipe for editing if edit parameter is present
   useEffect(() => {
@@ -258,6 +260,45 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     }
   };
 
+  const handlePhotoScan = async (file: File) => {
+    if (!file) {
+      toast.error('Please select a photo');
+      return;
+    }
+
+    if (!isImageFile(file)) {
+      toast.error('Please upload a valid image file (JPG, PNG, WEBP)');
+      return;
+    }
+
+    setIsScanningPhoto(true);
+    const reader = new FileReader();
+    reader.onload = (e) => setPhotoPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+
+    try {
+      toast.loading('Scanning recipe photo...', { id: 'scan-photo' });
+      const data = await extractRecipeFromPhoto(file);
+      setExtractedData(data);
+      setShowPreview(true);
+      toast.success('Recipe extracted from photo!', { id: 'scan-photo', duration: 2000 });
+    } catch (error: any) {
+      console.error('Photo scan error:', error);
+      const errorMessage = error?.message || 'Failed to scan photo. Please try again.';
+      toast.error(errorMessage, { id: 'scan-photo' });
+      setPhotoPreview('');
+    } finally {
+      setIsScanningPhoto(false);
+    }
+  };
+
+  const handlePhotoInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handlePhotoScan(file);
+    }
+  };
+
   const handleUrlExtract = async () => {
     if (!urlInput.trim()) {
       toast.error('Please enter a URL');
@@ -284,12 +325,12 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       const data = await extractRecipeFromUrl(urlInput);
       setExtractedData(data);
 
-      if (data.hasConflict) {
+    if (data.hasConflict) {
         setShowConflictDialog(true);
-        toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract' });
+        toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract', duration: 2000 });
       } else {
         setShowPreview(true);
-        toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract' });
+        toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
       }
       setIsExtracting(false);
     } catch (error: any) {
@@ -302,8 +343,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             const data = await extractRecipeFromUrl(urlInput);
             setExtractedData(data);
             setShowPreview(true);
-            toast.success('Recipe extracted!', { id: 'extract' });
-          } catch (retryError: any) {
+toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          } catch (retryError: any) {
             toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
           } finally {
             setIsExtracting(false);
@@ -509,8 +549,12 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
       }
 
-      // 5. Add to local state
-      dispatch({ type: 'SAVE_RECIPE', payload: createdRecipe });
+      // 5. Add to saved recipes
+      try {
+        await saveRecipe(createdRecipe);
+      } catch (saveError) {
+        console.error('[AddRecipe] Failed to save recipe:', saveError);
+      }
 
       // 6. Navigate to my recipes
       if (onNavigate) {
@@ -525,8 +569,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
 return (
     <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent md:relative">
-      <div
-        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gradient-to-br from-slate-50 via-white to-slate-50 md:min-h-screen overflow-hidden md:overflow-visible rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe"
+    <div
+        className="absolute inset-x-0 bottom-0 md:relative md:inset-auto bg-gradient-to-br from-slate-50 via-white to-slate-50 md:min-h-screen overflow-hidden md:overflow-visible rounded-t-3xl md:rounded-none shadow-2xl md:shadow-none pb-safe flex flex-col"
         style={{
           maxHeight: window.innerWidth >= 768 ? 'none' : '90vh'
         }}
@@ -536,10 +580,8 @@ return (
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Title section - sticky on desktop */}
-      <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6 fixed top-14 left-0 right-0 z-[60]">
-
-
+    {/* Title section - scrolls away naturally */}
+        <div className="w-full bg-gradient-to-br from-blue-50 to-white border-b border-slate-200 py-4 md:py-6">
           <div className="max-w-4xl mx-auto px-4">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 text-center">Create New Recipe</h1>
             <p className="text-sm sm:text-base text-slate-600 text-center mt-1">See a recipe online you like, add it here!</p>
@@ -547,7 +589,7 @@ return (
         </div>
 
         {/* Scrollable content container */}
-       <div className="overflow-y-auto max-h-[calc(95vh-6rem)] md:overflow-visible md:max-h-none overscroll-contain pb-32 md:pb-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain pb-32 md:pb-6 pt-4">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* URL Import Section - Mobile optimized */}
@@ -562,11 +604,11 @@ return (
            <div className="flex gap-2">
   <div className="relative flex-1">
     <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
-   <Input
+  <Input
   value={urlInput}
   onChange={(e) => setUrlInput(e.target.value)}
   placeholder="Paste recipe link..."
-  className="pl-10 h-10 text-sm placeholder:text-slate-400"
+  className="pl-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
   disabled={isExtracting}
   onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
 />
@@ -601,7 +643,7 @@ return (
               {isExtracting ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Extracting...
+                  Extracting... Can take up to a minute
                 </>
               ) : (
                 <>
@@ -641,6 +683,87 @@ return (
                   <p className="text-emerald-600 font-semibold">Supported: All recipe websites & most blogs</p>
                   <p className="text-orange-600">Warning: Instagram & TikTok (may take 30–60 seconds)</p>
                   <p className="text-slate-500">Coming Soon: YouTube videos</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Photo Scan Section - NEW! */}
+        <Card className="border-emerald-200 shadow-sm bg-gradient-to-br from-emerald-50 to-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Camera className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <span className="leading-tight">Scan Recipe Photo</span>
+              <Badge variant="secondary" className="ml-auto bg-emerald-100 text-emerald-700 border-emerald-200">
+                ✨ NEW!
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {photoPreview && (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-slate-100 border-2 border-emerald-200">
+                <img src={photoPreview} alt="Recipe preview" className="w-full h-full object-contain" />
+              </div>
+            )}
+
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhotoInput}
+              disabled={isScanningPhoto}
+              className="hidden"
+              id="photo-upload"
+            />
+
+            <Button
+              type="button"
+              onClick={() => document.getElementById('photo-upload')?.click()}
+              disabled={isScanningPhoto}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12"
+            >
+              {isScanningPhoto ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Scanning photo...
+                </>
+              ) : (
+                <>
+                  <Camera className="w-5 h-5 mr-2" />
+                  Take or Upload Photo
+                </>
+              )}
+            </Button>
+
+            <div className="mt-4 pt-4 border-t border-emerald-200">
+              <div className="space-y-2 text-xs leading-relaxed">
+                <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
+                  WHAT YOU CAN SCAN
+                </p>
+
+                <ol className="space-y-1.5 text-black ml-0.5">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
+                    <span>Recipe cards (printed or handwritten)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
+                    <span>Cookbook pages</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
+                    <span>Handwritten recipes from grandma</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-emerald-600 min-w-[14px]">•</span>
+                    <span>Screenshots of recipes</span>
+                  </li>
+                </ol>
+
+                <div className="mt-3 pt-2 border-t border-emerald-200 space-y-1 text-xs">
+                  <p className="text-emerald-600 font-semibold">AI-powered OCR extracts text from any image</p>
+                  <p className="text-slate-500">Works best with clear, well-lit photos</p>
                 </div>
               </div>
             </div>
@@ -797,7 +920,7 @@ return (
                     <SelectTrigger className={`mt-1.5 ${errors.cuisineType ? 'border-red-500' : ''}`}>
                       <SelectValue placeholder="Select cuisine" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[300]">
                       {CUISINE_TYPES.map(type => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
@@ -1064,7 +1187,6 @@ return (
               />
             </CardContent>
           </Card>
-        </form>  {/* ← ADD THIS CLOSING FORM TAG HERE */}
          
 
         {/* Preview Dialog - Mobile optimized */}
@@ -1307,8 +1429,7 @@ return (
             </DialogFooter>
 </DialogContent>
         </Dialog>
-          </div>
-        </div>
+     
 
         {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
         <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[100] lg:z-10">
@@ -1336,6 +1457,9 @@ return (
             >
               {isEditMode ? 'Update Recipe' : 'Create Recipe'}
             </Button>
+        </div>
+        </div>
+        </form>
           </div>
         </div>
       </div>
