@@ -176,7 +176,7 @@ export function FAQ() {
                 <AccordionItem value="item-15">
                   <AccordionTrigger>Is MealScrape free?</AccordionTrigger>
                   <AccordionContent>
-                    MealScrape offers a generous 6-month early bird trial for new users! After the trial, we offer affordable subscription plans. Early bird members get special lifetime pricing for being early supporters.
+                    MealScrape offers a generous 6-month early bird trial for new users! After the trial, we offer pay what you want plans.
                   </AccordionContent>
                 </AccordionItem>
 
