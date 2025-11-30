@@ -45,7 +45,7 @@ export function FAQ() {
                 <AccordionItem value="item-3">
                   <AccordionTrigger>Is there a mobile app?</AccordionTrigger>
                   <AccordionContent>
-                    Yes! MealScrape works great on mobile browsers and we have native iOS and Android apps coming soon. The web version is fully responsive and works on all devices.
+                    Yes! Meal Scrape works great on mobile browsers and we have native iOS and Android apps coming soon. The web version is fully responsive and works on all devices.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
