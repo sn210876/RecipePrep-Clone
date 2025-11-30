@@ -1153,7 +1153,7 @@ return (
           {/* Basic Information */}
           <Card className="border-2 border-slate-500 shadow-sm bg-gradient-to-br from-slate-50 to-white">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Basic Information</CardTitle>
+              <CardTitle className="text-lg">Add Manually</CardTitle>
               <CardDescription className="text-xs">Review extracted info</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
