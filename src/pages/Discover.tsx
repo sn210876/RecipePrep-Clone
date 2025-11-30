@@ -265,6 +265,13 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
           loadNotifications();
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${currentUserId}` },
+        () => {
+          loadNotifications();
+        }
+      )
       .subscribe();
 
     return () => {

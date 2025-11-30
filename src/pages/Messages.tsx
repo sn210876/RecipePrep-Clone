@@ -489,7 +489,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 </div>
 
         {/* INPUT BAR - Fixed footer above bottom nav */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 z-40 mb-16 lg:mb-0 shadow-lg">
+        <div className="fixed left-0 right-0 bg-white border-t border-gray-200 py-3 z-[51] shadow-lg" style={{ bottom: '64px' }}>
           <div className="max-w-sm lg:max-w-md mx-auto px-4 flex gap-2">
             <input
               type="text"
