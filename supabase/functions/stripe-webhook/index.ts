@@ -33,7 +33,7 @@ Deno.serve(async (req: Request) => {
       throw new Error("No signature provided");
     }
 
-    const event = stripe.webhooks.constructEvent(
+    const event = await stripe.webhooks.constructEventAsync(
       body,
       signature,
       Deno.env.get("STRIPE_WEBHOOK_SECRET") || ""
