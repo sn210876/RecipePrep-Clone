@@ -31,7 +31,7 @@ export function FAQ() {
                 <AccordionItem value="item-1">
                   <AccordionTrigger>What is Meal Scrape?</AccordionTrigger>
                   <AccordionContent>
-                    MealScrape is an AI-powered recipe management app that helps you save, organize, and discover recipes from anywhere on the internet. Simply paste a URL, upload a photo, or manually enter recipes to build your personal cookbook.
+                    Meal Scrape is an AI-powered recipe management app that helps you save, organize, and discover recipes from anywhere on the internet. Simply paste a URL, upload a photo, or manually enter recipes to build your personal cookbook.
                   </AccordionContent>
                 </AccordionItem>
 
