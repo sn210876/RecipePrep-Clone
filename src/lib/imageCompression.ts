@@ -15,11 +15,11 @@ export interface CompressionResult {
 }
 
 const DEFAULT_OPTIONS = {
-  maxSizeMB: 1.0,
-  maxWidthOrHeight: 1600,
+  maxSizeMB: 0.5,
+  maxWidthOrHeight: 1200,
   useWebWorker: true,
   fileType: 'image/jpeg',
-  initialQuality: 0.75,
+  initialQuality: 0.8,
 };
 
 /**
@@ -33,22 +33,6 @@ export async function compressImage(
   onProgress?: (progress: CompressionProgress) => void
 ): Promise<CompressionResult> {
   const originalSize = file.size;
-  const originalSizeMB = originalSize / (1024 * 1024);
-
-  if (originalSizeMB <= 2.0) {
-    onProgress?.({
-      percent: 100,
-      originalSize,
-      currentSize: originalSize,
-      isCompressing: false,
-    });
-    return {
-      file,
-      originalSize,
-      compressedSize: originalSize,
-      compressionRatio: 0,
-    };
-  }
 
   onProgress?.({
     percent: 0,
