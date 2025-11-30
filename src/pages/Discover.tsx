@@ -210,7 +210,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   useEffect(() => {
     if (!currentUserId) return;
 
-    const loadNotifications = async () => {
+  const loadNotifications = async () => {
   try {
     const { data, error } = await supabase
       .from('notifications')
@@ -226,6 +226,9 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
     }
 
     if (data) {
+      console.log('[Notifications] Loaded notifications:', data);
+      console.log('[Notifications] Unread count:', data.filter(n => !n.read).length);
+      
       // Fetch actor profiles separately
       const actorIds = [...new Set(data.map(n => n.actor_id).filter(Boolean))];
       
@@ -247,7 +250,9 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
         setNotifications(data);
       }
       
-      setUnreadNotifications(data.filter(n => !n.read).length);
+      const unreadCount = data.filter(n => !n.read).length;
+      console.log('[Notifications] Setting unread count to:', unreadCount);
+      setUnreadNotifications(unreadCount);
     }
   } catch (err) {
     console.error('[Notifications] Exception:', err);
