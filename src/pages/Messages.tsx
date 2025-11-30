@@ -286,18 +286,36 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       return;
     }
 
-    console.log('[Messages] Marking messages as read for conversation:', conversationId);
+    console.log('[Messages] Marking messages as read for conversation:', conversationId, 'currentUserId:', currentUserId);
+
+    // First, let's see what messages exist
+    const { data: messagesToUpdate, error: queryError } = await supabase
+      .from('direct_messages')
+      .select('id, sender_id, read')
+      .eq('conversation_id', conversationId)
+      .neq('sender_id', currentUserId)
+      .eq('read', false);
+
+    console.log('[Messages] Messages to mark as read:', messagesToUpdate, 'query error:', queryError);
+
+    if (!messagesToUpdate || messagesToUpdate.length === 0) {
+      console.log('[Messages] No unread messages found - they may already be marked as read');
+      return;
+    }
+
+    // Now update them
     const { data, error } = await supabase
       .from('direct_messages')
       .update({ read: true })
       .eq('conversation_id', conversationId)
       .neq('sender_id', currentUserId)
-      .eq('read', false);
+      .eq('read', false)
+      .select();
 
     if (error) {
       console.error('[Messages] Error marking as read:', error);
     } else {
-      console.log('[Messages] Successfully marked messages as read:', data);
+      console.log('[Messages] Successfully marked', data?.length || 0, 'messages as read:', data);
     }
   };
 
