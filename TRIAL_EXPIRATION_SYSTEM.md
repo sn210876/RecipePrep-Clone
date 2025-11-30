@@ -264,3 +264,14 @@ For issues or questions:
 - Run edge function manually for testing
 - Check browser console for subscription check errors
 - Verify user has profile (required for subscription)
+- 
+## UPDATE subscriptions 
+SET 
+  status = 'expired',
+  subscription_type = 'early_bird',
+  monthly_amount = NULL,
+  stripe_subscription_id = NULL,
+  stripe_customer_id = NULL,
+  trial_ends_at = '2025-11-26T19:27:41.147013+00:00',
+  expires_at = '2025-11-26T19:27:41.147013+00:00'
+WHERE user_id = 'f369e701-0b0a-4238-82c3-6c21c32688b1';
