@@ -124,9 +124,13 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
  useEffect(() => {
   if (selectedConversation) {
     console.log('[Messages] Conversation selected:', selectedConversation.id);
-    loadMessages(selectedConversation.id);
 
-    // Update state immediately - badge disappears
+    // Immediately update selected conversation state to remove badge
+    setSelectedConversation(prev =>
+      prev ? { ...prev, unread_count: 0 } : prev
+    );
+
+    // Update conversations list state immediately - badge disappears
     setConversations(prev =>
       prev.map(c =>
         c.id === selectedConversation.id
@@ -135,7 +139,10 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       )
     );
 
-    // Mark as read in database (but DON'T reload after)
+    // Load messages
+    loadMessages(selectedConversation.id);
+
+    // Mark as read in database (async, fire-and-forget)
     markAsRead(selectedConversation.id);
   }
 }, [selectedConversation?.id]);
@@ -274,13 +281,24 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   };
 
   const markAsRead = async (conversationId: string) => {
-    if (!currentUserId) return;
-    await supabase
+    if (!currentUserId) {
+      console.log('[Messages] markAsRead: No currentUserId');
+      return;
+    }
+
+    console.log('[Messages] Marking messages as read for conversation:', conversationId);
+    const { data, error } = await supabase
       .from('direct_messages')
       .update({ read: true })
       .eq('conversation_id', conversationId)
       .neq('sender_id', currentUserId)
       .eq('read', false);
+
+    if (error) {
+      console.error('[Messages] Error marking as read:', error);
+    } else {
+      console.log('[Messages] Successfully marked messages as read:', data);
+    }
   };
 
   const sendMessage = async () => {
@@ -406,10 +424,9 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                 setSearchQuery('');
                 if (onBack && recipientUserId) {
                   onBack();
-                } else if (currentUserId) {
-                  console.log('[Messages] Reloading conversations after back');
-                  loadConversations(currentUserId);
                 }
+                // Don't reload conversations - use existing state
+                // This prevents race condition where database hasn't updated yet
               }}
               className="p-2.5 hover:bg-gray-100 rounded-lg bg-blue-50 border-2 border-blue-500 shadow-sm active:scale-95 transition-transform"
               aria-label="Back to messages"
