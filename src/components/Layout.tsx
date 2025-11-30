@@ -497,21 +497,6 @@ const loadUnreadCount = async (userId: string) => {
     </div>
   </div>
 </div>
-        {/* REMOVE THIS LINE 481: )} */}
-        
-        {/* Social Feed FAB - For non-social pages, Desktop */}
-        {!socialPages.includes(currentPage) && (
-
-          <div className="hidden lg:block fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
-            <button
-              onClick={() => handleNavigate('discover')}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white w-14 h-14 rounded-full shadow-2xl hover:shadow-3xl transition-all hover:scale-110 flex items-center justify-center"
-              title="Social Feed"
-            >
-              <UtensilsCrossed className="w-7 h-7" />
-            </button>
-          </div>
-        )}
 
        
       </div>
