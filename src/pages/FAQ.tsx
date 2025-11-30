@@ -290,7 +290,7 @@ export function FAQ() {
                 <AccordionItem value="item-26">
                   <AccordionTrigger>I'm not receiving verification emails</AccordionTrigger>
                   <AccordionContent>
-                    Check your spam folder first. If it's not there, make sure you entered the correct email address and try resending the verification email. If issues persist, contact support at support@mealscrape.com.
+                    Check your spam folder first. If it's not there, make sure you entered the correct email address and try resending the verification email. If issues persist, dm in app @mealscrapeapp or email mealscrapeapp@gmail.com
                   </AccordionContent>
                 </AccordionItem>
 
