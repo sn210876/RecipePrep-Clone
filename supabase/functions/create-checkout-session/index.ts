@@ -100,7 +100,6 @@ Deno.serve(async (req: Request) => {
       recurring: { interval: "month" },
       product_data: {
         name: "MealScrape Monthly Subscription",
-        description: `Pay what you want - $${(amount / 100).toFixed(2)}/month`,
       },
     });
 
