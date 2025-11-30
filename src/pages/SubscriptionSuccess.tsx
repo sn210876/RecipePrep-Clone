@@ -27,7 +27,7 @@ export default function SubscriptionSuccess() {
     };
 
     checkStatus();
-  }, [searchParams, navigate, refreshSubscription]);
+  }, []);
 
   if (checking) {
     return (

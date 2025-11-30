@@ -17,7 +17,14 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    console.log('[create-checkout-session] Starting...');
+
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY not configured");
+    }
+
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2024-11-20.acacia",
     });
 
@@ -39,11 +46,15 @@ Deno.serve(async (req: Request) => {
       throw new Error("Not authenticated");
     }
 
+    console.log('[create-checkout-session] User authenticated:', user.id);
+
     const { amount } = await req.json();
 
     if (!amount || amount < 100) {
       throw new Error("Amount must be at least $1.00 (100 cents)");
     }
+
+    console.log('[create-checkout-session] Amount:', amount);
 
     const { data: profile } = await supabaseClient
       .from("profiles")
@@ -51,15 +62,20 @@ Deno.serve(async (req: Request) => {
       .eq("id", user.id)
       .maybeSingle();
 
+    console.log('[create-checkout-session] Profile email:', profile?.email);
+
     const { data: subscription } = await supabaseClient
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .maybeSingle();
 
+    console.log('[create-checkout-session] Existing customer ID:', subscription?.stripe_customer_id);
+
     let customerId = subscription?.stripe_customer_id;
 
     if (!customerId) {
+      console.log('[create-checkout-session] Creating new Stripe customer...');
       const customer = await stripe.customers.create({
         email: profile?.email || user.email,
         metadata: {
@@ -67,6 +83,7 @@ Deno.serve(async (req: Request) => {
         },
       });
       customerId = customer.id;
+      console.log('[create-checkout-session] Created customer:', customerId);
 
       await supabaseClient
         .from("subscriptions")
@@ -84,6 +101,7 @@ Deno.serve(async (req: Request) => {
       },
     });
 
+    console.log('[create-checkout-session] Creating checkout session...');
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
@@ -101,6 +119,8 @@ Deno.serve(async (req: Request) => {
       },
     });
 
+    console.log('[create-checkout-session] Session created:', session.id);
+
     return new Response(
       JSON.stringify({ url: session.url }),
       {
@@ -111,6 +131,7 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error: any) {
+    console.error('[create-checkout-session] Error:', error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

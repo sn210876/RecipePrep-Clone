@@ -32,10 +32,7 @@ export function PricingTiers({ onSuccess }: PricingTiersProps) {
 
   const quickAmounts = [
     { amount: 1, label: 'Supporter' },
-    { amount: 3, label: 'Friend' },
-    { amount: 5, label: 'Fan' },
     { amount: 10, label: 'Recommended', featured: true },
-    { amount: 15, label: 'Super Fan' },
     { amount: 20, label: 'Champion' },
   ];
 
@@ -57,7 +54,7 @@ export function PricingTiers({ onSuccess }: PricingTiersProps) {
         <p className="text-gray-600">Pay what you want. Minimum $1/month. Recommended: $10/month</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickAmounts.map((tier) => (
           <Card
             key={tier.amount}
