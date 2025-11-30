@@ -1,8 +1,16 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useSubscription } from '../context/SubscriptionContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { Crown, Lock } from 'lucide-react';
+import { Crown, Lock, AlertCircle, Clock } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 
 interface SubscriptionGateProps {
   children: ReactNode;
@@ -12,6 +20,24 @@ interface SubscriptionGateProps {
 
 export function SubscriptionGate({ children, onNavigate, featureName = 'this feature' }: SubscriptionGateProps) {
   const { subscriptionStatus, loading } = useSubscription();
+  const [showTrialWarning, setShowTrialWarning] = useState(false);
+
+  // Show trial warning popup when accessing paid features
+  useEffect(() => {
+    if (!loading && subscriptionStatus) {
+      // Show warning if trial is expiring soon (within 14 days) or in grace period
+      const shouldShowWarning =
+        (subscriptionStatus.daysRemaining !== null &&
+         subscriptionStatus.daysRemaining > 0 &&
+         subscriptionStatus.daysRemaining <= 14 &&
+         !subscriptionStatus.isTrialExpired) ||
+        (subscriptionStatus.isTrialExpired && subscriptionStatus.isInGracePeriod);
+
+      if (shouldShowWarning) {
+        setShowTrialWarning(true);
+      }
+    }
+  }, [loading, subscriptionStatus]);
 
   if (loading) {
     return (
@@ -89,6 +115,100 @@ export function SubscriptionGate({ children, onNavigate, featureName = 'this fea
     );
   }
 
+  // Show trial warning dialog if applicable
+  const renderTrialWarning = () => {
+    if (!subscriptionStatus) return null;
+
+    // Trial expiring soon
+    if (subscriptionStatus.daysRemaining !== null &&
+        subscriptionStatus.daysRemaining > 0 &&
+        subscriptionStatus.daysRemaining <= 14 &&
+        !subscriptionStatus.isTrialExpired) {
+      return (
+        <AlertDialog open={showTrialWarning} onOpenChange={setShowTrialWarning}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-2">
+                <Clock className="w-8 h-8 text-amber-600" />
+              </div>
+              <AlertDialogTitle className="text-center text-amber-900">
+                Trial Ending Soon
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-amber-700">
+                You have {subscriptionStatus.daysRemaining} day{subscriptionStatus.daysRemaining !== 1 ? 's' : ''} remaining in your trial.
+                Subscribe now to continue enjoying all features without interruption.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                onClick={() => {
+                  setShowTrialWarning(false);
+                  onNavigate('subscription');
+                }}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                View Plans
+              </Button>
+              <Button
+                onClick={() => setShowTrialWarning(false)}
+                variant="outline"
+              >
+                Continue
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      );
+    }
+
+    // In grace period
+    if (subscriptionStatus.isTrialExpired && subscriptionStatus.isInGracePeriod) {
+      const daysLeftInGrace = 7 + (subscriptionStatus.daysRemaining || 0);
+      return (
+        <AlertDialog open={showTrialWarning} onOpenChange={setShowTrialWarning}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                <AlertCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <AlertDialogTitle className="text-center text-red-900">
+                Trial Expired - Grace Period Active
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-red-700">
+                Your trial has ended. You have {daysLeftInGrace} day{daysLeftInGrace !== 1 ? 's' : ''} left in your grace period.
+                Please choose a subscription plan to continue using the app.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                onClick={() => {
+                  setShowTrialWarning(false);
+                  onNavigate('subscription');
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Choose Plan Now
+              </Button>
+              <Button
+                onClick={() => setShowTrialWarning(false)}
+                variant="outline"
+              >
+                Continue
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      );
+    }
+
+    return null;
+  };
+
   // Allow access
-  return <>{children}</>;
+  return (
+    <>
+      {renderTrialWarning()}
+      {children}
+    </>
+  );
 }
