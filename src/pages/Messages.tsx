@@ -51,13 +51,17 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
   useEffect(() => {
     const init = async () => {
+      console.log('[Messages] Component initializing');
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
+        console.log('[Messages] User authenticated:', userData.user.id);
         setCurrentUserId(userData.user.id);
         await markMessageNotificationsAsRead(userData.user.id);
         if (recipientUserId && recipientUsername) {
+          console.log('[Messages] Starting conversation with:', recipientUsername);
           await startConversation(recipientUserId, recipientUsername, userData.user.id);
         } else {
+          console.log('[Messages] Initial load of conversations');
           await loadConversations(userData.user.id);
         }
       }
@@ -67,6 +71,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   }, [recipientUserId]);
 
   const markMessageNotificationsAsRead = async (userId: string) => {
+    // Mark message notifications as read (if any exist)
+    // This is optional - unread counts are primarily tracked in direct_messages
     try {
       await supabase
         .from('notifications')
@@ -74,8 +80,9 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         .eq('user_id', userId)
         .eq('type', 'message')
         .eq('read', false);
+      // Silently ignore errors - this is not critical for DM functionality
     } catch (error) {
-      console.error('Error marking notifications as read:', error);
+      // Silently ignore - notifications are supplementary
     }
   };
 
@@ -116,17 +123,18 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 
  useEffect(() => {
   if (selectedConversation) {
+    console.log('[Messages] Conversation selected:', selectedConversation.id);
     loadMessages(selectedConversation.id);
-    
+
     // Update state immediately - badge disappears
-    setConversations(prev => 
-      prev.map(c => 
-        c.id === selectedConversation.id 
-          ? { ...c, unread_count: 0 } 
+    setConversations(prev =>
+      prev.map(c =>
+        c.id === selectedConversation.id
+          ? { ...c, unread_count: 0 }
           : c
       )
     );
-    
+
     // Mark as read in database (but DON'T reload after)
     markAsRead(selectedConversation.id);
   }
@@ -137,6 +145,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   }, [messages]);
 
   const loadConversations = async (userId: string) => {
+    console.log('[Messages] loadConversations called for userId:', userId);
     const { data: convos, error } = await supabase
       .from('conversations')
       .select('*')
@@ -391,12 +400,14 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
+                console.log('[Messages] Back button clicked');
                 setSelectedConversation(null);
                 setMessages([]);
                 setSearchQuery('');
                 if (onBack && recipientUserId) {
                   onBack();
                 } else if (currentUserId) {
+                  console.log('[Messages] Reloading conversations after back');
                   loadConversations(currentUserId);
                 }
               }}
