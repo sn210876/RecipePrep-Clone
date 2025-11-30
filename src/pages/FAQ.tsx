@@ -73,7 +73,7 @@ export function FAQ() {
                 <AccordionItem value="item-5">
                   <AccordionTrigger>What should I do if YouTube extraction fails?</AccordionTrigger>
                   <AccordionContent>
-                    If you see a bot detection error, use the purple "Paste Notes" tab! Just copy the video description from YouTube (click "...more" to expand it) and paste it into MealScrape. Our AI will extract the recipe in 2-5 seconds with 95%+ accuracy.
+                    If you see a bot detection error, use the purple "Paste Notes" tab! Just copy the video description from YouTube (click "...more" to expand it) and paste it into Meal Scrape. Our AI will extract the recipe in 2-5 seconds with 95%+ accuracy.
                   </AccordionContent>
                 </AccordionItem>
 
