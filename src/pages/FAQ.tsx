@@ -134,7 +134,7 @@ export function FAQ() {
                 <AccordionItem value="item-11">
                   <AccordionTrigger>Can I edit recipes after saving?</AccordionTrigger>
                   <AccordionContent>
-                    Absolutely! Click any recipe to view it, then click the edit button to make changes. You can update ingredients, instructions, photos, cooking times, tags, and more. All changes are saved automatically.
+                    Absolutely! Click the 3 dot recipe on in the Discover Recipe page, then click the "edit button" to make changes. You can update ingredients, instructions, photos, cooking times, tags, and more. All changes are saved automatically. It will create a new recipe, just delete the old.
                   </AccordionContent>
                 </AccordionItem>
 
