@@ -117,20 +117,24 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   useEffect(() => {
   if (selectedConversation) {
     loadMessages(selectedConversation.id);
+    
+    // Update state immediately
+    setConversations(prev => 
+      prev.map(c => 
+        c.id === selectedConversation.id 
+          ? { ...c, unread_count: 0 } 
+          : c
+      )
+    );
+    
+    // Mark as read in database
     markAsRead(selectedConversation.id).then(() => {
-      // Update unread count in state immediately
-      setConversations(prev => 
-        prev.map(c => 
-          c.id === selectedConversation.id 
-            ? { ...c, unread_count: 0 } 
-            : c
-        )
-      );
-      
-      // Also reload conversations to sync everything
-      if (currentUserId) {
-        loadConversations(currentUserId);
-      }
+      // Wait a moment for database to update, then reload to sync
+      setTimeout(() => {
+        if (currentUserId) {
+          loadConversations(currentUserId);
+        }
+      }, 500);
     });
   }
 }, [selectedConversation?.id]);
