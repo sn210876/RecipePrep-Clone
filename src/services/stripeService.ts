@@ -35,6 +35,7 @@ export const createCheckoutSession = async (
 
   if (!response.ok) {
     const error = await response.json();
+    console.error('[StripeService] Checkout session error:', error);
     throw new Error(error.error || 'Failed to create checkout session');
   }
 
