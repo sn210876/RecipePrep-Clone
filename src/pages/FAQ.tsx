@@ -218,7 +218,7 @@ export function FAQ() {
                 <Camera className="w-6 h-6 text-blue-600" />
                 Features & Capabilities
               </CardTitle>
-              <CardDescription>Discover what MealScrape can do</CardDescription>
+              <CardDescription>Discover what Meal Scrape can do</CardDescription>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
