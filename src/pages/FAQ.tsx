@@ -204,7 +204,7 @@ export function FAQ() {
                 <AccordionItem value="item-19">
                   <AccordionTrigger>Is there a family plan?</AccordionTrigger>
                   <AccordionContent>
-                    Yes! Family plans allow up to 6 family members to share recipes and meal plans under one subscription. Each family member gets their own account and can contribute recipes to the shared family collection.
+                    Not at the moment, the app is very affordable, just refer your family for their own accounts.  You can view eachother's social media profile to see what recipes you like.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
