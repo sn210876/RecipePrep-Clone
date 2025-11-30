@@ -155,7 +155,7 @@ export function FAQ() {
                 <AccordionItem value="item-14">
                   <AccordionTrigger>What happens if I save a recipe twice?</AccordionTrigger>
                   <AccordionContent>
-                    MealScrape will detect duplicate recipes and give you the option to update the existing recipe or create a new version. This prevents cluttering your collection with copies of the same recipe.
+                    Meal Scrape will detect duplicate recipes and give you the option to update the existing recipe or create a new version. This prevents cluttering your collection with copies of the same recipe.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
