@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { useSubscription } from '../context/SubscriptionContext';
 
-export default function SubscriptionSuccess() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+interface SubscriptionSuccessProps {
+  onNavigate?: (page: string) => void;
+}
+
+export default function SubscriptionSuccess({ onNavigate }: SubscriptionSuccessProps = {}) {
   const { subscriptionStatus, refreshSubscription } = useSubscription();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     const checkStatus = async () => {
-      const sessionId = searchParams.get('session_id');
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get('session_id');
 
       if (!sessionId) {
-        navigate('/subscription');
+        if (onNavigate) onNavigate('subscription');
         return;
       }
 
@@ -27,7 +29,7 @@ export default function SubscriptionSuccess() {
     };
 
     checkStatus();
-  }, []);
+  }, [refreshSubscription, onNavigate]);
 
   if (checking) {
     return (
@@ -88,13 +90,13 @@ export default function SubscriptionSuccess() {
 
           <div className="space-y-2">
             <Button
-              onClick={() => navigate('/discover')}
+              onClick={() => onNavigate && onNavigate('discover')}
               className="w-full bg-orange-500 hover:bg-orange-600"
             >
               Start Using MealScrape
             </Button>
             <Button
-              onClick={() => navigate('/subscription')}
+              onClick={() => onNavigate && onNavigate('subscription')}
               variant="outline"
               className="w-full"
             >

@@ -66,6 +66,7 @@ Deno.serve(async (req: Request) => {
             monthly_amount: amount,
             next_billing_date: new Date(subscription.current_period_end * 1000).toISOString(),
             billing_cycle_anchor: new Date(subscription.current_period_start * 1000).toISOString(),
+            expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
             updated_at: new Date().toISOString(),
           })
           .eq("user_id", userId);
@@ -105,6 +106,7 @@ Deno.serve(async (req: Request) => {
             .update({
               status: "active",
               next_billing_date: new Date(subscription.current_period_end * 1000).toISOString(),
+              expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
               updated_at: new Date().toISOString(),
             })
             .eq("stripe_subscription_id", subscriptionId);

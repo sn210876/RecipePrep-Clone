@@ -324,7 +324,7 @@ useEffect(() => {
         );
       case 'settings': return <Settings onNavigate={handleNavigate} />;
       case 'subscription': return <Subscription onNavigate={handleNavigate} />;
-      case 'subscription-success': return <SubscriptionSuccess />;
+      case 'subscription-success': return <SubscriptionSuccess onNavigate={handleNavigate} />;
       case 'faq': return <FAQ />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;
       default: return <DiscoverRecipes onNavigate={handleNavigate} />;
