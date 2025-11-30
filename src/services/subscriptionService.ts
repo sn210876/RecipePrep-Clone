@@ -139,6 +139,23 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
 
     // Regular paid subscription
     if (subscription.monthly_amount && subscription.status === 'active') {
+      // Check if the subscription has expired
+      if (expiresAt && now > expiresAt) {
+        console.log('[SubscriptionService] Paid subscription expired');
+        return {
+          hasAccess: false,
+          subscriptionType: subscription.subscription_type,
+          status: 'expired',
+          trialEndsAt: null,
+          expiresAt,
+          daysRemaining: null,
+          isTrialExpired: true,
+          isInGracePeriod: false,
+          needsPayment: true,
+          subscription,
+        };
+      }
+
       return {
         hasAccess: true,
         subscriptionType: subscription.subscription_type,
