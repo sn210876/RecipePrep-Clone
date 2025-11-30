@@ -115,16 +115,25 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   }, [selectedConversation, currentUserId]);
 
   useEffect(() => {
-    if (selectedConversation) {
-      loadMessages(selectedConversation.id);
-      markAsRead(selectedConversation.id).then(() => {
-        // Reload conversations to update unread counts
-        if (currentUserId) {
-          loadConversations(currentUserId);
-        }
-      });
-    }
-  }, [selectedConversation?.id]);
+  if (selectedConversation) {
+    loadMessages(selectedConversation.id);
+    markAsRead(selectedConversation.id).then(() => {
+      // Update unread count in state immediately
+      setConversations(prev => 
+        prev.map(c => 
+          c.id === selectedConversation.id 
+            ? { ...c, unread_count: 0 } 
+            : c
+        )
+      );
+      
+      // Also reload conversations to sync everything
+      if (currentUserId) {
+        loadConversations(currentUserId);
+      }
+    });
+  }
+}, [selectedConversation?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
