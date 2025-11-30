@@ -12,7 +12,7 @@ export function FAQ() {
             <HelpCircle className="w-10 h-10 text-blue-600" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Frequently Asked Questions</h1>
-          <p className="text-slate-600">Everything you need to know about MealScrape</p>
+          <p className="text-slate-600">Everything you need to know about Meal Scrape</p>
         </div>
 
         {/* FAQ Categories */}
