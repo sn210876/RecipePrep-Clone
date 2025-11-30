@@ -9,7 +9,10 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req: Request) => {
+  console.log('[create-checkout-session] Request received:', req.method, req.url);
+
   if (req.method === "OPTIONS") {
+    console.log('[create-checkout-session] Handling OPTIONS');
     return new Response(null, {
       status: 200,
       headers: corsHeaders,
@@ -17,7 +20,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    console.log('[create-checkout-session] Starting...');
+    console.log('[create-checkout-session] Starting POST request...');
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
@@ -131,9 +134,11 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error: any) {
-    console.error('[create-checkout-session] Error:', error.message);
+    console.error('[create-checkout-session] Error:', error);
+    console.error('[create-checkout-session] Error message:', error.message);
+    console.error('[create-checkout-session] Error stack:', error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Unknown error' }),
       {
         status: 400,
         headers: {
