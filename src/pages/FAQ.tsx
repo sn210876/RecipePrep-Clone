@@ -176,7 +176,7 @@ export function FAQ() {
                 <AccordionItem value="item-15">
                   <AccordionTrigger>Is Meal Scrape free?</AccordionTrigger>
                   <AccordionContent>
-                    MealScrape offers a generous 6-month early bird trial for new users! After the trial, we offer "pay what you want" plans, making it affordable for everyone.
+                    Meal Scrape offers a generous 6-month early bird trial for new users! After the trial, we offer "pay what you want" plans, making it affordable for everyone.
                   </AccordionContent>
                 </AccordionItem>
 
