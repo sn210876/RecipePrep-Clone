@@ -24,7 +24,7 @@ export function FAQ() {
                 <Sparkles className="w-6 h-6 text-blue-600" />
                 Getting Started
               </CardTitle>
-              <CardDescription>Learn the basics of using MealScrape</CardDescription>
+              <CardDescription>Learn the basics of using Meal Scrape</CardDescription>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
