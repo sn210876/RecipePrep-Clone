@@ -10,6 +10,7 @@ export interface SubscriptionStatus {
   isTrialExpired: boolean;
   isInGracePeriod: boolean;
   needsPayment: boolean;
+  subscription?: any;
 }
 
 const GRACE_PERIOD_DAYS = 3;
@@ -58,6 +59,7 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
         isTrialExpired: false,
         isInGracePeriod: false,
         needsPayment: false,
+        subscription,
       };
     }
 
@@ -99,6 +101,7 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
           isTrialExpired: true,
           isInGracePeriod,
           needsPayment: true,
+          subscription,
         };
       }
 
@@ -113,6 +116,7 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
         isTrialExpired: false,
         isInGracePeriod: false,
         needsPayment: false,
+        subscription,
       };
     }
 
@@ -129,6 +133,7 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
         isTrialExpired: false,
         isInGracePeriod: false,
         needsPayment: false,
+        subscription,
       };
     }
 
@@ -144,6 +149,7 @@ export async function checkSubscriptionAccess(userId: string): Promise<Subscript
         isTrialExpired: false,
         isInGracePeriod: false,
         needsPayment: false,
+        subscription,
       };
     }
 

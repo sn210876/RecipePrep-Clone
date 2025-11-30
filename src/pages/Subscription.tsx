@@ -14,10 +14,13 @@ import {
   Sparkles,
   Star,
   ArrowLeft,
-  Share2
+  Share2,
+  Settings
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Label } from '../components/ui/label';
+import { PricingTiers } from '../components/PricingTiers';
+import { createCustomerPortalSession } from '../services/stripeService';
 
 interface SubscriptionPageProps {
   onNavigate: (page: string) => void;
@@ -31,6 +34,9 @@ interface SubscriptionData {
   trial_ends_at: string | null;
   family_code_used: string | null;
   referral_years_remaining: number;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  next_billing_date: string | null;
 }
 
 interface ReferralData {
@@ -47,7 +53,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
   const [redeeming, setRedeeming] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState('1.00');
+  const [openingPortal, setOpeningPortal] = useState(false);
 
   useEffect(() => {
     loadSubscriptionData();
@@ -254,6 +260,45 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
                 </Button>
               </div>
             )}
+
+            {subscription?.status === 'active' && subscription.monthly_amount && subscription.stripe_customer_id && (
+              <div className="mt-4 space-y-2">
+                {subscription.next_billing_date && (
+                  <p className="text-sm text-gray-600">
+                    Next billing: {new Date(subscription.next_billing_date).toLocaleDateString()}
+                  </p>
+                )}
+                <Button
+                  onClick={async () => {
+                    setOpeningPortal(true);
+                    try {
+                      const { url } = await createCustomerPortalSession();
+                      window.location.href = url;
+                    } catch (error: any) {
+                      toast.error(error.message || 'Failed to open portal');
+                      setOpeningPortal(false);
+                    }
+                  }}
+                  disabled={openingPortal}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Settings className="w-4 h-4" />
+                  {openingPortal ? 'Opening...' : 'Manage Subscription'}
+                </Button>
+              </div>
+            )}
+
+            {subscription?.subscription_type === 'family_code' && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  You have lifetime free access! Want to support us anyway?
+                </p>
+                <Button onClick={() => setShowPaymentDialog(true)} variant="outline">
+                  Make a Donation
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -423,62 +468,17 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
 
       {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Choose Your Monthly Amount</DialogTitle>
+            <DialogTitle>Support MealScrape</DialogTitle>
             <DialogDescription>
-              Pay what you think is fair. Minimum $1/month.
+              {subscription?.subscription_type === 'family_code'
+                ? 'You already have lifetime access, but we appreciate your support!'
+                : 'Choose your monthly subscription amount'}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="amount">Monthly Amount</Label>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-2xl font-bold">$</span>
-                <Input
-                  id="amount"
-                  type="number"
-                  min="1"
-                  step="0.01"
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="text-2xl font-bold"
-                />
-              </div>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <p className="text-sm font-medium">Suggested amounts:</p>
-              <div className="flex gap-2">
-                {['1.00', '3.00', '5.00', '10.00'].map((amount) => (
-                  <Button
-                    key={amount}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPaymentAmount(amount)}
-                  >
-                    ${amount}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-orange-500 hover:bg-orange-600"
-              onClick={() => {
-                toast.info('Payment integration coming soon!');
-                setShowPaymentDialog(false);
-              }}
-            >
-              Continue to Payment
-            </Button>
-          </DialogFooter>
+          <PricingTiers onSuccess={() => setShowPaymentDialog(false)} />
         </DialogContent>
       </Dialog>
     </div>

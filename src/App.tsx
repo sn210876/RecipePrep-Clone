@@ -13,6 +13,7 @@ import { GroceryList } from './pages/GroceryList';
 import { Cart } from './pages/Cart';
 import Settings from './pages/Settings';
 import { Subscription } from './pages/Subscription';
+import SubscriptionSuccess from './pages/SubscriptionSuccess';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
@@ -53,6 +54,7 @@ function AppContent() {
   if (path === '/messages') return 'messages';
   if (path === '/settings') return 'settings';
   if (path === '/subscription') return 'subscription';
+  if (path === '/subscription/success') return 'subscription-success';
   if (path === '/faq') return 'faq';
   if (path === '/onboarding') return 'onboarding';
   if (path === '/blog') return 'blog';
@@ -322,6 +324,7 @@ useEffect(() => {
         );
       case 'settings': return <Settings onNavigate={handleNavigate} />;
       case 'subscription': return <Subscription onNavigate={handleNavigate} />;
+      case 'subscription-success': return <SubscriptionSuccess />;
       case 'faq': return <FAQ />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;
       default: return <DiscoverRecipes onNavigate={handleNavigate} />;
