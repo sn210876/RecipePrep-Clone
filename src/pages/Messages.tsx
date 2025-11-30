@@ -114,11 +114,11 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
     };
   }, [selectedConversation, currentUserId]);
 
-  useEffect(() => {
+ useEffect(() => {
   if (selectedConversation) {
     loadMessages(selectedConversation.id);
     
-    // Update state immediately
+    // Update state immediately - badge disappears
     setConversations(prev => 
       prev.map(c => 
         c.id === selectedConversation.id 
@@ -127,15 +127,8 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
       )
     );
     
-    // Mark as read in database
-    markAsRead(selectedConversation.id).then(() => {
-      // Wait a moment for database to update, then reload to sync
-      setTimeout(() => {
-        if (currentUserId) {
-          loadConversations(currentUserId);
-        }
-      }, 500);
-    });
+    // Mark as read in database (but DON'T reload after)
+    markAsRead(selectedConversation.id);
   }
 }, [selectedConversation?.id]);
 
