@@ -365,7 +365,7 @@ useEffect(() => {
 
       const result = await compressImageWithOptions(
         file,
-        { maxWidthOrHeight: 1080, maxSizeMB: 0.3 },
+        { maxWidthOrHeight: 400, maxSizeMB: 0.1 },
         (progress) => {
           if (progress.isCompressing) {
             toast.loading(`Compressing... ${Math.round(progress.percent)}%`, { id: toastId, duration: 0 });
@@ -415,7 +415,7 @@ useEffect(() => {
 
       const result = await compressImageWithOptions(
         file,
-        { maxWidthOrHeight: 1920, maxSizeMB: 0.5 },
+        { maxWidthOrHeight: 1200, maxSizeMB: 0.3 },
         (progress) => {
           if (progress.isCompressing) {
             toast.loading(`Compressing... ${Math.round(progress.percent)}%`, { id: toastId, duration: 0 });
