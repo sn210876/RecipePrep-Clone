@@ -197,7 +197,7 @@ export function FAQ() {
                 <AccordionItem value="item-18">
                   <AccordionTrigger>Do you offer refunds?</AccordionTrigger>
                   <AccordionContent>
-                    We offer a 30-day money-back guarantee. If you're not satisfied with MealScrape within the first 30 days of your subscription, contact support for a full refund.
+                    Currently not offering refunds, but it is a pay what you want model.  You should be satisfied, if not, send "Mealscrape" a DM!
                   </AccordionContent>
                 </AccordionItem>
 
