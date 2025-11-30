@@ -190,7 +190,7 @@ export function FAQ() {
                 <AccordionItem value="item-17">
                   <AccordionTrigger>Can I cancel anytime?</AccordionTrigger>
                   <AccordionContent>
-                    Yes! You can cancel your subscription at any time from the Settings page. You'll continue to have access until the end of your current billing period. All your recipes will remain saved.
+                    Yes! You can cancel your subscription at any time from the Settings page. You'll continue to have access until the end of your current billing period. All your recipes will remain saved but will need to pay to see them again.
                   </AccordionContent>
                 </AccordionItem>
 
