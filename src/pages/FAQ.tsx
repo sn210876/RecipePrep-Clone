@@ -197,7 +197,7 @@ export function FAQ() {
                 <AccordionItem value="item-18">
                   <AccordionTrigger>Do you offer refunds?</AccordionTrigger>
                   <AccordionContent>
-                    Currently not offering refunds, but it is a pay what you want model.  You should be satisfied, if not, send "Mealscrape" a DM!
+                    Currently not offering refunds, but it is a pay what you want model.  You should be satisfied, if not, send "Meal Scrape" a DM!
                   </AccordionContent>
                 </AccordionItem>
 
