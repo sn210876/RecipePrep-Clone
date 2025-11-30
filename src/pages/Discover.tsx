@@ -1048,23 +1048,28 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
               )}
             </div>
 
-            <div ref={notificationRef} className="relative">
+<div ref={notificationRef} className="relative">
               <button
              onClick={async (e) => {
   e.stopPropagation();
-  setShowNotifications(!showNotifications);
+  
+  // If we're about to OPEN the notifications panel, mark them as read
   if (!showNotifications && currentUserId) {
+    // Mark all unread notifications as read in the database
     await supabase
       .from('notifications')
       .update({ read: true })
       .eq('user_id', currentUserId)
       .eq('read', false)
       .neq('type', 'message');
-    setUnreadNotifications(0);
     
-    // Update local notifications state to reflect read status
+    // Update local state
+    setUnreadNotifications(0);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }
+  
+  // Then toggle the panel
+  setShowNotifications(!showNotifications);
 }}
                 className="relative p-2.5 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 bg-gray-50"
               >
