@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { isAdmin, supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { languages, type LanguageCode } from '@/lib/translations';
+import { useLanguage } from '@/context/LanguageContext';
 
 const COMMON_TIMEZONES = [
   { label: '--- Americas ---', value: 'header-americas', isHeader: true },
@@ -72,6 +73,7 @@ interface SettingsProps {
 
 export default function Settings({ onNavigate }: SettingsProps) {
   const { signOut, user } = useAuth();
+  const { language: currentLanguage, setLanguage: setGlobalLanguage, t } = useLanguage();
   const [forwardingEmail, setForwardingEmail] = useState('user-demo123@mealscrape.app');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -82,7 +84,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [testingVoice, setTestingVoice] = useState(false);
   const [timezone, setTimezone] = useState('America/New_York');
-  const [language, setLanguage] = useState<LanguageCode>('en');
+  const [language, setLanguage] = useState<LanguageCode>(currentLanguage);
   const [savingPreferences, setSavingPreferences] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -136,10 +138,11 @@ export default function Settings({ onNavigate }: SettingsProps) {
 
       if (error) throw error;
 
-      toast.success('Preferences saved successfully!');
+      await setGlobalLanguage(language);
+      toast.success(t.settings.changesSaved);
     } catch (error: any) {
       console.error('Error saving preferences:', error);
-      toast.error('Failed to save preferences');
+      toast.error(t.settings.errorSaving);
     } finally {
       setSavingPreferences(false);
     }
@@ -214,8 +217,8 @@ export default function Settings({ onNavigate }: SettingsProps) {
       <div className="w-full max-w-5xl mx-auto px-4 pt-2 pb-20 sm:px-6 md:px-8">
         {/* Header - Responsive sizing */}
         <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-1 sm:mb-2">Settings</h1>
-          <p className="text-sm sm:text-base text-slate-600">Manage your account and preferences</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-1 sm:mb-2">{t.settings.title}</h1>
+          <p className="text-sm sm:text-base text-slate-600">{t.settings.preferences}</p>
         </div>
 
         {/* Cards with mobile-optimized spacing */}
@@ -254,9 +257,9 @@ export default function Settings({ onNavigate }: SettingsProps) {
                   <Languages className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900">Language & Region</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900">{t.settings.preferences}</CardTitle>
                   <CardDescription className="text-xs sm:text-sm text-slate-600">
-                    Customize your language and timezone preferences
+                    {t.settings.languageDescription}
                   </CardDescription>
                 </div>
               </div>
@@ -265,7 +268,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <Label htmlFor="language-select" className="text-xs sm:text-sm font-medium text-slate-700 mb-2 block">
-                    Language
+                    {t.settings.language}
                   </Label>
                   <Select value={language} onValueChange={(val) => setLanguage(val as LanguageCode)} disabled={savingPreferences}>
                     <SelectTrigger id="language-select" className="w-full h-10 sm:h-11 text-sm sm:text-base">
@@ -286,7 +289,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
 
                 <div>
                   <Label htmlFor="timezone-select" className="text-xs sm:text-sm font-medium text-slate-700 mb-2 block">
-                    Timezone
+                    {t.settings.timezone}
                   </Label>
                   <Select value={timezone} onValueChange={setTimezone} disabled={savingPreferences}>
                     <SelectTrigger id="timezone-select" className="w-full h-10 sm:h-11 text-sm sm:text-base">
@@ -319,10 +322,10 @@ export default function Settings({ onNavigate }: SettingsProps) {
                   {savingPreferences ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
+                      {t.settings.saving}
                     </>
                   ) : (
-                    'Save Preferences'
+                    t.settings.saveChanges
                   )}
                 </Button>
               </div>

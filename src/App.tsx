@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SubscriptionProvider } from './context/SubscriptionContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { SubscriptionGate } from './components/SubscriptionGate';
 import Layout from './components/Layout';
 import { Discover as DiscoverRecipes } from './pages/DiscoverRecipes';
@@ -378,11 +379,13 @@ useEffect(() => {
 function App() {
   return (
     <AuthProvider>
-      <SubscriptionProvider>
-        <RecipeProvider>
-          <AppContent />
-        </RecipeProvider>
-      </SubscriptionProvider>
+      <LanguageProvider>
+        <SubscriptionProvider>
+          <RecipeProvider>
+            <AppContent />
+          </RecipeProvider>
+        </SubscriptionProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }
