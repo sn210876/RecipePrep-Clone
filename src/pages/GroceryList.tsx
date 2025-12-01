@@ -479,11 +479,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
       const cartItems = items.map(item => ({
         user_id: userData.user.id,
-        product_name: item.name,
-        quantity: `${item.quantity} ${item.unit}`.trim(),
-        price: '0.00',
+        ingredient_name: item.name,
+        quantity: item.quantity.toString(),
+        unit: item.unit,
+        price: null,
         image_url: null,
-        affiliate_link: null,
+        amazon_product_url: null,
+        amazon_product_name: null,
+        asin: null,
       }));
 
       const { error } = await supabase
