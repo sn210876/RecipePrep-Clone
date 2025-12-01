@@ -55,6 +55,82 @@ export const translations = {
       loading: 'Loading...',
       search: 'Search',
       filter: 'Filter'
+    },
+    recipe: {
+      title: 'Recipe',
+      ingredients: 'Ingredients',
+      instructions: 'Instructions',
+      prepTime: 'Prep Time',
+      cookTime: 'Cook Time',
+      totalTime: 'Total Time',
+      servings: 'Servings',
+      difficulty: 'Difficulty',
+      cuisine: 'Cuisine',
+      tags: 'Tags',
+      addToCart: 'Add to Cart',
+      viewRecipe: 'View Recipe',
+      saveRecipe: 'Save Recipe',
+      shareRecipe: 'Share Recipe',
+      minutes: 'minutes',
+      hours: 'hours'
+    },
+    addRecipe: {
+      title: 'Add Recipe',
+      recipeName: 'Recipe Name',
+      description: 'Description',
+      enterName: 'Enter recipe name',
+      enterDescription: 'Enter recipe description',
+      addIngredient: 'Add Ingredient',
+      ingredientName: 'Ingredient Name',
+      amount: 'Amount',
+      addInstruction: 'Add Instruction',
+      stepNumber: 'Step',
+      uploadImage: 'Upload Image',
+      publish: 'Publish Recipe',
+      draft: 'Save as Draft',
+      cancel: 'Cancel'
+    },
+    mealPlanner: {
+      title: 'Meal Planner',
+      week: 'Week',
+      today: 'Today',
+      breakfast: 'Breakfast',
+      lunch: 'Lunch',
+      dinner: 'Dinner',
+      snack: 'Snack',
+      addMeal: 'Add Meal',
+      selectRecipe: 'Select Recipe',
+      noMealsPlanned: 'No meals planned',
+      planMeal: 'Plan a Meal'
+    },
+    subscription: {
+      title: 'Subscription',
+      currentPlan: 'Current Plan',
+      upgradePlan: 'Upgrade Plan',
+      cancelPlan: 'Cancel Plan',
+      free: 'Free',
+      premium: 'Premium',
+      perMonth: 'per month',
+      features: 'Features',
+      subscribe: 'Subscribe',
+      manage: 'Manage Subscription'
+    },
+    groceryList: {
+      title: 'Grocery List',
+      addItem: 'Add Item',
+      clearAll: 'Clear All',
+      noItems: 'No items in your list',
+      itemName: 'Item name',
+      quantity: 'Quantity',
+      category: 'Category'
+    },
+    cart: {
+      title: 'Shopping Cart',
+      empty: 'Your cart is empty',
+      checkout: 'Checkout',
+      continueShopping: 'Continue Shopping',
+      total: 'Total',
+      removeItem: 'Remove Item'
     }
   },
   es: {
@@ -96,6 +172,82 @@ export const translations = {
       loading: 'Cargando...',
       search: 'Buscar',
       filter: 'Filtrar'
+    },
+    recipe: {
+      title: 'Receta',
+      ingredients: 'Ingredientes',
+      instructions: 'Instrucciones',
+      prepTime: 'Tiempo de Preparación',
+      cookTime: 'Tiempo de Cocción',
+      totalTime: 'Tiempo Total',
+      servings: 'Porciones',
+      difficulty: 'Dificultad',
+      cuisine: 'Cocina',
+      tags: 'Etiquetas',
+      addToCart: 'Agregar al Carrito',
+      viewRecipe: 'Ver Receta',
+      saveRecipe: 'Guardar Receta',
+      shareRecipe: 'Compartir Receta',
+      minutes: 'minutos',
+      hours: 'horas'
+    },
+    addRecipe: {
+      title: 'Agregar Receta',
+      recipeName: 'Nombre de la Receta',
+      description: 'Descripción',
+      enterName: 'Ingresa el nombre de la receta',
+      enterDescription: 'Ingresa la descripción de la receta',
+      addIngredient: 'Agregar Ingrediente',
+      ingredientName: 'Nombre del Ingrediente',
+      amount: 'Cantidad',
+      addInstruction: 'Agregar Instrucción',
+      stepNumber: 'Paso',
+      uploadImage: 'Subir Imagen',
+      publish: 'Publicar Receta',
+      draft: 'Guardar como Borrador',
+      cancel: 'Cancelar'
+    },
+    mealPlanner: {
+      title: 'Planificador de Comidas',
+      week: 'Semana',
+      today: 'Hoy',
+      breakfast: 'Desayuno',
+      lunch: 'Almuerzo',
+      dinner: 'Cena',
+      snack: 'Merienda',
+      addMeal: 'Agregar Comida',
+      selectRecipe: 'Seleccionar Receta',
+      noMealsPlanned: 'No hay comidas planificadas',
+      planMeal: 'Planificar una Comida'
+    },
+    subscription: {
+      title: 'Suscripción',
+      currentPlan: 'Plan Actual',
+      upgradePlan: 'Mejorar Plan',
+      cancelPlan: 'Cancelar Plan',
+      free: 'Gratis',
+      premium: 'Premium',
+      perMonth: 'por mes',
+      features: 'Características',
+      subscribe: 'Suscribirse',
+      manage: 'Administrar Suscripción'
+    },
+    groceryList: {
+      title: 'Lista de Compras',
+      addItem: 'Agregar Artículo',
+      clearAll: 'Limpiar Todo',
+      noItems: 'No hay artículos en tu lista',
+      itemName: 'Nombre del artículo',
+      quantity: 'Cantidad',
+      category: 'Categoría'
+    },
+    cart: {
+      title: 'Carrito de Compras',
+      empty: 'Tu carrito está vacío',
+      checkout: 'Finalizar Compra',
+      continueShopping: 'Continuar Comprando',
+      total: 'Total',
+      removeItem: 'Eliminar Artículo'
     }
   },
   it: {
@@ -137,6 +289,82 @@ export const translations = {
       loading: 'Caricamento...',
       search: 'Cerca',
       filter: 'Filtra'
+    },
+    recipe: {
+      title: 'Ricetta',
+      ingredients: 'Ingredienti',
+      instructions: 'Istruzioni',
+      prepTime: 'Tempo di Preparazione',
+      cookTime: 'Tempo di Cottura',
+      totalTime: 'Tempo Totale',
+      servings: 'Porzioni',
+      difficulty: 'Difficoltà',
+      cuisine: 'Cucina',
+      tags: 'Tag',
+      addToCart: 'Aggiungi al Carrello',
+      viewRecipe: 'Visualizza Ricetta',
+      saveRecipe: 'Salva Ricetta',
+      shareRecipe: 'Condividi Ricetta',
+      minutes: 'minuti',
+      hours: 'ore'
+    },
+    addRecipe: {
+      title: 'Aggiungi Ricetta',
+      recipeName: 'Nome Ricetta',
+      description: 'Descrizione',
+      enterName: 'Inserisci il nome della ricetta',
+      enterDescription: 'Inserisci la descrizione della ricetta',
+      addIngredient: 'Aggiungi Ingrediente',
+      ingredientName: 'Nome Ingrediente',
+      amount: 'Quantità',
+      addInstruction: 'Aggiungi Istruzione',
+      stepNumber: 'Passo',
+      uploadImage: 'Carica Immagine',
+      publish: 'Pubblica Ricetta',
+      draft: 'Salva come Bozza',
+      cancel: 'Annulla'
+    },
+    mealPlanner: {
+      title: 'Pianificatore Pasti',
+      week: 'Settimana',
+      today: 'Oggi',
+      breakfast: 'Colazione',
+      lunch: 'Pranzo',
+      dinner: 'Cena',
+      snack: 'Spuntino',
+      addMeal: 'Aggiungi Pasto',
+      selectRecipe: 'Seleziona Ricetta',
+      noMealsPlanned: 'Nessun pasto pianificato',
+      planMeal: 'Pianifica un Pasto'
+    },
+    subscription: {
+      title: 'Abbonamento',
+      currentPlan: 'Piano Attuale',
+      upgradePlan: 'Aggiorna Piano',
+      cancelPlan: 'Annulla Piano',
+      free: 'Gratuito',
+      premium: 'Premium',
+      perMonth: 'al mese',
+      features: 'Caratteristiche',
+      subscribe: 'Iscriviti',
+      manage: 'Gestisci Abbonamento'
+    },
+    groceryList: {
+      title: 'Lista della Spesa',
+      addItem: 'Aggiungi Articolo',
+      clearAll: 'Cancella Tutto',
+      noItems: 'Nessun articolo nella lista',
+      itemName: 'Nome articolo',
+      quantity: 'Quantità',
+      category: 'Categoria'
+    },
+    cart: {
+      title: 'Carrello',
+      empty: 'Il tuo carrello è vuoto',
+      checkout: 'Checkout',
+      continueShopping: 'Continua a Fare Acquisti',
+      total: 'Totale',
+      removeItem: 'Rimuovi Articolo'
     }
   },
   th: {
@@ -178,6 +406,82 @@ export const translations = {
       loading: 'กำลังโหลด...',
       search: 'ค้นหา',
       filter: 'กรอง'
+    },
+    recipe: {
+      title: 'สูตรอาหาร',
+      ingredients: 'ส่วนผสม',
+      instructions: 'วิธีทำ',
+      prepTime: 'เวลาเตรียม',
+      cookTime: 'เวลาปรุง',
+      totalTime: 'เวลารวม',
+      servings: 'จำนวนที่ได้',
+      difficulty: 'ความยาก',
+      cuisine: 'ประเภทอาหาร',
+      tags: 'ป้ายกำกับ',
+      addToCart: 'เพิ่มไปยังตะกร้า',
+      viewRecipe: 'ดูสูตร',
+      saveRecipe: 'บันทึกสูตร',
+      shareRecipe: 'แบ่งปันสูตร',
+      minutes: 'นาที',
+      hours: 'ชั่วโมง'
+    },
+    addRecipe: {
+      title: 'เพิ่มสูตรอาหาร',
+      recipeName: 'ชื่อสูตร',
+      description: 'คำอธิบาย',
+      enterName: 'ใส่ชื่อสูตร',
+      enterDescription: 'ใส่คำอธิบายสูตร',
+      addIngredient: 'เพิ่มส่วนผสม',
+      ingredientName: 'ชื่อส่วนผสม',
+      amount: 'ปริมาณ',
+      addInstruction: 'เพิ่มขั้นตอน',
+      stepNumber: 'ขั้นตอน',
+      uploadImage: 'อัปโหลดรูป',
+      publish: 'เผยแพร่สูตร',
+      draft: 'บันทึกแบบร่าง',
+      cancel: 'ยกเลิก'
+    },
+    mealPlanner: {
+      title: 'วางแผนมื้ออาหาร',
+      week: 'สัปดาห์',
+      today: 'วันนี้',
+      breakfast: 'อาหารเช้า',
+      lunch: 'อาหารกลางวัน',
+      dinner: 'อาหารเย็น',
+      snack: 'ของว่าง',
+      addMeal: 'เพิ่มมื้ออาหาร',
+      selectRecipe: 'เลือกสูตร',
+      noMealsPlanned: 'ไม่มีการวางแผนมื้ออาหาร',
+      planMeal: 'วางแผนมื้ออาหาร'
+    },
+    subscription: {
+      title: 'การสมัครสมาชิก',
+      currentPlan: 'แผนปัจจุบัน',
+      upgradePlan: 'อัปเกรดแผน',
+      cancelPlan: 'ยกเลิกแผน',
+      free: 'ฟรี',
+      premium: 'พรีเมียม',
+      perMonth: 'ต่อเดือน',
+      features: 'คุณสมบัติ',
+      subscribe: 'สมัครสมาชิก',
+      manage: 'จัดการการสมัคร'
+    },
+    groceryList: {
+      title: 'รายการซื้อของ',
+      addItem: 'เพิ่มรายการ',
+      clearAll: 'ล้างทั้งหมด',
+      noItems: 'ไม่มีรายการในลิสต์',
+      itemName: 'ชื่อรายการ',
+      quantity: 'จำนวน',
+      category: 'หมวดหมู่'
+    },
+    cart: {
+      title: 'ตะกร้าสินค้า',
+      empty: 'ตะกร้าของคุณว่างเปล่า',
+      checkout: 'ชำระเงิน',
+      continueShopping: 'ช้อปต่อ',
+      total: 'ยอดรวม',
+      removeItem: 'ลบรายการ'
     }
   },
   vi: {
@@ -219,6 +523,82 @@ export const translations = {
       loading: 'Đang Tải...',
       search: 'Tìm Kiếm',
       filter: 'Lọc'
+    },
+    recipe: {
+      title: 'Công Thức',
+      ingredients: 'Nguyên Liệu',
+      instructions: 'Hướng Dẫn',
+      prepTime: 'Thời Gian Chuẩn Bị',
+      cookTime: 'Thời Gian Nấu',
+      totalTime: 'Tổng Thời Gian',
+      servings: 'Khẩu Phần',
+      difficulty: 'Độ Khó',
+      cuisine: 'Ẩm Thực',
+      tags: 'Thẻ',
+      addToCart: 'Thêm Vào Giỏ',
+      viewRecipe: 'Xem Công Thức',
+      saveRecipe: 'Lưu Công Thức',
+      shareRecipe: 'Chia Sẻ Công Thức',
+      minutes: 'phút',
+      hours: 'giờ'
+    },
+    addRecipe: {
+      title: 'Thêm Công Thức',
+      recipeName: 'Tên Công Thức',
+      description: 'Mô Tả',
+      enterName: 'Nhập tên công thức',
+      enterDescription: 'Nhập mô tả công thức',
+      addIngredient: 'Thêm Nguyên Liệu',
+      ingredientName: 'Tên Nguyên Liệu',
+      amount: 'Số Lượng',
+      addInstruction: 'Thêm Hướng Dẫn',
+      stepNumber: 'Bước',
+      uploadImage: 'Tải Ảnh Lên',
+      publish: 'Xuất Bản Công Thức',
+      draft: 'Lưu Nháp',
+      cancel: 'Hủy'
+    },
+    mealPlanner: {
+      title: 'Lập Kế Hoạch Bữa Ăn',
+      week: 'Tuần',
+      today: 'Hôm Nay',
+      breakfast: 'Bữa Sáng',
+      lunch: 'Bữa Trưa',
+      dinner: 'Bữa Tối',
+      snack: 'Bữa Phụ',
+      addMeal: 'Thêm Bữa Ăn',
+      selectRecipe: 'Chọn Công Thức',
+      noMealsPlanned: 'Chưa lên kế hoạch bữa ăn',
+      planMeal: 'Lên Kế Hoạch Bữa Ăn'
+    },
+    subscription: {
+      title: 'Đăng Ký',
+      currentPlan: 'Gói Hiện Tại',
+      upgradePlan: 'Nâng Cấp Gói',
+      cancelPlan: 'Hủy Gói',
+      free: 'Miễn Phí',
+      premium: 'Cao Cấp',
+      perMonth: 'mỗi tháng',
+      features: 'Tính Năng',
+      subscribe: 'Đăng Ký',
+      manage: 'Quản Lý Đăng Ký'
+    },
+    groceryList: {
+      title: 'Danh Sách Mua Sắm',
+      addItem: 'Thêm Mục',
+      clearAll: 'Xóa Tất Cả',
+      noItems: 'Không có mục nào trong danh sách',
+      itemName: 'Tên mục',
+      quantity: 'Số lượng',
+      category: 'Danh mục'
+    },
+    cart: {
+      title: 'Giỏ Hàng',
+      empty: 'Giỏ hàng của bạn trống',
+      checkout: 'Thanh Toán',
+      continueShopping: 'Tiếp Tục Mua Sắm',
+      total: 'Tổng',
+      removeItem: 'Xóa Mục'
     }
   },
   ja: {
@@ -511,5 +891,14 @@ export const translations = {
 } as const;
 
 export const getTranslation = (lang: LanguageCode) => {
-  return translations[lang] || translations.en;
+  const langTranslations = translations[lang] || translations.en;
+
+  return new Proxy(langTranslations, {
+    get(target, prop) {
+      if (prop in target) {
+        return target[prop as keyof typeof target];
+      }
+      return (translations.en as any)[prop];
+    }
+  }) as typeof translations.en;
 };

@@ -39,6 +39,7 @@ import { findProductsForIngredient, bulkAddToCart, addProductToCart, type Amazon
 import { useAuth } from '../context/AuthContext';
 import { getMealPlans, addMealPlan, updateMealPlan, deleteMealPlan, clearAllMealPlans } from '../services/mealPlannerService';
 import { saveGroceryItems, getGroceryItems } from '../services/groceryListService';
+import { useLanguage } from '../context/LanguageContext';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
@@ -54,6 +55,18 @@ interface MealPlannerProps {
 export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   const { state, dispatch } = useRecipes();
   const { user } = useAuth();
+  const { t } = useLanguage();
+
+  const getMealTypeTranslation = (mealType: string): string => {
+    const mealTypeMap: Record<string, string> = {
+      'Breakfast': t.mealPlanner.breakfast,
+      'Lunch': t.mealPlanner.lunch,
+      'Dinner': t.mealPlanner.dinner,
+      'Snack': t.mealPlanner.snack
+    };
+    return mealTypeMap[mealType] || mealType;
+  };
+
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [weeksToShow, setWeeksToShow] = useState<1 | 4>(1);
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>([]);
@@ -492,7 +505,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                   <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Meal Planner</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-slate-900">{t.mealPlanner.title}</h1>
                   <p className="text-xs md:text-sm text-slate-600">Select recipe, click slot</p>
                 </div>
               </div>

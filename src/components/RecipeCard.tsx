@@ -13,6 +13,7 @@ import { ReviewForm } from './ReviewForm';
 import { supabase } from '../lib/supabase';
 import { decodeHtmlEntities } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -29,6 +30,7 @@ interface RecipeCardProps {
 export function RecipeCard({ recipe, onSave, onCook, onDelete, onEdit, showReviewButton = false, isAdmin = false, preloadedSocialPost, requireAuth = false }: RecipeCardProps) {
   const { state } = useRecipes();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showDetail, setShowDetail] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
@@ -187,7 +189,7 @@ useEffect(() => {
                           className="w-full flex items-center gap-2 px-4 py-3 hover:bg-red-50 text-left text-sm text-red-600 rounded-b-lg"
                         >
                           <Trash2 className="w-4 h-4" />
-                          Delete
+                          {t.common.delete}
                         </button>
                       )}
                     </div>
@@ -215,7 +217,7 @@ useEffect(() => {
           <div className="flex items-center gap-3 text-sm text-gray-600">
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4 flex-shrink-0" />
-              <span className="font-medium whitespace-nowrap">{totalTime} min</span>
+              <span className="font-medium whitespace-nowrap">{totalTime} {t.recipe.minutes}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <ChefHat className="w-4 h-4 flex-shrink-0" />
@@ -269,7 +271,7 @@ useEffect(() => {
   >
     <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isSaved ? 'fill-white' : ''}`} />
     <span className="truncate text-xs sm:text-sm leading-tight">
-      {isSaved ? 'Saved' : 'Save Recipe'}
+      {isSaved ? t.recipe.saveRecipe : t.recipe.saveRecipe}
     </span>
   </Button>
   
