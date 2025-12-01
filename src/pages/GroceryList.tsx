@@ -384,7 +384,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     const newItems: GroceryListItem[] = recipe.ingredients.map((ing, idx) => {
       const categoryId = getCategoryForIngredient(ing.name);
       return {
-        id: `item-${Date.now()}-${idx}`,
+        id: `item-${Date.now()}-${Math.random()}-${idx}`,
         name: ing.name,
         quantity: parseFloat(ing.quantity) || 1,
         unit: ing.unit || '',
@@ -394,9 +394,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       };
     });
 
+    const currentItems = state.groceryList;
     dispatch({
       type: 'UPDATE_GROCERY_LIST',
-      payload: [...items, ...newItems]
+      payload: [...currentItems, ...newItems]
     });
 
     toast.success(`Added ${newItems.length} ingredients from ${recipe.title}`);

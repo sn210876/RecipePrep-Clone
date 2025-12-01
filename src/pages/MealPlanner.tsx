@@ -212,31 +212,30 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
     const dateString = formatDateInTimezone(date, 'local');
     const existingMeal = getMealForSlot(date, mealType);
     try {
+      const newMealPlan = {
+        id: existingMeal?.id || `meal-${Date.now()}`,
+        recipeId: recipe.id,
+        date: dateString,
+        mealType: mealType,
+        servings: recipe.servings
+      };
+
       if (existingMeal) {
         dispatch({
           type: 'UPDATE_MEAL_PLAN',
-          payload: {
-            id: existingMeal.id,
-            recipeId: recipe.id,
-            date: dateString,
-            mealType: mealType,
-            servings: recipe.servings
-          }
+          payload: newMealPlan
         });
       } else {
         dispatch({
           type: 'ADD_MEAL_PLAN',
-          payload: {
-            id: `meal-${Date.now()}`,
-            recipeId: recipe.id,
-            date: dateString,
-            mealType: mealType,
-            servings: recipe.servings
-          }
+          payload: newMealPlan
         });
       }
-      await loadMealPlans();
-      await syncGroceryList();
+
+      setTimeout(async () => {
+        await loadMealPlans();
+        await syncGroceryList();
+      }, 100);
     } catch (error) {
       console.error('Error adding meal:', error);
       throw error;
@@ -259,8 +258,11 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
     try {
       dispatch({ type: 'REMOVE_MEAL_PLAN', payload: mealPlanId });
       toast.success('Meal removed');
-      await loadMealPlans();
-      await syncGroceryList();
+
+      setTimeout(async () => {
+        await loadMealPlans();
+        await syncGroceryList();
+      }, 100);
     } catch (error) {
       console.error('Error removing meal:', error);
       toast.error('Failed to remove meal');
