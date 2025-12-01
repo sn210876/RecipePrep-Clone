@@ -50,6 +50,15 @@ export function appendAffiliateTag(url: string): string {
   }
 }
 
+export function extractAsinFromUrl(url: string): string | null {
+  try {
+    const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/gp\/product\/([A-Z0-9]{10})/i);
+    return asinMatch ? asinMatch[1] : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getAllProductCategories(): Promise<ProductCategory[]> {
   const { data, error } = await supabase
     .from('product_categories')
@@ -166,6 +175,7 @@ export async function addProductToCart(
       amazon_product_name: product.product_name,
       price: product.price,
       image_url: product.image_url,
+      asin: product.asin,
       source_recipe_id: sourceRecipeId,
     })
     .select()
@@ -193,6 +203,7 @@ export async function bulkAddToCart(
     amazon_product_name: item.product.product_name,
     price: item.product.price,
     image_url: item.product.image_url,
+    asin: item.product.asin,
     source_recipe_id: item.sourceRecipeId,
   }));
 

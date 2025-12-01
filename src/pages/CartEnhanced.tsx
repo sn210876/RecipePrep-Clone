@@ -26,6 +26,7 @@ interface CartItem {
   amazon_product_name: string | null;
   price: number | null;
   image_url: string | null;
+  asin: string | null;
   source_recipe_id: string | null;
 }
 
@@ -200,15 +201,49 @@ export function Cart({ onNavigate }: CartProps = {}) {
       return;
     }
 
-    cartItems.forEach((item, index) => {
-      if (item.amazon_product_url) {
+    const itemsWithAsin = cartItems.filter(item => item.asin);
+    const itemsWithoutAsin = cartItems.filter(item => !item.asin && item.amazon_product_url);
+
+    if (itemsWithAsin.length > 0) {
+      const cartUrl = buildAmazonCartUrl(itemsWithAsin);
+      window.open(cartUrl, '_blank');
+
+      if (itemsWithoutAsin.length > 0) {
+        toast.success(`Added ${itemsWithAsin.length} items to Amazon cart. Opening ${itemsWithoutAsin.length} additional items...`);
+        itemsWithoutAsin.forEach((item, index) => {
+          setTimeout(() => {
+            window.open(appendAffiliateTag(item.amazon_product_url!), '_blank');
+          }, (index + 1) * 300);
+        });
+      } else {
+        toast.success(`Added ${itemsWithAsin.length} items to Amazon cart!`);
+      }
+    } else if (itemsWithoutAsin.length > 0) {
+      itemsWithoutAsin.forEach((item, index) => {
         setTimeout(() => {
           window.open(appendAffiliateTag(item.amazon_product_url!), '_blank');
-        }, index * 100);
-      }
+        }, index * 300);
+      });
+      toast.success('Opening Amazon product pages...');
+    } else {
+      toast.error('No Amazon products in cart');
+    }
+  };
+
+  const buildAmazonCartUrl = (items: CartItem[]): string => {
+    const AFFILIATE_TAG = 'mealscrape-20';
+    const baseUrl = 'https://www.amazon.com/gp/aws/cart/add.html';
+    const params = new URLSearchParams();
+
+    items.forEach((item, index) => {
+      const itemNum = index + 1;
+      params.append(`ASIN.${itemNum}`, item.asin!);
+      const quantity = parseInt(item.quantity) || 1;
+      params.append(`Quantity.${itemNum}`, quantity.toString());
     });
 
-    toast.success('Opening Amazon product pages...');
+    params.append('tag', AFFILIATE_TAG);
+    return `${baseUrl}?${params.toString()}`;
   };
 
   if (loading) {
@@ -511,7 +546,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                   Buy All on Amazon
                 </Button>
                 <p className="text-xs text-center text-gray-500 mt-2">
-                  Opens product pages in new tabs with affiliate links
+                  Products with ASINs are added to your Amazon cart instantly
                 </p>
               </div>
             </div>
