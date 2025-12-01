@@ -34,6 +34,9 @@ import { toast } from 'sonner';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { consolidateGroceryListItems } from '../services/groceryListService.local';
 import { formatDateInTimezone, parseDateInTimezone } from '../lib/timezone';
+import { supabase } from '../lib/supabase';
+import { findProductsForIngredient, bulkAddToCart, addProductToCart, type AmazonProduct } from '../services/amazonProductService';
+import { useAuth } from '../context/AuthContext';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
@@ -48,6 +51,7 @@ interface MealPlannerProps {
 
 export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   const { state, dispatch } = useRecipes();
+  const { user } = useAuth();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [weeksToShow, setWeeksToShow] = useState<1 | 4>(1);
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>([]);
@@ -126,6 +130,64 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
     } catch (error) {
       console.error('Error syncing grocery list:', error);
       toast.error('Failed to update grocery list');
+    }
+  };
+
+  const syncToCart = async () => {
+    if (!user) {
+      toast.error('Please sign in to sync to cart');
+      return;
+    }
+
+    try {
+      const mealPlansWithServings = state.mealPlan.map(plan => ({
+        recipeId: plan.recipeId,
+        servings: plan.servings || 2,
+      }));
+      const groceryItems = consolidateGroceryListItems(mealPlansWithServings, state.savedRecipes);
+
+      if (groceryItems.length === 0) {
+        toast.error('No ingredients to sync to cart');
+        return;
+      }
+
+      toast.info('Finding matching products...');
+
+      const itemsToAdd: Array<{
+        product: AmazonProduct;
+        quantity: string;
+        unit: string;
+        sourceRecipeId?: string;
+      }> = [];
+
+      for (const item of groceryItems) {
+        const products = await findProductsForIngredient(item.name, 1);
+        if (products.length > 0) {
+          itemsToAdd.push({
+            product: products[0],
+            quantity: item.quantity?.toString() || '1',
+            unit: item.unit || '',
+            sourceRecipeId: item.sourceRecipeIds?.[0],
+          });
+        }
+      }
+
+      if (itemsToAdd.length === 0) {
+        toast.info('No matching products found for your ingredients');
+        return;
+      }
+
+      const addedItems = await bulkAddToCart(user.id, itemsToAdd);
+      toast.success(`Added ${addedItems.length} product${addedItems.length !== 1 ? 's' : ''} to cart!`);
+
+      if (onNavigate) {
+        setTimeout(() => {
+          toast.info('View your cart to see the added products');
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error syncing to cart:', error);
+      toast.error('Failed to sync to cart');
     }
   };
 
@@ -435,6 +497,16 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                 >
                   <ShoppingCart className="w-4 h-4" />
                   See Grocery List
+                </Button>
+
+                <Button
+                  onClick={syncToCart}
+                  className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white gap-2 text-xs md:text-sm"
+                  size="sm"
+                  disabled={state.mealPlan.length === 0}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Sync to Cart
                 </Button>
 
                 <Button
