@@ -143,13 +143,18 @@ export async function findProductsForIngredient(
       .map(m => m.amazon_products as unknown as AmazonProduct);
   }
 
-  const { data: products, error: searchError } = await supabase
+  const searchTerm = normalizedName.split(',')[0].trim();
+
+  let query = supabase
     .from('amazon_products')
     .select('*')
-    .eq('is_active', true)
-    .or(
-      `product_name.ilike.*${normalizedName}*,search_keywords.cs.{${normalizedName}}`
-    )
+    .eq('is_active', true);
+
+  query = query.or(
+    `product_name.ilike.*${searchTerm}*,search_keywords.cs.{${searchTerm}}`
+  );
+
+  const { data: products, error: searchError } = await query
     .order('popularity_score', { ascending: false })
     .limit(limit);
 
