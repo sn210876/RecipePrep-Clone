@@ -365,7 +365,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">3.</span>
-                        <span>Open Meal Scrape and go to Add Recipe → "Paste" button, Then "Extract Recipe."</span>
+                        <span>Open Meal Scrape and go to Add Recipe → "Import From URL"→ "Paste" button, Then "Extract Recipe."</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">4.</span>
