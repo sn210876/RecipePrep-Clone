@@ -317,14 +317,39 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
       toast.loading(message, { id: 'scan-photo' });
       const data = await extractRecipeFromPhoto(selectedPhotoFiles);
-      setExtractedData(data);
-      setShowPreview(true);
 
       const successMsg = selectedPhotoFiles.length === 1
-        ? 'Recipe extracted from photo!'
-        : `Recipe extracted from ${selectedPhotoFiles.length} photos!`;
+        ? 'Recipe extracted from photo! Review and edit as needed.'
+        : `Recipe extracted from ${selectedPhotoFiles.length} photos! Review and edit as needed.`;
 
       toast.success(successMsg, { id: 'scan-photo', duration: 2000 });
+
+      setTitle(data.title.replace(/\s+on\s+instagram$/i, ''));
+
+      const normalizedIngredients = data.ingredients.map(ing => ({
+        quantity: ing.quantity || '',
+        unit: ing.unit || 'cup',
+        name: ing.name || ''
+      }));
+
+      setIngredients(normalizedIngredients);
+      setInstructions(data.instructions);
+      setPrepTime(String(parseTimeValue(data.prepTime)));
+      setCookTime(String(parseTimeValue(data.cookTime)));
+      setServings(String(parseServingsValue(data.servings)));
+      setCuisineType(data.cuisineType);
+      setDifficulty(data.difficulty);
+      setSelectedMealTypes(data.mealTypes);
+      setSelectedDietaryTags(data.dietaryTags);
+
+      if (data.imageUrl) {
+        setImageUrl(data.imageUrl);
+      }
+
+      setNotes(`Scanned from ${selectedPhotoFiles.length} photo${selectedPhotoFiles.length > 1 ? 's' : ''}\n\n${data.notes || ''}`);
+
+      setActiveTab('manual');
+      setSelectedPhotoFiles([]);
     } catch (error: any) {
       console.error('Photo scan error:', error);
       const errorMessage = error?.message || 'Failed to scan photo. Please try again.';
