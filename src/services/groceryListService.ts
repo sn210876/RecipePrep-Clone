@@ -52,7 +52,6 @@ export async function saveGroceryItems(
 
   const dbItems = items.map(item => ({
     user_id: userId,
-    id: item.id,
     name: item.name,
     quantity: item.quantity,
     unit: item.unit,

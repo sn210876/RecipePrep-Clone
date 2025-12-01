@@ -34,6 +34,7 @@ import { supabase } from '../lib/supabase';
 import { ProductSelectorDialog } from '../components/ProductSelectorDialog';
 import { addProductToCart, findProductsForIngredient, bulkAddToCart, type AmazonProduct } from '../services/amazonProductService';
 import { getGroceryItems, saveGroceryItems, clearAllGroceryItems } from '../services/groceryListService';
+import { getMealPlans } from '../services/mealPlannerService';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -260,56 +261,78 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     loadMealPlannerItems();
   }, [startDate, endDate]);
 
-  function loadMealPlannerItems() {
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+  async function loadMealPlannerItems() {
+    if (!userId) {
+      toast.error('Please sign in to load meal planner items');
+      return;
+    }
 
-    const mealsInRange = state.mealPlan.filter(meal => {
-      const mealDate = new Date(meal.date);
-      mealDate.setHours(0, 0, 0, 0);
-      return mealDate >= start && mealDate <= end;
-    });
+    try {
+      const dbMealPlans = await getMealPlans(userId);
+      const dbGroceryItems = await getGroceryItems(userId);
 
-    const ingredientsToAdd: { [key: string]: GroceryListItem } = {};
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
 
-    mealsInRange.forEach(meal => {
-      const recipe = state.savedRecipes.find(r => r.id === meal.recipeId);
-      if (recipe) {
-        recipe.ingredients.forEach(ing => {
-          const key = `${ing.name.toLowerCase()}-${ing.unit}`;
-          if (ingredientsToAdd[key]) {
-            ingredientsToAdd[key].quantity += parseFloat(ing.quantity) || 0;
-            if (!ingredientsToAdd[key].sourceRecipeIds.includes(recipe.id)) {
-              ingredientsToAdd[key].sourceRecipeIds.push(recipe.id);
-            }
-          } else {
-            const categoryId = getCategoryForIngredient(ing.name);
-            ingredientsToAdd[key] = {
-              id: `item-${Date.now()}-${Math.random()}`,
-              name: ing.name,
-              quantity: parseFloat(ing.quantity) || 1,
-              unit: ing.unit || '',
-              categoryId,
-              checked: false,
-              sourceRecipeIds: [recipe.id],
-            };
-          }
-        });
-      }
-    });
-
-    const existingItemKeys = new Set(items.map(item => `${item.name.toLowerCase()}-${item.unit}`));
-    const newItems = Object.values(ingredientsToAdd).filter(
-      item => !existingItemKeys.has(`${item.name.toLowerCase()}-${item.unit}`)
-    );
-
-    if (newItems.length > 0) {
-      dispatch({
-        type: 'UPDATE_GROCERY_LIST',
-        payload: [...items, ...newItems]
+      const mealsInRange = dbMealPlans.filter(meal => {
+        const mealDate = new Date(meal.date);
+        mealDate.setHours(0, 0, 0, 0);
+        return mealDate >= start && mealDate <= end;
       });
+
+      const ingredientsToAdd: { [key: string]: GroceryListItem } = {};
+
+      mealsInRange.forEach(meal => {
+        const recipe = state.savedRecipes.find(r => r.id === meal.recipeId);
+        if (recipe) {
+          recipe.ingredients.forEach(ing => {
+            const key = `${ing.name.toLowerCase()}-${ing.unit}`;
+            if (ingredientsToAdd[key]) {
+              ingredientsToAdd[key].quantity += parseFloat(ing.quantity) || 0;
+              if (!ingredientsToAdd[key].sourceRecipeIds.includes(recipe.id)) {
+                ingredientsToAdd[key].sourceRecipeIds.push(recipe.id);
+              }
+            } else {
+              const categoryId = getCategoryForIngredient(ing.name);
+              ingredientsToAdd[key] = {
+                id: `item-${Date.now()}-${Math.random()}`,
+                name: ing.name,
+                quantity: parseFloat(ing.quantity) || 1,
+                unit: ing.unit || '',
+                categoryId,
+                checked: false,
+                sourceRecipeIds: [recipe.id],
+              };
+            }
+          });
+        }
+      });
+
+      const existingItemKeys = new Set(dbGroceryItems.map(item => `${item.name.toLowerCase()}-${item.unit}`));
+      const newItems = Object.values(ingredientsToAdd).filter(
+        item => !existingItemKeys.has(`${item.name.toLowerCase()}-${item.unit}`)
+      );
+
+      if (newItems.length > 0) {
+        const updatedItems = [...dbGroceryItems, ...newItems];
+        await saveGroceryItems(userId, updatedItems);
+        dispatch({
+          type: 'UPDATE_GROCERY_LIST',
+          payload: updatedItems
+        });
+        toast.success(`Added ${newItems.length} items from meal planner`);
+      } else {
+        dispatch({
+          type: 'UPDATE_GROCERY_LIST',
+          payload: dbGroceryItems
+        });
+        toast.info('All meal planner items already in grocery list');
+      }
+    } catch (error) {
+      console.error('Error loading meal planner items:', error);
+      toast.error('Failed to load meal planner items');
     }
   }
 

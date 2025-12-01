@@ -87,8 +87,10 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   }, []);
 
   useEffect(() => {
-    loadMealPlans();
-  }, [userId, currentWeekStart, weeksToShow, state.mealPlan, state.savedRecipes]);
+    if (user?.id) {
+      loadMealPlans();
+    }
+  }, [user?.id, state.savedRecipes]);
 
   const recipesByCuisine = useMemo(() => {
     const grouped: Record<string, Recipe[]> = {};
@@ -114,13 +116,13 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
     try {
       const dbMealPlans = await getMealPlans(user.id);
 
-      dispatch({ type: 'LOAD_STATE', payload: { ...state, mealPlan: dbMealPlans } });
-
       const plansWithRecipes: MealPlanWithRecipe[] = dbMealPlans.map(plan => {
         const recipe = state.savedRecipes.find(r => r.id === plan.recipeId);
         return { ...plan, recipe };
       });
       setMealPlans(plansWithRecipes);
+
+      dispatch({ type: 'LOAD_STATE', payload: { ...state, mealPlan: dbMealPlans } });
     } catch (error) {
       console.error('Error loading meal plans:', error);
       toast.error('Failed to load meal plans');
