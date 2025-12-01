@@ -4,14 +4,15 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download, Crown } from 'lucide-react';
+import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download, Crown, Languages } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { migrateExistingPosts } from '@/lib/imageStorage';
 import { toast } from 'sonner';
-import { isAdmin } from '@/lib/supabase';
+import { isAdmin, supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { languages, type LanguageCode } from '@/lib/translations';
 
 const COMMON_TIMEZONES = [
   { label: '--- Americas ---', value: 'header-americas', isHeader: true },
@@ -81,7 +82,8 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [testingVoice, setTestingVoice] = useState(false);
   const [timezone, setTimezone] = useState('America/New_York');
-  const [savingTimezone, setSavingTimezone] = useState(false);
+  const [language, setLanguage] = useState<LanguageCode>('en');
+  const [savingPreferences, setSavingPreferences] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -99,6 +101,49 @@ export default function Settings({ onNavigate }: SettingsProps) {
       setAvailableVoices(voices);
     }
   }, []);
+
+  useEffect(() => {
+    const loadPreferences = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('timezone, language')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (data) {
+          if (data.timezone) setTimezone(data.timezone);
+          if (data.language) setLanguage(data.language as LanguageCode);
+        }
+      }
+    };
+
+    loadPreferences();
+  }, [user]);
+
+  const savePreferences = async () => {
+    if (!user) return;
+
+    setSavingPreferences(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          timezone,
+          language
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast.success('Preferences saved successfully!');
+    } catch (error: any) {
+      console.error('Error saving preferences:', error);
+      toast.error('Failed to save preferences');
+    } finally {
+      setSavingPreferences(false);
+    }
+  };
 
   const copyToClipboard = async () => {
     try {
@@ -201,28 +246,49 @@ export default function Settings({ onNavigate }: SettingsProps) {
             </CardHeader>
           </Card>
 
-          {/* Timezone Card */}
+          {/* Language & Timezone Card */}
           <Card className="border-slate-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-100 p-4 sm:p-6">
+            <CardHeader className="bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-blue-100 p-4 sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-600 flex items-center justify-center shrink-0">
-                  <Globe className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                  <Languages className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900">Timezone</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900">Language & Region</CardTitle>
                   <CardDescription className="text-xs sm:text-sm text-slate-600">
-                    Set your timezone for accurate meal planning
+                    Customize your language and timezone preferences
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <Label htmlFor="language-select" className="text-xs sm:text-sm font-medium text-slate-700 mb-2 block">
+                    Language
+                  </Label>
+                  <Select value={language} onValueChange={(val) => setLanguage(val as LanguageCode)} disabled={savingPreferences}>
+                    <SelectTrigger id="language-select" className="w-full h-10 sm:h-11 text-sm sm:text-base">
+                      <SelectValue placeholder="Select your language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(languages).map(([code, name]) => (
+                        <SelectItem key={code} value={code} className="text-sm sm:text-base">
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-2">
+                    Selected: <span className="font-medium text-slate-700">{languages[language]}</span>
+                  </p>
+                </div>
+
                 <div>
                   <Label htmlFor="timezone-select" className="text-xs sm:text-sm font-medium text-slate-700 mb-2 block">
-                    Select Timezone
+                    Timezone
                   </Label>
-                  <Select value={timezone} onValueChange={setTimezone} disabled={savingTimezone}>
+                  <Select value={timezone} onValueChange={setTimezone} disabled={savingPreferences}>
                     <SelectTrigger id="timezone-select" className="w-full h-10 sm:h-11 text-sm sm:text-base">
                       <SelectValue placeholder="Select your timezone" />
                     </SelectTrigger>
@@ -244,6 +310,21 @@ export default function Settings({ onNavigate }: SettingsProps) {
                     Current: <span className="font-medium text-slate-700">{timezone}</span>
                   </p>
                 </div>
+
+                <Button
+                  onClick={savePreferences}
+                  disabled={savingPreferences}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white h-10 sm:h-11"
+                >
+                  {savingPreferences ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Preferences'
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
