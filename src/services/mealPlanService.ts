@@ -67,7 +67,7 @@ export async function updateMealPlan(
   userId: string,
   mealPlan: MealPlanEntry
 ): Promise<MealPlanEntry> {
-  const { data, error} = await supabase
+  const { data, error } = await supabase
     .from('user_meal_plans')
     .upsert({
       id: mealPlan.id,

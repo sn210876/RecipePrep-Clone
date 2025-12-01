@@ -37,6 +37,8 @@ import { formatDateInTimezone, parseDateInTimezone } from '../lib/timezone';
 import { supabase } from '../lib/supabase';
 import { findProductsForIngredient, bulkAddToCart, addProductToCart, type AmazonProduct } from '../services/amazonProductService';
 import { useAuth } from '../context/AuthContext';
+import { getMealPlans, addMealPlan, updateMealPlan, deleteMealPlan, clearAllMealPlans } from '../services/mealPlannerService';
+import { saveGroceryItems, getGroceryItems } from '../services/groceryListService';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
@@ -103,9 +105,18 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   }, [state.savedRecipes]);
 
   const loadMealPlans = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const plansWithRecipes: MealPlanWithRecipe[] = state.mealPlan.map(plan => {
+      const dbMealPlans = await getMealPlans(user.id);
+
+      dispatch({ type: 'LOAD_STATE', payload: { ...state, mealPlan: dbMealPlans } });
+
+      const plansWithRecipes: MealPlanWithRecipe[] = dbMealPlans.map(plan => {
         const recipe = state.savedRecipes.find(r => r.id === plan.recipeId);
         return { ...plan, recipe };
       });
@@ -119,13 +130,18 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   };
 
   const syncGroceryList = async () => {
+    if (!user?.id) return;
+
     try {
-      const mealPlansWithServings = state.mealPlan.map(plan => ({
+      const mealPlansWithServings = mealPlans.map(plan => ({
         recipeId: plan.recipeId,
         servings: plan.servings || 2,
       }));
       const items = consolidateGroceryListItems(mealPlansWithServings, state.savedRecipes);
+
+      await saveGroceryItems(user.id, items);
       dispatch({ type: 'UPDATE_GROCERY_LIST', payload: items });
+
       toast.success('Grocery list updated!');
     } catch (error) {
       console.error('Error syncing grocery list:', error);
@@ -209,11 +225,16 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   };
 
   const addMealToSlot = async (date: Date, mealType: MealType, recipe: Recipe) => {
+    if (!user?.id) {
+      toast.error('Please sign in to add meals');
+      return;
+    }
+
     const dateString = formatDateInTimezone(date, 'local');
     const existingMeal = getMealForSlot(date, mealType);
+
     try {
-      const newMealPlan = {
-        id: existingMeal?.id || `meal-${Date.now()}`,
+      const mealPlanData = {
         recipeId: recipe.id,
         date: dateString,
         mealType: mealType,
@@ -221,21 +242,13 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
       };
 
       if (existingMeal) {
-        dispatch({
-          type: 'UPDATE_MEAL_PLAN',
-          payload: newMealPlan
-        });
+        await updateMealPlan(user.id, { id: existingMeal.id, ...mealPlanData });
       } else {
-        dispatch({
-          type: 'ADD_MEAL_PLAN',
-          payload: newMealPlan
-        });
+        await addMealPlan(user.id, mealPlanData);
       }
 
-      setTimeout(async () => {
-        await loadMealPlans();
-        await syncGroceryList();
-      }, 100);
+      await loadMealPlans();
+      await syncGroceryList();
     } catch (error) {
       console.error('Error adding meal:', error);
       throw error;
@@ -255,14 +268,17 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   };
 
   const handleRemoveMeal = async (mealPlanId: string) => {
+    if (!user?.id) {
+      toast.error('Please sign in to remove meals');
+      return;
+    }
+
     try {
-      dispatch({ type: 'REMOVE_MEAL_PLAN', payload: mealPlanId });
+      await deleteMealPlan(user.id, mealPlanId);
       toast.success('Meal removed');
 
-      setTimeout(async () => {
-        await loadMealPlans();
-        await syncGroceryList();
-      }, 100);
+      await loadMealPlans();
+      await syncGroceryList();
     } catch (error) {
       console.error('Error removing meal:', error);
       toast.error('Failed to remove meal');

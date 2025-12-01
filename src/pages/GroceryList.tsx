@@ -33,6 +33,7 @@ import { formatQuantity } from '../lib/unitConversion';
 import { supabase } from '../lib/supabase';
 import { ProductSelectorDialog } from '../components/ProductSelectorDialog';
 import { addProductToCart, findProductsForIngredient, bulkAddToCart, type AmazonProduct } from '../services/amazonProductService';
+import { getGroceryItems, saveGroceryItems, clearAllGroceryItems } from '../services/groceryListService';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -66,12 +67,18 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
   const items = state.groceryList;
 
-  // Get user ID on mount
+  // Get user ID on mount and load grocery items
   useEffect(() => {
     const getUserId = async () => {
       const { data } = await supabase.auth.getUser();
       if (data.user) {
         setUserId(data.user.id);
+        try {
+          const dbItems = await getGroceryItems(data.user.id);
+          dispatch({ type: 'UPDATE_GROCERY_LIST', payload: dbItems });
+        } catch (error) {
+          console.error('Error loading grocery items:', error);
+        }
       }
     };
     getUserId();
@@ -331,24 +338,41 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     setSwipedItem(null);
   }
 
-  function handleClearChecked() {
+  async function handleClearChecked() {
+    if (!userId) return;
+
     const uncheckedItems = items.filter(item => !item.checked);
-    dispatch({
-      type: 'UPDATE_GROCERY_LIST',
-      payload: uncheckedItems
-    });
+    try {
+      await saveGroceryItems(userId, uncheckedItems);
+      dispatch({
+        type: 'UPDATE_GROCERY_LIST',
+        payload: uncheckedItems
+      });
+    } catch (error) {
+      console.error('Error clearing checked items:', error);
+      toast.error('Failed to clear checked items');
+    }
   }
 
-  function handleClearAll() {
+  async function handleClearAll() {
+    if (!userId) return;
     if (!window.confirm('Are you sure you want to clear all items from your grocery list?')) return;
-    dispatch({
-      type: 'UPDATE_GROCERY_LIST',
-      payload: []
-    });
+
+    try {
+      await clearAllGroceryItems(userId);
+      dispatch({
+        type: 'UPDATE_GROCERY_LIST',
+        payload: []
+      });
+      toast.success('Grocery list cleared');
+    } catch (error) {
+      console.error('Error clearing grocery list:', error);
+      toast.error('Failed to clear grocery list');
+    }
   }
 
-  function handleAddItem() {
-    if (!newItemName.trim() || !newItemCategory) return;
+  async function handleAddItem() {
+    if (!userId || !newItemName.trim() || !newItemCategory) return;
 
     const newItem: GroceryListItem = {
       id: `item-${Date.now()}-${Math.random()}`,
@@ -360,20 +384,28 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       sourceRecipeIds: [],
     };
 
-    dispatch({
-      type: 'ADD_GROCERY_ITEM',
-      payload: newItem
-    });
+    try {
+      const updatedItems = [...items, newItem];
+      await saveGroceryItems(userId, updatedItems);
 
-    setShowAddItemDialog(false);
-    setNewItemName('');
-    setNewItemQuantity('');
-    setNewItemUnit('');
-    setNewItemCategory('');
+      dispatch({
+        type: 'ADD_GROCERY_ITEM',
+        payload: newItem
+      });
+
+      setShowAddItemDialog(false);
+      setNewItemName('');
+      setNewItemQuantity('');
+      setNewItemUnit('');
+      setNewItemCategory('');
+    } catch (error) {
+      console.error('Error adding item:', error);
+      toast.error('Failed to add item');
+    }
   }
 
-  function handleAddRecipe() {
-    if (!selectedRecipeId) return;
+  async function handleAddRecipe() {
+    if (!userId || !selectedRecipeId) return;
 
     const recipe = state.savedRecipes.find(r => r.id === selectedRecipeId);
     if (!recipe) {
@@ -394,15 +426,23 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       };
     });
 
-    const currentItems = state.groceryList;
-    dispatch({
-      type: 'UPDATE_GROCERY_LIST',
-      payload: [...currentItems, ...newItems]
-    });
+    try {
+      const currentItems = state.groceryList;
+      const updatedItems = [...currentItems, ...newItems];
+      await saveGroceryItems(userId, updatedItems);
 
-    toast.success(`Added ${newItems.length} ingredients from ${recipe.title}`);
-    setShowAddRecipeDialog(false);
-    setSelectedRecipeId('');
+      dispatch({
+        type: 'UPDATE_GROCERY_LIST',
+        payload: updatedItems
+      });
+
+      toast.success(`Added ${newItems.length} ingredients from ${recipe.title}`);
+      setShowAddRecipeDialog(false);
+      setSelectedRecipeId('');
+    } catch (error) {
+      console.error('Error adding recipe:', error);
+      toast.error('Failed to add recipe ingredients');
+    }
   }
 
   function handleMoveItem(itemId: string, newCategoryId: string) {
