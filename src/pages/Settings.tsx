@@ -424,11 +424,11 @@ export default function Settings({ onNavigate }: SettingsProps) {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">2.</span>
-                        <span>Paste personal Notes or video transcript from onine source</span>
+                        <span>Paste personal Notes or video transcript from onine source in the text box</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">3.</span>
-                        <span>Paste link and let AI extract!</span>
+                        <span>Click "Extract" and edit as needed in "Input Manually"</span>
                       </li>
                     </ol>
                     <Button 
