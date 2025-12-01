@@ -424,9 +424,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         sourceUrl: '',
       };
 
-      setExtractedData(extractedRecipe);
-      setShowPreview(true);
       toast.success('Recipe extracted from description! Review and edit before saving.', { id: 'extract-desc', duration: 2000 });
+      populateFormWithExtractedData(extractedRecipe, '');
       setIsExtractingFromDescription(false);
 
       // Clear the inputs
@@ -463,14 +462,14 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     try {
       toast.loading('Extracting recipe...', { id: 'extract' });
       const data = await extractRecipeFromUrl(urlInput);
-      setExtractedData(data);
 
-    if (data.hasConflict) {
+      if (data.hasConflict) {
+        setExtractedData(data);
         setShowConflictDialog(true);
         toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract', duration: 2000 });
       } else {
-        setShowPreview(true);
         toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
+        populateFormWithExtractedData(data, urlInput);
       }
       setIsExtracting(false);
     } catch (error: any) {
@@ -481,9 +480,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           try {
             toast.loading('Retrying extraction...', { id: 'extract' });
             const data = await extractRecipeFromUrl(urlInput);
-            setExtractedData(data);
-            setShowPreview(true);
-toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          } catch (retryError: any) {
+            toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });
+            populateFormWithExtractedData(data, urlInput);
+          } catch (retryError: any) {
             toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
           } finally {
             setIsExtracting(false);
@@ -496,52 +495,54 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
     }
   };
 
-  const handleAcceptExtraction = () => {
-    if (!extractedData) return;
+  const populateFormWithExtractedData = (data: ExtractedRecipeData, sourceUrl: string = '') => {
+    setTitle(data.title.replace(/\s+on\s+instagram$/i, ''));
 
-    setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
-
-    const normalizedIngredients = extractedData.ingredients.map(ing => ({
+    const normalizedIngredients = data.ingredients.map(ing => ({
       quantity: ing.quantity || '',
       unit: ing.unit || 'cup',
       name: ing.name || ''
     }));
 
     setIngredients(normalizedIngredients);
-    setInstructions(extractedData.instructions);
-    setPrepTime(String(parseTimeValue(extractedData.prepTime)));
-    setCookTime(String(parseTimeValue(extractedData.cookTime)));
-    setServings(String(parseServingsValue(extractedData.servings)));
-    setCuisineType(extractedData.cuisineType);
-    setDifficulty(extractedData.difficulty);
-    setSelectedMealTypes(extractedData.mealTypes);
-    setSelectedDietaryTags(extractedData.dietaryTags);
-    
-    if (extractedData.imageUrl) {
-      setImageUrl(extractedData.imageUrl);
+    setInstructions(data.instructions);
+    setPrepTime(String(parseTimeValue(data.prepTime)));
+    setCookTime(String(parseTimeValue(data.cookTime)));
+    setServings(String(parseServingsValue(data.servings)));
+    setCuisineType(data.cuisineType);
+    setDifficulty(data.difficulty);
+    setSelectedMealTypes(data.mealTypes);
+    setSelectedDietaryTags(data.dietaryTags);
+
+    if (data.imageUrl) {
+      setImageUrl(data.imageUrl);
     }
 
     // Don't set video URL for YouTube/Instagram/TikTok - videos won't play in social feed
-    const isYouTubeOrSocial = urlInput && (
-      urlInput.includes('youtube.com') ||
-      urlInput.includes('youtu.be') ||
-      urlInput.includes('instagram.com') ||
-      urlInput.includes('tiktok.com')
+    const isYouTubeOrSocial = sourceUrl && (
+      sourceUrl.includes('youtube.com') ||
+      sourceUrl.includes('youtu.be') ||
+      sourceUrl.includes('instagram.com') ||
+      sourceUrl.includes('tiktok.com')
     );
 
-    if (!isYouTubeOrSocial && extractedData.videoUrl) {
-      setVideoUrl(extractedData.videoUrl);
+    if (!isYouTubeOrSocial && data.videoUrl) {
+      setVideoUrl(data.videoUrl);
     } else {
       setVideoUrl('');
     }
 
-    const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
-    setNotes(sourceNote + (extractedData.notes || ''));
+    const sourceNote = sourceUrl ? `Source: ${sourceUrl}\n\n` : '';
+    setNotes(sourceNote + (data.notes || ''));
 
+    setActiveTab('manual');
+  };
+
+  const handleAcceptExtraction = () => {
+    if (!extractedData) return;
+    populateFormWithExtractedData(extractedData, urlInput);
     setShowPreview(false);
     setExtractedData(null);
-    setActiveTab('manual');
-
     toast.success('Recipe loaded! Edit any details as needed.');
   };
 
