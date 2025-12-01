@@ -361,7 +361,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">2.</span>
-                        <span>For website address, click "Ctrl/CMD" → "C"</span>
+                        <span>For website, click "Ctrl/CMD" → "C" over address</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">3.</span>
