@@ -381,7 +381,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shrink-0">
                       <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
-                    <h3 className="text-sm sm:text-base md:text-lg font-semibold text-slate-900">From Photos Or Computer</h3>
+                    <h3 className="text-sm sm:text-base md:text-lg font-semibold text-slate-900">From Photos</h3>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3 sm:p-4 border border-slate-200">
                     <div className="aspect-video bg-gradient-to-br from-blue-100 to-cyan-100 rounded-md flex items-center justify-center mb-3">
