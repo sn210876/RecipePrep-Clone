@@ -365,11 +365,11 @@ export default function Settings({ onNavigate }: SettingsProps) {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">3.</span>
-                        <span>Open Meal Scrape and go to Add Recipe, click "Paste" button, Then "Extract Recipe"</span>
+                        <span>Open Meal Scrape and go to Add Recipe, click "Paste" button, Then "Extract Recipe."</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">4.</span>
-                        <span>Send and auto-save!</span>
+                        <span>Revise as needed in "Manual Edit Tab"!</span>
                       </li>
                     </ol>
                   </div>
