@@ -258,12 +258,13 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }
 
   useEffect(() => {
-    loadMealPlannerItems();
-  }, [startDate, endDate]);
+    if (userId) {
+      loadMealPlannerItems();
+    }
+  }, [startDate, endDate, userId]);
 
   async function loadMealPlannerItems() {
     if (!userId) {
-      toast.error('Please sign in to load meal planner items');
       return;
     }
 
@@ -346,19 +347,39 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     return 'other';
   }
 
-  function handleToggleItem(itemId: string) {
-    dispatch({
-      type: 'TOGGLE_GROCERY_ITEM',
-      payload: itemId
-    });
+  async function handleToggleItem(itemId: string) {
+    if (!userId) return;
+
+    try {
+      const updatedItems = items.map(item =>
+        item.id === itemId ? { ...item, checked: !item.checked } : item
+      );
+      await saveGroceryItems(userId, updatedItems);
+      dispatch({
+        type: 'TOGGLE_GROCERY_ITEM',
+        payload: itemId
+      });
+    } catch (error) {
+      console.error('Error toggling item:', error);
+      toast.error('Failed to update item');
+    }
   }
 
-  function handleDeleteItem(itemId: string) {
-    dispatch({
-      type: 'REMOVE_GROCERY_ITEM',
-      payload: itemId
-    });
-    setSwipedItem(null);
+  async function handleDeleteItem(itemId: string) {
+    if (!userId) return;
+
+    try {
+      const updatedItems = items.filter(item => item.id !== itemId);
+      await saveGroceryItems(userId, updatedItems);
+      dispatch({
+        type: 'REMOVE_GROCERY_ITEM',
+        payload: itemId
+      });
+      setSwipedItem(null);
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Failed to delete item');
+    }
   }
 
   async function handleClearChecked() {
@@ -408,12 +429,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     };
 
     try {
-      const updatedItems = [...items, newItem];
+      const currentItems = await getGroceryItems(userId);
+      const updatedItems = [...currentItems, newItem];
       await saveGroceryItems(userId, updatedItems);
 
+      const freshItems = await getGroceryItems(userId);
       dispatch({
-        type: 'ADD_GROCERY_ITEM',
-        payload: newItem
+        type: 'UPDATE_GROCERY_LIST',
+        payload: freshItems
       });
 
       setShowAddItemDialog(false);
@@ -450,13 +473,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     });
 
     try {
-      const currentItems = state.groceryList;
+      const currentItems = await getGroceryItems(userId);
       const updatedItems = [...currentItems, ...newItems];
       await saveGroceryItems(userId, updatedItems);
 
+      const freshItems = await getGroceryItems(userId);
       dispatch({
         type: 'UPDATE_GROCERY_LIST',
-        payload: updatedItems
+        payload: freshItems
       });
 
       toast.success(`Added ${newItems.length} ingredients from ${recipe.title}`);
@@ -468,14 +492,22 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     }
   }
 
-  function handleMoveItem(itemId: string, newCategoryId: string) {
-    const updatedItems = items.map(item =>
-      item.id === itemId ? { ...item, categoryId: newCategoryId } : item
-    );
-    dispatch({
-      type: 'UPDATE_GROCERY_LIST',
-      payload: updatedItems
-    });
+  async function handleMoveItem(itemId: string, newCategoryId: string) {
+    if (!userId) return;
+
+    try {
+      const updatedItems = items.map(item =>
+        item.id === itemId ? { ...item, categoryId: newCategoryId } : item
+      );
+      await saveGroceryItems(userId, updatedItems);
+      dispatch({
+        type: 'UPDATE_GROCERY_LIST',
+        payload: updatedItems
+      });
+    } catch (error) {
+      console.error('Error moving item:', error);
+      toast.error('Failed to move item');
+    }
   }
 
   // Mobile: Long press to show move dialog
