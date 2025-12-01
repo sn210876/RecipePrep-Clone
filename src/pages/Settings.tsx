@@ -414,17 +414,17 @@ export default function Settings({ onNavigate }: SettingsProps) {
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shrink-0">
                       <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
-                    <h3 className="text-sm sm:text-base md:text-lg font-semibold text-slate-900">Copy & Paste Link</h3>
+                    <h3 className="text-sm sm:text-base md:text-lg font-semibold text-slate-900">Paste Notes</h3>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3 sm:p-4 border border-slate-200">
                     <ol className="space-y-2 text-xs sm:text-sm text-slate-700 mb-3">
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">1.</span>
-                        <span>Copy recipe URL from any website</span>
+                        <span>Click "Add Recipe" → "Paste Notes" Tab</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">2.</span>
-                        <span>Click button below to go to Add Recipe</span>
+                        <span>Paste personal Notes or video transcript from onine source</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">3.</span>
