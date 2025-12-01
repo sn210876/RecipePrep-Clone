@@ -17,6 +17,19 @@ export type LanguageCode = keyof typeof languages;
 
 export const translations = {
   en: {
+    nav: {
+      discoverRecipes: 'Discover Recipes',
+      socialFeed: 'Social Feed',
+      myRecipes: 'My Recipes',
+      addRecipe: 'Add Recipe',
+      mealPlanner: 'Meal Planner',
+      groceryList: 'Grocery List',
+      cart: 'Cart',
+      blog: 'Blog',
+      subscription: 'Subscription',
+      faq: 'FAQ',
+      settings: 'Settings'
+    },
     settings: {
       title: 'Settings',
       profile: 'Profile Settings',
@@ -45,6 +58,19 @@ export const translations = {
     }
   },
   es: {
+    nav: {
+      discoverRecipes: 'Descubrir Recetas',
+      socialFeed: 'Red Social',
+      myRecipes: 'Mis Recetas',
+      addRecipe: 'Agregar Receta',
+      mealPlanner: 'Planificador de Comidas',
+      groceryList: 'Lista de Compras',
+      cart: 'Carrito',
+      blog: 'Blog',
+      subscription: 'Suscripción',
+      faq: 'Preguntas Frecuentes',
+      settings: 'Configuración'
+    },
     settings: {
       title: 'Configuración',
       profile: 'Configuración del Perfil',
@@ -73,6 +99,19 @@ export const translations = {
     }
   },
   it: {
+    nav: {
+      discoverRecipes: 'Scopri Ricette',
+      socialFeed: 'Feed Sociale',
+      myRecipes: 'Le Mie Ricette',
+      addRecipe: 'Aggiungi Ricetta',
+      mealPlanner: 'Pianificatore Pasti',
+      groceryList: 'Lista della Spesa',
+      cart: 'Carrello',
+      blog: 'Blog',
+      subscription: 'Abbonamento',
+      faq: 'Domande Frequenti',
+      settings: 'Impostazioni'
+    },
     settings: {
       title: 'Impostazioni',
       profile: 'Impostazioni Profilo',
@@ -101,6 +140,19 @@ export const translations = {
     }
   },
   th: {
+    nav: {
+      discoverRecipes: 'ค้นพบสูตรอาหาร',
+      socialFeed: 'ฟีดโซเชียล',
+      myRecipes: 'สูตรอาหารของฉัน',
+      addRecipe: 'เพิ่มสูตรอาหาร',
+      mealPlanner: 'วางแผนมื้ออาหาร',
+      groceryList: 'รายการซื้อของ',
+      cart: 'ตะกร้า',
+      blog: 'บล็อก',
+      subscription: 'การสมัครสมาชิก',
+      faq: 'คำถามที่พบบ่อย',
+      settings: 'การตั้งค่า'
+    },
     settings: {
       title: 'การตั้งค่า',
       profile: 'การตั้งค่าโปรไฟล์',
@@ -129,6 +181,19 @@ export const translations = {
     }
   },
   vi: {
+    nav: {
+      discoverRecipes: 'Khám Phá Công Thức',
+      socialFeed: 'Bảng Tin',
+      myRecipes: 'Công Thức Của Tôi',
+      addRecipe: 'Thêm Công Thức',
+      mealPlanner: 'Lập Kế Hoạch Bữa Ăn',
+      groceryList: 'Danh Sách Mua Sắm',
+      cart: 'Giỏ Hàng',
+      blog: 'Blog',
+      subscription: 'Đăng Ký',
+      faq: 'Câu Hỏi Thường Gặp',
+      settings: 'Cài Đặt'
+    },
     settings: {
       title: 'Cài Đặt',
       profile: 'Cài Đặt Hồ Sơ',
@@ -157,6 +222,19 @@ export const translations = {
     }
   },
   ja: {
+    nav: {
+      discoverRecipes: 'レシピを探す',
+      socialFeed: 'ソーシャルフィード',
+      myRecipes: '私のレシピ',
+      addRecipe: 'レシピを追加',
+      mealPlanner: '食事プランナー',
+      groceryList: '買い物リスト',
+      cart: 'カート',
+      blog: 'ブログ',
+      subscription: 'サブスクリプション',
+      faq: 'よくある質問',
+      settings: '設定'
+    },
     settings: {
       title: '設定',
       profile: 'プロフィール設定',
@@ -185,6 +263,19 @@ export const translations = {
     }
   },
   ko: {
+    nav: {
+      discoverRecipes: '레시피 발견',
+      socialFeed: '소셜 피드',
+      myRecipes: '내 레시피',
+      addRecipe: '레시피 추가',
+      mealPlanner: '식사 계획',
+      groceryList: '장보기 목록',
+      cart: '장바구니',
+      blog: '블로그',
+      subscription: '구독',
+      faq: '자주 묻는 질문',
+      settings: '설정'
+    },
     settings: {
       title: '설정',
       profile: '프로필 설정',
@@ -213,6 +304,19 @@ export const translations = {
     }
   },
   fr: {
+    nav: {
+      discoverRecipes: 'Découvrir des Recettes',
+      socialFeed: 'Fil Social',
+      myRecipes: 'Mes Recettes',
+      addRecipe: 'Ajouter une Recette',
+      mealPlanner: 'Planificateur de Repas',
+      groceryList: 'Liste de Courses',
+      cart: 'Panier',
+      blog: 'Blog',
+      subscription: 'Abonnement',
+      faq: 'FAQ',
+      settings: 'Paramètres'
+    },
     settings: {
       title: 'Paramètres',
       profile: 'Paramètres du Profil',
@@ -241,6 +345,19 @@ export const translations = {
     }
   },
   de: {
+    nav: {
+      discoverRecipes: 'Rezepte Entdecken',
+      socialFeed: 'Social Feed',
+      myRecipes: 'Meine Rezepte',
+      addRecipe: 'Rezept Hinzufügen',
+      mealPlanner: 'Essensplaner',
+      groceryList: 'Einkaufsliste',
+      cart: 'Warenkorb',
+      blog: 'Blog',
+      subscription: 'Abonnement',
+      faq: 'Häufig Gestellte Fragen',
+      settings: 'Einstellungen'
+    },
     settings: {
       title: 'Einstellungen',
       profile: 'Profileinstellungen',
@@ -269,6 +386,19 @@ export const translations = {
     }
   },
   fa: {
+    nav: {
+      discoverRecipes: 'کشف دستور پخت',
+      socialFeed: 'فید اجتماعی',
+      myRecipes: 'دستورهای من',
+      addRecipe: 'افزودن دستور پخت',
+      mealPlanner: 'برنامه ریز غذا',
+      groceryList: 'لیست خرید',
+      cart: 'سبد خرید',
+      blog: 'بلاگ',
+      subscription: 'اشتراک',
+      faq: 'سوالات متداول',
+      settings: 'تنظیمات'
+    },
     settings: {
       title: 'تنظیمات',
       profile: 'تنظیمات پروفایل',
@@ -297,6 +427,19 @@ export const translations = {
     }
   },
   pt: {
+    nav: {
+      discoverRecipes: 'Descobrir Receitas',
+      socialFeed: 'Feed Social',
+      myRecipes: 'Minhas Receitas',
+      addRecipe: 'Adicionar Receita',
+      mealPlanner: 'Planejador de Refeições',
+      groceryList: 'Lista de Compras',
+      cart: 'Carrinho',
+      blog: 'Blog',
+      subscription: 'Assinatura',
+      faq: 'Perguntas Frequentes',
+      settings: 'Configurações'
+    },
     settings: {
       title: 'Configurações',
       profile: 'Configurações do Perfil',
@@ -325,6 +468,19 @@ export const translations = {
     }
   },
   zh: {
+    nav: {
+      discoverRecipes: '发现食谱',
+      socialFeed: '社交动态',
+      myRecipes: '我的食谱',
+      addRecipe: '添加食谱',
+      mealPlanner: '餐食计划',
+      groceryList: '购物清单',
+      cart: '购物车',
+      blog: '博客',
+      subscription: '订阅',
+      faq: '常见问题',
+      settings: '设置'
+    },
     settings: {
       title: '设置',
       profile: '个人资料设置',

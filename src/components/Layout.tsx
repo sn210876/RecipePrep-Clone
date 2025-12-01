@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface LayoutProps {
   currentPage: string;
@@ -28,6 +29,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ currentPage: propCurrentPage, onNavigate, children }: LayoutProps) {
+  const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState(propCurrentPage);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
@@ -35,19 +37,19 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  
+
   const navItems = [
-    { id: 'discover-recipes', label: 'Discover Recipes', icon: ChefHat },
-    { id: 'discover', label: 'Social Feed', icon: UtensilsCrossed },
-    { id: 'my-recipes', label: 'My Recipes', icon: BookMarked },
-    { id: 'add-recipe', label: 'Add Recipe', icon: Plus },
-    { id: 'meal-planner', label: 'Meal Planner', icon: Calendar },
-    { id: 'grocery-list', label: 'Grocery List', icon: ShoppingCart },
-    { id: 'cart', label: 'Cart', icon: PiggyBank },
-    { id: 'blog', label: 'Blog', icon: MessageSquare },
-    { id: 'subscription', label: 'Subscription', icon: Crown },
-    { id: 'faq', label: 'FAQ', icon: HelpCircle },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'discover-recipes', label: t.nav.discoverRecipes, icon: ChefHat },
+    { id: 'discover', label: t.nav.socialFeed, icon: UtensilsCrossed },
+    { id: 'my-recipes', label: t.nav.myRecipes, icon: BookMarked },
+    { id: 'add-recipe', label: t.nav.addRecipe, icon: Plus },
+    { id: 'meal-planner', label: t.nav.mealPlanner, icon: Calendar },
+    { id: 'grocery-list', label: t.nav.groceryList, icon: ShoppingCart },
+    { id: 'cart', label: t.nav.cart, icon: PiggyBank },
+    { id: 'blog', label: t.nav.blog, icon: MessageSquare },
+    { id: 'subscription', label: t.nav.subscription, icon: Crown },
+    { id: 'faq', label: t.nav.faq, icon: HelpCircle },
+    { id: 'settings', label: t.nav.settings, icon: Settings }
   ];
 
   const socialPages = ['discover', 'upload', 'profile', 'messages', 'add-recipe'];
