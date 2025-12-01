@@ -398,7 +398,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">3.</span>
-                        <span>Click your photo and upload</span>
+                        <span>Select your photo(s) in device → Upload</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">4.</span>
