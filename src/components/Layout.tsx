@@ -182,7 +182,7 @@ const loadUnreadCount = async (userId: string) => {
            {/* Sidebar Overlay - for both mobile and desktop */}
       {(isMobileMenuOpen || isDesktopSidebarOpen) && (
         <div
-          className="fixed inset-0 z-40 bg-black/50"
+          className="fixed inset-0 z-[200] bg-black/50"
           onClick={() => {
             setIsMobileMenuOpen(false);
             setIsDesktopSidebarOpen(false);
@@ -191,7 +191,7 @@ const loadUnreadCount = async (userId: string) => {
       )}
 
       {/* Sidebar - works same on mobile and desktop */}
- <aside className={`fixed left-0 top-0 z-[90] h-screen w-60 sm:w-60 lg:w-64 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+ <aside className={`fixed left-0 top-0 z-[250] h-screen w-60 sm:w-60 lg:w-64 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
         (isMobileMenuOpen || isDesktopSidebarOpen) ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex h-full flex-col">
@@ -281,7 +281,7 @@ const loadUnreadCount = async (userId: string) => {
       variant="ghost"
       size="icon"
       onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      className="lg:hidden h-9 w-9 sm:h-10 sm:w-10 relative z-[200]"
+      className="lg:hidden h-9 w-9 sm:h-10 sm:w-10"
     >
       <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
     </Button>
@@ -291,13 +291,13 @@ const loadUnreadCount = async (userId: string) => {
       variant="ghost"
       size="icon"
       onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
-      className="hidden lg:flex h-9 w-9 sm:h-10 sm:w-10 relative z-[200]"
+      className="hidden lg:flex h-9 w-9 sm:h-10 sm:w-10"
     >
       <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
     </Button>
-            
+
          {!socialPages.includes(currentPage) && (
-  <div className="flex-1 flex items-center justify-center lg:justify-start gap-2">
+  <div className="flex-1 flex items-center justify-center gap-2">
     {currentPage === 'discover-recipes' && (
       <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
         <ChefHat className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
@@ -350,7 +350,7 @@ const loadUnreadCount = async (userId: string) => {
 )}
             
         {socialPages.includes(currentPage) && (
-  <div className="flex-1 flex items-center justify-center lg:justify-start gap-2">
+  <div className="flex-1 flex items-center justify-center gap-2">
     <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
       {currentPage === 'add-recipe' ? (
         <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
