@@ -2,11 +2,15 @@
 
 ## Problem Fixed
 
-**Issue:** When sending ingredients from Meal Planner to Cart, "all purpose flour" didn't sync to cart.
+**Issue:** When sending ingredients from Meal Planner/Grocery List to Cart:
+1. "all purpose flour" didn't sync to cart
+2. Items without Amazon products were being added to cart (empty items)
+3. "C all purpose flour" (with measurement prefix) wasn't matching
 
-**Root Cause:** Two issues were found:
+**Root Cause:** Three issues were found:
 1. GroceryList.tsx was using wrong field names for cart_items table
-2. No ingredient mappings existed for "flour" variations
+2. GroceryList.tsx was adding ALL items instead of only ones with Amazon products
+3. No ingredient mappings existed for "flour" variations (including with measurement prefixes)
 
 ## What Was Fixed
 
@@ -34,13 +38,38 @@
 }
 ```
 
-### 2. Added Ingredient Mappings for Flour
+### 2. Fixed handleSendToCart to Only Add Amazon Products
+
+**Before (Added everything):**
+```typescript
+const cartItems = items.map(item => ({
+  ingredient_name: item.name,
+  // ... no Amazon product
+}));
+await supabase.from('cart_items').insert(cartItems);
+```
+
+**After (Only adds items with matching Amazon products):**
+```typescript
+for (const item of items) {
+  const products = await findProductsForIngredient(item.name, 1);
+  if (products.length > 0) {
+    itemsToAdd.push({ product: products[0], ... });
+  }
+}
+await bulkAddToCart(userId, itemsToAdd);
+```
+
+### 3. Added Ingredient Mappings for Flour
 
 Added mappings to help the system find flour products:
 - "all purpose flour" → King Arthur Organic All Purpose Flour
 - "flour" → King Arthur Organic All Purpose Flour
 - "all-purpose flour" → King Arthur Organic All Purpose Flour
 - "ap flour" → King Arthur Organic All Purpose Flour
+- "c all purpose flour" → King Arthur Organic All Purpose Flour (handles cup measurement)
+- "cup all purpose flour" → King Arthur Organic All Purpose Flour
+- "cups all purpose flour" → King Arthur Organic All Purpose Flour
 
 ## How Ingredient Matching Works
 

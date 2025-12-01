@@ -32,7 +32,7 @@ import { useRecipes } from '../context/RecipeContext';
 import { formatQuantity } from '../lib/unitConversion';
 import { supabase } from '../lib/supabase';
 import { ProductSelectorDialog } from '../components/ProductSelectorDialog';
-import { addProductToCart, type AmazonProduct } from '../services/amazonProductService';
+import { addProductToCart, findProductsForIngredient, bulkAddToCart, type AmazonProduct } from '../services/amazonProductService';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -477,25 +477,38 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         return;
       }
 
-      const cartItems = items.map(item => ({
-        user_id: userData.user.id,
-        ingredient_name: item.name,
-        quantity: item.quantity.toString(),
-        unit: item.unit,
-        price: null,
-        image_url: null,
-        amazon_product_url: null,
-        amazon_product_name: null,
-        asin: null,
-      }));
+      toast.info('Finding matching Amazon products...');
 
-      const { error } = await supabase
-        .from('cart_items')
-        .insert(cartItems);
+      const itemsToAdd: Array<{
+        product: AmazonProduct;
+        quantity: string;
+        unit: string;
+      }> = [];
 
-      if (error) throw error;
+      for (const item of items) {
+        const products = await findProductsForIngredient(item.name, 1);
+        if (products.length > 0) {
+          itemsToAdd.push({
+            product: products[0],
+            quantity: item.quantity.toString(),
+            unit: item.unit,
+          });
+        }
+      }
 
-      toast.success(`Added ${items.length} items to cart!`);
+      if (itemsToAdd.length === 0) {
+        toast.error('No matching Amazon products found for your grocery items');
+        return;
+      }
+
+      const addedItems = await bulkAddToCart(userData.user.id, itemsToAdd);
+
+      toast.success(`Added ${addedItems.length} product${addedItems.length !== 1 ? 's' : ''} to cart!`);
+
+      const skippedCount = items.length - addedItems.length;
+      if (skippedCount > 0) {
+        toast.info(`${skippedCount} item${skippedCount !== 1 ? 's' : ''} skipped (no matching products)`);
+      }
 
       if (onNavigate) {
         setTimeout(() => onNavigate('cart'), 1000);
