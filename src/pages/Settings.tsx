@@ -357,11 +357,11 @@ export default function Settings({ onNavigate }: SettingsProps) {
                     <ol className="space-y-2 text-xs sm:text-sm text-slate-700">
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">1.</span>
-                        <span> On social media, click "Share" button and "Copy" link</span>
+                        <span> For social media, click "Share" button and "Copy" link</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">2.</span>
-                        <span>On website address, just click "Ctrl/CMD" → "C"</span>
+                        <span>For website address, click "Ctrl/CMD" → "C"</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">3.</span>
