@@ -533,10 +533,15 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                   variant="destructive"
                   size="sm"
                   onClick={async () => {
+                    if (!user?.id) {
+                      toast.error('You must be logged in');
+                      return;
+                    }
                     if (confirm('Clear all meal plans?')) {
                       try {
-                        await clearAllMealPlans(userId);
+                        await clearAllMealPlans(user.id);
                         dispatch({ type: 'CLEAR_MEAL_PLAN' });
+                        setMealPlans([]);
                         toast.success('All meals cleared');
                       } catch (error) {
                         console.error('Error clearing meal plans:', error);
