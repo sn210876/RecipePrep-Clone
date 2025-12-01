@@ -390,19 +390,19 @@ export default function Settings({ onNavigate }: SettingsProps) {
                     <ol className="space-y-2 text-xs sm:text-sm text-slate-700">
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">1.</span>
-                        <span>Screenshot recipe</span>
+                        <span>Screenshot recipe from device</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">2.</span>
-                        <span>Open photos, select screenshot</span>
+                        <span>Open Meal Scrape -> Add Recipe -> Upload Photos</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">3.</span>
-                        <span>Share → "Mail"</span>
+                        <span>Click your photo and upload</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-600 shrink-0">4.</span>
-                        <span>Send to forwarding email</span>
+                        <span>Edit in the Input Manually Tab </span>
                       </li>
                     </ol>
                   </div>
