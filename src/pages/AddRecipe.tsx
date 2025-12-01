@@ -468,7 +468,19 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         setShowConflictDialog(true);
         toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract', duration: 2000 });
       } else {
-        toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
+        const isSocialMedia = urlInput.includes('instagram.com') || urlInput.includes('tiktok.com');
+        const hasNoIngredients = !data.ingredients || data.ingredients.length === 0;
+        const hasNoInstructions = !data.instructions || data.instructions.length === 0;
+
+        if (isSocialMedia && (hasNoIngredients || hasNoInstructions)) {
+          toast.info('This post has limited recipe details. Switch to "Paste Video Description" tab and manually add the recipe ingredients and instructions you see in the video!', {
+            id: 'extract',
+            duration: 6000
+          });
+        } else {
+          toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
+        }
+
         populateFormWithExtractedData(data, urlInput);
       }
       setIsExtracting(false);
@@ -480,7 +492,20 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           try {
             toast.loading('Retrying extraction...', { id: 'extract' });
             const data = await extractRecipeFromUrl(urlInput);
-            toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });
+
+            const isSocialMedia = urlInput.includes('instagram.com') || urlInput.includes('tiktok.com');
+            const hasNoIngredients = !data.ingredients || data.ingredients.length === 0;
+            const hasNoInstructions = !data.instructions || data.instructions.length === 0;
+
+            if (isSocialMedia && (hasNoIngredients || hasNoInstructions)) {
+              toast.info('This post has limited recipe details. Switch to "Paste Video Description" tab and manually add the recipe ingredients and instructions you see in the video!', {
+                id: 'extract',
+                duration: 6000
+              });
+            } else {
+              toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });
+            }
+
             populateFormWithExtractedData(data, urlInput);
           } catch (retryError: any) {
             toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
