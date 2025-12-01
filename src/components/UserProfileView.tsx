@@ -491,10 +491,10 @@ export function UserProfileView({
                       const { error } = await supabase
                         .from("posts")
                         .delete()
-                        .eq("id", selectedPostId)
-                        .eq("user_id", currentUserId);
+                        .eq("id", selectedPostId);
 
                       if (error) {
+                        console.error("Delete error:", error);
                         toast.error("Failed to delete post");
                       } else {
                         toast.success("Post deleted");
