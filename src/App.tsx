@@ -10,7 +10,7 @@ import { MyRecipes } from './pages/MyRecipes';
 import { AddRecipe } from './pages/AddRecipe';
 import { MealPlanner } from './pages/MealPlanner';
 import { GroceryList } from './pages/GroceryList';
-import { Cart } from './pages/Cart';
+import { Cart } from './pages/CartEnhanced';
 import Settings from './pages/Settings';
 import { Subscription } from './pages/Subscription';
 import SubscriptionSuccess from './pages/SubscriptionSuccess';

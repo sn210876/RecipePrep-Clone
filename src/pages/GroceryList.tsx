@@ -6,7 +6,7 @@
 // 4. Add swipe-to-delete gesture
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X, Apple, Beef, Milk, Wheat, Carrot, Fish, Egg, Cookie, Droplet, Flame } from 'lucide-react';
+import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X, Apple, Beef, Milk, Wheat, Carrot, Fish, Egg, Cookie, Droplet, Flame, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -31,6 +31,8 @@ import {
 import { useRecipes } from '../context/RecipeContext';
 import { formatQuantity } from '../lib/unitConversion';
 import { supabase } from '../lib/supabase';
+import { ProductSelectorDialog } from '../components/ProductSelectorDialog';
+import { addProductToCart, type AmazonProduct } from '../services/amazonProductService';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -57,7 +59,23 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [itemToMove, setItemToMove] = useState<GroceryListItem | null>(null);
   const [swipedItem, setSwipedItem] = useState<string | null>(null);
 
+  // Amazon product integration
+  const [showProductSelector, setShowProductSelector] = useState(false);
+  const [selectedGroceryItem, setSelectedGroceryItem] = useState<GroceryListItem | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
   const items = state.groceryList;
+
+  // Get user ID on mount
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setUserId(data.user.id);
+      }
+    };
+    getUserId();
+  }, []);
 
   // Helper function to get ingredient icon with comprehensive detection
   function getIngredientIcon(name: string, categoryId: string) {
@@ -485,6 +503,33 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     }
   }
 
+  // Handle adding a single item to cart with Amazon product
+  const handleAddItemToCart = (item: GroceryListItem) => {
+    if (!userId) {
+      toast.error('Please sign in to add items to cart');
+      return;
+    }
+    setSelectedGroceryItem(item);
+    setShowProductSelector(true);
+  };
+
+  const handleProductSelected = async (product: AmazonProduct) => {
+    if (!userId || !selectedGroceryItem) return;
+
+    try {
+      await addProductToCart(
+        userId,
+        product,
+        selectedGroceryItem.quantity.toString(),
+        selectedGroceryItem.unit
+      );
+      toast.success(`Added ${product.product_name} to cart`);
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      toast.error('Failed to add item to cart');
+    }
+  };
+
   // Swipe gesture handlers for mobile
   let touchStartX = 0;
   let touchEndX = 0;
@@ -496,7 +541,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   function handleTouchEnd(e: React.TouchEvent, itemId: string) {
     touchEndX = e.changedTouches[0].clientX;
     const swipeDistance = touchStartX - touchEndX;
-    
+
     // Swipe left to delete (> 100px)
     if (swipeDistance > 100) {
       setSwipedItem(itemId);
@@ -719,15 +764,26 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                           </p>
                         </div>
 
-                        {/* Delete button - always visible on mobile */}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="shrink-0 h-10 w-10"
-                        >
-                          <Trash2 className="w-5 h-5 text-red-500" />
-                        </Button>
+                        {/* Action buttons */}
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleAddItemToCart(item)}
+                            className="shrink-0 h-10 w-10"
+                            title="Add to Cart"
+                          >
+                            <ShoppingBag className="w-5 h-5 text-orange-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="shrink-0 h-10 w-10"
+                          >
+                            <Trash2 className="w-5 h-5 text-red-500" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -890,6 +946,18 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Product Selector Dialog */}
+      {selectedGroceryItem && (
+        <ProductSelectorDialog
+          open={showProductSelector}
+          onOpenChange={setShowProductSelector}
+          ingredientName={selectedGroceryItem.name}
+          quantity={selectedGroceryItem.quantity.toString()}
+          unit={selectedGroceryItem.unit}
+          onSelect={handleProductSelected}
+        />
+      )}
     </div>
   );
 }
