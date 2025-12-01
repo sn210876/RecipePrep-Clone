@@ -532,10 +532,16 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => {
+                  onClick={async () => {
                     if (confirm('Clear all meal plans?')) {
-                      dispatch({ type: 'CLEAR_MEAL_PLAN' });
-                      toast.success('All meals cleared');
+                      try {
+                        await clearAllMealPlans(userId);
+                        dispatch({ type: 'CLEAR_MEAL_PLAN' });
+                        toast.success('All meals cleared');
+                      } catch (error) {
+                        console.error('Error clearing meal plans:', error);
+                        toast.error('Failed to clear meal plans');
+                      }
                     }
                   }}
                   className="gap-2 text-xs md:text-sm"
