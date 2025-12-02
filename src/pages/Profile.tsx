@@ -1183,12 +1183,21 @@ if (loading) {
               {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
               {editingPost?.photoUrl && (
                 <div className="relative mt-3 inline-block">
-                  <img
-                    src={editingPost.photoUrl}
-                    alt="Preview"
-                    className="w-32 h-32 object-cover rounded-lg"
-                    loading="lazy"
-                  />
+                  {editingPost.isVideo ? (
+                    <video
+                      src={editingPost.photoUrl}
+                      className="w-32 h-32 object-cover rounded-lg"
+                      controls
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={editingPost.photoUrl}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-lg"
+                      loading="lazy"
+                    />
+                  )}
                   <button
                     onClick={handleRemovePhoto}
                     className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg transition-colors"
