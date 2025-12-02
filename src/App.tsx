@@ -227,7 +227,8 @@ useEffect(() => {
       'profile': '/profile',
       'messages': '/messages',
       'settings': '/settings',
-     'subscription': '/subscription',  // ← ADD THIS LINE
+     'subscription': '/subscription',
+      'faq': '/faq',
       'onboarding': '/onboarding',
       'blog': '/blog',
     };
@@ -356,8 +357,8 @@ useEffect(() => {
     );
   }
 
-  // Allow access to DiscoverRecipes and Blog without login
-  const publicPages = ['discover-recipes', 'blog'];
+  // Allow access to DiscoverRecipes, Blog, FAQ, and Subscription without login
+  const publicPages = ['discover-recipes', 'blog', 'faq', 'subscription'];
   const isPublicPage = publicPages.includes(currentPage) || currentPage.startsWith('blog:');
 
   // Show auth form if not logged in and trying to access protected content OR if showAuthPrompt is true
