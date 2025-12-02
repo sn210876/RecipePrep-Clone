@@ -38,6 +38,7 @@ export function RecipeCard({ recipe, onSave, onCook, onDelete, onEdit, showRevie
   const [socialPost, setSocialPost] = useState<any>(null);
   const [loadingSocialPost, setLoadingSocialPost] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const totalTime = recipe.prepTime + recipe.cookTime;
   const isSaved = state.savedRecipes.some(r => r.id === recipe.id);
 const [loadingReviews, setLoadingReviews] = useState(false);
@@ -125,16 +126,23 @@ useEffect(() => {
     setShowDetail(true);
   }}
 >
-        <div className="relative overflow-hidden aspect-square">
-          <img
-            src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-              ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-              : recipe.imageUrl}
-            alt={recipe.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-            decoding="async"
-          />
+        <div className="relative overflow-hidden aspect-square bg-gray-100">
+          {!imageError && recipe.imageUrl ? (
+            <img
+              src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+                : recipe.imageUrl}
+              alt={recipe.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+              decoding="async"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+              <ChefHat className="w-16 h-16 text-gray-400" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="absolute top-3 right-3 flex gap-2">
             {isSaved && (
