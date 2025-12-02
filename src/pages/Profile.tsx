@@ -197,8 +197,8 @@ const [followersModalType, setFollowersModalType] = useState<'followers' | 'foll
     title: string;
     caption: string;
     recipeUrl: string;
-    photoUrl: string;
-    isVideo: boolean;
+    imageUrl: string | null;
+    videoUrl: string | null;
   } | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
@@ -590,29 +590,29 @@ useEffect(() => {
     }
   };
 
-  const handleRemovePhoto = () => {
-    setEditingPost(prev => prev ? { ...prev, photoUrl: '' } : null);
+  const handleRemoveImage = () => {
+    setEditingPost(prev => prev ? { ...prev, imageUrl: null } : null);
     toast.success('Photo removed');
+  };
+
+  const handleRemoveVideo = () => {
+    setEditingPost(prev => prev ? { ...prev, videoUrl: null } : null);
+    toast.success('Video removed');
   };
 
   const handleEditPost = async () => {
     if (!editingPost) return;
 
     try {
-      const mediaUrl = editingPost.photoUrl?.trim() || null;
+      const imageUrl = editingPost.imageUrl?.trim() || null;
+      const videoUrl = editingPost.videoUrl?.trim() || null;
 
       const updateData: any = {
         caption: editingPost.caption.trim() || null,
         recipe_url: editingPost.recipeUrl.trim() || null,
+        image_url: imageUrl,
+        video_url: videoUrl,
       };
-
-      if (editingPost.isVideo) {
-        updateData.video_url = mediaUrl;
-        updateData.image_url = null;
-      } else {
-        updateData.image_url = mediaUrl;
-        updateData.video_url = null;
-      }
 
       const { error } = await supabase
         .from('posts')
@@ -630,8 +630,8 @@ useEffect(() => {
             ? {
                 ...p,
                 caption: editingPost.caption.trim() || null,
-                image_url: editingPost.isVideo ? null : mediaUrl,
-                video_url: editingPost.isVideo ? mediaUrl : null,
+                image_url: imageUrl,
+                video_url: videoUrl,
                 recipe_url: editingPost.recipeUrl.trim() || null,
               }
             : p
@@ -972,8 +972,8 @@ if (loading) {
                       title: post.title || '',
                       caption: post.caption || '',
                       recipeUrl: post.recipe_url || '',
-                      photoUrl: post.image_url || post.video_url || '',
-                      isVideo: !!post.video_url && !post.image_url
+                      imageUrl: post.image_url || null,
+                      videoUrl: post.video_url || null
                     });
                   }}
                   className="cursor-pointer"
@@ -1112,8 +1112,8 @@ if (loading) {
                           title: post.title || '',
                           caption: post.caption || '',
                           recipeUrl: post.recipe_url || '',
-                          photoUrl: post.image_url || post.video_url || '',
-                          isVideo: !!post.video_url && !post.image_url
+                          imageUrl: post.image_url || null,
+                          videoUrl: post.video_url || null
                         });
                       }
                       setSelectedPostId(null);
@@ -1181,32 +1181,44 @@ if (loading) {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               {uploadingPhoto && <p className="text-sm text-gray-500 mt-1">Uploading...</p>}
-              {editingPost?.photoUrl && (
-                <div className="relative mt-3 inline-block">
-                  {editingPost.isVideo ? (
+              <div className="flex flex-wrap gap-3 mt-3">
+                {editingPost?.imageUrl && (
+                  <div className="relative inline-block">
+                    <img
+                      src={editingPost.imageUrl}
+                      alt="Photo preview"
+                      className="w-32 h-32 object-cover rounded-lg"
+                      loading="lazy"
+                    />
+                    <button
+                      onClick={handleRemoveImage}
+                      className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg transition-colors"
+                      type="button"
+                      title="Remove photo"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                {editingPost?.videoUrl && (
+                  <div className="relative inline-block">
                     <video
-                      src={editingPost.photoUrl}
+                      src={editingPost.videoUrl}
                       className="w-32 h-32 object-cover rounded-lg"
                       controls
                       playsInline
                     />
-                  ) : (
-                    <img
-                      src={editingPost.photoUrl}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-lg"
-                      loading="lazy"
-                    />
-                  )}
-                  <button
-                    onClick={handleRemovePhoto}
-                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg transition-colors"
-                    type="button"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+                    <button
+                      onClick={handleRemoveVideo}
+                      className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg transition-colors"
+                      type="button"
+                      title="Remove video"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <AlertDialogFooter>
