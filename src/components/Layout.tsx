@@ -193,7 +193,7 @@ const loadUnreadCount = async (userId: string) => {
       )}
 
       {/* Sidebar - works same on mobile and desktop */}
- <aside className={`fixed left-0 top-0 z-[250] h-screen w-60 sm:w-60 lg:w-64 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
+ <aside className={`fixed left-0 top-0 z-[250] h-screen w-[240px] sm:w-60 lg:w-64 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
         (isMobileMenuOpen || isDesktopSidebarOpen) ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex h-full flex-col">
@@ -215,8 +215,8 @@ const loadUnreadCount = async (userId: string) => {
     </div>
 
     <div className="flex-1 min-w-0">
-      <h1 className="text-sm sm:text-base lg:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
-      <p className="text-[8px] sm:text-[9px] lg:text-xs text-gray-500 truncate leading-tight">Discover, Plan, Enjoy </p>
+      <h1 className="text-base sm:text-base lg:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
+      <p className="text-[10px] sm:text-[9px] lg:text-xs text-gray-500 truncate leading-tight">Discover, Plan, Enjoy </p>
     </div>
   </div>
 
@@ -235,7 +235,7 @@ const loadUnreadCount = async (userId: string) => {
 </div>
 
           {/* Navigation Items - Mobile Optimized */}
-          <nav className="flex-1 space-y-0 p-2 sm:p-3 lg:p-4 overflow-y-auto">
+          <nav className="flex-1 space-y-0.5 p-3 sm:p-3 lg:p-4 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -243,17 +243,17 @@ const loadUnreadCount = async (userId: string) => {
                 <button
                   key={item.id}
                   onClick={() => handleNavigate(item.id)}
-                  className={`flex w-full items-center gap-2 sm:gap-3 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 lg:px-4 lg:py-2.5 text-left transition-all touch-manipulation ${
+                  className={`flex w-full items-center gap-3 sm:gap-3 rounded-lg px-3 py-2 sm:px-3 sm:py-2 lg:px-4 lg:py-2.5 text-left transition-all touch-manipulation ${
                     isActive
                       ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg scale-[1.02]'
                       : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
                   }`}
                 >
-                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${isActive ? 'opacity-100' : 'opacity-70'}`} />
-                  <span className="font-medium text-xs sm:text-sm lg:text-base truncate">{item.label}</span>
+                  <Icon className={`h-5 w-5 sm:h-5 sm:w-5 flex-shrink-0 ${isActive ? 'opacity-100' : 'opacity-70'}`} />
+                  <span className="font-medium text-sm sm:text-sm lg:text-base truncate">{item.label}</span>
 
                   {item.id === 'messages' && unreadCount > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-[10px] sm:text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold flex-shrink-0">
+                    <span className="ml-auto bg-red-500 text-white text-xs sm:text-xs rounded-full w-5 h-5 sm:w-5 sm:h-5 flex items-center justify-center font-bold flex-shrink-0">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
@@ -263,10 +263,10 @@ const loadUnreadCount = async (userId: string) => {
           </nav>
 
           {/* Footer Card - Mobile Optimized */}
-          <div className="border-t border-gray-200 p-2 sm:p-3 lg:p-4 flex-shrink-0">
-            <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-2.5 sm:p-3 lg:p-4 border border-orange-200">
-              <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-900 leading-tight">Discover, Save, Plan</p>
-              <p className="mt-0.5 sm:mt-1 text-[9px] sm:text-[10px] lg:text-xs text-gray-600 leading-tight">All in One Place</p>
+          <div className="border-t border-gray-200 p-3 sm:p-3 lg:p-4 flex-shrink-0">
+            <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-3 sm:p-3 lg:p-4 border border-orange-200">
+              <p className="text-xs sm:text-xs lg:text-sm font-semibold text-gray-900 leading-tight">Discover, Save, Plan</p>
+              <p className="mt-1 sm:mt-1 text-[10px] sm:text-[10px] lg:text-xs text-gray-600 leading-tight">All in One Place</p>
             </div>
           </div>
         </div>
