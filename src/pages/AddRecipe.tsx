@@ -111,6 +111,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     if (editId) {
       setEditRecipeId(editId);
       setIsEditMode(true);
+      setActiveTab('manual');
       loadRecipeForEdit(editId);
     }
   }, []);
