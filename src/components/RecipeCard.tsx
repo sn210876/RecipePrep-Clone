@@ -222,21 +222,21 @@ useEffect(() => {
 </h3>
           </div>
 
-          <div className="flex items-center gap-3 text-sm text-gray-600">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4 flex-shrink-0" />
-              <span className="font-medium whitespace-nowrap">{totalTime} {t.recipe.minutes}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <ChefHat className="w-4 h-4 flex-shrink-0" />
-              <Badge
-                variant="outline"
-                className={`text-xs ${difficultyColors[recipe.difficulty]}`}
-              >
-                {recipe.difficulty}
-              </Badge>
-            </div>
-          </div>
+        <div className="flex items-center gap-3 text-sm text-gray-600">
+  <div className="flex items-center gap-1.5">
+    <Clock className="w-4 h-4 flex-shrink-0" />
+    <span className="font-medium whitespace-nowrap">{totalTime} {t.recipe.minutes}</span>
+  </div>
+  <div className="hidden md:flex items-center gap-1.5">
+    <ChefHat className="w-4 h-4 flex-shrink-0" />
+    <Badge
+      variant="outline"
+      className={`text-xs ${difficultyColors[recipe.difficulty]}`}
+    >
+      {recipe.difficulty}
+    </Badge>
+  </div>
+</div>
 
        
 
