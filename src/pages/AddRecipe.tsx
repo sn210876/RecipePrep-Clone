@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon, Camera } from 'lucide-react';
+import { Plus, X, Clock, Users, ChefHat, Link2, Sparkles, Loader2, Upload, Image as ImageIcon, Camera, FileText, Edit } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
 import { Ingredient } from '@/types/recipe';
 import { toast } from 'sonner';
@@ -95,6 +95,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [isScanningPhoto, setIsScanningPhoto] = useState(false);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [selectedPhotoFiles, setSelectedPhotoFiles] = useState<File[]>([]);
+  const [descriptionInput, setDescriptionInput] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+  const [isExtractingFromDescription, setIsExtractingFromDescription] = useState(false);
+  const [activeTab, setActiveTab] = useState<'url' | 'description' | 'photo' | 'manual'>('url');
 
   // Load recipe for editing if edit parameter is present
   useEffect(() => {
@@ -107,6 +111,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     if (editId) {
       setEditRecipeId(editId);
       setIsEditMode(true);
+      setActiveTab('manual');
       loadRecipeForEdit(editId);
     }
   }, []);
@@ -313,14 +318,39 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
       toast.loading(message, { id: 'scan-photo' });
       const data = await extractRecipeFromPhoto(selectedPhotoFiles);
-      setExtractedData(data);
-      setShowPreview(true);
 
       const successMsg = selectedPhotoFiles.length === 1
-        ? 'Recipe extracted from photo!'
-        : `Recipe extracted from ${selectedPhotoFiles.length} photos!`;
+        ? 'Recipe extracted from photo! Review and edit as needed.'
+        : `Recipe extracted from ${selectedPhotoFiles.length} photos! Review and edit as needed.`;
 
       toast.success(successMsg, { id: 'scan-photo', duration: 2000 });
+
+      setTitle(data.title.replace(/\s+on\s+instagram$/i, ''));
+
+      const normalizedIngredients = data.ingredients.map(ing => ({
+        quantity: ing.quantity || '',
+        unit: ing.unit || 'cup',
+        name: ing.name || ''
+      }));
+
+      setIngredients(normalizedIngredients);
+      setInstructions(data.instructions);
+      setPrepTime(String(parseTimeValue(data.prepTime)));
+      setCookTime(String(parseTimeValue(data.cookTime)));
+      setServings(String(parseServingsValue(data.servings)));
+      setCuisineType(data.cuisineType);
+      setDifficulty(data.difficulty);
+      setSelectedMealTypes(data.mealTypes);
+      setSelectedDietaryTags(data.dietaryTags);
+
+      if (data.imageUrl) {
+        setImageUrl(data.imageUrl);
+      }
+
+      setNotes(`Scanned from ${selectedPhotoFiles.length} photo${selectedPhotoFiles.length > 1 ? 's' : ''}\n\n${data.notes || ''}`);
+
+      setActiveTab('manual');
+      setSelectedPhotoFiles([]);
     } catch (error: any) {
       console.error('Photo scan error:', error);
       const errorMessage = error?.message || 'Failed to scan photo. Please try again.';
@@ -335,6 +365,78 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const removePhoto = (index: number) => {
     setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
     setSelectedPhotoFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDescriptionExtract = async () => {
+    if (!descriptionInput.trim()) {
+      toast.error('Please paste a video description');
+      return;
+    }
+
+    setIsExtractingFromDescription(true);
+
+    try {
+      toast.loading('Extracting recipe from description...', { id: 'extract-desc' });
+
+      const RENDER_SERVER = import.meta.env.VITE_API_URL || 'https://recipe-backend-nodejs-1.onrender.com';
+      const response = await fetch(`${RENDER_SERVER}/extract-manual-description`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: videoTitle.trim() || 'Recipe from Video',
+          description: descriptionInput.trim(),
+          thumbnail: '',
+          channelTitle: '',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Description Extract] Error:', errorText);
+        throw new Error('Failed to extract recipe from description');
+      }
+
+      const data = await response.json();
+
+      // Convert to ExtractedRecipeData format
+      const extractedRecipe: ExtractedRecipeData = {
+        title: data.title || videoTitle.trim() || 'Recipe from Video',
+        description: data.description || '',
+        creator: data.creator || 'Unknown',
+        ingredients: data.ingredients.map((ing: string) => {
+          const parts = ing.split(' ');
+          return {
+            quantity: parts[0] || '',
+            unit: parts[1] || 'piece',
+            name: parts.slice(2).join(' ') || ing
+          };
+        }),
+        instructions: data.instructions || [],
+        prepTime: String(data.prep_time || 15),
+        cookTime: String(data.cook_time || 30),
+        servings: String(data.servings || 4),
+        cuisineType: data.cuisineType || 'Global',
+        difficulty: data.difficulty || 'Medium',
+        mealTypes: ['Dinner'],
+        dietaryTags: data.dietaryTags || [],
+        imageUrl: data.image || data.imageUrl || '',
+        videoUrl: '',
+        notes: data.notes || 'Extracted from description',
+        sourceUrl: '',
+      };
+
+      toast.success('Recipe extracted from description! Review and edit before saving.', { id: 'extract-desc', duration: 2000 });
+      populateFormWithExtractedData(extractedRecipe, '');
+      setIsExtractingFromDescription(false);
+
+      // Clear the inputs
+      setDescriptionInput('');
+      setVideoTitle('');
+    } catch (error: any) {
+      console.error('[Description Extract] Error:', error);
+      toast.error(error.message || 'Failed to extract recipe from description.', { id: 'extract-desc' });
+      setIsExtractingFromDescription(false);
+    }
   };
 
   const handleUrlExtract = async () => {
@@ -361,27 +463,52 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     try {
       toast.loading('Extracting recipe...', { id: 'extract' });
       const data = await extractRecipeFromUrl(urlInput);
-      setExtractedData(data);
 
-    if (data.hasConflict) {
+      if (data.hasConflict) {
+        setExtractedData(data);
         setShowConflictDialog(true);
         toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract', duration: 2000 });
       } else {
-        setShowPreview(true);
-        toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
+        const isSocialMedia = urlInput.includes('instagram.com') || urlInput.includes('tiktok.com');
+        const hasNoIngredients = !data.ingredients || data.ingredients.length === 0;
+        const hasNoInstructions = !data.instructions || data.instructions.length === 0;
+
+        if (isSocialMedia && (hasNoIngredients || hasNoInstructions)) {
+          toast.info('This post has limited recipe details. Switch to "Paste Video Description" tab and manually add the recipe ingredients and instructions you see in the video!', {
+            id: 'extract',
+            duration: 6000
+          });
+        } else {
+          toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
+        }
+
+        populateFormWithExtractedData(data, urlInput);
       }
       setIsExtracting(false);
     } catch (error: any) {
       if (error.message.includes('waking up')) {
         toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
-        
+
         setTimeout(async () => {
           try {
             toast.loading('Retrying extraction...', { id: 'extract' });
             const data = await extractRecipeFromUrl(urlInput);
-            setExtractedData(data);
-            setShowPreview(true);
-toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          } catch (retryError: any) {
+
+            const isSocialMedia = urlInput.includes('instagram.com') || urlInput.includes('tiktok.com');
+            const hasNoIngredients = !data.ingredients || data.ingredients.length === 0;
+            const hasNoInstructions = !data.instructions || data.instructions.length === 0;
+
+            if (isSocialMedia && (hasNoIngredients || hasNoInstructions)) {
+              toast.info('This post has limited recipe details. Switch to "Paste Video Description" tab and manually add the recipe ingredients and instructions you see in the video!', {
+                id: 'extract',
+                duration: 6000
+              });
+            } else {
+              toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });
+            }
+
+            populateFormWithExtractedData(data, urlInput);
+          } catch (retryError: any) {
             toast.error(retryError.message || 'Extraction failed. Please try again.', { id: 'extract' });
           } finally {
             setIsExtracting(false);
@@ -394,38 +521,54 @@ toast.success('Recipe extracted!', { id: 'extract', duration: 2000 });          
     }
   };
 
-  const handleAcceptExtraction = () => {
-    if (!extractedData) return;
+  const populateFormWithExtractedData = (data: ExtractedRecipeData, sourceUrl: string = '') => {
+    setTitle(data.title.replace(/\s+on\s+instagram$/i, ''));
 
-    setTitle(extractedData.title.replace(/\s+on\s+instagram$/i, ''));
-
-    const normalizedIngredients = extractedData.ingredients.map(ing => ({
+    const normalizedIngredients = data.ingredients.map(ing => ({
       quantity: ing.quantity || '',
       unit: ing.unit || 'cup',
       name: ing.name || ''
     }));
 
     setIngredients(normalizedIngredients);
-    setInstructions(extractedData.instructions);
-    setPrepTime(String(parseTimeValue(extractedData.prepTime)));
-    setCookTime(String(parseTimeValue(extractedData.cookTime)));
-    setServings(String(parseServingsValue(extractedData.servings)));
-    setCuisineType(extractedData.cuisineType);
-    setDifficulty(extractedData.difficulty);
-    setSelectedMealTypes(extractedData.mealTypes);
-    setSelectedDietaryTags(extractedData.dietaryTags);
-    
-    if (extractedData.imageUrl) {
-      setImageUrl(extractedData.imageUrl);
-    }
-    
-    setVideoUrl(extractedData.videoUrl || '');
-    const sourceNote = urlInput ? `Source: ${urlInput}\n\n` : '';
-    setNotes(sourceNote + (extractedData.notes || ''));
+    setInstructions(data.instructions);
+    setPrepTime(String(parseTimeValue(data.prepTime)));
+    setCookTime(String(parseTimeValue(data.cookTime)));
+    setServings(String(parseServingsValue(data.servings)));
+    setCuisineType(data.cuisineType);
+    setDifficulty(data.difficulty);
+    setSelectedMealTypes(data.mealTypes);
+    setSelectedDietaryTags(data.dietaryTags);
 
+    if (data.imageUrl) {
+      setImageUrl(data.imageUrl);
+    }
+
+    // Don't set video URL for YouTube/Instagram/TikTok - videos won't play in social feed
+    const isYouTubeOrSocial = sourceUrl && (
+      sourceUrl.includes('youtube.com') ||
+      sourceUrl.includes('youtu.be') ||
+      sourceUrl.includes('instagram.com') ||
+      sourceUrl.includes('tiktok.com')
+    );
+
+    if (!isYouTubeOrSocial && data.videoUrl) {
+      setVideoUrl(data.videoUrl);
+    } else {
+      setVideoUrl('');
+    }
+
+    const sourceNote = sourceUrl ? `Source: ${sourceUrl}\n\n` : '';
+    setNotes(sourceNote + (data.notes || ''));
+
+    setActiveTab('manual');
+  };
+
+  const handleAcceptExtraction = () => {
+    if (!extractedData) return;
+    populateFormWithExtractedData(extractedData, urlInput);
     setShowPreview(false);
     setExtractedData(null);
-
     toast.success('Recipe loaded! Edit any details as needed.');
   };
 
@@ -689,11 +832,63 @@ return (
         </div>
 
         {/* Scrollable content container */}
-        <div className="flex-1 overflow-y-auto overscroll-contain pb-32 md:pb-6 pt-4">
-          <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain pb-36 md:pb-24 pt-4">
+          <div className="max-w-4xl mx-auto px-4 py-6 mb-4">
 
-        {/* URL Import Section - Mobile optimized */}
-        <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-blue-50 to-white">
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+          <button
+            onClick={() => setActiveTab('url')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-t-lg border-b-4 transition-all whitespace-nowrap ${
+              activeTab === 'url'
+                ? 'bg-blue-50 border-blue-500 font-bold text-blue-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Link2 className="w-5 h-5 flex-shrink-0" />
+            <span className="hidden sm:inline">Import From URL</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('description')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-t-lg border-b-4 transition-all whitespace-nowrap ${
+              activeTab === 'description'
+                ? 'bg-purple-50 border-purple-500 font-bold text-purple-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <FileText className="w-5 h-5 flex-shrink-0" />
+            <span className="hidden sm:inline">Paste Notes</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('photo')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-t-lg border-b-4 transition-all whitespace-nowrap ${
+              activeTab === 'photo'
+                ? 'bg-emerald-50 border-emerald-500 font-bold text-emerald-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Camera className="w-5 h-5 flex-shrink-0" />
+            <span className="hidden sm:inline">Upload Photo</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('manual')}
+            className={`flex items-center gap-2 px-4 py-3 rounded-t-lg border-b-4 transition-all whitespace-nowrap ${
+              activeTab === 'manual'
+                ? 'bg-slate-50 border-slate-500 font-bold text-slate-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Edit className="w-5 h-5 flex-shrink-0" />
+            <span className="hidden sm:inline">Input Manually</span>
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'url' && (
+        <Card className="border-2 border-blue-500 shadow-sm bg-gradient-to-br from-blue-50 to-white">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
@@ -780,17 +975,117 @@ return (
                   </li>
                 </ol>
                 <div className="mt-3 pt-2 border-t border-slate-200 space-y-1 text-xs">
-                  <p className="text-emerald-600 font-semibold">Supported: All recipe websites & most blogs</p>
-                  <p className="text-orange-600">Warning: Instagram & TikTok (may take 30–60 seconds)</p>
-                  <p className="text-slate-500">Coming Soon: YouTube videos</p>
+                  <p className="text-emerald-600 font-semibold">✅ Supported: All recipe websites & most blogs</p>
+                  <p className="text-blue-600 font-semibold">✅ Supported: YouTube videos (with description fallback)</p>
+                  <p className="text-orange-600">⚠️ Warning: Instagram & TikTok (may take 30–60 seconds)</p>
+                  <p className="text-purple-600 font-medium">💡 YouTube blocked? Use "Paste Video Description" below!</p>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
+        )}
 
-        {/* Photo Scan Section - NEW! */}
-        <Card className="border-emerald-200 shadow-sm bg-gradient-to-br from-emerald-50 to-white">
+        {/* Manual Description Paste Tab */}
+        {activeTab === 'description' && (
+        <Card className="border-2 border-purple-500 shadow-sm bg-gradient-to-br from-purple-50 to-white">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Sparkles className="w-5 h-5 text-purple-600 flex-shrink-0" />
+              <span className="leading-tight">Paste Video Description</span>
+              <Badge variant="secondary" className="ml-auto bg-purple-100 text-purple-700 border-purple-200">
+                For YouTube
+              </Badge>
+            </CardTitle>
+            <CardDescription className="text-xs">
+              If automatic extraction fails, copy the video description from YouTube and paste it here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label htmlFor="video-title" className="text-xs font-medium text-slate-700">
+                Video Title (Optional)
+              </Label>
+              <Input
+                id="video-title"
+                value={videoTitle}
+                onChange={(e) => setVideoTitle(e.target.value)}
+                placeholder="e.g., Best Chocolate Cake Recipe"
+                className="mt-1 h-10 text-sm border-purple-200 focus:border-purple-500"
+                disabled={isExtractingFromDescription}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="description-input" className="text-xs font-medium text-slate-700">
+                Video Description *
+              </Label>
+              <Textarea
+                id="description-input"
+                value={descriptionInput}
+                onChange={(e) => setDescriptionInput(e.target.value)}
+                placeholder="Paste the full video description here, including ingredients and instructions..."
+                className="mt-1 min-h-[200px] text-sm border-purple-200 focus:border-purple-500 font-mono"
+                disabled={isExtractingFromDescription}
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Paste the complete description from the video (click "...more" on YouTube to see full description)
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleDescriptionExtract}
+              disabled={isExtractingFromDescription || !descriptionInput.trim()}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12"
+            >
+              {isExtractingFromDescription ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Extracting Recipe...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Extract Recipe from Description
+                </>
+              )}
+            </Button>
+
+            <div className="mt-4 pt-4 border-t border-purple-200">
+              <div className="space-y-2 text-xs leading-relaxed">
+                <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
+                  WHEN TO USE THIS
+                </p>
+                <ol className="space-y-1.5 text-black ml-0.5">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">•</span>
+                    <span>YouTube video extraction shows bot detection error</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">•</span>
+                    <span>Recipe is in the video description but not extracting</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-black-600 min-w-[14px]">•</span>
+                    <span>You want faster extraction without waiting for audio processing</span>
+                  </li>
+                </ol>
+                <div className="mt-2 p-2 bg-purple-100 border border-purple-200 rounded text-xs">
+                  <p className="font-semibold text-purple-900">💡 Pro Tip:</p>
+                  <p className="text-purple-800 mt-1">
+                    On YouTube, click the "...more" button below the video to expand the full description, then copy everything and paste it here.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        )}
+
+        {/* Photo Scan Tab */}
+        {activeTab === 'photo' && (
+        <Card className="border-2 border-emerald-500 shadow-sm bg-gradient-to-br from-emerald-50 to-white">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Camera className="w-5 h-5 text-emerald-600 flex-shrink-0" />
@@ -902,42 +1197,15 @@ return (
             </div>
           </CardContent>
         </Card>
+        )}
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-200" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-gradient-to-br from-slate-50 via-white to-slate-50 px-3 py-1 text-slate-500">Or enter manually</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 pb-24 lg:pb-6">
-          {/* Error Summary */}
-          {showErrors && Object.keys(errors).length > 0 && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
-                    <span className="text-red-600 text-sm font-bold">!</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-red-900 mb-2">Please fix these errors:</h3>
-                    <ul className="space-y-1">
-                      {Object.values(errors).map((error, idx) => (
-                        <li key={idx} className="text-sm text-red-700 break-words">• {error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
+          {/* Manual Input Tab */}
+          {activeTab === 'manual' && (
+          <form onSubmit={handleSubmit} className="space-y-4 pb-24 lg:pb-6">
           {/* Basic Information */}
-          <Card className="border-slate-200 shadow-sm">
+          <Card className="border-2 border-slate-500 shadow-sm bg-gradient-to-br from-slate-50 to-white">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Basic Information</CardTitle>
+              <CardTitle className="text-lg">Add Manually</CardTitle>
               <CardDescription className="text-xs">Review extracted info</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1562,11 +1830,13 @@ return (
             </DialogFooter>
 </DialogContent>
         </Dialog>
-     
+
+          </form>
+          )}
 
         {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
-        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-[100] lg:z-10">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3">
+        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 z-[150] lg:z-10 pointer-events-none">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3 pointer-events-auto">
             {onNavigate && (
               <Button
                 type="button"
@@ -1592,7 +1862,6 @@ return (
             </Button>
         </div>
         </div>
-        </form>
           </div>
         </div>
       </div>
