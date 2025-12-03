@@ -443,7 +443,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
                 <div className="text-sm text-blue-700 mb-4">6 months trial</div>
                 <ul className="text-sm space-y-2 text-blue-800">
                   <li>✓ Full access</li>
-                  <li>✓ All features</li>
+                  <li>✓ All features Meal Planner, Shopping Cart, Groceries</li>
                   <li>✓ Then $1+/month</li>
                 </ul>
               </div>
