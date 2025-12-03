@@ -67,6 +67,27 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
     return mealTypeMap[mealType] || mealType;
   };
 
+  const getDayColorClass = (day: Date): string => {
+    const dayOfWeek = day.getDay();
+    const isLightDay = dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5;
+
+    if (isSameDay(day, selectedDateForView)) {
+      return isLightDay ? 'bg-slate-200 text-slate-900' : 'bg-slate-400 text-white';
+    } else if (isSameDay(day, new Date())) {
+      return 'bg-blue-100 text-blue-600 border-2 border-blue-300';
+    } else {
+      return isLightDay
+        ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+        : 'bg-slate-300 text-slate-900 hover:bg-slate-400';
+    }
+  };
+
+  const getDayHeaderColorClass = (day: Date): string => {
+    const dayOfWeek = day.getDay();
+    const isLightDay = dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5;
+    return isLightDay ? 'bg-slate-100' : 'bg-slate-300';
+  };
+
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [weeksToShow, setWeeksToShow] = useState<1 | 4>(1);
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>([]);
@@ -647,9 +668,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                           className={`flex-shrink-0 rounded-lg p-3 transition-all ${
                             isSameDay(day, selectedDateForView)
                               ? 'bg-blue-600 text-white shadow-lg'
-                              : isSameDay(day, new Date())
-                              ? 'bg-blue-100 text-blue-600 border-2 border-blue-300'
-                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                              : getDayColorClass(day)
                           }`}
                         >
                           <div className="text-xs font-medium text-center">
@@ -756,8 +775,8 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
               <div className={`grid gap-4 ${weeksToShow === 4 ? 'grid-cols-7' : 'grid-cols-7'}`}>
                 {getDaysToShow().map((day, dayIndex) => (
                   <div key={dayIndex} className="space-y-2">
-                    <div className="text-center pb-2 border-b-2 border-slate-200">
-                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    <div className={`text-center pb-2 border-b-2 border-slate-200 rounded-t-lg p-2 ${getDayHeaderColorClass(day)}`}>
+                      <div className="text-xs font-medium text-slate-700 uppercase tracking-wide">
                         {format(day, 'EEE')}
                       </div>
                       <div className={`text-lg font-bold ${

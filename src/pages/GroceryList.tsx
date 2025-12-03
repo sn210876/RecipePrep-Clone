@@ -362,12 +362,44 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
   function getCategoryForIngredient(name: string): string {
     const nameLower = name.toLowerCase();
-    if (nameLower.includes('milk') || nameLower.includes('cheese') || nameLower.includes('yogurt') || nameLower.includes('butter') || nameLower.includes('cream')) return 'dairy';
-    if (nameLower.includes('chicken') || nameLower.includes('beef') || nameLower.includes('pork') || nameLower.includes('fish') || nameLower.includes('meat')) return 'meat';
-    if (nameLower.includes('apple') || nameLower.includes('banana') || nameLower.includes('orange') || nameLower.includes('berry') || nameLower.includes('fruit')) return 'produce';
-    if (nameLower.includes('lettuce') || nameLower.includes('tomato') || nameLower.includes('carrot') || nameLower.includes('onion') || nameLower.includes('vegetable')) return 'produce';
-    if (nameLower.includes('bread') || nameLower.includes('pasta') || nameLower.includes('rice') || nameLower.includes('cereal')) return 'pantry';
-    return 'other';
+
+    // Produce - cat-0
+    if (nameLower.match(/\b(apple|banana|orange|berry|fruit|lettuce|tomato|carrot|onion|vegetable|pepper|cucumber|zucchini|potato|spinach|broccoli|mushroom|garlic|avocado|cilantro|parsley|basil|lemon|lime)\b/)) {
+      return 'cat-0';
+    }
+
+    // Meat & Seafood - cat-1
+    if (nameLower.match(/\b(chicken|beef|pork|turkey|salmon|shrimp|fish|bacon|sausage|meat|seafood)\b/)) {
+      return 'cat-1';
+    }
+
+    // Dairy & Eggs - cat-2
+    if (nameLower.match(/\b(milk|cheese|yogurt|butter|cream|egg|dairy|cheddar|mozzarella|parmesan)\b/)) {
+      return 'cat-2';
+    }
+
+    // Bakery - cat-3
+    if (nameLower.match(/\b(bread|tortilla|buns|rolls|bagels|croissant|bakery)\b/)) {
+      return 'cat-3';
+    }
+
+    // Pantry - cat-4
+    if (nameLower.match(/\b(rice|pasta|flour|sugar|salt|pepper|oil|vinegar|sauce|beans|chickpeas|lentils|broth|stock|honey|peanut butter|spice|seasoning)\b/)) {
+      return 'cat-4';
+    }
+
+    // Frozen - cat-5
+    if (nameLower.match(/\b(frozen|ice cream)\b/)) {
+      return 'cat-5';
+    }
+
+    // Beverages - cat-6
+    if (nameLower.match(/\b(water|juice|coffee|tea|soda|beverage|drink)\b/)) {
+      return 'cat-6';
+    }
+
+    // Other - cat-7
+    return 'cat-7';
   }
 
   async function handleToggleItem(itemId: string) {
