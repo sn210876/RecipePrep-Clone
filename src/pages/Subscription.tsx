@@ -448,30 +448,23 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
                 </ul>
               </div>
 
-           {/* Regular */}
+              {/* Regular */}
               <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
                 <div className="text-lg font-bold text-green-900 mb-2">💚 Pay What You Want</div>
                 <div className="text-3xl font-bold text-green-600 mb-2">$1+</div>
                 <div className="text-sm text-green-700 mb-4">per month</div>
                 <ul className="text-sm space-y-2 text-green-800">
-                  <li className="flex items-start gap-2">
-                    <span className="shrink-0">✓</span>
-                    <span>Full access to include Add Recipe, Meal Planner, Grocery, Shopping</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="shrink-0">✓</span>
-                    <span>Choose your price</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="shrink-0">✓</span>
-                    <span>Support development</span>
-                  </li>
+                  <li>✓ Full access to include Add Recipe, Meal Planner, Grocery, Shopping</li>
+                  <li>✓ Choose your price</li>
+                  <li>✓ Support development</li>
                 </ul>
               </div>
-           </div> {/* This closes the grid container */}
+
+         
+            </div>
           </CardContent>
         </Card>
-      </div> {/* This closes the max-w-4xl mx-auto px-4 py-6 space-y-6 div */}
+      </div>
 
       {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
@@ -488,7 +481,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
           <PricingTiers onSuccess={() => setShowPaymentDialog(false)} />
         </DialogContent>
       </Dialog>
-    </div> {/* This closes the min-h-screen main container */}
+    </div>
   );
 }
 
