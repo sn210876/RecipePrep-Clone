@@ -437,37 +437,37 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
               {/* Early Bird */}
-<div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
-  <div className="text-lg font-bold text-slate-900 mb-2">🎁 Early Bird</div>
-  <div className="text-3xl font-bold text-green-600 mb-2">FREE</div>
-  <div className="text-sm text-slate-900 mb-4">6 months trial</div>
-  <ul className="text-sm space-y-2 text-slate-900">
-    <li><span className="text-green-600">✓</span> Full access for 6 months</li>
-    <li><span className="text-green-600">✓</span> Social Feed, commenting, Blog will remain free</li>
-    <li><span className="text-green-600">✓</span> Then $1+/month</li>
-  </ul>
-</div>
+              <div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
+                <div className="text-lg font-bold text-blue-900 mb-2">🎁 Early Bird</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">FREE</div>
+                <div className="text-sm text-blue-700 mb-4">6 months trial</div>
+                <ul className="text-sm space-y-2 text-blue-800">
+                  <li>✓ Full access for 6 months</li>
+                  <li>✓ Social Feed, commenting, Blog will remain free</li>
+                  <li>✓ Then $1+/month</li>
+                </ul>
+              </div>
 
               {/* Regular */}
-             <div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
-  <div className="text-lg font-bold text-slate-900 mb-2">🎁 Early Bird</div>
-  <div className="text-3xl font-bold text-green-600 mb-2">FREE</div>
-  <div className="text-sm text-slate-700 mb-4">6 months trial</div>
-  <ul className="text-sm space-y-2 text-slate-800">
-    <li className="flex items-start gap-2">
-      <span className="shrink-0 text-green-600">✓</span>
-      <span>Full access for 6 months</span>
-    </li>
-    <li className="flex items-start gap-2">
-      <span className="shrink-0 text-green-600">✓</span>
-      <span>Social Feed, commenting, Blog will remain free</span>
-    </li>
-    <li className="flex items-start gap-2">
-      <span className="shrink-0 text-green-600">✓</span>
-      <span>Then $1+/month</span>
-    </li>
-  </ul>
-</div>
+              <div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
+                <div className="text-lg font-bold text-blue-900 mb-2">🎁 Early Bird</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">FREE</div>
+                <div className="text-sm text-blue-700 mb-4">6 months trial</div>
+                <ul className="text-sm space-y-2 text-blue-800">
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0">✓</span>
+                    <span>Full access for 6 months</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0">✓</span>
+                    <span>Social Feed, commenting, Blog will remain free</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0">✓</span>
+                    <span>Then $1+/month</span>
+                  </li>
+                </ul>
+              </div>
 
          
             </div>
