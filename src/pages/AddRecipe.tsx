@@ -119,6 +119,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
   const loadRecipeForEdit = async (recipeId: string) => {
     try {
+      
       const { getRecipeById } = await import('@/services/recipeService');
       const recipe = await getRecipeById(recipeId);
 
