@@ -454,7 +454,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
                 <div className="text-3xl font-bold text-green-600 mb-2">$1+</div>
                 <div className="text-sm text-green-700 mb-4">per month</div>
                 <ul className="text-sm space-y-2 text-green-800">
-                  <li>✓ Full access</li>
+                  <li>✓ Full access to include Add Recipe, Meal Planner, Grocery, Shopping.</li>
                   <li>✓ Choose your price</li>
                   <li>✓ Support development</li>
                 </ul>
