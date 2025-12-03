@@ -358,62 +358,63 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
     <div className="fixed inset-0 z-50 bg-white overflow-hidden">
       <div className="h-full flex flex-col">
         
-        {/* Header - Mobile Optimized */}
-        <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-2 py-2 sm:px-4 sm:py-3 flex items-center justify-between shadow-lg flex-shrink-0">
-         <div className="flex items-center gap-2 flex-shrink-0">
+       {/* Header - Mobile Optimized */}
+<div className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-2 py-2 sm:px-4 sm:py-3 flex items-center justify-between shadow-lg flex-shrink-0">
+  <div className="flex-1 min-w-0 px-2">
+    <h2 className="text-base sm:text-lg md:text-xl font-bold truncate text-center">
+      {recipe.title}
+    </h2>
+    <p className="text-orange-100 text-[10px] sm:text-xs text-center">
+      Step {currentStep + 1} of {steps.length}
+    </p>
+  </div>
+
+  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+    {recipe.videoUrl && (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => window.open(recipe.videoUrl, '_blank')}
+        className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
+        title="Watch recipe video"
+      >
+        <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
+      </Button>
+    )}
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setSoundEnabled(!soundEnabled)}
+      className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
+    >
+      {soundEnabled ? (
+        <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+      ) : (
+        <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
+      )}
+    </Button>
+  </div>
+</div>
+
+{/* Progress Bar */}
+<div className="w-full bg-gray-200 h-1 sm:h-1.5 flex-shrink-0">
+  <div
+    className="bg-orange-600 h-full transition-all duration-300"
+    style={{ width: `${progress}%` }}
+  />
+</div>
+
+{/* Floating Back Button - Dropped down below header */}
+<div className="absolute top-20 left-4 z-50">
   <Button
     onClick={onClose}
-    className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/50 h-10 px-4 flex items-center gap-2 font-bold rounded-xl shadow-lg active:scale-95 transition-all"
+    className="bg-white/95 hover:bg-white text-orange-600 border-2 border-orange-500 h-12 px-5 flex items-center gap-2 font-bold rounded-xl shadow-xl active:scale-95 transition-all"
     title="Back to recipes"
   >
     <ArrowLeft className="w-5 h-5" />
     <span className="text-sm">Back</span>
   </Button>
 </div>
-
-          <div className="flex-1 min-w-0 px-2">
-            <h2 className="text-base sm:text-lg md:text-xl font-bold truncate text-center">
-              {recipe.title}
-            </h2>
-            <p className="text-orange-100 text-[10px] sm:text-xs text-center">
-              Step {currentStep + 1} of {steps.length}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            {recipe.videoUrl && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => window.open(recipe.videoUrl, '_blank')}
-                className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
-                title="Watch recipe video"
-              >
-                <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
-            >
-              {soundEnabled ? (
-                <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
-              ) : (
-                <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 h-1 sm:h-1.5 flex-shrink-0">
-          <div
-            className="bg-orange-600 h-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
 
         {/* Scrollable Content */}
         <div className="flex-1 min-h-0 overflow-y-auto">
