@@ -332,8 +332,13 @@ async function extractFromYouTubeHybrid(url: string, videoId: string): Promise<E
       () => getYouTubeVideoData(videoId)
     );
 
-    if (hasRecipeInDescription(videoData.description)) {
-      console.log('[Extractor] ✅ Recipe found in description! Using fast extraction...');
+    const hasRecipeKeywords = hasRecipeInDescription(videoData.description);
+    console.log(`[Extractor] Recipe keywords found: ${hasRecipeKeywords}`);
+
+    // ALWAYS try description extraction, even if keywords aren't detected
+    // The AI backend is smart enough to find recipes even without obvious keywords
+    try {
+      console.log('[Extractor] Attempting AI-powered description extraction...');
 
       const descriptionRecipe = await trackExtraction(
         url,
@@ -347,13 +352,23 @@ async function extractFromYouTubeHybrid(url: string, videoId: string): Promise<E
         })
       );
 
-      // Format the response to match ExtractedRecipeData
-      return formatDescriptionRecipe(descriptionRecipe, url, videoData);
+      // Check if we got valid recipe data
+      if (descriptionRecipe &&
+          descriptionRecipe.ingredients &&
+          descriptionRecipe.ingredients.length > 0 &&
+          descriptionRecipe.instructions &&
+          descriptionRecipe.instructions.length > 0) {
+        console.log('[Extractor] ✅ Recipe successfully extracted from description!');
+        return formatDescriptionRecipe(descriptionRecipe, url, videoData);
+      }
+
+      console.log('[Extractor] Description extraction returned incomplete data, trying audio...');
+    } catch (descError: any) {
+      console.log('[Extractor] Description extraction failed:', descError.message);
     }
 
-    console.log('[Extractor] No recipe in description, falling back to audio transcription...');
-
-    // STEP 2: Fall back to audio transcription (slow & expensive)
+    // STEP 2: Fall back to audio transcription only if description extraction failed
+    console.log('[Extractor] Falling back to audio transcription...');
     return await trackExtraction(
       url,
       'YouTube',
@@ -368,17 +383,6 @@ async function extractFromYouTubeHybrid(url: string, videoId: string): Promise<E
     if (error.message?.includes('404') || error.message?.includes('YouTube API error')) {
       console.log('[Extractor] YouTube metadata endpoint not available. Backend needs deployment.');
       throw new Error('YouTube extraction temporarily unavailable. Please copy and paste the video description from YouTube into the recipe form manually, or wait for the server to update.');
-    }
-
-    // STEP 3: Last resort - try audio extraction
-    if (error.message?.includes('quota') || error.message?.includes('API')) {
-      console.log('[Extractor] YouTube API issue, falling back to audio extraction...');
-      return await trackExtraction(
-        url,
-        'YouTube',
-        'audio-fallback',
-        () => extractFromRenderServer(url)
-      );
     }
 
     throw error;
