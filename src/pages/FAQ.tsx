@@ -51,64 +51,7 @@ export function FAQ() {
               </Accordion>
             </CardContent>
           </Card>
-
-        {/* Adding Recipes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <FileText className="w-6 h-6 text-blue-600" />
-                Managing Recipes
-              </CardTitle>
-              <CardDescription>Learn how to import recipes from various sources</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-4">
-                  <AccordionTrigger>How does URL extraction work?</AccordionTrigger>
-                  <AccordionContent>
-                    Simply paste any recipe URL and our AI will automatically extract the title, ingredients, instructions, cooking times, and more. We support all major recipe websites, blogs, and social media platforms including Instagram, TikTok, and YouTube.
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="item-5">
-                  <AccordionTrigger>What should I do if YouTube extraction fails?</AccordionTrigger>
-                  <AccordionContent>
-                    If you see a bot detection error, use the purple "Paste Notes" tab! Just copy the video description from YouTube (click "...more" to expand it) and paste it into Meal Scrape. Our AI will extract the recipe in 2-5 seconds with 95%+ accuracy.
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="item-6">
-                  <AccordionTrigger>Can I extract recipes from photos?</AccordionTrigger>
-                  <AccordionContent>
-                    Yes! Use the "Upload Photo" tab to scan recipe cards, cookbook pages, or handwritten recipes. Our AI uses OCR technology to read the text and structure it into a proper recipe format. You can upload up to 4 photos at once.
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="item-7">
-                  <AccordionTrigger>How accurate is the AI extraction?</AccordionTrigger>
-                  <AccordionContent>
-                    Our AI is 85-95% accurate depending on the source. We always show you a preview before saving, so you can review and edit any details. Most recipes need only minor tweaks like adjusting measurements or reordering steps.
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="item-8">
-                  <AccordionTrigger>Which websites are supported?</AccordionTrigger>
-                  <AccordionContent>
-                    We support virtually all recipe websites and blogs including AllRecipes, Food Network, Bon Appétit, Serious Eats, and thousands more. Social media platforms like Instagram, TikTok, and YouTube are also supported. If a site has a recipe, we can extract it!
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="item-9">
-                  <AccordionTrigger>Why is extraction taking so long?</AccordionTrigger>
-                  <AccordionContent>
-                    URL extraction typically takes 5-15 seconds for most websites. Instagram and TikTok videos may take 30-60 seconds due to audio transcription. If it's your first request of the day, the server may need 20-30 seconds to wake up. For instant results, use the "Paste Notes" or "Upload Photo" options which take only 2-5 seconds.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-
-       {/* Recipe Extraction */}
+  {/* Recipe Extraction */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
@@ -237,6 +180,63 @@ export function FAQ() {
                     </div>
                   </AccordionContent>
                 </AccordionItem>
+        {/* Adding Recipes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <FileText className="w-6 h-6 text-blue-600" />
+                Managing Recipes
+              </CardTitle>
+              <CardDescription>Learn how to import recipes from various sources</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-4">
+                  <AccordionTrigger>How does URL extraction work?</AccordionTrigger>
+                  <AccordionContent>
+                    Simply paste any recipe URL and our AI will automatically extract the title, ingredients, instructions, cooking times, and more. We support all major recipe websites, blogs, and social media platforms including Instagram, TikTok, and YouTube.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-5">
+                  <AccordionTrigger>What should I do if YouTube extraction fails?</AccordionTrigger>
+                  <AccordionContent>
+                    If you see a bot detection error, use the purple "Paste Notes" tab! Just copy the video description from YouTube (click "...more" to expand it) and paste it into Meal Scrape. Our AI will extract the recipe in 2-5 seconds with 95%+ accuracy.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-6">
+                  <AccordionTrigger>Can I extract recipes from photos?</AccordionTrigger>
+                  <AccordionContent>
+                    Yes! Use the "Upload Photo" tab to scan recipe cards, cookbook pages, or handwritten recipes. Our AI uses OCR technology to read the text and structure it into a proper recipe format. You can upload up to 4 photos at once.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-7">
+                  <AccordionTrigger>How accurate is the AI extraction?</AccordionTrigger>
+                  <AccordionContent>
+                    Our AI is 85-95% accurate depending on the source. We always show you a preview before saving, so you can review and edit any details. Most recipes need only minor tweaks like adjusting measurements or reordering steps.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-8">
+                  <AccordionTrigger>Which websites are supported?</AccordionTrigger>
+                  <AccordionContent>
+                    We support virtually all recipe websites and blogs including AllRecipes, Food Network, Bon Appétit, Serious Eats, and thousands more. Social media platforms like Instagram, TikTok, and YouTube are also supported. If a site has a recipe, we can extract it!
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-9">
+                  <AccordionTrigger>Why is extraction taking so long?</AccordionTrigger>
+                  <AccordionContent>
+                    URL extraction typically takes 5-15 seconds for most websites. Instagram and TikTok videos may take 30-60 seconds due to audio transcription. If it's your first request of the day, the server may need 20-30 seconds to wake up. For instant results, use the "Paste Notes" or "Upload Photo" options which take only 2-5 seconds.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+
+     
 
                 <AccordionItem value="item-11">
                   <AccordionTrigger>Can I edit recipes after saving?</AccordionTrigger>
