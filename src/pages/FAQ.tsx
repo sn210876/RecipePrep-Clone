@@ -119,14 +119,121 @@ export function FAQ() {
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-10">
+               <AccordionItem value="item-10">
                   <AccordionTrigger>What are the 4 ways to add recipes?</AccordionTrigger>
                   <AccordionContent>
-                    <div className="space-y-2">
-                      <p><strong>1. Import From URL</strong> - Paste any recipe link for automatic extraction (5-15 seconds)</p>
-                      <p><strong>2. Paste Notes</strong> - Copy/paste video descriptions or recipe text for instant extraction (2-5 seconds)</p>
-                      <p><strong>3. Upload Photo</strong> - Scan recipe cards or cookbook pages with AI (2-5 seconds)</p>
-                      <p><strong>4. Input Manually</strong> - Type in recipes by hand for full control</p>
+                    <div className="space-y-4">
+                      {/* From Social Media/URLs */}
+                      <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg p-4 border border-purple-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                            <Link2 className="w-4 h-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-slate-900">1. Import From URL</h4>
+                        </div>
+                        <ol className="space-y-2 text-sm text-slate-700 ml-2">
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-purple-600 shrink-0">•</span>
+                            <span>For social media, click "Share" button → "Copy" link</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-purple-600 shrink-0">•</span>
+                            <span>For websites, click "Ctrl/CMD + C" over hyperlink</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-purple-600 shrink-0">•</span>
+                            <span>Open Meal Scrape → Add Recipe → "Import From URL" → Paste → "Extract Recipe"</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-purple-600 shrink-0">•</span>
+                            <span>Revise in "Input Manually" tab if needed</span>
+                          </li>
+                        </ol>
+                        <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes 5-15 seconds</p>
+                      </div>
+
+                      {/* Paste Notes */}
+                      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-lg p-4 border border-orange-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                            <FileText className="w-4 h-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-slate-900">2. Paste Notes</h4>
+                        </div>
+                        <ol className="space-y-2 text-sm text-slate-700 ml-2">
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-orange-600 shrink-0">•</span>
+                            <span>Click "Add Recipe" → "Paste Notes" tab</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-orange-600 shrink-0">•</span>
+                            <span>Paste personal notes or video transcript from online source</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-orange-600 shrink-0">•</span>
+                            <span>Click "Extract" and edit as needed in "Input Manually"</span>
+                          </li>
+                        </ol>
+                        <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes 2-5 seconds (fastest!)</p>
+                      </div>
+
+                      {/* Upload Photos */}
+                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-4 border border-blue-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+                            <Camera className="w-4 h-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-slate-900">3. Upload Photos</h4>
+                        </div>
+                        <ol className="space-y-2 text-sm text-slate-700 ml-2">
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-blue-600 shrink-0">•</span>
+                            <span>Screenshot recipe from device</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-blue-600 shrink-0">•</span>
+                            <span>Open Meal Scrape → Add Recipe → Upload Photos</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-blue-600 shrink-0">•</span>
+                            <span>Select your photo(s) → Upload</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-blue-600 shrink-0">•</span>
+                            <span>Edit in the "Input Manually" tab</span>
+                          </li>
+                        </ol>
+                        <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes 2-5 seconds</p>
+                      </div>
+
+                      {/* Manual Input */}
+                      <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg p-4 border border-slate-200">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-500 to-gray-600 flex items-center justify-center">
+                            <FileText className="w-4 h-4 text-white" />
+                          </div>
+                          <h4 className="font-semibold text-slate-900">4. Input Manually</h4>
+                        </div>
+                        <p className="text-sm text-slate-700 ml-2">
+                          Type in recipes by hand for full control over every detail
+                        </p>
+                        <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes as long as you need</p>
+                      </div>
+
+                      {/* Pro Tip */}
+                      <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-4 border-2 border-blue-200">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-slate-900 mb-1">Pro Tip</h4>
+                            <p className="text-sm text-slate-700 leading-relaxed">
+                              For YouTube videos with bot detection errors, use "Paste Notes" instead! Copy the video description and paste it directly - works every time.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
