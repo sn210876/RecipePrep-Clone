@@ -360,17 +360,16 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
         
         {/* Header - Mobile Optimized */}
         <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-2 py-2 sm:px-4 sm:py-3 flex items-center justify-between shadow-lg flex-shrink-0">
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-white hover:bg-white/20 bg-white/10 border border-white/30 h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 rounded-lg"
-              title="Back to recipes"
-            >
-              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-            </Button>
-          </div>
+         <div className="flex items-center gap-2 flex-shrink-0">
+  <Button
+    onClick={onClose}
+    className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/50 h-10 px-4 flex items-center gap-2 font-bold rounded-xl shadow-lg active:scale-95 transition-all"
+    title="Back to recipes"
+  >
+    <ArrowLeft className="w-5 h-5" />
+    <span className="text-sm">Back</span>
+  </Button>
+</div>
 
           <div className="flex-1 min-w-0 px-2">
             <h2 className="text-base sm:text-lg md:text-xl font-bold truncate text-center">
