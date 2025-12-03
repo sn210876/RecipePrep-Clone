@@ -468,9 +468,10 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
                   </li>
                 </ul>
               </div>
-            </div> {/* This closes the grid container */}
+           </div> {/* This closes the grid container */}
           </CardContent>
         </Card>
+      </div> {/* This closes the max-w-4xl mx-auto px-4 py-6 space-y-6 div */}
 
       {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
@@ -487,7 +488,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
           <PricingTiers onSuccess={() => setShowPaymentDialog(false)} />
         </DialogContent>
       </Dialog>
-    </div>
+    </div> {/* This closes the min-h-screen main container */}
   );
 }
 
