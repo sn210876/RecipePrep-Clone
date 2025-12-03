@@ -379,7 +379,7 @@ export function FAQ() {
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="item-25">
-                  <AccordionTrigger>The extraction isn't working?</AccordionTrigger>
+                  <AccordionTrigger>The extraction isn't working</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2">
                       <p>Try these steps in order:</p>
