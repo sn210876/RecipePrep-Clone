@@ -85,7 +85,7 @@ export function FAQ() {
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="font-semibold text-purple-600 shrink-0">•</span>
-                            <span>Open Meal Scrape → Add Recipe → "Import From URL" → Paste → "Extract Recipe"</span>
+                            <span>Open Meal Scrape → Add Recipe → "Import From URL" → Paste → "Scrape Recipe"</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="font-semibold text-purple-600 shrink-0">•</span>
@@ -206,7 +206,7 @@ export function FAQ() {
                 </AccordionItem>
 
                 <AccordionItem value="item-6">
-                  <AccordionTrigger>Can I extract recipes from photos?</AccordionTrigger>
+                  <AccordionTrigger>Can I scrape recipes from photos?</AccordionTrigger>
                   <AccordionContent>
                     Yes! Use the "Upload Photo" tab to scan recipe cards, cookbook pages, or handwritten recipes. Our AI uses OCR technology to read the text and structure it into a proper recipe format. You can upload up to 4 photos at once.
                   </AccordionContent>
