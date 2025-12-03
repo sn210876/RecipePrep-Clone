@@ -62,7 +62,7 @@ export function FAQ() {
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
-               <AccordionItem value="item-10">
+               <AccordionItem value="item-10" className="border-none">
                   <AccordionTrigger>What are the 4 ways to add recipes?</AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-4">
