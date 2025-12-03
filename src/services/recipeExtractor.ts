@@ -182,8 +182,8 @@ if (isSocial) {
       difficulty: 'Medium',
       mealTypes: ['Dinner'],
       dietaryTags: [],
-      imageUrl: finalImageUrl, // ✅ Now using proxied URL
-      videoUrl: undefined, // ❌ Don't save video URL
+      imageUrl: finalImageUrl,
+      videoUrl: url,
       notes: `Recipe from ${data.channel || data.creator || 'video'}`,
       sourceUrl: url,
     };
@@ -496,7 +496,7 @@ async function extractFromRenderServer(url: string): Promise<ExtractedRecipeData
       mealTypes: ['Dinner'],
       dietaryTags: [],
       imageUrl: finalImageUrl,
-      videoUrl: undefined,
+      videoUrl: url,
       notes: `Recipe from ${data.channel || data.creator || 'video'}`,
       sourceUrl: url,
     };
@@ -733,7 +733,7 @@ export async function extractRecipeFromPhoto(imageFiles: File[]): Promise<Extrac
       mealTypes: ['Dinner'],
       dietaryTags: data.dietary_tags || [],
       imageUrl: compressedImages[0],
-      videoUrl: undefined,
+      videoUrl: '',
       notes: data.notes || `Scanned from ${imageFiles.length} photo${imageFiles.length > 1 ? 's' : ''}`,
       sourceUrl: ''
     };
