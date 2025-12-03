@@ -88,6 +88,23 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
     return isLightDay ? 'bg-slate-100' : 'bg-slate-300';
   };
 
+  const getMealSlotBackgroundClass = (day: Date, hasMeal: boolean, isSelectable: boolean): string => {
+    const dayOfWeek = day.getDay();
+    const isLightDay = dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5;
+
+    if (isSelectable) {
+      return isLightDay
+        ? 'border-orange-400 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-500'
+        : 'border-orange-400 bg-orange-100 cursor-pointer hover:bg-orange-200 hover:border-orange-500';
+    }
+
+    if (hasMeal) {
+      return isLightDay ? 'bg-white' : 'bg-slate-50';
+    }
+
+    return isLightDay ? 'bg-slate-50/30' : 'bg-slate-200/40';
+  };
+
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [weeksToShow, setWeeksToShow] = useState<1 | 4>(1);
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>([]);
@@ -701,11 +718,11 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                           }
                         }}
                         className={`rounded-lg border-2 overflow-hidden transition-all ${
+                          getMealSlotBackgroundClass(selectedDateForView, !!meal, !!(selectedRecipeForAssignment && !meal))
+                        } ${
                           meal
-                            ? 'bg-white border-slate-200 shadow-sm'
-                            : selectedRecipeForAssignment
-                            ? 'border-orange-400 bg-orange-50 border-dashed cursor-pointer active:bg-orange-100'
-                            : 'border-slate-200 bg-slate-50 border-dashed'
+                            ? 'border-slate-300 border-solid shadow-sm'
+                            : 'border-slate-200 border-dashed'
                         }`}
                       >
                         {meal && meal.recipe ? (
@@ -800,11 +817,8 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                             className={`
                               min-h-[100px] rounded-lg border-2 p-2
                               transition-all relative group
-                              ${selectedRecipeForAssignment && !meal
-                                ? 'border-orange-400 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-500 border-dashed'
-                                : 'border-slate-200 bg-slate-50/50'
-                              }
-                              ${meal ? 'border-solid bg-white hover:shadow-md' : 'border-dashed'}
+                              ${getMealSlotBackgroundClass(day, !!meal, !!(selectedRecipeForAssignment && !meal))}
+                              ${meal ? 'border-solid border-slate-300 hover:shadow-md' : 'border-dashed border-slate-200'}
                             `}
                           >
                             {meal && meal.recipe ? (
