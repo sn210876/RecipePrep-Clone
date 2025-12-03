@@ -117,11 +117,19 @@ useEffect(() => {
         SplashScreen.hide();
       }, 1000);
       
-      // Handle Android back button
-      CapApp.addListener('backButton', ({ canGoBack }) => {
-        if (!canGoBack) {
+      // Handle Android back button - IMPROVED
+      CapApp.addListener('backButton', (data) => {
+        console.log('Back button pressed, canGoBack:', data.canGoBack);
+
+        // Check if we're on the home page
+        const isHomePage = window.location.pathname === '/' ||
+                          window.location.pathname === '/discover-recipes';
+
+        if (isHomePage && !data.canGoBack) {
+          // Exit app if on home page with no history
           CapApp.exitApp();
         } else {
+          // Navigate back in history
           window.history.back();
         }
       });

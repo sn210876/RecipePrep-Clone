@@ -112,6 +112,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       setIsEditMode(true);
       setActiveTab('manual');
       loadRecipeForEdit(editId);
+      hasRestoredFromSession.current = true;
       return;
     }
 
@@ -135,13 +136,15 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           setNotes(data.notes || '');
           setUrlInput(data.urlInput || '');
           setActiveTab(data.activeTab || 'url');
-          hasRestoredFromSession.current = true;
           console.log('[AddRecipe] ✅ Restored form data from session');
         }
       } catch (e) {
         console.error('Failed to restore form data:', e);
       }
     }
+
+    // Mark as restored even if no data was found
+    hasRestoredFromSession.current = true;
   }, []);
 
   const loadRecipeForEdit = async (recipeId: string) => {
