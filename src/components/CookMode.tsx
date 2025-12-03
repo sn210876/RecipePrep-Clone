@@ -29,6 +29,8 @@ interface CookModeProps {
 }
 
 export function CookMode({ recipe, onClose }: CookModeProps) {
+  console.log('[CookMode] Recipe videoUrl:', recipe.videoUrl);
+
   const [currentStep, setCurrentStep] = useState(0);
   const [checkedIngredients, setCheckedIngredients] = useState(new Set());
   const [checkedSteps, setCheckedSteps] = useState(new Set());

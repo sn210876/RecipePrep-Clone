@@ -9,11 +9,19 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ videoUrl, className = '' }: VideoPlayerProps) {
-  const [parsedVideo, setParsedVideo] = useState<ParsedVideo | null>(() => parseVideoUrl(videoUrl));
+  const [parsedVideo, setParsedVideo] = useState<ParsedVideo | null>(() => {
+    console.log('[VideoPlayer] Received URL:', videoUrl);
+    const parsed = parseVideoUrl(videoUrl);
+    console.log('[VideoPlayer] Parsed result:', parsed);
+    return parsed;
+  });
 
   if (!parsedVideo) {
+    console.log('[VideoPlayer] ❌ Failed to parse video URL, not rendering player');
     return null;
   }
+
+  console.log('[VideoPlayer] ✅ Rendering player for platform:', parsedVideo.platform);
 
   const getPlatformName = () => {
     switch (parsedVideo.platform) {
