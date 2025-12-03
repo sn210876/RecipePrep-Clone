@@ -466,7 +466,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
   <ul className="text-sm space-y-2 text-slate-900">
     <li className="flex items-start gap-2">
       <span className="shrink-0 text-green-600">✓</span>
-      <span>Full access to include Add Recipe, Meal Planner, Grocery, Shopping</span>
+      <span>Full access to include Add Recipe, Meal Planner, Grocery, Cart</span>
     </li>
     <li className="flex items-start gap-2">
       <span className="shrink-0 text-green-600">✓</span>
