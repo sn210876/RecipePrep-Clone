@@ -1035,7 +1035,7 @@ return (
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-black-600 min-w-[14px]">2.</span>
-                    <span>Click <span className="font-bold text-blue-600">"Extract Recipe"</span></span>
+                    <span>Click <span className="font-bold text-blue-600">"Scrape Recipe"</span></span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-black-600 min-w-[14px]">3.</span>
@@ -1146,7 +1146,7 @@ return (
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Extract Recipe</span>
+                  <span className="text-sm">Scrape Recipe</span>
                 </>
               )}
             </Button>
