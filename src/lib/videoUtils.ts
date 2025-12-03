@@ -109,7 +109,7 @@ function parseInstagramUrl(url: string): ParsedVideo | null {
       return null;
     }
 
-    const embedUrl = `https://www.instagram.com/${type}/${postId}/embed`;
+    const embedUrl = `https://www.instagram.com/${type}/${postId}/embed/captioned/?cr=1&v=14`;
 
     return {
       platform: 'instagram',

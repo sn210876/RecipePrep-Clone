@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { parseVideoUrl, type ParsedVideo } from '@/lib/videoUtils';
-import { ExternalLink, Video } from 'lucide-react';
+import { ExternalLink, Video, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface VideoPlayerProps {
@@ -15,6 +15,18 @@ export function VideoPlayer({ videoUrl, className = '' }: VideoPlayerProps) {
     console.log('[VideoPlayer] Parsed result:', parsed);
     return parsed;
   });
+
+  const [embedError, setEmbedError] = useState(false);
+  const [loadAttempted, setLoadAttempted] = useState(false);
+
+  useEffect(() => {
+    if (parsedVideo?.platform === 'instagram' || parsedVideo?.platform === 'tiktok') {
+      const timer = setTimeout(() => {
+        setLoadAttempted(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [parsedVideo]);
 
   if (!parsedVideo) {
     console.log('[VideoPlayer] ❌ Failed to parse video URL, not rendering player');
@@ -104,14 +116,27 @@ export function VideoPlayer({ videoUrl, className = '' }: VideoPlayerProps) {
           )}
 
           {parsedVideo.platform === 'instagram' && (
-            <iframe
-              src={parsedVideo.embedUrl}
-              className="absolute inset-0 w-full h-full"
-              allowFullScreen
-              title="Instagram Recipe Video"
-              loading="lazy"
-              scrolling="no"
-            />
+            <>
+              <iframe
+                src={parsedVideo.embedUrl}
+                className="absolute inset-0 w-full h-full border-0"
+                allowFullScreen
+                title="Instagram Recipe Video"
+                loading="lazy"
+                scrolling="no"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+                onError={() => setEmbedError(true)}
+              />
+              {(embedError || (loadAttempted && !embedError)) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 p-4">
+                  <AlertCircle className="w-12 h-12 text-pink-500 mb-3" />
+                  <p className="text-sm text-gray-700 text-center mb-3 max-w-xs">
+                    Instagram video embed may not display. Tap "Open" above to watch in Instagram.
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           {parsedVideo.platform === 'tiktok' && (
