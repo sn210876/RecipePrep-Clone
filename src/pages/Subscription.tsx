@@ -449,7 +449,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
               </div>
 
               {/* Regular */}
-              <div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
+             <div className="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
                 <div className="text-lg font-bold text-blue-900 mb-2">🎁 Early Bird</div>
                 <div className="text-3xl font-bold text-blue-600 mb-2">FREE</div>
                 <div className="text-sm text-blue-700 mb-4">6 months trial</div>
