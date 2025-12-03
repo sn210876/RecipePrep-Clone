@@ -334,24 +334,42 @@ useEffect(() => {
   };
 
   // Beautiful hourglass while loading or checking email
-  if (loading || (user && isEmailVerified === undefined)) {
+ if (loading || (user && isEmailVerified === undefined)) {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative w-20 h-28">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-12 border-8 border-orange-300 rounded-t-full"></div>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-12 border-8 border-orange-300 rounded-b-full"></div>
-            <div className="absolute top-10 left-1/2 -translate-x-1/2 w-1 bg-orange-600 origin-top animate-sand"></div>
+          <div className="relative w-64 h-64">
+            <img 
+              src="https://i.imgur.com/your-uploaded-image.jpg" 
+              alt="Loading"
+              className="w-full h-full object-contain animate-bowl-splash"
+            />
           </div>
-          <p className="mt-8 text-lg font-medium text-orange-800">Preparing your kitchen…</p>
         </div>
 
         <style>{`
-          @keyframes sand {
-            0%, 100% { height: 0; opacity: 1; }
-            50% { height: 40px; opacity: 1; }
+          @keyframes bowl-splash {
+            0%, 100% { 
+              transform: scale(1);
+            }
+            50% { 
+              transform: scale(1.1);
+            }
           }
-          .animate-sand { animation: sand 2.4s infinite ease-in-out; }
+          @keyframes splash-out {
+            0%, 100% {
+              transform: translateY(0) scale(1);
+              opacity: 1;
+            }
+            50% {
+              transform: translateY(-20px) scale(1.2);
+              opacity: 0.8;
+            }
+          }
+          .animate-bowl-splash { 
+            animation: bowl-splash 1.5s ease-in-out infinite, splash-out 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 10px 30px rgba(255, 107, 53, 0.3));
+          }
         `}</style>
       </div>
     );
