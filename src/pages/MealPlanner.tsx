@@ -85,7 +85,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   const getDayHeaderColorClass = (day: Date): string => {
     const dayOfWeek = day.getDay();
     const isLightDay = dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5;
-    return isLightDay ? 'bg-slate-100' : 'bg-slate-300';
+    return isLightDay ? 'bg-white' : 'bg-slate-300';
   };
 
   const getMealSlotBackgroundClass = (day: Date, hasMeal: boolean, isSelectable: boolean): string => {
@@ -95,14 +95,14 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
     if (isSelectable) {
       return isLightDay
         ? 'border-orange-400 bg-orange-50 cursor-pointer hover:bg-orange-100 hover:border-orange-500'
-        : 'border-orange-400 bg-orange-100 cursor-pointer hover:bg-orange-200 hover:border-orange-500';
+        : 'border-orange-400 bg-orange-200 cursor-pointer hover:bg-orange-300 hover:border-orange-500';
     }
 
     if (hasMeal) {
-      return isLightDay ? 'bg-white' : 'bg-slate-50';
+      return isLightDay ? 'bg-white' : 'bg-slate-100';
     }
 
-    return isLightDay ? 'bg-slate-50/30' : 'bg-slate-200/40';
+    return isLightDay ? 'bg-white' : 'bg-slate-200';
   };
 
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
