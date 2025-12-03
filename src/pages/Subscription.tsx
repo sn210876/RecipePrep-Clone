@@ -464,9 +464,18 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
   <div className="text-3xl font-bold text-green-600 mb-2">$1+</div>
   <div className="text-sm text-slate-900 mb-4">per month</div>
   <ul className="text-sm space-y-2 text-slate-900">
-    <li><span className="text-green-600">✓</span> Full access to include Add Recipe, Meal Planner, Grocery, Shopping</li>
-    <li><span className="text-green-600">✓</span> Choose your price</li>
-    <li><span className="text-green-600">✓</span> Support development</li>
+    <li className="flex items-start gap-2">
+      <span className="shrink-0 text-green-600">✓</span>
+      <span>Full access to include Add Recipe, Meal Planner, Grocery, Shopping</span>
+    </li>
+    <li className="flex items-start gap-2">
+      <span className="shrink-0 text-green-600">✓</span>
+      <span>Choose your price</span>
+    </li>
+    <li className="flex items-start gap-2">
+      <span className="shrink-0 text-green-600">✓</span>
+      <span>Support development</span>
+    </li>
   </ul>
 </div>
 
