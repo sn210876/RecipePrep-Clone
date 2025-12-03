@@ -283,13 +283,36 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         return mealDate >= start && mealDate <= end;
       });
 
+      if (mealsInRange.length === 0) {
+        dispatch({
+          type: 'UPDATE_GROCERY_LIST',
+          payload: dbGroceryItems
+        });
+        toast.info('No meals planned in selected date range');
+        return;
+      }
+
+      const recipeIds = [...new Set(mealsInRange.map(meal => meal.recipeId))];
+
+      const { data: recipes, error: recipeError } = await supabase
+        .from('public_recipes')
+        .select('*')
+        .in('id', recipeIds);
+
+      if (recipeError) {
+        console.error('Error fetching recipes:', recipeError);
+        toast.error('Failed to fetch recipes from meal planner');
+        return;
+      }
+
       const ingredientsToAdd: { [key: string]: GroceryListItem } = {};
 
       mealsInRange.forEach(meal => {
-        const recipe = state.savedRecipes.find(r => r.id === meal.recipeId);
-        if (recipe) {
-          recipe.ingredients.forEach(ing => {
-            const key = `${ing.name.toLowerCase()}-${ing.unit}`;
+        const recipe = recipes.find(r => r.id === meal.recipeId);
+        if (recipe && recipe.ingredients) {
+          const ingredients = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+          ingredients.forEach((ing: any) => {
+            const key = `${ing.name.toLowerCase()}-${ing.unit || ''}`;
             if (ingredientsToAdd[key]) {
               ingredientsToAdd[key].quantity += parseFloat(ing.quantity) || 0;
               if (!ingredientsToAdd[key].sourceRecipeIds.includes(recipe.id)) {
