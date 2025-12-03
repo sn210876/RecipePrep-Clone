@@ -108,12 +108,12 @@ export function FAQ() {
             </CardContent>
           </Card>
 
-          {/* Adding Recipes */}
+       {/* Recipe Extraction */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
-                <FileText className="w-6 h-6 text-blue-600" />
-                Managing Recipes
+                <Link2 className="w-6 h-6 text-blue-600" />
+                Recipe Extraction
               </CardTitle>
               <CardDescription>Learn how to add, edit, and organize your recipes</CardDescription>
             </CardHeader>
