@@ -178,7 +178,7 @@ export function FAQ() {
                         </div>
                       </div>
                     </div>
-                  </AccordionContent>
+                  </div>
                 </AccordionItem>
         {/* Adding Recipes */}
           <Card>
