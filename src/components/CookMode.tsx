@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Recipe } from '../types/recipe';
+import { VideoPlayer } from './VideoPlayer';
 
 import {
   ChevronLeft,
@@ -569,6 +570,11 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
                 })}
               </div>
             </div>
+
+            {/* Video Player */}
+            {recipe.videoUrl && (
+              <VideoPlayer videoUrl={recipe.videoUrl} />
+            )}
 
             {/* Current Step - Swipeable */}
             <div
