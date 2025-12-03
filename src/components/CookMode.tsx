@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Recipe } from '../types/recipe';
-import { VideoPlayer } from './VideoPlayer';
 
 import {
   ChevronLeft,
@@ -21,6 +20,8 @@ import {
   Minus,
   Mic,
   MicOff,
+  ExternalLink,
+  ArrowLeft,
 } from 'lucide-react';
 
 interface CookModeProps {
@@ -359,15 +360,37 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
         
         {/* Header - Mobile Optimized */}
         <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between shadow-lg flex-shrink-0">
-          <div className="flex-1 min-w-0 mr-2">
-            <h2 className="text-base sm:text-lg md:text-xl font-bold truncate">
-              {recipe.title}
-            </h2>
-            <p className="text-orange-100 text-[10px] sm:text-xs">
-              Step {currentStep + 1} of {steps.length}
-            </p>
+          <div className="flex items-center gap-2 flex-1 min-w-0 mr-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
+              title="Back to recipes"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-lg md:text-xl font-bold truncate">
+                {recipe.title}
+              </h2>
+              <p className="text-orange-100 text-[10px] sm:text-xs">
+                Step {currentStep + 1} of {steps.length}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            {recipe.videoUrl && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => window.open(recipe.videoUrl, '_blank')}
+                className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
+                title="Watch recipe video"
+              >
+                <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -379,14 +402,6 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               ) : (
                 <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-white hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9"
-            >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
         </div>
@@ -573,10 +588,6 @@ export function CookMode({ recipe, onClose }: CookModeProps) {
               </div>
             </div>
 
-            {/* Video Player */}
-            {recipe.videoUrl && (
-              <VideoPlayer videoUrl={recipe.videoUrl} />
-            )}
 
             {/* Current Step - Swipeable */}
             <div

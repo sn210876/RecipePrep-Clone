@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -99,21 +99,48 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [videoTitle, setVideoTitle] = useState('');
   const [isExtractingFromDescription, setIsExtractingFromDescription] = useState(false);
   const [activeTab, setActiveTab] = useState<'url' | 'description' | 'photo' | 'manual'>('url');
+  const hasRestoredFromSession = useRef(false);
 
-  // Load recipe for editing if edit parameter is present
-  
-   useEffect(() => {
+  // Restore form data on mount FIRST (before checking for edit)
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const editId = params.get('edit');
 
-    console.log('[AddRecipe] Checking for edit param:', editId);
-    console.log('[AddRecipe] Current URL:', window.location.href);
-
     if (editId) {
+      console.log('[AddRecipe] Edit mode detected, skipping session restore');
       setEditRecipeId(editId);
       setIsEditMode(true);
       setActiveTab('manual');
       loadRecipeForEdit(editId);
+      return;
+    }
+
+    const savedData = sessionStorage.getItem('addRecipeFormData');
+    if (savedData && !hasRestoredFromSession.current) {
+      try {
+        const data = JSON.parse(savedData);
+        if (data.title || data.ingredients?.some((i: Ingredient) => i.name)) {
+          setTitle(data.title || '');
+          setIngredients(data.ingredients || [{ quantity: '', unit: 'cup', name: '' }]);
+          setInstructions(data.instructions || ['']);
+          setPrepTime(data.prepTime || '');
+          setCookTime(data.cookTime || '');
+          setServings(data.servings || '');
+          setCuisineType(data.cuisineType || '');
+          setDifficulty(data.difficulty || 'Easy');
+          setSelectedMealTypes(data.selectedMealTypes || []);
+          setSelectedDietaryTags(data.selectedDietaryTags || []);
+          setImageUrl(data.imageUrl || '');
+          setVideoUrl(data.videoUrl || '');
+          setNotes(data.notes || '');
+          setUrlInput(data.urlInput || '');
+          setActiveTab(data.activeTab || 'url');
+          hasRestoredFromSession.current = true;
+          console.log('[AddRecipe] ✅ Restored form data from session');
+        }
+      } catch (e) {
+        console.error('Failed to restore form data:', e);
+      }
     }
   }, []);
 
@@ -153,7 +180,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
   // Save form data to sessionStorage whenever it changes
   useEffect(() => {
-    if (!isEditMode) {
+    if (!isEditMode && hasRestoredFromSession.current) {
       const formData = {
         title,
         ingredients,
@@ -174,36 +201,6 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       sessionStorage.setItem('addRecipeFormData', JSON.stringify(formData));
     }
   }, [title, ingredients, instructions, prepTime, cookTime, servings, cuisineType, difficulty, selectedMealTypes, selectedDietaryTags, imageUrl, videoUrl, notes, urlInput, activeTab, isEditMode]);
-
-  // Restore form data on mount
-  useEffect(() => {
-    const savedData = sessionStorage.getItem('addRecipeFormData');
-    if (savedData && !editRecipeId) {
-      try {
-        const data = JSON.parse(savedData);
-        if (data.title || data.ingredients?.some((i: Ingredient) => i.name)) {
-          setTitle(data.title || '');
-          setIngredients(data.ingredients || [{ quantity: '', unit: 'cup', name: '' }]);
-          setInstructions(data.instructions || ['']);
-          setPrepTime(data.prepTime || '');
-          setCookTime(data.cookTime || '');
-          setServings(data.servings || '');
-          setCuisineType(data.cuisineType || '');
-          setDifficulty(data.difficulty || 'Easy');
-          setSelectedMealTypes(data.selectedMealTypes || []);
-          setSelectedDietaryTags(data.selectedDietaryTags || []);
-          setImageUrl(data.imageUrl || '');
-          setVideoUrl(data.videoUrl || '');
-          setNotes(data.notes || '');
-          setUrlInput(data.urlInput || '');
-          setActiveTab(data.activeTab || 'url');
-          console.log('[AddRecipe] ✅ Restored form data from session');
-        }
-      } catch (e) {
-        console.error('Failed to restore form data:', e);
-      }
-    }
-  }, [editRecipeId]);
 
   const addIngredient = () => {
     setIngredients([...ingredients, { quantity: '', unit: 'cup', name: '' }]);
