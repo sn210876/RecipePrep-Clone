@@ -334,13 +334,13 @@ useEffect(() => {
   };
 
   // Beautiful hourglass while loading or checking email
- if (loading || (user && isEmailVerified === undefined)) {
+if (loading || (user && isEmailVerified === undefined)) {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
           <div className="relative w-64 h-64">
             <img 
-              src="src=/spoon-nobg.png" 
+              src="/spoon-nobg.png" 
               alt="Loading"
               className="w-full h-full object-contain animate-bowl-splash"
             />
