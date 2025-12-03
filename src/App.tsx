@@ -340,7 +340,7 @@ useEffect(() => {
         <div className="text-center">
           <div className="relative w-64 h-64">
             <img 
-              src="https://i.imgur.com/your-uploaded-image.jpg" 
+              src="src=/spoon-nobg.png" 
               alt="Loading"
               className="w-full h-full object-contain animate-bowl-splash"
             />
