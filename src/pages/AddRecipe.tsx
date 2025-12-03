@@ -955,54 +955,63 @@ return (
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-           <div className="flex gap-2">
-  <div className="relative flex-1">
-    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
-  <Input
-  value={urlInput}
-  onChange={(e) => setUrlInput(e.target.value)}
-  placeholder="Paste recipe link..."
-  className="pl-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
-  disabled={isExtracting}
-  onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-/>
-  </div>
-  <Button
-    type="button"
-    onClick={async () => {
-      try {
-        const text = await navigator.clipboard.readText();
-        setUrlInput(text);
-        toast.success('Pasted!');
-      } catch (err) {
-        toast.error('Failed to paste. Copy a URL first.');
-      }
-    }}
-    disabled={isExtracting}
-    variant="outline"
-    className="h-10"
-  >
-    Paste
-  </Button>
-</div>
+            <div className="relative">
+              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
+              <Input
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="Paste recipe link..."
+                className="pl-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
+                disabled={isExtracting}
+                onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+              />
+            </div>
 
-
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  setUrlInput('');
+                  toast.success('Cleared!');
+                }}
+                disabled={isExtracting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-10"
+              >
+                Clear
+              </Button>
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    setUrlInput(text);
+                    toast.success('Pasted!');
+                  } catch (err) {
+                    toast.error('Failed to paste. Copy a URL first.');
+                  }
+                }}
+                disabled={isExtracting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-10"
+              >
+                Paste
+              </Button>
+            </div>
 
             <Button
               type="button"
               onClick={handleUrlExtract}
               disabled={isExtracting || !urlInput.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-10"
             >
               {isExtracting ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Extracting... Can take up to a minute
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span className="text-sm">Extracting...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Extract Recipe
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  <span className="text-sm">Extract Recipe</span>
                 </>
               )}
             </Button>
@@ -1092,21 +1101,52 @@ return (
               </p>
             </div>
 
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  setDescriptionInput('');
+                  setVideoTitle('');
+                  toast.success('Cleared!');
+                }}
+                disabled={isExtractingFromDescription}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white h-10"
+              >
+                Clear
+              </Button>
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    setDescriptionInput(text);
+                    toast.success('Pasted!');
+                  } catch (err) {
+                    toast.error('Failed to paste. Copy text first.');
+                  }
+                }}
+                disabled={isExtractingFromDescription}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white h-10"
+              >
+                Paste
+              </Button>
+            </div>
+
             <Button
               type="button"
               onClick={handleDescriptionExtract}
               disabled={isExtractingFromDescription || !descriptionInput.trim()}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white h-10"
             >
               {isExtractingFromDescription ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Extracting Recipe...
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span className="text-sm">Extracting...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Extract Recipe from Description
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  <span className="text-sm">Extract Recipe</span>
                 </>
               )}
             </Button>
