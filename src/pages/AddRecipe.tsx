@@ -449,7 +449,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[Description Extract] Error:', errorText);
-        throw new Error('Failed to extract recipe from description');
+        throw new Error('Failed to scrape recipe from description');
       }
 
       const data = await response.json();
@@ -490,7 +490,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       setVideoTitle('');
     } catch (error: any) {
       console.error('[Description Extract] Error:', error);
-      toast.error(error.message || 'Failed to extract recipe from description.', { id: 'extract-desc' });
+      toast.error(error.message || 'Failed to scrape recipe from description.', { id: 'extract-desc' });
       setIsExtractingFromDescription(false);
     }
   };
@@ -571,7 +571,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
           }
         }, 30000);
       } else {
-        toast.error(error.message || 'Failed to extract recipe.', { id: 'extract' });
+        toast.error(error.message || 'Failed to scrape recipe.', { id: 'extract' });
         setIsExtracting(false);
       }
     }
@@ -1011,7 +1011,7 @@ return (
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Extract Recipe</span>
+                  <span className="text-sm">Scrape Recipe</span>
                 </>
               )}
             </Button>
