@@ -500,7 +500,7 @@ export default function Settings({ onNavigate }: SettingsProps) {
                     onClick={testVoice}
                     disabled={testingVoice}
                     variant="outline"
-                    className="w-full border-emerald-300 hover:bg-emerald-50 h-10 sm:h-11 text-sm sm:text-base"
+                    className="w-full border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 h-10 sm:h-11 text-sm sm:text-base"
                   >
                     <Volume2 className="w-4 h-4 mr-2" />
                     {testingVoice ? 'Playing...' : 'Test Voice Settings'}
