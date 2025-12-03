@@ -63,8 +63,8 @@ export function FAQ() {
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
                <AccordionItem value="item-10" className="border-none">
-                  <div className="font-medium py-4">What are the 4 ways to add recipes?</AccordionTrigger>
-                  <AccordionContent>
+                  <div className="font-medium py-4">What are the 4 ways to add recipes?</div>
+                  <div className="pb-4">
                     <div className="space-y-4">
                       {/* From Social Media/URLs */}
                       <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg p-4 border border-purple-200">
