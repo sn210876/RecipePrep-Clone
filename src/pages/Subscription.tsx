@@ -458,17 +458,17 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
   </ul>
 </div>
 
-              {/* Regular */}
-              <div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
-                <div className="text-lg font-bold text-green-900 mb-2">💚 Pay What You Want</div>
-                <div className="text-3xl font-bold text-green-600 mb-2">$1+</div>
-                <div className="text-sm text-green-700 mb-4">per month</div>
-                <ul className="text-sm space-y-2 text-green-800">
-                  <li>✓ Full access to include Add Recipe, Meal Planner, Grocery, Shopping</li>
-                  <li>✓ Choose your price</li>
-                  <li>✓ Support development</li>
-                </ul>
-              </div>
+             {/* Regular */}
+<div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+  <div className="text-lg font-bold text-slate-900 mb-2">💚 Pay What You Want</div>
+  <div className="text-3xl font-bold text-green-600 mb-2">$1+</div>
+  <div className="text-sm text-slate-900 mb-4">per month</div>
+  <ul className="text-sm space-y-2 text-slate-900">
+    <li><span className="text-green-600">✓</span> Full access to include Add Recipe, Meal Planner, Grocery, Shopping</li>
+    <li><span className="text-green-600">✓</span> Choose your price</li>
+    <li><span className="text-green-600">✓</span> Support development</li>
+  </ul>
+</div>
 
          
             </div>
