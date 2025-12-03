@@ -101,6 +101,9 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [activeTab, setActiveTab] = useState<'url' | 'description' | 'photo' | 'manual'>('url');
 
   // Load recipe for editing if edit parameter is present
+   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get('edit');
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const editId = params.get('edit');
