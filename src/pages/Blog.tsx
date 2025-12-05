@@ -145,7 +145,7 @@ export function Blog({ onNavigate }: BlogPageProps) {
     <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500" />
     Blog & Discussions
   </h1>
-  <p className="text-sm sm:text-base text-gray-600 mb-4">
+  <p className="text-sm sm:text-base text-gray-600 mb-4 text-center">
     Share your cooking journey, tips, and stories with the community
   </p>
   {user && (
