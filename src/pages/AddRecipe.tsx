@@ -975,7 +975,7 @@ return (
                   toast.success('Cleared!');
                 }}
                 disabled={isExtracting}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-10"
+className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 h-10"
               >
                 Clear
               </Button>
@@ -991,7 +991,7 @@ return (
                   }
                 }}
                 disabled={isExtracting}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-10"
+className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 h-10"
               >
                 Paste
               </Button>
