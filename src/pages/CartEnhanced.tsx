@@ -538,7 +538,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                     onClick={handleCheckout}
                   >
                     <CreditCard className="w-5 h-5 mr-2" />
-                    Buy All on Amazon
+                    Send To Amazon Cart
                   </Button>
                   <p className="text-xs text-center text-gray-500 mt-2">
                     Products with ASINs are added to your Amazon cart instantly
