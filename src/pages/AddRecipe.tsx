@@ -458,7 +458,6 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     const extractedRecipe: ExtractedRecipeData = {
   title: data.title || videoTitle.trim() || 'Recipe from Video',
   description: data.description || '',
-  description: data.description || '',
   creator: data.creator || 'Unknown',
   ingredients: data.ingredients.map((ing: string) => {
     const parts = ing.split(' ');
