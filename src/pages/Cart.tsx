@@ -289,7 +289,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
             </Card>
 
             {/* Checkout Button - Sticky on Mobile */}
-            <div className="fixed bottom-32 left-0 right-0 p-4 pb-safe md:relative md:bottom-0 md:p-0 bg-white md:bg-transparent border-t md:border-t-0 border-slate-200 shadow-lg md:shadow-none z-40">
+            <div className="fixed bottom-56 left-0 right-0 p-4 pb-safe md:relative md:bottom-0 md:p-0 bg-white md:bg-transparent border-t md:border-t-0 border-slate-200 shadow-lg md:shadow-none z-40">
               <Button
                 className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium text-sm md:text-base h-12 md:h-14"
                 size="lg"
