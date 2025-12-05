@@ -262,7 +262,12 @@ const loadUnreadCount = async (userId: string) => {
             })}
           </nav>
 
-      
+          {/* Footer Card - Mobile Optimized */}
+          <div className="border-t border-gray-200 p-3 sm:p-3 lg:p-4 flex-shrink-0">
+            <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 p-3 sm:p-3 lg:p-4 border border-orange-200">
+              <p className="text-xs sm:text-xs lg:text-sm font-semibold text-gray-900 leading-tight">Discover, Save, Plan</p>
+              <p className="mt-1 sm:mt-1 text-[10px] sm:text-[10px] lg:text-xs text-gray-600 leading-tight">All in One Place</p>
+            </div>
           </div>
         </div>
       </aside>
