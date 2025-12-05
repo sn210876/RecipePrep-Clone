@@ -1110,8 +1110,8 @@ className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover
                   toast.success('Cleared!');
                 }}
                 disabled={isExtractingFromDescription}
-                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white h-10"
-              >
+variant="outline"
+className="flex-1 border-2 border-purple-600 text-purple-600 hover:bg-purple-700 hover:text-white transition-colors h-10"              >
                 Clear
               </Button>
               <Button
