@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isAdmin } from '../lib/supabase';
 import { toast } from 'sonner';
-import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3, MoreVertical, X } from 'lucide-react';
+import { Camera, Grid3x3, Upload as UploadIcon, Edit2, Crown, Trash2, ArrowLeft, Edit3, MoreVertical, X, Ban } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
 import { Input } from '../components/ui/input';
@@ -189,6 +189,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [followersModalOpen, setFollowersModalOpen] = useState(false);
 const [followersModalType, setFollowersModalType] = useState<'followers' | 'following'>('followers');
@@ -272,6 +273,7 @@ useEffect(() => {
         followersResult,
         followingResult,
         followDataResult,
+        blockedResult,
         postsResult,
         adminResult
       ] = await Promise.all([
@@ -280,13 +282,13 @@ useEffect(() => {
           .from('follows')
           .select('*', { count: 'exact', head: true })
           .eq('following_id', userIdToLoad),
-        
+
         // Following count
         supabase
           .from('follows')
           .select('*', { count: 'exact', head: true })
           .eq('follower_id', userIdToLoad),
-        
+
         // Check if current user follows this profile
         user.id !== userIdToLoad
           ? supabase
@@ -296,14 +298,24 @@ useEffect(() => {
               .eq('following_id', userIdToLoad)
               .maybeSingle()
           : Promise.resolve({ data: null }),
-        
+
+        // Check if current user has blocked this profile
+        user.id !== userIdToLoad
+          ? supabase
+              .from('blocked_users')
+              .select('id')
+              .eq('blocker_id', user.id)
+              .eq('blocked_id', userIdToLoad)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+
         // Get posts
         supabase
           .from('posts')
           .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
           .eq('user_id', userIdToLoad)
           .order('created_at', { ascending: false }),
-        
+
         // Check admin status
         isAdmin()
       ]);
@@ -312,6 +324,7 @@ useEffect(() => {
 
       // Set all data at once
       setIsFollowing(!!followDataResult.data);
+      setIsBlocked(!!blockedResult.data);
       setPosts(postsResult.data || []);
       setIsUserAdmin(adminResult);
 
@@ -666,6 +679,53 @@ useEffect(() => {
     }
   };
 
+  const handleToggleBlock = async () => {
+    if (!currentUserId || !targetUserId) return;
+
+    try {
+      if (isBlocked) {
+        // Unblock user
+        const { error } = await supabase
+          .from('blocked_users')
+          .delete()
+          .eq('blocker_id', currentUserId)
+          .eq('blocked_id', targetUserId);
+
+        if (error) throw error;
+
+        setIsBlocked(false);
+        toast.success('User unblocked');
+      } else {
+        // Block user
+        const { error } = await supabase
+          .from('blocked_users')
+          .insert({
+            blocker_id: currentUserId,
+            blocked_id: targetUserId
+          });
+
+        if (error) throw error;
+
+        // If blocking, also unfollow
+        if (isFollowing) {
+          await supabase
+            .from('follows')
+            .delete()
+            .eq('follower_id', currentUserId)
+            .eq('following_id', targetUserId);
+
+          setIsFollowing(false);
+        }
+
+        setIsBlocked(true);
+        toast.success('User blocked');
+      }
+    } catch (error) {
+      console.error('Block error:', error);
+      toast.error('Failed to update block status');
+    }
+  };
+
   // ✅ Show skeleton while loading
 if (loading) {
   return <ProfileSkeleton />;
@@ -839,6 +899,23 @@ if (loading) {
                 >
                   Message
                 </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="h-10 px-3 bg-white border-2 border-gray-300 text-gray-900 hover:bg-gray-50">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={handleToggleBlock}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Ban className="w-4 h-4 mr-2" />
+                      {isBlocked ? 'Unblock User' : 'Block User'}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           )}

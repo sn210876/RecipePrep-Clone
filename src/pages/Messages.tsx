@@ -1,9 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { ArrowLeft, Send as SendIcon, Search } from 'lucide-react';
+import { ArrowLeft, Send as SendIcon, Search, Trash2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '../components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 
 interface Conversation {
   id: string;
@@ -38,6 +55,7 @@ interface MessagesProps {
 }
 
 export function Messages({ recipientUserId, recipientUsername, onBack }: MessagesProps) {
+  const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -47,6 +65,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -419,6 +438,43 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   }
 };
 
+  // *** DELETE CONVERSATION ***
+  const handleDeleteConversation = async () => {
+    if (!currentUserId || !selectedConversation) return;
+
+    setShowDeleteDialog(false);
+
+    try {
+      // Delete all messages in the conversation
+      const { error: messagesError } = await supabase
+        .from('direct_messages')
+        .delete()
+        .eq('conversation_id', selectedConversation.id);
+
+      if (messagesError) throw messagesError;
+
+      // Delete the conversation
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', selectedConversation.id);
+
+      if (conversationError) throw conversationError;
+
+      toast.success('Conversation deleted');
+
+      // Go back to conversation list
+      setSelectedConversation(null);
+      setMessages([]);
+
+      // Reload conversations
+      await loadConversations(currentUserId);
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+      toast.error('Could not delete conversation');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-20">
@@ -452,7 +508,10 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
               <ArrowLeft className="w-6 h-6 text-blue-600 font-bold" strokeWidth={3} />
             </button>
 
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <button
+              onClick={() => navigate(`/profile/${selectedConversation.other_user.username}`)}
+              className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+            >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
                 {selectedConversation.other_user.avatar_url ? (
                   <img
@@ -465,7 +524,24 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
                 )}
               </div>
               <span className="font-semibold">{selectedConversation.other_user.username}</span>
-            </div>
+            </button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <MoreVertical className="w-5 h-5 text-gray-600" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Conversation
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           </div>
         </div>
@@ -567,6 +643,27 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             </Button>
           </div>
         </div>
+
+        {/* DELETE CONFIRMATION DIALOG */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Conversation?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete your conversation with {selectedConversation.other_user.username} and all messages. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConversation}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
       </div>
     );

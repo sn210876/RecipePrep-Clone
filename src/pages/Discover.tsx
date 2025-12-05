@@ -17,6 +17,7 @@ import CommentModal from '../components/CommentModal';
 import { RecipeDetailModal } from '../components/RecipeDetailModal';
 import { UserProfileView } from '../components/UserProfileView';
 import { Recipe } from '../types/recipe';
+import { blockService } from '../services/blockService';
 
 import {
   DropdownMenu,
@@ -368,24 +369,46 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       const postIdsToFetch = postsData.map(p => p.id);
       const userIdsToFetch = [...new Set(postsData.map(p => p.user_id))];
 
+      // Get blocked users
+      const { data: { user } } = await supabase.auth.getUser();
+      const blockedUserIds = user ? await blockService.getBlockedUserIds(user.id) : [];
+      const usersWhoBlockedMe = user ? await blockService.getUsersWhoBlockedMe(user.id) : [];
+
+      // Filter out posts from blocked users and users who blocked me
+      const filteredPosts = postsData.filter(post => {
+        return !blockedUserIds.includes(post.user_id) && !usersWhoBlockedMe.includes(post.user_id);
+      });
+
+      if (filteredPosts.length === 0) {
+        if (isRefresh) {
+          setPosts([]);
+        }
+        setHasMore(false);
+        setLoading(false);
+        return;
+      }
+
+      const filteredPostIds = filteredPosts.map(p => p.id);
+      const filteredUserIds = [...new Set(filteredPosts.map(p => p.user_id))];
+
       const [profilesData, likesData, commentsDataRaw, ratingsData] = await Promise.all([
         supabase
           .from('profiles')
           .select('id, username, avatar_url')
-          .in('id', userIdsToFetch),
+          .in('id', filteredUserIds),
         supabase
           .from('likes')
           .select('user_id, post_id')
-          .in('post_id', postIdsToFetch),
+          .in('post_id', filteredPostIds),
         supabase
           .from('comments')
           .select('id, text, created_at, user_id, post_id, rating')
-          .in('post_id', postIdsToFetch)
+          .in('post_id', filteredPostIds)
           .order('created_at', { ascending: false }),
         supabase
           .from('post_ratings')
           .select('rating, post_id')
-          .in('post_id', postIdsToFetch)
+          .in('post_id', filteredPostIds)
       ]);
 
       // Fetch comment profiles
@@ -436,11 +459,11 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       });
 
       // Merge data
-      const postsWithDetails = postsData.map(post => {
+      const postsWithDetails = filteredPosts.map(post => {
         const profile = profilesMap.get(post.user_id) || { username: 'User', avatar_url: null };
         const likes = likesByPost.get(post.id) || [];
         const comments = commentsByPost.get(post.id) || [];
-        
+
         return {
           ...post,
           profiles: profile,
@@ -462,7 +485,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
         setPosts(prev => [...prev, ...postsWithDetails]);
       }
 
-      setHasMore(postsData.length === POSTS_PER_PAGE);
+      setHasMore(filteredPosts.length === POSTS_PER_PAGE);
     } catch (error: any) {
       console.error('Error fetching posts:', error);
       toast.error('Failed to load posts');
