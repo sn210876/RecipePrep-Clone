@@ -1173,7 +1173,8 @@ return (
                   variant="outline"
                   onClick={() => document.getElementById('imageUploadDescription')?.click()}
                   disabled={isUploadingImage}
-                  className="w-full h-12 border-purple-300 hover:border-purple-500 hover:bg-purple-50"
+                 className="w-full h-12 border-purple-300 hover:border-purple-500 hover:bg-purple-700 hover:text-white transition-colors"
+
                 >
                   {isUploadingImage ? (
                     <>
