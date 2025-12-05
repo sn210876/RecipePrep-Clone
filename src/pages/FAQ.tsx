@@ -7,11 +7,8 @@ export function FAQ() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 pb-24 md:pb-6">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <HelpCircle className="w-10 h-10 text-blue-600" />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Frequently Asked Questions</h1>
+       <div className="text-center mb-8">
+  <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Frequently Asked Questions</h1>
           <p className="text-slate-600">Everything you need to know about Meal Scrape</p>
         </div>
 
