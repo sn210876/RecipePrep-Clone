@@ -545,7 +545,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
         </div>
 
         {/* MESSAGES */}
-<div className="pt-44 flex-1 overflow-y-auto pb-40 lg:pb-32">
+<div className="pt-44 flex-1 overflow-y-auto pb-32 lg:pb-24">
   <div className="max-w-sm lg:max-w-md mx-auto px-4">
   <div className="space-y-4 py-4">
     {messages.map((message) => (
