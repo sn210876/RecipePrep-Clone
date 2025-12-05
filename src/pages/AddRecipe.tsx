@@ -1046,7 +1046,7 @@ return (
   <p className="text-blue-600 font-semibold">✅ Supported: All recipe websites & most blogs</p>
   <p className="text-blue-600 font-semibold">✅ Supported: YouTube videos (with description)</p>
   <p className="text-orange-600">⚠️ Warning: If scraping fails, try again (may take 2 min)</p>
-  <p className="text-purple-600 font-medium">💡 YouTube blocked? Use "Paste Video Description" </p>
+  <p className="text-purple-600 font-medium">💡 YouTube youtube blocked? Use "Paste Video Description" </p>
                 </div>
               </div>
             </div>
