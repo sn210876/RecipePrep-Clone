@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -55,7 +54,6 @@ interface MessagesProps {
 }
 
 export function Messages({ recipientUserId, recipientUsername, onBack }: MessagesProps) {
-  const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -509,7 +507,7 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
             </button>
 
             <button
-              onClick={() => navigate(`/profile/${selectedConversation.other_user.username}`)}
+              onClick={() => window.location.href = `/profile/${selectedConversation.other_user.username}`}
               className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity"
             >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center text-white font-semibold overflow-hidden">
