@@ -1415,18 +1415,19 @@ return (
               {/* Cuisine and Difficulty */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="cuisineType" className="text-sm font-medium">Cuisine Type *</Label>
-                  <Select value={cuisineType} onValueChange={setCuisineType}>
-                    <SelectTrigger className={`mt-1.5 ${errors.cuisineType ? 'border-red-500' : ''}`}>
-                      <SelectValue placeholder="Select cuisine" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[300]">
-                      {CUISINE_TYPES.map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3">
+  <Label htmlFor="cuisineType" className="text-sm font-medium">Cuisine Type *</Label>
+  <Select value={cuisineType} onValueChange={setCuisineType}>
+    <SelectTrigger className={`mt-1.5 ${errors.cuisineType ? 'border-red-500' : ''}`}>
+      <SelectValue placeholder="Select cuisine" />
+    </SelectTrigger>
+    <SelectContent className="z-[300]">
+      {CUISINE_TYPES.map(type => (
+        <SelectItem key={type} value={type}>{type}</SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
 
                 <div>
                   <Label htmlFor="difficulty" className="text-sm font-medium flex items-center gap-2">
