@@ -1151,6 +1151,52 @@ return (
               )}
             </Button>
 
+            {/* Image Upload Section */}
+            <div className="space-y-3 pt-3 border-t border-purple-200">
+              <div>
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  Recipe Image (Optional)
+                </Label>
+                <p className="text-xs text-slate-500 mt-1 mb-2">Upload an image for this recipe</p>
+
+                <input
+                  type="file"
+                  id="imageUploadDescription"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  disabled={isUploadingImage}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('imageUploadDescription')?.click()}
+                  disabled={isUploadingImage}
+                  className="w-full h-12 border-purple-300 hover:border-purple-500 hover:bg-purple-50"
+                >
+                  {isUploadingImage ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Image
+                    </>
+                  )}
+                </Button>
+
+                {uploadedImageFile && (
+                  <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1 truncate">
+                    <ImageIcon className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{uploadedImageFile.name}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="mt-4 pt-4 border-t border-purple-200">
               <div className="space-y-2 text-xs leading-relaxed">
                 <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
