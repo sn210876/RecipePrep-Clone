@@ -335,7 +335,10 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
 </div>
 
              {/* Regular */}
-<div className="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+<div
+  onClick={() => setShowPaymentDialog(true)}
+  className="border-2 border-green-300 rounded-lg p-4 bg-green-50 cursor-pointer hover:bg-green-100 hover:border-green-400 hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+>
   <div className="text-lg font-bold text-slate-900 mb-2">💚 Pay What You Want</div>
   <div className="text-3xl font-bold text-green-600 mb-2">$1+</div>
   <div className="text-sm text-slate-900 mb-4">per month</div>
@@ -353,6 +356,9 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
       <span>Support development</span>
     </li>
   </ul>
+  <div className="mt-4 pt-4 border-t border-green-300">
+    <p className="text-sm font-semibold text-green-800 text-center">Click to start paying →</p>
+  </div>
 </div>
 
          
