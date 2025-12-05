@@ -439,7 +439,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: videoTitle.trim() || 'Recipe from Video',
+          title: videoTitle.trim() || '',
           description: descriptionInput.trim(),
           thumbnail: '',
           channelTitle: '',
