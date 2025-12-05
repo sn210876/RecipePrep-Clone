@@ -690,18 +690,6 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
         </DialogContent>
       </Dialog>
 
-     {/* Minimized floating button */}
-     {isOpen && isMinimized && (
-       <button
-         onClick={() => setIsMinimized(false)}
-         className="fixed bottom-20 right-4 z-[99999] bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-4 py-3 rounded-full shadow-xl flex items-center gap-2 transition-all active:scale-95 touch-manipulation animate-bounce"
-         style={{ animationDuration: '2s', animationIterationCount: '3' }}
-       >
-         <span className="text-sm sm:text-base">💬</span>
-         <span className="text-sm font-medium">Back to Comments</span>
-       </button>
-     )}
-
      {selectedRecipe && (
        <RecipeDetailModal 
          recipe={selectedRecipe} 
