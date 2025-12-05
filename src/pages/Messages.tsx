@@ -164,9 +164,15 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   }
 }, [selectedConversation?.id]);
 
-  useEffect(() => {
+  const [previousMessageCount, setPreviousMessageCount] = useState(0);
+
+useEffect(() => {
+  // Only scroll if a new message was added (not on initial load)
+  if (messages.length > previousMessageCount && previousMessageCount > 0) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }
+  setPreviousMessageCount(messages.length);
+}, [messages]);
 
   const loadConversations = async (userId: string) => {
     console.log('[Messages] loadConversations called for userId:', userId);
