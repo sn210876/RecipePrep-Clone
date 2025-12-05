@@ -991,8 +991,8 @@ className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover
                   }
                 }}
                 disabled={isExtracting}
-className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 h-10"
-              >
+variant="outline"
+className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"              >
                 Paste
               </Button>
             </div>
