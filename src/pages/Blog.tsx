@@ -141,7 +141,7 @@ export function Blog({ onNavigate }: BlogPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
        <div className="mb-8">
-  <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+  <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
     <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500" />
     Blog & Discussions
   </h1>
