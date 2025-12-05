@@ -146,7 +146,7 @@ export function Blog({ onNavigate }: BlogPageProps) {
     Blog & Discussions
   </h1>
   <p className="text-sm sm:text-base text-gray-600 mb-4 text-center">
-    Share your cooking journey, tips, and stories with the community
+    Share your cooking stories with the community
   </p>
   {user && (
     <Button
