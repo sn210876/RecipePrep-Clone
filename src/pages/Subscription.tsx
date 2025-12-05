@@ -228,7 +228,7 @@ export function Subscription({ onNavigate }: SubscriptionPageProps) {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Subscription</h1>
+            <h1 className="text-2xl font-bold text-gray-900 text-center">Subscription</h1>
             <p className="text-sm text-gray-600">Manage your plan and referrals</p>
           </div>
         </div>
