@@ -1006,7 +1006,7 @@ return (
               {isExtracting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span className="text-sm">Scraping... up to 2 min</span>
+                  <span className="text-sm">Scraping... can take up to 2 min</span>
                 </>
               ) : (
                 <>
