@@ -1046,7 +1046,7 @@ return (
   <p className="text-blue-600 font-semibold">✅ Supported: All recipe websites & most blogs</p>
   <p className="text-blue-600 font-semibold">✅ Supported: YouTube videos (with description fallback)</p>
   <p className="text-orange-600">⚠️ Warning: Instagram & TikTok (may take 30–60 seconds)</p>
-  <p className="text-purple-600 font-medium">💡 YouTube blocked? Use "Paste Video Description" below!</p>
+  <p className="text-purple-600 font-medium">💡 YouTube blocked? Use "Paste Video Description" </p>
                 </div>
               </div>
             </div>
