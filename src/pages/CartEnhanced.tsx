@@ -531,19 +531,19 @@ export function Cart({ onNavigate }: CartProps = {}) {
               </Card>
 
               <div className="fixed bottom-[80px] lg:relative lg:bottom-0 left-0 right-0 z-[150] lg:z-10 pointer-events-none">
-                <div className="max-w-4xl mx-auto px-4 py-3 pointer-events-auto">
-                  <Button
-                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold h-12 md:h-14 shadow-lg rounded-full transition-all transform active:scale-95"
-                    size="lg"
-                    onClick={handleCheckout}
-                  >
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Send To Amazon Cart
-                  </Button>
-                  <p className="text-xs text-center text-gray-500 mt-2">
-                    Products with ASINs are added to your Amazon cart instantly
-                  </p>
-                </div>
+               <div className="max-w-4xl mx-auto px-4 py-3 pointer-events-auto flex flex-col items-center">
+  <Button
+    className="w-auto bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold h-12 md:h-14 shadow-lg rounded-full transition-all transform active:scale-95 px-6"
+    size="lg"
+    onClick={handleCheckout}
+  >
+    <CreditCard className="w-5 h-5 mr-2" />
+    Send To Amazon Cart
+  </Button>
+  <p className="text-xs text-center text-gray-500 mt-2">
+    Products with ASINs are added to your Amazon cart instantly
+  </p>
+</div>
               </div>
             </div>
           </>
