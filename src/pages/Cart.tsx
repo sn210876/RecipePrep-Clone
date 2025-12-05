@@ -288,19 +288,21 @@ export function Cart({ onNavigate }: CartProps = {}) {
               </CardContent>
             </Card>
 
-            {/* Checkout Button - Sticky on Mobile */}
-           <div className="fixed bottom-28 left-0 right-0 p-4 pb-safe md:relative md:bottom-0 md:p-0 bg-white md:bg-transparent border-t md:border-t-0 border-slate-200 shadow-lg md:shadow-none z-40">
-              <Button
-                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium text-sm md:text-base h-12 md:h-14"
-                size="lg"
-                onClick={handleCheckout}
-              >
-                <CreditCard className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                Proceed to Checkout
-              </Button>
-              <p className="text-xs text-center text-gray-500 mt-2">
-                Stripe checkout integration coming soon
-              </p>
+            {/* Checkout Button - Fixed footer on mobile (above nav), sticky on desktop */}
+            <div className="fixed bottom-[80px] lg:relative lg:bottom-0 left-0 right-0 z-[150] lg:z-10 pointer-events-none">
+              <div className="max-w-4xl mx-auto px-4 py-3 pointer-events-auto">
+                <Button
+                  className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold h-12 md:h-14 shadow-lg rounded-full transition-all transform active:scale-95"
+                  size="lg"
+                  onClick={handleCheckout}
+                >
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Proceed to Checkout
+                </Button>
+                <p className="text-xs text-center text-gray-500 mt-2">
+                  Stripe checkout integration coming soon
+                </p>
+              </div>
             </div>
           </div>
         </div>
