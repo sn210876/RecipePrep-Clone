@@ -456,7 +456,8 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
       // Convert to ExtractedRecipeData format
      const extractedRecipe: ExtractedRecipeData = {
-  title: data.title || videoTitle.trim() || '',
+  title: data.title || videoTitle.trim() || '
+    ',
   description: data.description || '',
   creator: data.creator || 'Unknown',
   ingredients: data.ingredients.map((ing: string) => {
