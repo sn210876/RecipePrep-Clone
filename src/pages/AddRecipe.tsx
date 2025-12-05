@@ -455,31 +455,31 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       const data = await response.json();
 
       // Convert to ExtractedRecipeData format
-      const extractedRecipe: ExtractedRecipeData = {
-        title: data.title || videoTitle.trim() || 'Recipe from Video',
-        description: data.description || '',
-        creator: data.creator || 'Unknown',
-        ingredients: data.ingredients.map((ing: string) => {
-          const parts = ing.split(' ');
-          return {
-            quantity: parts[0] || '',
-            unit: parts[1] || 'piece',
-            name: parts.slice(2).join(' ') || ing
-          };
-        }),
-        instructions: data.instructions || [],
-        prepTime: String(data.prep_time || 15),
-        cookTime: String(data.cook_time || 30),
-        servings: String(data.servings || 4),
-        cuisineType: data.cuisineType || 'Global',
-        difficulty: data.difficulty || 'Medium',
-        mealTypes: ['Dinner'],
-        dietaryTags: data.dietaryTags || [],
-        imageUrl: data.image || data.imageUrl || '',
-        videoUrl: '',
-        notes: data.notes || 'Extracted from description',
-        sourceUrl: '',
-      };
+     const extractedRecipe: ExtractedRecipeData = {
+  title: data.title || videoTitle.trim() || 'Recipe from Video',
+  description: data.description || '',
+  creator: data.creator || 'Unknown',
+  ingredients: data.ingredients.map((ing: string) => {
+    const parts = ing.split(' ');
+    return {
+      quantity: parts[0] || '',
+      unit: parts[1] || 'piece',
+      name: parts.slice(2).join(' ') || ing
+    };
+  }),
+  instructions: data.instructions || [],
+  prepTime: String(data.prep_time || 15),
+  cookTime: String(data.cook_time || 30),
+  servings: String(data.servings || 4),
+  cuisineType: data.cuisineType || 'Global',
+  difficulty: data.difficulty || 'Medium',
+  mealTypes: ['Dinner'],
+  dietaryTags: data.dietaryTags || [],
+  imageUrl: data.image || data.imageUrl || '',
+  videoUrl: '',
+  notes: data.notes || '',
+  sourceUrl: '',
+};
 
       toast.success('Recipe extracted from description! Review and edit before saving.', { id: 'extract-desc', duration: 2000 });
       populateFormWithExtractedData(extractedRecipe, '');
