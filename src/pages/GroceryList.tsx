@@ -736,13 +736,13 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   return (
     <div className="max-w-4xl mx-auto px-4 pt-2 pb-24">
       <div className="mb-6">
-        <div className="flex flex-col gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grocery List</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {checkedCount} of {totalCount} items checked
-            </p>
-          </div>
+      <div className="flex flex-col gap-4 mb-4">
+  <div className="text-center">
+    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Grocery List</h1>
+    <p className="text-sm text-gray-500 mt-1">
+      {checkedCount} of {totalCount} items checked
+    </p>
+  </div>
       {/* Mobile-optimized button layout */}
           <div className="grid grid-cols-2 gap-2">
             <Button
