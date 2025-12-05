@@ -1414,7 +1414,6 @@ return (
 
               {/* Cuisine and Difficulty */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
                 <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3">
   <Label htmlFor="cuisineType" className="text-sm font-medium">Cuisine Type *</Label>
   <Select value={cuisineType} onValueChange={setCuisineType}>
