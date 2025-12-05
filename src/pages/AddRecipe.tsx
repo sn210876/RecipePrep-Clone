@@ -1282,7 +1282,7 @@ className="flex-1 border-2 border-purple-600 text-purple-600 hover:bg-purple-700
                 onClick={() => document.getElementById('photo-upload')?.click()}
                 disabled={isScanningPhoto || photoPreviews.length >= 4}
                 variant="outline"
-                className="flex-1 h-12 border-emerald-300"
+className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-700 hover:text-white transition-colors"
               >
                 <Upload className="w-5 h-5 mr-2" />
                 {photoPreviews.length > 0 ? 'Add More' : 'Select Photos'}
