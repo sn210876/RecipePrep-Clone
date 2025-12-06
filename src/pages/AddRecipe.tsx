@@ -955,48 +955,47 @@ return (
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-         <div className="relative">
-  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
-  <Input
-    value={urlInput}
-    onChange={(e) => setUrlInput(e.target.value)}
-    placeholder="👉 Paste recipe link here... 👈"
-    className="pl-10 pr-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
-    disabled={isExtracting}
-    onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-  />
-  {urlInput && (
-    <button
-      type="button"
-      onClick={() => {
-        setUrlInput('');
-        toast.success('Cleared!');
-      }}
-      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600 transition-colors"
-      disabled={isExtracting}
-    >
-      <X className="w-4 h-4" />
-    </button>
-  )}
-</div>
+            <div className="relative">
+              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
+              <Input
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="👉 Paste recipe link here... 👈"
+                className="pl-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
+                disabled={isExtracting}
+                onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+              />
+            </div>
 
-<Button
-  type="button"
-  onClick={async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      setUrlInput(text);
-      toast.success('Pasted!');
-    } catch (err) {
-      toast.error('Failed to paste. Copy a URL first.');
-    }
-  }}
-  disabled={isExtracting}
-  variant="ghost"
-  className="w-full text-slate-600 hover:bg-slate-100 hover:text-blue-600 h-10 font-medium"
->
-  📋 Paste
-</Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  setUrlInput('');
+                  toast.success('Cleared!');
+                }}
+                disabled={isExtracting}
+variant="outline"
+className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"              >
+                Clear
+              </Button>
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    setUrlInput(text);
+                    toast.success('Pasted!');
+                  } catch (err) {
+                    toast.error('Failed to paste. Copy a URL first.');
+                  }
+                }}
+                disabled={isExtracting}
+variant="outline"
+className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"              >
+                Paste
+              </Button>
+            </div>
 
             <Button
               type="button"
@@ -1539,29 +1538,171 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
                 </div>
 
                 <div className="relative">
-  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
-  <Input
-    value={urlInput}
-    onChange={(e) => setUrlInput(e.target.value)}
-    placeholder="👉 Paste recipe link here... 👈"
-    className="pl-10 pr-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
-    disabled={isExtracting}
-    onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-  />
-  <button
-    type="button"
-    onClick={() => {
-      setUrlInput('');
-      toast.success('Cleared!');
-    }}
-    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${
-      urlInput ? 'text-slate-600 hover:text-red-600' : 'text-slate-300 cursor-not-allowed'
-    }`}
-    disabled={isExtracting || !urlInput}
-  >
-    <X className="w-4 h-4" />
-  </button>
-</div>>
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-slate-200" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-slate-500">or</span>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="imageUrl" className="text-sm font-medium">Image URL</Label>
+                  <Input
+                    id="imageUrl"
+                    value={imageUrl}
+                    onChange={(e) => {
+                      setImageUrl(e.target.value);
+                      setUploadedImageFile(null);
+                      setUploadedImageUrl('');
+                    }}
+                    placeholder="https://example.com/image.jpg"
+                    className="mt-1.5 text-base"
+                    disabled={!!uploadedImageFile}
+                  />
+                  {uploadedImageFile && (
+                    <p className="text-xs text-slate-500 mt-1">Clear uploaded image to use URL</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Meal Types */}
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Meal Types *</CardTitle>
+              <CardDescription className="text-xs">When is this served?</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {MEAL_TYPES.map(type => (
+                  <Badge
+                    key={type}
+                    variant={selectedMealTypes.includes(type) ? "default" : "outline"}
+                    className="cursor-pointer transition-all hover:scale-105 text-sm py-1.5 px-3"
+                    onClick={() => toggleMealType(type)}
+                  >
+                    {type}
+                  </Badge>
+                ))}
+              </div>
+              {errors.mealTypes && <p className="text-xs text-red-500 mt-2">{errors.mealTypes}</p>}
+            </CardContent>
+          </Card>
+
+          {/* Dietary Tags */}
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Dietary Tags</CardTitle>
+              <CardDescription className="text-xs">Select any that apply</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {DIETARY_TAGS.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant={selectedDietaryTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer transition-all hover:scale-105 text-sm py-1.5 px-3"
+                    onClick={() => toggleDietaryTag(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Ingredients - Mobile optimized */}
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Ingredients *</CardTitle>
+              <CardDescription className="text-xs">List all ingredients</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {ingredients.map((ingredient, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      value={ingredient.quantity}
+                      onChange={(e) => updateIngredient(index, 'quantity', e.target.value)}
+                      placeholder="1"
+                      className="w-16 text-center text-base"
+                    />
+                    <Select
+                      value={ingredient.unit}
+                      onValueChange={(val) => updateIngredient(index, 'unit', val)}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UNITS.map(unit => (
+                          <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeIngredient(index)}
+                      disabled={ingredients.length === 1}
+                      className="shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Input
+                    value={ingredient.name}
+                    onChange={(e) => updateIngredient(index, 'name', e.target.value)}
+                    placeholder="Ingredient name"
+                    className="text-base"
+                  />
+                </div>
+              ))}
+              {errors.ingredients && <p className="text-xs text-red-500">{errors.ingredients}</p>}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addIngredient}
+                className="w-full mt-2 h-11"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Ingredient
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Instructions - Mobile optimized */}
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Instructions *</CardTitle>
+              <CardDescription className="text-xs">Step-by-step instructions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {instructions.map((instruction, index) => (
+                <div key={index} className="flex gap-2 items-start">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-700 mt-2">
+                    {index + 1}
+                  </div>
+                  <Textarea
+                    value={instruction}
+                    onChange={(e) => updateInstruction(index, e.target.value)}
+                    placeholder="Describe this step..."
+                    className="flex-1 min-h-[100px] text-base"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeInstruction(index)}
+                    disabled={instructions.length === 1}
+                    className="shrink-0 mt-2"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
               ))}
               {errors.instructions && <p className="text-xs text-red-500">{errors.instructions}</p>}
               <Button
