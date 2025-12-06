@@ -1,87 +1,244 @@
-import { ChefHat, Calendar, ShoppingCart } from 'lucide-react';
+import { useState } from 'react';
+import { ChefHat, Link as LinkIcon, Camera, ClipboardPaste, Sparkles, Calendar, ShoppingCart } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
+import { Card } from '../components/ui/card';
 
 interface OnboardingProps {
   onComplete: () => void;
 }
 
+const slides = [
+  {
+    id: 1,
+    title: 'Welcome to MealScrape',
+    emoji: '👋',
+    description: 'Your personal recipe companion that helps you save, organize, and plan meals effortlessly.',
+    icon: ChefHat,
+    color: 'from-emerald-500 to-teal-600',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-600'
+  },
+  {
+    id: 2,
+    title: 'Save Any Recipe',
+    description: 'Extract recipes from any website, upload photos, or paste descriptions. We handle the rest.',
+    methods: [
+      { icon: LinkIcon, label: 'Paste URL', desc: 'From any website' },
+      { icon: Camera, label: 'Take Photo', desc: 'From cookbooks' },
+      { icon: ClipboardPaste, label: 'Paste Text', desc: 'From anywhere' }
+    ],
+    icon: Sparkles,
+    color: 'from-orange-500 to-amber-600',
+    iconBg: 'bg-orange-100',
+    iconColor: 'text-orange-600'
+  },
+  {
+    id: 3,
+    title: 'Everything Organized',
+    description: 'Beautifully formatted recipes with smart editing, meal planning, and grocery lists.',
+    features: [
+      { icon: Sparkles, label: 'Auto Formatting', desc: 'Clean, readable recipes' },
+      { icon: Calendar, label: 'Meal Planning', desc: 'Weekly calendar view' },
+      { icon: ShoppingCart, label: 'Grocery Lists', desc: 'Auto-generated' }
+    ],
+    icon: Calendar,
+    color: 'from-blue-500 to-indigo-600',
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-600'
+  },
+  {
+    id: 4,
+    title: 'Ready to Start?',
+    description: 'Join thousands of home cooks who are making meal planning easier every day.',
+    icon: ChefHat,
+    color: 'from-emerald-500 to-teal-600',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-600',
+    stats: [
+      { value: '10K+', label: 'Active Users' },
+      { value: '50K+', label: 'Recipes Saved' },
+      { value: '4.9★', label: 'User Rating' }
+    ]
+  }
+];
+
 export function Onboarding({ onComplete }: OnboardingProps) {
-  const features = [
-    {
-      icon: ChefHat,
-      title: 'Discover Recipes',
-      description: 'Browse thousands of curated recipes from cuisines around the world. Filter by dietary preferences, cook time, and more.',
-    },
-    {
-      icon: Calendar,
-      title: 'Plan Your Meals',
-      description: 'Drag and drop recipes onto your weekly calendar. Smart suggestions help you plan balanced, varied meals.',
-    },
-    {
-      icon: ShoppingCart,
-      title: 'Smart Grocery Lists',
-      description: 'Automatically generate organized grocery lists from your meal plan. Check off items as you shop.',
-    },
-  ];
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
+  const handleNext = () => {
+    if (currentSlide < slides.length - 1) {
+      setCurrentSlide(currentSlide + 1);
+    } else {
+      handleComplete();
+    }
+  };
+
+  const handleSkip = () => {
+    handleComplete();
+  };
+
+  const handleComplete = () => {
+    localStorage.setItem('onboarding_completed', 'true');
+    onComplete();
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && currentSlide < slides.length - 1) {
+      setCurrentSlide(currentSlide + 1);
+    }
+    if (isRightSwipe && currentSlide > 0) {
+      setCurrentSlide(currentSlide - 1);
+    }
+  };
+
+  const slide = slides[currentSlide];
+  const Icon = slide.icon;
 
   return (
-    <div 
-      className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-amber-50 flex items-center justify-center p-4 overflow-y-auto"
-      style={{ 
+    <div
+      className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 flex flex-col overflow-hidden"
+      style={{
         paddingTop: 'max(1rem, env(safe-area-inset-top))',
         paddingBottom: 'max(2rem, env(safe-area-inset-bottom))'
       }}
     >
-      <div className="max-w-5xl w-full py-8">
-        <div className="text-center mb-8 sm:mb-12 space-y-3 sm:space-y-4 px-4">
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-            <ChefHat className="w-10 h-10 sm:w-12 sm:h-12 text-emerald-600" strokeWidth={2} />
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900">Meal Scrape</h1>
-          </div>
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 font-medium">
-            Discover, Save, Plan, Shop - All in One Place
-          </p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 px-2">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <Card
-                key={index}
-                className="border-2 border-gray-100 hover:border-emerald-200 hover:shadow-lg transition-all duration-300"
-              >
-                <CardContent className="pt-6 sm:pt-8 pb-5 sm:pb-6 text-center space-y-3 sm:space-y-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
-                    <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="text-center px-4">
+      {currentSlide < slides.length - 1 && (
+        <div className="absolute top-4 right-4 z-10" style={{ top: 'max(1rem, calc(env(safe-area-inset-top) + 1rem))' }}>
           <Button
-            onClick={onComplete}
-            size="lg"
-            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-8 sm:px-12 py-5 sm:py-6 text-base sm:text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            onClick={handleSkip}
+            variant="ghost"
+            className="text-gray-600 hover:text-gray-900 hover:bg-white/50"
           >
-            Get Started
+            Skip
           </Button>
         </div>
+      )}
 
-        <div className="mt-8 sm:mt-12 text-center px-4">
-          <p className="text-xs sm:text-sm text-gray-500">
-            Join thousands of home cooks planning better meals
-          </p>
+      <div
+        className="flex-1 flex items-center justify-center px-4 py-8"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="max-w-lg w-full">
+          <div
+            key={currentSlide}
+            className="animate-in fade-in slide-in-from-right duration-500"
+          >
+            <div className="text-center mb-8 space-y-6">
+              <div className={`w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br ${slide.color} flex items-center justify-center shadow-lg`}>
+                <Icon className="w-12 h-12 text-white" strokeWidth={2} />
+              </div>
+
+              <div className="space-y-3">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  {slide.title} {slide.emoji}
+                </h1>
+                <p className="text-lg text-gray-600 leading-relaxed">
+                  {slide.description}
+                </p>
+              </div>
+
+              {slide.methods && (
+                <div className="grid grid-cols-1 gap-3 mt-8">
+                  {slide.methods.map((method, idx) => {
+                    const MethodIcon = method.icon;
+                    return (
+                      <Card key={idx} className="p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-xl ${slide.iconBg} flex items-center justify-center flex-shrink-0`}>
+                            <MethodIcon className={`w-6 h-6 ${slide.iconColor}`} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold text-gray-900">{method.label}</div>
+                            <div className="text-sm text-gray-600">{method.desc}</div>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+
+              {slide.features && (
+                <div className="grid grid-cols-1 gap-3 mt-8">
+                  {slide.features.map((feature, idx) => {
+                    const FeatureIcon = feature.icon;
+                    return (
+                      <Card key={idx} className="p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-xl ${slide.iconBg} flex items-center justify-center flex-shrink-0`}>
+                            <FeatureIcon className={`w-6 h-6 ${slide.iconColor}`} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold text-gray-900">{feature.label}</div>
+                            <div className="text-sm text-gray-600">{feature.desc}</div>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+
+              {slide.stats && (
+                <div className="grid grid-cols-3 gap-4 mt-8">
+                  {slide.stats.map((stat, idx) => (
+                    <Card key={idx} className="p-4 text-center">
+                      <div className="text-2xl font-bold text-emerald-600">{stat.value}</div>
+                      <div className="text-sm text-gray-600 mt-1">{stat.label}</div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 pb-4 space-y-6">
+        <div className="flex justify-center gap-2">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlide(idx)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                idx === currentSlide
+                  ? 'w-8 bg-emerald-600'
+                  : 'w-2 bg-gray-300 hover:bg-gray-400'
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+
+        <div className="max-w-lg mx-auto">
+          <Button
+            onClick={handleNext}
+            size="lg"
+            className={`w-full bg-gradient-to-r ${slide.color} text-white py-6 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0`}
+          >
+            {currentSlide === slides.length - 1 ? "Let's Go!" : 'Next'}
+          </Button>
         </div>
       </div>
     </div>

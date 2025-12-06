@@ -22,6 +22,7 @@ import { Messages } from './pages/Messages';
 import { Blog } from './pages/Blog';
 import { BlogPostPage } from './pages/BlogPost';
 import { FAQ } from './pages/FAQ';
+import { Onboarding } from './pages/Onboarding';
 import { Toaster } from './components/ui/sonner';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -39,6 +40,7 @@ const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
 function AppContent() {
   const { user, loading, isEmailVerified } = useAuth();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
  const [currentPage, setCurrentPage] = useState<string>(() => {
   const path = window.location.pathname;
@@ -336,6 +338,7 @@ useEffect(() => {
       case 'subscription': return <Subscription onNavigate={handleNavigate} />;
       case 'subscription-success': return <SubscriptionSuccess onNavigate={handleNavigate} />;
       case 'faq': return <FAQ />;
+      case 'onboarding': return <Onboarding onComplete={() => handleNavigate('add-recipe')} />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;
       default: return <DiscoverRecipes onNavigate={handleNavigate} />;
     }
@@ -383,9 +386,32 @@ if (loading || (user && isEmailVerified === undefined)) {
     );
   }
 
+  // Check if onboarding should be shown
+  useEffect(() => {
+    if (user && isEmailVerified) {
+      const onboardingCompleted = localStorage.getItem('onboarding_completed');
+      const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
+
+      if (!onboardingCompleted && !hasSeenOnboarding) {
+        setShowOnboarding(true);
+        localStorage.setItem(`onboarding_seen_${user.id}`, 'true');
+      }
+    }
+  }, [user, isEmailVerified]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    handleNavigate('add-recipe');
+  };
+
   // Allow access to DiscoverRecipes, Blog, FAQ, and Subscription without login
   const publicPages = ['discover-recipes', 'blog', 'faq', 'subscription'];
   const isPublicPage = publicPages.includes(currentPage) || currentPage.startsWith('blog:');
+
+  // Show onboarding for new users
+  if (showOnboarding && user && isEmailVerified) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
 
   // Show auth form if not logged in and trying to access protected content OR if showAuthPrompt is true
   if ((!user && !isPublicPage) || showAuthPrompt) return <AuthForm />;

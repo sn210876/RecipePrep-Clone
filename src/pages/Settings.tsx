@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download, Crown, Languages } from 'lucide-react';
+import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download, Crown, Languages, BookOpen } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -354,6 +354,32 @@ export default function Settings({ onNavigate }: SettingsProps) {
               >
                 <Lock className="w-4 h-4 mr-2" />
                 Change Password
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Onboarding Card */}
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-100 p-4 sm:p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-600 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <CardTitle className="text-lg sm:text-xl md:text-2xl text-slate-900">App Tutorial</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm text-slate-600">
+                    View the welcome tutorial again
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <Button
+                onClick={() => onNavigate('onboarding')}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 h-10 sm:h-11 text-sm sm:text-base"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                View Tutorial
               </Button>
             </CardContent>
           </Card>
