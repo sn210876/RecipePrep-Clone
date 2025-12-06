@@ -148,14 +148,17 @@ async def extract_recipe(request: ExtractRequest):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             thumbnail = info.get("thumbnail", "")
-            text = f"{info.get('description', '')}\n{info.get('title', '')}"
+            description = info.get("description", "")
+            text = f"{description}\n{info.get('title', '')}"
             ingredients, instructions, notes = parse_with_ai(text)
 
             if DEBUG_MODE:
                 print(f"[DEBUG] Successfully extracted: {info.get('title', 'Unknown')}")
+                print(f"[DEBUG] Description length: {len(description)} chars")
 
             return {
                 "title": info.get("title", "Video Recipe"),
+                "description": description,
                 "ingredients": ingredients,
                 "instructions": instructions,
                 "thumbnail": thumbnail,
