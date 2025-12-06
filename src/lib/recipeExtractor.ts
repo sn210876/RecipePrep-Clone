@@ -87,6 +87,8 @@ if (isSocial) {
 
     const data = await response.json();
     console.log('[Extractor] Raw data from server:', data);
+    console.log('[Extractor] Server description field:', data.description || 'NONE');
+    console.log('[Extractor] Server content field:', data.content || 'NONE');
 
     // Get the raw image URL
     const rawImageUrl = data.thumbnail || data.image || '';
@@ -177,8 +179,12 @@ if (isSocial) {
       ''
     );
 
+    console.log('[Extractor] Description:', description ? `"${description.substring(0, 100)}..."` : 'EMPTY');
+    console.log('[Extractor] Ingredients count:', ingredients.length);
+    console.log('[Extractor] Instructions count:', rawInstructions.length);
+
     if (ingredients.length === 0 && rawInstructions.length === 0 && description) {
-      console.log('[Extractor] No recipe data found, trying AI extraction from description...');
+      console.log('[Extractor] ⚡ Triggering AI extraction from description...');
       try {
         const aiResponse = await fetch(SUPABASE_TEXT_FUNCTION, {
           method: 'POST',
