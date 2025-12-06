@@ -15,6 +15,7 @@ const API_URL = `${SUPABASE_URL}/functions/v1/recipe-proxy`;
 // YOUR RENDER SERVER ONLY — 100% FINAL VERSION
 const RENDER_SERVER = 'https://recipe-backend-nodejs-1.onrender.com/extract';
 const SUPABASE_PHOTO_FUNCTION = `${SUPABASE_URL}/functions/v1/extract-recipe-photo`;
+const SUPABASE_TEXT_FUNCTION = `${SUPABASE_URL}/functions/v1/extract-recipe-text`;
 
 export interface ExtractedRecipeData {
   title: string;
@@ -169,14 +170,60 @@ if (isSocial) {
     const rawInstructions = Array.isArray(data.instructions) ? data.instructions : [];
     console.log('[Extractor] Processing instructions:', rawInstructions);
 
+    const description = decodeHtmlEntities(
+      data.description ||
+      data.shortDescription ||
+      data.content ||
+      ''
+    );
+
+    if (ingredients.length === 0 && rawInstructions.length === 0 && description) {
+      console.log('[Extractor] No recipe data found, trying AI extraction from description...');
+      try {
+        const aiResponse = await fetch(SUPABASE_TEXT_FUNCTION, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            text: description,
+          }),
+        });
+
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json();
+          console.log('[Extractor] AI extraction successful:', aiData);
+
+          if (aiData.ingredients && aiData.ingredients.length > 0) {
+            return {
+              title: decodeHtmlEntities(data.title || data.channel || aiData.title || 'Video Recipe'),
+              description: aiData.description || description,
+              creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
+              ingredients: aiData.ingredients,
+              instructions: aiData.instructions || [],
+              prepTime: aiData.prepTime || formatTime(data.prep_time || 15),
+              cookTime: aiData.cookTime || formatTime(data.cook_time || 35),
+              servings: aiData.servings || data.servings || data.yield || '4',
+              cuisineType: aiData.cuisineType || 'Global',
+              difficulty: aiData.difficulty || 'Medium',
+              mealTypes: aiData.mealTypes || ['Dinner'],
+              dietaryTags: aiData.dietaryTags || [],
+              imageUrl: finalImageUrl,
+              videoUrl: url,
+              notes: `Recipe extracted from description`,
+              sourceUrl: url,
+            };
+          }
+        }
+      } catch (aiError) {
+        console.error('[Extractor] AI extraction failed:', aiError);
+      }
+    }
+
     return {
       title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
-     description: decodeHtmlEntities(
-    data.description ||
-    data.shortDescription ||
-    data.content ||
-    ''
-        ),
+      description,
       creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
       ingredients,
       instructions: rawInstructions.map((i: string) => decodeHtmlEntities(i)),
