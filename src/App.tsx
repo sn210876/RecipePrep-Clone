@@ -191,6 +191,19 @@ function AppContent() {
     };
   }, []);
 
+  // Check if onboarding should be shown
+  useEffect(() => {
+    if (user && isEmailVerified) {
+      const onboardingCompleted = localStorage.getItem('onboarding_completed');
+      const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
+
+      if (!onboardingCompleted && !hasSeenOnboarding) {
+        setShowOnboarding(true);
+        localStorage.setItem(`onboarding_seen_${user.id}`, 'true');
+      }
+    }
+  }, [user, isEmailVerified]);
+
   const handleNavigate = (page: string) => {
     // Protected pages that require authentication
     const protectedPages = [
@@ -373,19 +386,6 @@ if (loading || (user && isEmailVerified === undefined)) {
       </div>
     );
   }
-
-  // Check if onboarding should be shown
-  useEffect(() => {
-    if (user && isEmailVerified) {
-      const onboardingCompleted = localStorage.getItem('onboarding_completed');
-      const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
-
-      if (!onboardingCompleted && !hasSeenOnboarding) {
-        setShowOnboarding(true);
-        localStorage.setItem(`onboarding_seen_${user.id}`, 'true');
-      }
-    }
-  }, [user, isEmailVerified]);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
