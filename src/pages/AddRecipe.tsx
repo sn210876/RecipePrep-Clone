@@ -858,7 +858,10 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       // 6. Clear saved form data after successful submission
       sessionStorage.removeItem('addRecipeFormData');
 
-      // 7. Navigate to my recipes
+      // 7. Dispatch event to refresh Discover page
+      window.dispatchEvent(new CustomEvent('recipe-created'));
+
+      // 8. Navigate to my recipes
       if (onNavigate) {
         onNavigate('my-recipes');
       }

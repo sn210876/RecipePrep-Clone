@@ -168,7 +168,7 @@ useEffect(() => {
       const dbRecipes = await getAllPublicRecipes();
       console.log('[Discover] Loaded', dbRecipes.length, 'recipes from database');
       setAllRecipes(dbRecipes);
-      
+
       await loadAllSocialPosts(dbRecipes);
     } catch (error) {
       console.error('Failed to load recipes:', error);
@@ -184,9 +184,17 @@ useEffect(() => {
     }
   };
 
+  const handleRecipeCreated = () => {
+    console.log('[Discover] Recipe created event received, refreshing...');
+    loadRecipes();
+  };
+
   document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('recipe-created', handleRecipeCreated);
+
   return () => {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('recipe-created', handleRecipeCreated);
   };
 }, []);
 
