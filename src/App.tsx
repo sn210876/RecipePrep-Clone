@@ -97,110 +97,98 @@ function AppContent() {
   // Sync back/forward buttons
   useEffect(() => {
     const handlePop = () => {
-  const path = window.location.pathname;
-  // Add mobile app initialization
-useEffect(() => {
-  const initializeMobileApp = async () => {
-    // Only run on native platforms (iOS/Android)
-    if (Capacitor.isNativePlatform()) {
-      
-      // Configure status bar
-      try {
-        await StatusBar.setStyle({ style: Style.Light });
-        if (Capacitor.getPlatform() === 'android') {
-          await StatusBar.setBackgroundColor({ color: '#FF6B35' });
-        }
-      } catch (e) {
-        console.log('Status bar error:', e);
-      }
-      
-      // Hide splash screen after app loads
-      setTimeout(() => {
-        SplashScreen.hide();
-      }, 1000);
-      
-      // Handle Android back button - IMPROVED
-      CapApp.addListener('backButton', (data) => {
-        console.log('Back button pressed, canGoBack:', data.canGoBack);
+      const path = window.location.pathname;
 
-        // Check if we're on the home page
-        const isHomePage = window.location.pathname === '/' ||
-                          window.location.pathname === '/discover-recipes';
-
-        if (isHomePage && !data.canGoBack) {
-          // Exit app if on home page with no history
-          CapApp.exitApp();
+      // Explicit route checks first
+      if (path === '/' || path === '/discover-recipes') {
+        setCurrentPage('discover-recipes');
+      } else if (path === '/discover') {
+        setCurrentPage('discover');
+      } else if (path === '/recipes' || path === '/my-recipes') {
+        setCurrentPage('my-recipes');
+      } else if (path === '/upload') {
+        setCurrentPage('upload');
+      } else if (path === '/messages') {
+        setCurrentPage('messages');
+      } else if (path === '/settings') {
+        setCurrentPage('settings');
+      } else if (path === '/blog') {
+        setCurrentPage('blog');
+      } else if (path.startsWith('/blog/') && path !== '/blog') {
+        const slug = path.split('/blog/')[1];
+        if (slug) setCurrentPage(`blog:${slug}`);
+      } else if (path === '/profile') {
+        setCurrentPage('profile');
+      } else if (path.startsWith('/profile/') && path !== '/profile') {
+        const username = path.split('/profile/')[1];
+        if (username) setCurrentPage(`profile:${username}`);
+      } else if (path.match(/^\/post\/[a-f0-9-]{36}$/)) {
+        setCurrentPage('discover');
+      } else if (path !== '/' && path.length > 1 && !path.includes('.')) {
+        const username = path.substring(1);
+        const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'blog'];
+        if (username && !username.includes('/') && !knownRoutes.includes(username)) {
+          setCurrentPage(`profile:${username}`);
         } else {
-          // Navigate back in history
-          window.history.back();
+          setCurrentPage('discover-recipes');
         }
-      });
-      
-      // Handle deep links (e.g., mealscrape://recipe/123)
-      CapApp.addListener('appUrlOpen', (data) => {
-        console.log('App opened with URL:', data.url);
-        // Handle deep link navigation here
-        const url = new URL(data.url);
-        if (url.pathname.startsWith('/post/')) {
-          const postId = url.pathname.split('/post/')[1];
-          setCurrentPage('discover');
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
-          }, 500);
-        }
-      });
-    }
-  };
-  
-  initializeMobileApp();
-  
-  return () => {
-    if (Capacitor.isNativePlatform()) {
-      CapApp.removeAllListeners();
-    }
-  };
-}, []);
-  // Explicit route checks first
-  if (path === '/' || path === '/discover-recipes') {
-    setCurrentPage('discover-recipes');
-  } else if (path === '/discover') {
-    setCurrentPage('discover');
-  } else if (path === '/recipes' || path === '/my-recipes') {
-    setCurrentPage('my-recipes');
-  } else if (path === '/upload') {
-    setCurrentPage('upload');
-  } else if (path === '/messages') {
-    setCurrentPage('messages');
-  } else if (path === '/settings') {
-    setCurrentPage('settings');
-  } else if (path === '/blog') {
-    setCurrentPage('blog');
-  } else if (path.startsWith('/blog/') && path !== '/blog') {
-    const slug = path.split('/blog/')[1];
-    if (slug) setCurrentPage(`blog:${slug}`);
-  } else if (path === '/profile') {
-    setCurrentPage('profile');
-  } else if (path.startsWith('/profile/') && path !== '/profile') {
-    const username = path.split('/profile/')[1];
-    if (username) setCurrentPage(`profile:${username}`);
-  } else if (path.match(/^\/post\/[a-f0-9-]{36}$/)) {
-    // Handle post deep links
-    setCurrentPage('discover');
-  } else if (path !== '/' && path.length > 1 && !path.includes('.')) {
-    // Only treat as username if it doesn't match any known routes
-    const username = path.substring(1);
-    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'blog'];
-    if (username && !username.includes('/') && !knownRoutes.includes(username)) {
-      setCurrentPage(`profile:${username}`);
-    } else {
-      setCurrentPage('discover-recipes'); // Default fallback
-    }
-  } else {
-    setCurrentPage('discover-recipes');
-  }
-};
+      } else {
+        setCurrentPage('discover-recipes');
+      }
+    };
+
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
+  }, []);
+
+  // Mobile app initialization
+  useEffect(() => {
+    const initializeMobileApp = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await StatusBar.setStyle({ style: Style.Light });
+          if (Capacitor.getPlatform() === 'android') {
+            await StatusBar.setBackgroundColor({ color: '#FF6B35' });
+          }
+        } catch (e) {
+          console.log('Status bar error:', e);
+        }
+
+        setTimeout(() => {
+          SplashScreen.hide();
+        }, 1000);
+
+        CapApp.addListener('backButton', (data) => {
+          const isHomePage = window.location.pathname === '/' ||
+                            window.location.pathname === '/discover-recipes';
+
+          if (isHomePage && !data.canGoBack) {
+            CapApp.exitApp();
+          } else {
+            window.history.back();
+          }
+        });
+
+        CapApp.addListener('appUrlOpen', (data) => {
+          const url = new URL(data.url);
+          if (url.pathname.startsWith('/post/')) {
+            const postId = url.pathname.split('/post/')[1];
+            setCurrentPage('discover');
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
+            }, 500);
+          }
+        });
+      }
+    };
+
+    initializeMobileApp();
+
+    return () => {
+      if (Capacitor.isNativePlatform()) {
+        CapApp.removeAllListeners();
+      }
+    };
   }, []);
 
   const handleNavigate = (page: string) => {
