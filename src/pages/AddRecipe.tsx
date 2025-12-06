@@ -967,35 +967,39 @@ return (
               />
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                onClick={() => {
-                  setUrlInput('');
-                  toast.success('Cleared!');
-                }}
-                disabled={isExtracting}
-variant="outline"
-className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"              >
-                Clear
-              </Button>
-              <Button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const text = await navigator.clipboard.readText();
-                    setUrlInput(text);
-                    toast.success('Pasted!');
-                  } catch (err) {
-                    toast.error('Failed to paste. Copy a URL first.');
-                  }
-                }}
-                disabled={isExtracting}
-variant="outline"
-className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"              >
-                Paste
-              </Button>
-            </div>
+           <div className="flex items-center gap-2">
+  <Button
+    type="button"
+    onClick={async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        setUrlInput(text);
+        toast.success('Pasted!');
+      } catch (err) {
+        toast.error('Failed to paste. Copy a URL first.');
+      }
+    }}
+    disabled={isExtracting}
+    variant="ghost"
+    className="flex-1 text-slate-600 hover:bg-slate-100 hover:text-blue-600 h-10 font-medium"
+  >
+    📋 Paste
+  </Button>
+  
+  <Button
+    type="button"
+    onClick={() => {
+      setUrlInput('');
+      toast.success('Cleared!');
+    }}
+    disabled={isExtracting}
+    variant="ghost"
+    size="icon"
+    className="text-slate-400 hover:bg-red-50 hover:text-red-600 h-10 w-10"
+  >
+    <X className="w-4 h-4" />
+  </Button>
+</div>
 
             <Button
               type="button"
