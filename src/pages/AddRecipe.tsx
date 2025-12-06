@@ -955,51 +955,48 @@ return (
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="relative">
-              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
-              <Input
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="👉 Paste recipe link here... 👈"
-                className="pl-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
-                disabled={isExtracting}
-                onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
-              />
-            </div>
-
-           <div className="flex items-center gap-2">
-  <Button
-    type="button"
-    onClick={async () => {
-      try {
-        const text = await navigator.clipboard.readText();
-        setUrlInput(text);
-        toast.success('Pasted!');
-      } catch (err) {
-        toast.error('Failed to paste. Copy a URL first.');
-      }
-    }}
+         <div className="relative">
+  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 flex-shrink-0" />
+  <Input
+    value={urlInput}
+    onChange={(e) => setUrlInput(e.target.value)}
+    placeholder="👉 Paste recipe link here... 👈"
+    className="pl-10 pr-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
     disabled={isExtracting}
-    variant="ghost"
-    className="flex-1 text-slate-600 hover:bg-slate-100 hover:text-blue-600 h-10 font-medium"
-  >
-    📋 Paste
-  </Button>
-  
-  <Button
-    type="button"
-    onClick={() => {
-      setUrlInput('');
-      toast.success('Cleared!');
-    }}
-    disabled={isExtracting}
-    variant="ghost"
-    className="text-slate-600 hover:bg-red-50 hover:text-red-600 h-10 px-4 font-medium"
-  >
-    <X className="w-4 h-4 mr-1" />
-    Clear
-  </Button>
+    onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
+  />
+  {urlInput && (
+    <button
+      type="button"
+      onClick={() => {
+        setUrlInput('');
+        toast.success('Cleared!');
+      }}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600 transition-colors"
+      disabled={isExtracting}
+    >
+      <X className="w-4 h-4" />
+    </button>
+  )}
 </div>
+
+<Button
+  type="button"
+  onClick={async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setUrlInput(text);
+      toast.success('Pasted!');
+    } catch (err) {
+      toast.error('Failed to paste. Copy a URL first.');
+    }
+  }}
+  disabled={isExtracting}
+  variant="ghost"
+  className="w-full text-slate-600 hover:bg-slate-100 hover:text-blue-600 h-10 font-medium"
+>
+  📋 Paste
+</Button>
 
             <Button
               type="button"
