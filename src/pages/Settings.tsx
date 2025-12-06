@@ -260,8 +260,8 @@ export default function Settings({ onNavigate }: SettingsProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Mobile-optimized container with safe padding */}
       <div className="w-full max-w-5xl mx-auto px-4 pt-2 pb-20 sm:px-6 md:px-8">
-       {/* Header - Responsive sizing */}
-        <div className="mb-4 sm:mb-6 md:mb-8 text-center">
+        {/* Header - Responsive sizing */}
+        <div className="mb-4 sm:mb-6 md:mb-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-1 sm:mb-2">{t.settings.title}</h1>
           <p className="text-sm sm:text-base text-slate-600">{t.settings.preferences}</p>
         </div>
