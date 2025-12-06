@@ -303,7 +303,7 @@ useEffect(() => {
         variant="outline"
         size="sm"
         disabled={loadingReviews}
-        className={`w-full min-h-[44px] border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-500 active:scale-95 transition-all touch-manipulation text-xs sm:text-sm ${
+       className={`w-full min-h-[44px] border-orange-300 text-orange-600 hover:bg-orange-100 hover:border-orange-500 active:scale-95 transition-all touch-manipulation text-xs sm:text-sm ${
           loadingReviews ? 'opacity-60 cursor-wait' : ''
         }`}
         onClick={async (e) => {
