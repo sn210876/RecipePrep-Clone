@@ -193,7 +193,7 @@ function AppContent() {
 
   // Check if onboarding should be shown
   useEffect(() => {
-    if (user && isEmailVerified) {
+    if (user && !loading) {
       const onboardingCompleted = localStorage.getItem('onboarding_completed');
       const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
 
@@ -202,7 +202,7 @@ function AppContent() {
         localStorage.setItem(`onboarding_seen_${user.id}`, 'true');
       }
     }
-  }, [user, isEmailVerified]);
+  }, [user, loading]);
 
   const handleNavigate = (page: string) => {
     // Protected pages that require authentication
@@ -397,7 +397,7 @@ if (loading || (user && isEmailVerified === undefined)) {
   const isPublicPage = publicPages.includes(currentPage) || currentPage.startsWith('blog:');
 
   // Show onboarding for new users
-  if (showOnboarding && user && isEmailVerified) {
+  if (showOnboarding && user && !loading) {
     return <Onboarding onComplete={handleOnboardingComplete} />;
   }
 
