@@ -428,6 +428,7 @@ async def health_check():
 
     return checks
 
+@app.head("/")
 @app.get("/")
 async def root():
     return {"status": "ok", "version": "2025-11-29-enhanced", "endpoints": ["/extract", "/youtube-metadata", "/extract-from-description", "/extract-youtube-transcript", "/extract-manual-description", "/health"]}
