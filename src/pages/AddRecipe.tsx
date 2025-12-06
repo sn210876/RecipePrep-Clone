@@ -960,7 +960,7 @@ return (
               <Input
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="Paste recipe link..."
+                placeholder="👉 Paste recipe link here... 👈"
                 className="pl-10 h-10 text-sm placeholder:text-slate-400 border-2 border-blue-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 shadow-sm"
                 disabled={isExtracting}
                 onKeyDown={(e) => e.key === 'Enter' && handleUrlExtract()}
