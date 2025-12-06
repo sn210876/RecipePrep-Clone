@@ -994,10 +994,10 @@ return (
     }}
     disabled={isExtracting}
     variant="ghost"
-    size="icon"
-    className="text-slate-400 hover:bg-red-50 hover:text-red-600 h-10 w-10"
+    className="text-slate-600 hover:bg-red-50 hover:text-red-600 h-10 px-4 font-medium"
   >
-    <X className="w-4 h-4" />
+    <X className="w-4 h-4 mr-1" />
+    Clear
   </Button>
 </div>
 
