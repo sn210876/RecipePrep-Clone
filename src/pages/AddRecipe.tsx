@@ -1236,7 +1236,7 @@ className="flex-1 border-2 border-purple-600 text-purple-600 hover:bg-purple-700
             <CardTitle className="flex items-center gap-2 text-lg">
               <Camera className="w-5 h-5 text-emerald-600 flex-shrink-0" />
               <span className="leading-tight">Scan Recipe Photo</span>
-              <Badge variant="secondary" className="ml-auto bg-emerald-100 text-emerald-700 border-emerald-200">
+            
            
             </CardTitle>
           </CardHeader>
