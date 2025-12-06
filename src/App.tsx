@@ -194,10 +194,9 @@ function AppContent() {
   // Check if onboarding should be shown
   useEffect(() => {
     if (user && !loading) {
-      const onboardingCompleted = localStorage.getItem('onboarding_completed');
       const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
 
-      if (!onboardingCompleted && !hasSeenOnboarding) {
+      if (!hasSeenOnboarding) {
         setShowOnboarding(true);
         localStorage.setItem(`onboarding_seen_${user.id}`, 'true');
       }
