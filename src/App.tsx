@@ -338,7 +338,7 @@ function AppContent() {
       case 'subscription': return <Subscription onNavigate={handleNavigate} />;
       case 'subscription-success': return <SubscriptionSuccess onNavigate={handleNavigate} />;
       case 'faq': return <FAQ />;
-      case 'onboarding': return <Onboarding onComplete={() => handleNavigate('add-recipe')} />;
+      case 'onboarding': return <Onboarding onComplete={() => handleNavigate('discover-recipes')} />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;
       default: return <DiscoverRecipes onNavigate={handleNavigate} />;
     }
@@ -388,7 +388,7 @@ if (loading || (user && isEmailVerified === undefined)) {
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
-    handleNavigate('add-recipe');
+    handleNavigate('discover-recipes');
   };
 
   // Allow access to DiscoverRecipes, Blog, FAQ, and Subscription without login

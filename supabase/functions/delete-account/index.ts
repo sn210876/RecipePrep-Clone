@@ -41,6 +41,22 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    const storageBuckets = ['avatars', 'banners', 'blog-covers', 'dailys', 'posts', 'recipe-images'];
+    for (const bucket of storageBuckets) {
+      try {
+        const { data: files } = await supabaseAdmin.storage
+          .from(bucket)
+          .list(user.id);
+
+        if (files && files.length > 0) {
+          const filePaths = files.map(file => `${user.id}/${file.name}`);
+          await supabaseAdmin.storage.from(bucket).remove(filePaths);
+        }
+      } catch (storageError) {
+        console.error(`Error deleting files from ${bucket}:`, storageError);
+      }
+    }
+
     const { error: deleteError } = await supabaseAdmin.rpc('delete_user_account_data', {
       target_user_id: user.id
     });
