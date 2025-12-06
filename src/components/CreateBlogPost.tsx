@@ -9,6 +9,7 @@ import { createBlogPost } from '../services/blogService';
 import { uploadImage } from '../lib/imageStorage';
 import { toast } from 'sonner';
 import { extractTextFromHTML } from '../lib/seo';
+import { compressImageWithOptions } from '../lib/imageCompression';
 
 interface CreateBlogPostProps {
   open: boolean;
@@ -33,17 +34,25 @@ export function CreateBlogPost({ open, onClose, onPostCreated }: CreateBlogPostP
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image must be less than 10MB');
       return;
     }
 
     setIsUploading(true);
     try {
-      const imageUrl = await uploadImage(file, 'blog-covers');
+      const result = await compressImageWithOptions(file, {
+        maxSizeMB: 0.2,
+        maxWidthOrHeight: 1200,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.85,
+      });
+
+      const imageUrl = await uploadImage(result.file, 'blog-covers');
       setCoverImage(imageUrl);
-      setImageFile(file);
-      toast.success('Cover image uploaded!');
+      setImageFile(result.file);
+      toast.success(`Cover image uploaded! (${Math.round(result.compressedSize / 1024)}KB)`);
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image');

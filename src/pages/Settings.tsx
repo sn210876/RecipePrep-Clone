@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download, Crown, Languages, BookOpen } from 'lucide-react';
+import { Mail, Copy, Check, Instagram, MessageSquare, Camera, ArrowRight, TestTube, Loader2, Mic, Volume2, LogOut, Globe, Lock, Download, Crown, Languages, BookOpen, Trash2, AlertTriangle } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -92,6 +92,9 @@ export default function Settings({ onNavigate }: SettingsProps) {
   const [changingPassword, setChangingPassword] = useState(false);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [migratingImages, setMigratingImages] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     isAdmin().then(setIsUserAdmin);
@@ -208,6 +211,48 @@ export default function Settings({ onNavigate }: SettingsProps) {
       toast.error('Migration failed: ' + error.message, { id: 'migrate' });
     } finally {
       setMigratingImages(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      toast.error('Please type DELETE to confirm');
+      return;
+    }
+
+    setDeletingAccount(true);
+    toast.loading('Deleting your account...', { id: 'delete-account' });
+
+    try {
+      if (!user) throw new Error('No user logged in');
+
+      const { data: storage } = await supabase.storage.listBuckets();
+
+      const buckets = ['avatars', 'recipe-images', 'posts', 'dailys', 'blog-covers', 'recipe-videos'];
+      for (const bucket of buckets) {
+        try {
+          const { data: files } = await supabase.storage.from(bucket).list(user.id);
+
+          if (files && files.length > 0) {
+            const filePaths = files.map(f => `${user.id}/${f.name}`);
+            await supabase.storage.from(bucket).remove(filePaths);
+          }
+        } catch (err) {
+          console.error(`Error deleting ${bucket}:`, err);
+        }
+      }
+
+      const { error: rpcError } = await supabase.rpc('delete_user_account');
+
+      if (rpcError) throw rpcError;
+
+      toast.success('Account deleted successfully', { id: 'delete-account' });
+
+      await signOut();
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      toast.error('Failed to delete account: ' + error.message, { id: 'delete-account' });
+      setDeletingAccount(false);
     }
   };
 
@@ -595,6 +640,51 @@ export default function Settings({ onNavigate }: SettingsProps) {
               </CardContent>
             </Card>
           )}
+
+          {/* Danger Zone - Delete Account */}
+          <Card className="border-red-300 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gradient-to-br from-red-50 to-rose-50 border-b border-red-200 p-4 sm:p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-600 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <CardTitle className="text-lg sm:text-xl md:text-2xl text-red-900">Danger Zone</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm text-red-700">
+                    Permanent account deletion
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-4">
+                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    Delete Your Account
+                  </h3>
+                  <p className="text-sm text-red-800 mb-3">
+                    This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                  </p>
+                  <ul className="text-sm text-red-700 space-y-1 mb-4 list-disc list-inside">
+                    <li>All your saved recipes will be deleted</li>
+                    <li>Your profile and posts will be removed</li>
+                    <li>All uploaded images and videos will be deleted</li>
+                    <li>Your meal plans and grocery lists will be lost</li>
+                    <li>You will lose access to any premium features</li>
+                  </ul>
+                  <Button
+                    onClick={() => setShowDeleteAccountModal(true)}
+                    variant="destructive"
+                    className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Account
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -760,6 +850,80 @@ Instructions:
                 className="h-10 sm:h-11 text-sm sm:text-base"
               >
                 Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Confirmation Modal */}
+      <Dialog open={showDeleteAccountModal} onOpenChange={setShowDeleteAccountModal}>
+        <DialogContent className="w-[95vw] max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl text-red-900 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Delete Account
+            </DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-red-700">
+              This action is permanent and cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+              <p className="text-sm font-semibold text-red-900 mb-2">
+                You will lose everything:
+              </p>
+              <ul className="text-sm text-red-800 space-y-1 list-disc list-inside">
+                <li>All your saved recipes</li>
+                <li>Your profile and all posts</li>
+                <li>All uploaded photos and videos</li>
+                <li>Meal plans and grocery lists</li>
+                <li>Premium subscription (no refund)</li>
+                <li>Followers and following connections</li>
+              </ul>
+            </div>
+            <div>
+              <Label htmlFor="delete-confirm" className="text-sm sm:text-base font-semibold text-red-900">
+                Type <span className="font-mono bg-red-100 px-2 py-0.5 rounded">DELETE</span> to confirm
+              </Label>
+              <input
+                id="delete-confirm"
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className="w-full px-3 py-2 sm:py-2.5 text-sm sm:text-base border-2 border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 mt-2"
+                placeholder="Type DELETE"
+              />
+            </div>
+            <div className="flex gap-2 sm:gap-3 pt-2">
+              <Button
+                onClick={() => {
+                  setShowDeleteAccountModal(false);
+                  setDeleteConfirmText('');
+                }}
+                variant="outline"
+                disabled={deletingAccount}
+                className="flex-1 h-10 sm:h-11 text-sm sm:text-base"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount || deleteConfirmText !== 'DELETE'}
+                variant="destructive"
+                className="flex-1 bg-red-600 hover:bg-red-700 h-10 sm:h-11 text-sm sm:text-base"
+              >
+                {deletingAccount ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Forever
+                  </>
+                )}
               </Button>
             </div>
           </div>
