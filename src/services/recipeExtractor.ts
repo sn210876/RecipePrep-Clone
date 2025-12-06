@@ -94,10 +94,10 @@ if (isSocial) {
     // ✅ NEW: Check if it's an Instagram/Facebook CDN URL that needs proxying
     let finalImageUrl = rawImageUrl;
     if (rawImageUrl) {
-      const needsProxy = rawImageUrl.includes('cdninstagram.com') || 
+      const needsProxy = rawImageUrl.includes('cdninstagram.com') ||
                          rawImageUrl.includes('fbcdn.net') ||
                          rawImageUrl.includes('instagram.com');
-      
+
       if (needsProxy) {
         // Wrap it with your Supabase proxy
         const cleanUrl = rawImageUrl.replace(/&amp;/g, '&');
@@ -108,8 +108,10 @@ if (isSocial) {
       }
     }
 
-    // Normalize ingredients
-    const ingredients = (data.ingredients || []).map((ing: string) => {
+    const rawIngredients = Array.isArray(data.ingredients) ? data.ingredients : [];
+    console.log('[Extractor] Processing ingredients:', rawIngredients);
+
+    const ingredients = rawIngredients.map((ing: string) => {
       const cleaned = decodeHtmlEntities(ing.trim());
       if (!cleaned) return { quantity: '', unit: '', name: '' };
 
@@ -163,7 +165,10 @@ if (isSocial) {
     };
 
     console.log('[Extractor] Final image URL being returned:', finalImageUrl);
-//test
+
+    const rawInstructions = Array.isArray(data.instructions) ? data.instructions : [];
+    console.log('[Extractor] Processing instructions:', rawInstructions);
+
     return {
       title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
      description: decodeHtmlEntities(
@@ -174,7 +179,7 @@ if (isSocial) {
         ),
       creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
       ingredients,
-      instructions: (data.instructions || []).map((i: string) => decodeHtmlEntities(i)),
+      instructions: rawInstructions.map((i: string) => decodeHtmlEntities(i)),
       prepTime: formatTime(data.prep_time || 15),
       cookTime: formatTime(data.cook_time || 35),
       servings: data.servings || data.yield || '4',
