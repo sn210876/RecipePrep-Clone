@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
 
     if (deleteError) {
       console.error('Delete account error:', deleteError);
-      throw deleteError;
+      throw new Error(deleteError.message || 'Failed to delete account');
     }
 
     return new Response(

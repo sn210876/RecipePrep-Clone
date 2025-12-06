@@ -34,6 +34,6 @@ export const isAdmin = async (): Promise<boolean> => {
     .from('admin_users')
     .select('user_id')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
   return !!data;
 };
