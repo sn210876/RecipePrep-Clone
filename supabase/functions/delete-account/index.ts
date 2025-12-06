@@ -36,11 +36,25 @@ Deno.serve(async (req: Request) => {
       throw new Error('Unauthorized');
     }
 
-    const { error: deleteError } = await supabaseClient.rpc('delete_user_account');
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { error: deleteError } = await supabaseAdmin.rpc('delete_user_account_data', {
+      target_user_id: user.id
+    });
 
     if (deleteError) {
-      console.error('Delete account error:', deleteError);
-      throw new Error(deleteError.message || 'Failed to delete account');
+      console.error('Delete account data error:', deleteError);
+      throw new Error(deleteError.message || 'Failed to delete account data');
+    }
+
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+
+    if (authDeleteError) {
+      console.error('Delete auth user error:', authDeleteError);
+      throw new Error(authDeleteError.message || 'Failed to delete auth user');
     }
 
     return new Response(
