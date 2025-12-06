@@ -242,7 +242,8 @@ export default function Settings({ onNavigate }: SettingsProps) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to delete account');
+        console.error('Delete account error response:', errorData);
+        throw new Error(errorData.error || errorData.message || 'Failed to delete account');
       }
 
       toast.success('Account deleted successfully', { id: 'delete-account' });
