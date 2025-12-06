@@ -221,30 +221,29 @@ export default function Settings({ onNavigate }: SettingsProps) {
     }
 
     setDeletingAccount(true);
-    toast.loading('Deleting your account...', { id: 'delete-account' });
+    toast.loading('Deleting your account and all data...', { id: 'delete-account' });
 
     try {
       if (!user) throw new Error('No user logged in');
 
-      const { data: storage } = await supabase.storage.listBuckets();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
 
-      const buckets = ['avatars', 'recipe-images', 'posts', 'dailys', 'blog-covers', 'recipe-videos'];
-      for (const bucket of buckets) {
-        try {
-          const { data: files } = await supabase.storage.from(bucket).list(user.id);
-
-          if (files && files.length > 0) {
-            const filePaths = files.map(f => `${user.id}/${f.name}`);
-            await supabase.storage.from(bucket).remove(filePaths);
-          }
-        } catch (err) {
-          console.error(`Error deleting ${bucket}:`, err);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
         }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete account');
       }
-
-      const { error: rpcError } = await supabase.rpc('delete_user_account');
-
-      if (rpcError) throw rpcError;
 
       toast.success('Account deleted successfully', { id: 'delete-account' });
 
@@ -253,6 +252,8 @@ export default function Settings({ onNavigate }: SettingsProps) {
       console.error('Error deleting account:', error);
       toast.error('Failed to delete account: ' + error.message, { id: 'delete-account' });
       setDeletingAccount(false);
+      setShowDeleteAccountModal(false);
+      setDeleteConfirmText('');
     }
   };
 
