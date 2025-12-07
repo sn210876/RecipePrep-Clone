@@ -224,8 +224,10 @@ useEffect(() => {
 
         <div className="flex items-center gap-3 text-sm text-gray-600">
   <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-3 text-sm text-gray-600">
+  <div className="flex items-center gap-1.5">
     <Clock className="w-4 h-4 flex-shrink-0" />
-    <span className="font-medium whitespace-nowrap">{totalTime} {t.recipe.minutes}</span>
+    <span className="font-medium whitespace-nowrap">{totalTime} min</span>
   </div>
   <div className="hidden md:flex items-center gap-1.5">
     <ChefHat className="w-4 h-4 flex-shrink-0" />
