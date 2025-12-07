@@ -739,22 +739,16 @@ if (loading) {
       className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden"
       style={{ paddingBottom: 'max(8rem, env(safe-area-inset-bottom))' }}
     >
-      {/* Back Button + Username Header */}
-     {/* Back Button + Username Header */}
-<div
-  className="fixed left-0 right-0 bg-white border-b border-gray-200 z-50"
+      {/* Back Button - Floating */}
+<button
+  onClick={() => window.history.back()}
+  className="fixed left-4 z-50 p-2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full shadow-lg transition-all"
   style={{
-    top: 'calc(56px + env(safe-area-inset-top))',   // 56px = your main nav height
-    paddingTop: 'env(safe-area-inset-top)',        // keeps notch area safe
+    top: 'calc(60px + env(safe-area-inset-top))',
   }}
 >
-  <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-    <button onClick={() => window.history.back()} className="p-2 hover:bg-gray-100 rounded-full">
-      <ArrowLeft className="w-6 h-6" />
-    </button>
-    <h1 className="text-lg font-semibold">@{profile.username}</h1>
-  </div>
-</div>
+  <ArrowLeft className="w-6 h-6 text-gray-900" />
+</button>
       
       <div className="max-w-lg mx-auto w-full">
         <div className="bg-white border-b border-gray-200">
