@@ -221,10 +221,7 @@ useEffect(() => {
   {decodeHtmlEntities(recipe.title)}
 </h3>
           </div>
-
-        <div className="flex items-center gap-3 text-sm text-gray-600">
-  <div className="flex items-center gap-1.5">
-    <div className="flex items-center gap-3 text-sm text-gray-600">
+<div className="flex items-center gap-3 text-sm text-gray-600">
   <div className="flex items-center gap-1.5">
     <Clock className="w-4 h-4 flex-shrink-0" />
     <span className="font-medium whitespace-nowrap">{totalTime} min</span>
@@ -239,7 +236,6 @@ useEffect(() => {
     </Badge>
   </div>
 </div>
-
        
 
           {recipe.dietaryTags.length > 0 && (
