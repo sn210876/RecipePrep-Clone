@@ -55,9 +55,9 @@ const slides = [
     iconBg: 'bg-emerald-100',
     iconColor: 'text-emerald-600',
     stats: [
-      { value: '10K+', label: 'Active Users' },
+      { value: '10K+', label: 'Future Users' },
       { value: '50K+', label: 'Recipes Saved' },
-      { value: '4.9★', label: 'User Rating' }
+      { value: '5.0★', label: 'User Rating' }
     ]
   }
 ];
