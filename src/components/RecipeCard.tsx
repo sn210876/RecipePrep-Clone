@@ -220,8 +220,7 @@ useEffect(() => {
          <h3 className="font-bold text-gray-900 leading-tight text-sm sm:text-base lg:text-lg xl:text-xl hyphens-auto break-words">
   {decodeHtmlEntities(recipe.title)}
 </h3>
-          </div>
-        <div className="flex items-center gap-3 text-sm text-gray-600">
+          </div><div className="flex items-center gap-3 text-sm text-gray-600">
   <div className="flex items-center gap-1.5">
     <Clock className="w-4 h-4 flex-shrink-0" />
     <span className="font-medium whitespace-nowrap">{totalTime} min</span>
