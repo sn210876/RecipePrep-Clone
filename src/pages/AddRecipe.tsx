@@ -51,7 +51,7 @@ const CUISINE_TYPES = [
   'Thai', 'Vegan/Vegetarian', 'Vietnamese'
 ];
 
-const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
+const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', Beverages];
 
 const DIETARY_TAGS = [
   'Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free',
