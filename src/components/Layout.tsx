@@ -214,14 +214,11 @@ const loadUnreadCount = async (userId: string) => {
       </div>
     </div>
 
-   <div className="flex-1 min-w-0">
-  <h1 className="text-base sm:text-base lg:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
-  <div className="flex flex-col text-[8px] sm:text-[8px] lg:text-[10px] text-gray-500 leading-tight">
-    <span>Discover</span>
-    <span>Plan</span>
-    <span>Enjoy</span>
+    <div className="flex-1 min-w-0">
+      <h1 className="text-base sm:text-base lg:text-xl font-bold text-gray-900 truncate">Meal Scrape</h1>
+      <p className="text-[10px] sm:text-[9px] lg:text-xs text-gray-500 truncate leading-tight">Discover, Plan, Enjoy </p>
+    </div>
   </div>
-</div>
 
   {/* Close button */}
   <Button
@@ -263,8 +260,10 @@ const loadUnreadCount = async (userId: string) => {
                 </button>
               );
             })}
-         </nav>
-        </div>  {/* This closes the flex h-full flex-col div */}
+          </nav>
+
+        
+        </div>
       </aside>
 
       {/* Main Content Area */}
