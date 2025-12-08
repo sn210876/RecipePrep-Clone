@@ -123,7 +123,7 @@ export function FAQ() {
                         </ol>
                         <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes 2-5 seconds (fastest!)</p>
                         <div className="mt-4">
-                    <TutorialVideo
+                          <TutorialVideo
   src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/Import%20From%20URL.mp4"
 />
                           />
