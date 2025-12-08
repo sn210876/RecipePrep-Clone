@@ -191,6 +191,8 @@ export function FAQ() {
                         <div className="mt-4">
                           <TutorialVideo
                             src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/Add%20From%20Notes%20Youtube.mp4"
+                              width="70%"
+
                             className="max-w-md mx-auto"
                           />
                         </div>
