@@ -27,7 +27,9 @@ const slides = [
     color: 'from-blue-500 to-indigo-600',
     iconBg: 'bg-blue-100',
     iconColor: 'text-blue-600',
-    videoUrl: 'https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/How%20To%20Use%20Mealscrape.mp4'
+    videoUrl: 
+      'https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/How%20To%20Use%20Mealscrape.mp4'
+     className="max-w-md mx-auto"
   },
   {
     id: 3,
