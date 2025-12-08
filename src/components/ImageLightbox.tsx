@@ -15,10 +15,10 @@ export function ImageLightbox({ src, alt, open, onOpenChange }: ImageLightboxPro
       <style>
         {`
           [data-radix-dialog-overlay] {
-            z-index: 999998 !important;
+            z-index: 9999998 !important;
           }
           [data-radix-dialog-content] {
-            z-index: 999999 !important;
+            z-index: 9999999 !important;
           }
         `}
       </style>
