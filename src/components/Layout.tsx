@@ -266,7 +266,7 @@ const loadUnreadCount = async (userId: string) => {
           </nav>
 
         
-        </div>
+        </div> {
       </aside>
 
       {/* Main Content Area */}
