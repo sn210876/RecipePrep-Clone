@@ -125,6 +125,8 @@ export function FAQ() {
                         <div className="mt-4">
                           <TutorialVideo
                             src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/Adding%20From%20Notes.mp4"
+                           <div className="w-[50%] mx-auto">
+
                           />
                         </div>
                       </div>
