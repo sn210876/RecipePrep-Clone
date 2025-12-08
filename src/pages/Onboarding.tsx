@@ -29,7 +29,7 @@ const slides = [
     iconColor: 'text-blue-600',
     videoUrl: 
       'https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/How%20To%20Use%20Mealscrape.mp4'
-     className="max-w-md mx-auto"
+    
   },
   {
     id: 3,
@@ -224,14 +224,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 </div>
               )}
 
-              {(slide as any).videoUrl && (
-                <div className="mt-8">
-                  <TutorialVideo
-                    src={(slide as any).videoUrl}
-                    className="max-w-2xl mx-auto"
-                  />
-                </div>
-              )}
+            {(slide as any).videoUrl && (
+  <div className="mt-8">
+    <TutorialVideo
+      src={(slide as any).videoUrl}
+      width="70%"
+    />
+  </div>
+)}
             </div>
           </div>
         </div>
