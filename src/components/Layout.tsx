@@ -263,10 +263,8 @@ const loadUnreadCount = async (userId: string) => {
                 </button>
               );
             })}
-          </nav>
-
-        
-        </div> {
+         </nav>
+        </div>  {/* This closes the flex h-full flex-col div */}
       </aside>
 
       {/* Main Content Area */}
