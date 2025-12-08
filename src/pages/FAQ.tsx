@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { HelpCircle, Link2, Camera, FileText, CreditCard, Sparkles, Clock } from 'lucide-react';
+import { HelpCircle, Link2, Camera, FileText, CreditCard, Sparkles, Clock, Youtube } from 'lucide-react';
+import { TutorialVideo } from '@/components/TutorialVideo';
 
 export function FAQ() {
   return (
@@ -90,6 +91,12 @@ export function FAQ() {
                           </li>
                         </ol>
                         <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes 5-15 seconds</p>
+                        <div className="mt-4">
+                          <TutorialVideo
+                            src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/Import%20From%20URL.mp4"
+                            className="max-w-md mx-auto"
+                          />
+                        </div>
                       </div>
 
                       {/* Paste Notes */}
@@ -115,6 +122,12 @@ export function FAQ() {
                           </li>
                         </ol>
                         <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes 2-5 seconds (fastest!)</p>
+                        <div className="mt-4">
+                          <TutorialVideo
+                            src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/Adding%20From%20Notes.mp4"
+                            className="max-w-md mx-auto"
+                          />
+                        </div>
                       </div>
 
                       {/* Upload Photos */}
@@ -144,20 +157,43 @@ export function FAQ() {
                           </li>
                         </ol>
                         <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes 2-5 seconds</p>
+                        <div className="mt-4">
+                          <TutorialVideo
+                            src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/Import%20Photo.mp4"
+                            className="max-w-md mx-auto"
+                          />
+                        </div>
                       </div>
 
-                      {/* Manual Input */}
-                      <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg p-4 border border-slate-200">
+                      {/* YouTube Videos Without Transcript */}
+                      <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-lg p-4 border border-red-200">
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-500 to-gray-600 flex items-center justify-center">
-                            <FileText className="w-4 h-4 text-white" />
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-600 to-pink-600 flex items-center justify-center">
+                            <Youtube className="w-4 h-4 text-white" />
                           </div>
-                          <h4 className="font-semibold text-slate-900">4. Input Manually</h4>
+                          <h4 className="font-semibold text-slate-900">4. YouTube Videos Without Transcript</h4>
                         </div>
-                        <p className="text-sm text-slate-700 ml-2">
-                          Type in recipes by hand for full control over every detail
-                        </p>
-                        <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes as long as you need</p>
+                        <ol className="space-y-2 text-sm text-slate-700 ml-2">
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-red-600 shrink-0">•</span>
+                            <span>Open the YouTube video and click "...more" to expand the description</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-red-600 shrink-0">•</span>
+                            <span>Copy the full recipe from the video description</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="font-semibold text-red-600 shrink-0">•</span>
+                            <span>Click "Add Recipe" → "Paste Notes" tab → Paste and Extract</span>
+                          </li>
+                        </ol>
+                        <p className="text-xs text-slate-600 mt-2 italic">⏱️ Takes 2-5 seconds (perfect for bot detection errors!)</p>
+                        <div className="mt-4">
+                          <TutorialVideo
+                            src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/Add%20From%20Notes%20Youtube.mp4"
+                            className="max-w-md mx-auto"
+                          />
+                        </div>
                       </div>
 
                       {/* Pro Tip */}

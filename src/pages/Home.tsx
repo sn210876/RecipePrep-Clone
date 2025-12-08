@@ -1,5 +1,6 @@
 import { Button } from '../components/ui/button';
 import { BookOpen, Plus, UtensilsCrossed } from 'lucide-react';
+import { TutorialVideo } from '../components/TutorialVideo';
 
 interface HomeProps {
   onNavigate: (page: string) => void;
@@ -11,14 +12,22 @@ export function Home({ onNavigate }: HomeProps) {
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-orange-200/30 to-transparent rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-amber-200/30 to-transparent rounded-full blur-3xl" />
 
-      <div 
-        className="relative z-10 h-screen flex flex-col items-center justify-center px-4 sm:px-6 pb-safe overflow-y-auto"
-        style={{ 
+      <div
+        className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 py-8 pb-safe overflow-y-auto"
+        style={{
           paddingTop: 'max(2rem, env(safe-area-inset-top))',
           paddingBottom: 'max(2rem, env(safe-area-inset-bottom))'
         }}
       >
-        <div className="text-center max-w-4xl mx-auto w-full">
+        <div className="text-center max-w-4xl mx-auto w-full space-y-8">
+          {/* Welcome Video */}
+          <div className="max-w-3xl mx-auto">
+            <TutorialVideo
+              src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/How%20To%20Use%20Mealscrape.mp4"
+              title="Welcome to Meal Scrape - Quick Start Guide"
+            />
+          </div>
+
           {/* Hero Header */}
           <div className="mb-8 sm:mb-12">
             <div className="inline-flex items-center justify-center w-32 h-32 sm:w-44 sm:h-44 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl shadow-lg mb-4 sm:mb-6 p-0">
