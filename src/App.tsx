@@ -193,15 +193,14 @@ function AppContent() {
 
   // Check if onboarding should be shown
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !loading && isEmailVerified) {
       const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
 
       if (!hasSeenOnboarding) {
         setShowOnboarding(true);
-        localStorage.setItem(`onboarding_seen_${user.id}`, 'true');
       }
     }
-  }, [user, loading]);
+  }, [user, loading, isEmailVerified]);
 
   const handleNavigate = (page: string) => {
     // Protected pages that require authentication
@@ -387,6 +386,9 @@ if (loading || (user && isEmailVerified === undefined)) {
   }
 
   const handleOnboardingComplete = () => {
+    if (user) {
+      localStorage.setItem(`onboarding_seen_${user.id}`, 'true');
+    }
     setShowOnboarding(false);
     handleNavigate('discover-recipes');
   };

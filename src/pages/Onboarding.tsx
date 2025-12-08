@@ -95,7 +95,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   const handleComplete = () => {
-    localStorage.setItem('onboarding_completed', 'true');
     onComplete();
   };
 
