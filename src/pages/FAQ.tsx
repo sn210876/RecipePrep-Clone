@@ -29,11 +29,12 @@ export function FAQ() {
                 <AccordionItem value="item-1">
                   <AccordionTrigger>What is Meal Scrape?</AccordionTrigger>
                   <AccordionContent>
-                    Meal Scrape is an AI-powered recipe management app that helps you save, organize, and discover recipes from anywhere on the internet. Simply paste a URL, upload a photo, or manually enter recipes to build your personal cookbook.
+                    <p className="mb-4">Meal Scrape is an AI-powered recipe management app that helps you save, organize, and discover recipes from anywhere on the internet. Simply paste a URL, upload a photo, or manually enter recipes to build your personal cookbook.</p>
+                    <TutorialVideo
+                      src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/How%20To%20Use%20Mealscrape.mp4"
+                      width="30%"
+                    />
                   </AccordionContent>
-                   <TutorialVideo
-                            src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/Import%20From%20URL.mp4"
-                              width="30%"
                 </AccordionItem>
 
                 <AccordionItem value="item-2">
