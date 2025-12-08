@@ -1662,22 +1662,24 @@ if (post.video_url) {
     </div>
   )}
 
-  {/* Title + rating overlay */}
+  {/* Title overlay */}
   {post.title && (
     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-4 py-3">
-      <div className="flex items-end justify-between gap-2">
-        <h3 className="text-white text-sm font-semibold flex-1">{post.title}</h3>
-        {postRatings[post.id] && postRatings[post.id].count > 0 && (
-          <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded-full">
-            <span className="text-lg">🔥</span>
-            <span className="text-white text-xs font-semibold">
-              {postRatings[post.id].average.toFixed(1)}
-            </span>
-            <span className="text-white/70 text-xs">
-              ({postRatings[post.id].count})
-            </span>
-          </div>
-        )}
+      <h3 className="text-white text-sm font-semibold">{post.title}</h3>
+    </div>
+  )}
+
+  {/* Rating overlay - always show on bottom right when ratings exist */}
+  {postRatings[post.id] && postRatings[post.id].count > 0 && (
+    <div className="absolute bottom-3 right-3 z-20">
+      <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm px-2.5 py-1.5 rounded-full shadow-lg">
+        <span className="text-lg">🔥</span>
+        <span className="text-white text-xs font-bold">
+          {postRatings[post.id].average.toFixed(1)}
+        </span>
+        <span className="text-white/70 text-xs">
+          ({postRatings[post.id].count})
+        </span>
       </div>
     </div>
   )}
