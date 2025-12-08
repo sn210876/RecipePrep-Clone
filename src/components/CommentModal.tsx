@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogPortal, DialogOverlay } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
@@ -364,8 +364,10 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
 
   if (!post && loading) {
     return (
-<Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>   
-  <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[9999] flex flex-col">
+<Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>
+  <DialogPortal>
+    <DialogOverlay className="z-[10000000]" />
+    <DialogContent className="max-w-lg w-[95vw] h-[90vh] sm:max-h-[85vh] p-0 gap-0 overflow-hidden z-[10000001] flex flex-col">
           <div className="flex flex-col h-full overflow-hidden">
            <div className="flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3 space-y-2 sm:space-y-3 min-h-[100px] max-h-[35vh] sm:max-h-none">
               <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/90 z-10">
@@ -394,6 +396,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             </div>
           </div>
         </DialogContent>
+      </DialogPortal>
       </Dialog>
     );
   }
@@ -401,19 +404,21 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
  return (
     <>
       <Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>
-        <DialogContent className="
-          max-w-5xl 
-          w-[calc(100vw-1rem)]
-          sm:w-[95vw] 
-          h-[calc(100vh-2rem)]
-          sm:h-[85vh] 
-          p-0 
-          gap-0 
-          overflow-hidden 
-          z-[9999]
-          mx-2
-          sm:mx-auto
-        ">
+        <DialogPortal>
+          <DialogOverlay className="z-[10000000]" />
+          <DialogContent className="
+            max-w-5xl
+            w-[calc(100vw-1rem)]
+            sm:w-[95vw]
+            h-[calc(100vh-2rem)]
+            sm:h-[85vh]
+            p-0
+            gap-0
+            overflow-hidden
+            z-[10000001]
+            mx-2
+            sm:mx-auto
+          ">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -688,6 +693,7 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
             </div>
           </div>
         </DialogContent>
+        </DialogPortal>
       </Dialog>
 
      {selectedRecipe && (
