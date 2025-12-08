@@ -11,6 +11,7 @@ import {
   ChefHat,
   PlayCircle,
   ExternalLink,
+  Expand,
 } from 'lucide-react';
 import { CookMode } from './CookMode';
 import { ReviewForm } from './ReviewForm';
@@ -126,12 +127,21 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
         <img
   src={getProxiedImageUrl(recipe.imageUrl)}
   alt={recipe.title}
-  className="w-full h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+  className="w-full h-64 object-cover"
   loading="lazy"
-  onClick={() => setShowImageLightbox(true)}
 />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+        {!recipe.videoUrl && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowImageLightbox(true)}
+            className="absolute bottom-3 right-3 z-20 bg-black/60 hover:bg-black/80 text-white rounded-full min-h-[40px] min-w-[40px] touch-manipulation active:scale-95 backdrop-blur-sm"
+          >
+            <Expand className="w-5 h-5" />
+          </Button>
+        )}
         <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
           <h1 className="text-2xl font-bold mb-3 leading-tight">{decodeHtmlEntities(recipe.title)}</h1>
           {recipe.sourceUrl && (

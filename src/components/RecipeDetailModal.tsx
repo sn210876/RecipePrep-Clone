@@ -17,6 +17,7 @@ import {
   Timer,
   UtensilsCrossed,
   PlayCircle,
+  Expand,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CookMode } from './CookMode';
@@ -121,10 +122,10 @@ export function RecipeDetailModal({
       <style>
         {`
           [data-radix-dialog-overlay] {
-            z-index: 9998 !important;
+            z-index: 99998 !important;
           }
           [data-radix-dialog-content] {
-            z-index: 9999 !important;
+            z-index: 99999 !important;
           }
         `}
       </style>
@@ -142,7 +143,7 @@ export function RecipeDetailModal({
               <Button
                 variant="ghost"
                 size="icon"
-                className="sticky top-2 right-2 float-right z-[10000] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
+                className="sticky top-2 right-2 float-right z-[100000] bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[44px] min-w-[44px] touch-manipulation active:scale-95 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpenChange(false);
@@ -158,11 +159,21 @@ export function RecipeDetailModal({
                     ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
                     : recipe.imageUrl}
                   alt={recipe.title}
-                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  className="w-full h-full object-cover"
                   loading="lazy"
-                  onClick={() => setShowImageLightbox(true)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowImageLightbox(true);
+                  }}
+                  className="absolute bottom-3 right-3 z-20 bg-black/60 hover:bg-black/80 text-white rounded-full min-h-[40px] min-w-[40px] touch-manipulation active:scale-95 backdrop-blur-sm"
+                >
+                  <Expand className="w-5 h-5" />
+                </Button>
                 <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white z-10">
                   <h1 className="text-xl sm:text-2xl font-bold mb-2 leading-tight pr-12">{recipe.title}</h1>
                   <div className="flex flex-wrap gap-1 sm:gap-1.5">
