@@ -135,6 +135,7 @@ export function RecipeDetailModal({
           className="max-w-4xl w-[85%] h-[85vh] p-0 gap-0 overflow-hidden rounded-xl border"
           onPointerDownOutside={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
           <div className="h-full overflow-y-auto overscroll-contain scroll-smooth">

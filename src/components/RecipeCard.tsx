@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Clock, ChefHat, Bookmark, Flame, Trash2, MoreVertical, Edit } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -27,7 +27,7 @@ interface RecipeCardProps {
   requireAuth?: boolean;
 }
 
-export function RecipeCard({ recipe, onSave, onCook, onDelete, onEdit, showReviewButton = false, isAdmin = false, preloadedSocialPost, requireAuth = false }: RecipeCardProps) {
+const RecipeCardComponent = ({ recipe, onSave, onCook, onDelete, onEdit, showReviewButton = false, isAdmin = false, preloadedSocialPost, requireAuth = false }: RecipeCardProps) => {
   const { state } = useRecipes();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -357,4 +357,13 @@ useEffect(() => {
       />
     </>
   );
-}
+};
+
+export const RecipeCard = memo(RecipeCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.recipe.id === nextProps.recipe.id &&
+    prevProps.isAdmin === nextProps.isAdmin &&
+    prevProps.showReviewButton === nextProps.showReviewButton &&
+    prevProps.preloadedSocialPost?.id === nextProps.preloadedSocialPost?.id
+  );
+});
