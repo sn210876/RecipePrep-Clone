@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CookMode } from './CookMode';
+import { ImageLightbox } from './ImageLightbox';
 
 interface RecipeDetailModalProps {
   recipe: Recipe;
@@ -36,6 +37,7 @@ export function RecipeDetailModal({
   const [cookMode, setCookMode] = useState(false);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<number, boolean>>({});
   const [checkedInstructions, setCheckedInstructions] = useState<Record<number, boolean>>({});
+  const [showImageLightbox, setShowImageLightbox] = useState(false);
 
   const isSaved = state.savedRecipes.some((r) => r.id === recipe.id);
   const hasSteps = (recipe.steps && recipe.steps.length > 0) || (recipe.instructions && recipe.instructions.length > 0);
@@ -156,8 +158,9 @@ export function RecipeDetailModal({
                     ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
                     : recipe.imageUrl}
                   alt={recipe.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                   loading="lazy"
+                  onClick={() => setShowImageLightbox(true)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
                 <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white z-10">
@@ -411,6 +414,15 @@ export function RecipeDetailModal({
           </div>
         </DialogContent>
       </Dialog>
+
+      <ImageLightbox
+        src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
+          ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
+          : recipe.imageUrl}
+        alt={recipe.title}
+        open={showImageLightbox}
+        onOpenChange={setShowImageLightbox}
+      />
     </>
   );
 }

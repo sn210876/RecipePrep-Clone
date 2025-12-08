@@ -25,6 +25,7 @@ import {
 } from '../services/reviewService';
 import { toast } from 'sonner';
 import { decodeHtmlEntities } from '@/lib/utils';
+import { ImageLightbox } from './ImageLightbox';
 
 interface RecipeDetailViewProps {
   recipe: Recipe;
@@ -37,6 +38,7 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
   const [userReview, setUserReview] = useState<ReviewWithImages | null>(null);
   const [averageRating, setAverageRating] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showImageLightbox, setShowImageLightbox] = useState(false);
 
   const hasSteps = recipe.steps && recipe.steps.length > 0;
 
@@ -124,8 +126,9 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
         <img
   src={getProxiedImageUrl(recipe.imageUrl)}
   alt={recipe.title}
-  className="w-full h-64 object-cover"
+  className="w-full h-64 object-cover cursor-pointer hover:opacity-90 transition-opacity"
   loading="lazy"
+  onClick={() => setShowImageLightbox(true)}
 />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -364,6 +367,13 @@ export function RecipeDetailView({ recipe, onClose }: RecipeDetailViewProps) {
           ) : null}
         </div>
       </div>
+
+      <ImageLightbox
+        src={getProxiedImageUrl(recipe.imageUrl)}
+        alt={recipe.title}
+        open={showImageLightbox}
+        onOpenChange={setShowImageLightbox}
+      />
     </div>
   );
 }
