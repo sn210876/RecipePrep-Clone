@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChefHat, Link as LinkIcon, Camera, ClipboardPaste, Sparkles, Calendar, ShoppingCart } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
+import { TutorialVideo } from '../components/TutorialVideo';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -20,6 +21,16 @@ const slides = [
   },
   {
     id: 2,
+    title: 'Quick Start Guide',
+    description: 'Watch this short video to learn how to use MealScrape',
+    icon: Sparkles,
+    color: 'from-blue-500 to-indigo-600',
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-600',
+    videoUrl: 'https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/How%20To%20Use%20Mealscrape.mp4'
+  },
+  {
+    id: 3,
     title: 'Save Any Recipe',
     description: 'Extract recipes from any website, upload photos, or paste descriptions. We handle the rest.',
     methods: [
@@ -33,7 +44,7 @@ const slides = [
     iconColor: 'text-orange-600'
   },
   {
-    id: 3,
+    id: 4,
     title: 'Everything Organized',
     description: 'Beautifully formatted recipes with smart editing, meal planning, and grocery lists.',
     features: [
@@ -47,7 +58,7 @@ const slides = [
     iconColor: 'text-blue-600'
   },
   {
-    id: 4,
+    id: 5,
     title: 'Ready to Start?',
     description: 'Join thousands of home cooks who are making meal planning easier every day.',
     icon: ChefHat,
@@ -208,6 +219,15 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                       <div className="text-sm text-gray-600 mt-1">{stat.label}</div>
                     </Card>
                   ))}
+                </div>
+              )}
+
+              {(slide as any).videoUrl && (
+                <div className="mt-8">
+                  <TutorialVideo
+                    src={(slide as any).videoUrl}
+                    className="max-w-2xl mx-auto"
+                  />
                 </div>
               )}
             </div>
