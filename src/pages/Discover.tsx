@@ -144,7 +144,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [socialPostsMap, setSocialPostsMap] = useState<Map<string, any>>(new Map());
   const [copiedLink, setCopiedLink] = useState(false);
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
-  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number } | null>(null);
+  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number; postId: string } | null>(null);
 
   const POSTS_PER_PAGE = 10;
 
@@ -1487,7 +1487,8 @@ if (post.video_url) {
             onClick={() => {
               setLightboxPost({
                 media: mediaUrls.map((url, idx) => ({ url, type: mediaTypes[idx] as 'image' | 'video' })),
-                initialIndex: 0
+                initialIndex: 0,
+                postId: post.id
               });
             }}
             onError={(e) => {
@@ -1556,7 +1557,8 @@ if (post.video_url) {
               onClick={() => {
                 setLightboxPost({
                   media: mediaUrls.map((url, idx) => ({ url, type: mediaTypes[idx] as 'image' | 'video' })),
-                  initialIndex: currentImageIndex
+                  initialIndex: currentImageIndex,
+                  postId: post.id
                 });
               }}
               onError={(e) => {
@@ -2192,9 +2194,13 @@ if (post.video_url) {
           <PostLightbox
             media={lightboxPost.media}
             initialIndex={lightboxPost.initialIndex}
+            postId={lightboxPost.postId}
             open={!!lightboxPost}
             onOpenChange={(open) => {
               if (!open) setLightboxPost(null);
+            }}
+            onLikeUpdate={() => {
+              fetchPosts(1, true);
             }}
           />
         )}

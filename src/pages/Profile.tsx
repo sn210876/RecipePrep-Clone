@@ -190,7 +190,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [newBio, setNewBio] = useState('');
   const [newLink, setNewLink] = useState('');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number } | null>(null);
+  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number; postId: string } | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -1048,7 +1048,8 @@ if (loading) {
 
             setLightboxPost({
               media: mediaUrls.map((url, idx) => ({ url, type: mediaTypes[idx] })),
-              initialIndex: 0
+              initialIndex: 0,
+              postId: post.id
             });
           }}
           className="cursor-pointer hover:opacity-90 w-full h-full"
@@ -1389,9 +1390,20 @@ if (loading) {
         <PostLightbox
           media={lightboxPost.media}
           initialIndex={lightboxPost.initialIndex}
+          postId={lightboxPost.postId}
           open={!!lightboxPost}
           onOpenChange={(open) => {
             if (!open) setLightboxPost(null);
+          }}
+          onLikeUpdate={async () => {
+            if (targetUserId) {
+              const { data } = await supabase
+                .from('posts')
+                .select('id, user_id, title, image_url, video_url, caption, recipe_url, recipe_id, created_at')
+                .eq('user_id', targetUserId)
+                .order('created_at', { ascending: false });
+              setPosts(data || []);
+            }
           }}
         />
       )}

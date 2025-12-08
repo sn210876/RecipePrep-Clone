@@ -62,7 +62,7 @@ export function UserProfileView({
   const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null; bio?: string; banner_url?: string | null } | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number } | null>(null);
+  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number; postId: string } | null>(null);
 
   const [supportersCount, setSupportersCount] = useState(0);
   const [supportingCount, setSupportingCount] = useState(0);
@@ -386,7 +386,8 @@ export function UserProfileView({
                           onClick={() => {
                             setLightboxPost({
                               media: mediaUrls.map((url, idx) => ({ url, type: mediaTypes[idx] })),
-                              initialIndex: 0
+                              initialIndex: 0,
+                              postId: post.id
                             });
                           }}
                         />
@@ -681,9 +682,13 @@ export function UserProfileView({
         <PostLightbox
           media={lightboxPost.media}
           initialIndex={lightboxPost.initialIndex}
+          postId={lightboxPost.postId}
           open={!!lightboxPost}
           onOpenChange={(open) => {
             if (!open) setLightboxPost(null);
+          }}
+          onLikeUpdate={() => {
+            if (onRefresh) onRefresh();
           }}
         />
       )}

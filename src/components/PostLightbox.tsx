@@ -1,17 +1,88 @@
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Heart, MessageCircle } from 'lucide-react';
 import { Dialog, DialogPortal, DialogOverlay, DialogContent } from './ui/dialog';
 import { Button } from './ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { toast } from 'sonner';
+import CommentModal from './CommentModal';
 
 interface PostLightboxProps {
   media: Array<{ url: string; type: 'image' | 'video' }>;
   initialIndex?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  postId?: string;
+  onLikeUpdate?: () => void;
 }
 
-export function PostLightbox({ media, initialIndex = 0, open, onOpenChange }: PostLightboxProps) {
+export function PostLightbox({ media, initialIndex = 0, open, onOpenChange, postId, onLikeUpdate }: PostLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showComments, setShowComments] = useState(false);
+
+  useEffect(() => {
+    const loadLikeStatus = async () => {
+      if (!postId || !open) return;
+
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id || null;
+      setCurrentUserId(userId);
+
+      if (!userId) return;
+
+      const { data: likeData } = await supabase
+        .from('likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      setIsLiked(!!likeData);
+
+      const { count } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', postId);
+
+      setLikeCount(count || 0);
+    };
+
+    loadLikeStatus();
+  }, [postId, open]);
+
+  const toggleLike = async () => {
+    if (!postId || !currentUserId) {
+      toast.error('Please sign in to like posts');
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', currentUserId);
+
+        setIsLiked(false);
+        setLikeCount(prev => Math.max(0, prev - 1));
+      } else {
+        await supabase
+          .from('likes')
+          .insert({ post_id: postId, user_id: currentUserId });
+
+        setIsLiked(true);
+        setLikeCount(prev => prev + 1);
+      }
+
+      if (onLikeUpdate) onLikeUpdate();
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast.error('Failed to update like');
+    }
+  };
 
   const goToNext = () => {
     if (currentIndex < media.length - 1) {
@@ -92,9 +163,49 @@ export function PostLightbox({ media, initialIndex = 0, open, onOpenChange }: Po
                 ))}
               </div>
             )}
+
+            {postId && (
+              <div className="absolute bottom-4 right-4 flex flex-col gap-3 z-[10]">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleLike();
+                  }}
+                  className="bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[48px] min-w-[48px] touch-manipulation active:scale-95"
+                >
+                  <Heart
+                    className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-700'}`}
+                  />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowComments(true);
+                  }}
+                  className="bg-white/95 hover:bg-white shadow-lg rounded-full min-h-[48px] min-w-[48px] touch-manipulation active:scale-95"
+                >
+                  <MessageCircle className="w-6 h-6 text-gray-700" />
+                </Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </DialogPortal>
+
+      {showComments && postId && (
+        <CommentModal
+          postId={postId}
+          isOpen={showComments}
+          onClose={() => setShowComments(false)}
+          onCommentPosted={() => {
+            if (onLikeUpdate) onLikeUpdate();
+          }}
+        />
+      )}
     </Dialog>
   );
 }
