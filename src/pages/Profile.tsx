@@ -13,6 +13,7 @@ import { ChevronLeft } from 'lucide-react';
 
 import CommentModal from '../components/CommentModal';
 import { FollowersModal } from '../components/FollowersModal';
+import { PostLightbox } from '../components/PostLightbox';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { compressImageWithOptions, formatFileSize, isImageFile } from '../lib/imageCompression';
@@ -189,6 +190,7 @@ export function Profile({ username: targetUsername }: ProfileProps) {
   const [newBio, setNewBio] = useState('');
   const [newLink, setNewLink] = useState('');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number } | null>(null);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -996,7 +998,61 @@ if (loading) {
         key={post.id}
         className="aspect-square bg-gray-100 overflow-hidden relative group"
       >
-        <div onClick={() => setSelectedPostId(post.id)} className="cursor-pointer hover:opacity-90 w-full h-full">
+        <div
+          onClick={() => {
+            // Parse all media for lightbox
+            const mediaUrls: string[] = [];
+            const mediaTypes: ('image' | 'video')[] = [];
+
+            if (post.image_url) {
+              try {
+                const parsed = JSON.parse(post.image_url);
+                if (Array.isArray(parsed)) {
+                  parsed.forEach(url => {
+                    const displayUrl = getDisplayImageUrl(url);
+                    if (displayUrl) {
+                      mediaUrls.push(displayUrl);
+                      mediaTypes.push('image');
+                    }
+                  });
+                } else {
+                  const displayUrl = getDisplayImageUrl(parsed);
+                  if (displayUrl) {
+                    mediaUrls.push(displayUrl);
+                    mediaTypes.push('image');
+                  }
+                }
+              } catch {
+                if (post.image_url.includes(',')) {
+                  post.image_url.split(',').forEach(url => {
+                    const displayUrl = getDisplayImageUrl(url.trim());
+                    if (displayUrl) {
+                      mediaUrls.push(displayUrl);
+                      mediaTypes.push('image');
+                    }
+                  });
+                } else {
+                  const displayUrl = getDisplayImageUrl(post.image_url);
+                  if (displayUrl) {
+                    mediaUrls.push(displayUrl);
+                    mediaTypes.push('image');
+                  }
+                }
+              }
+            }
+
+            if (post.video_url) {
+              mediaUrls.push(post.video_url);
+              mediaTypes.push('video');
+            }
+
+            setLightboxPost({
+              media: mediaUrls.map((url, idx) => ({ url, type: mediaTypes[idx] })),
+              initialIndex: 0
+            });
+          }}
+          className="cursor-pointer hover:opacity-90 w-full h-full"
+        >
           {firstImageUrl ? (
             <img
               src={firstImageUrl}
@@ -1327,6 +1383,18 @@ if (loading) {
         userId={targetUserId || ''}
         type={followersModalType}
       />
-    </div> 
+
+      {/* Post Lightbox */}
+      {lightboxPost && (
+        <PostLightbox
+          media={lightboxPost.media}
+          initialIndex={lightboxPost.initialIndex}
+          open={!!lightboxPost}
+          onOpenChange={(open) => {
+            if (!open) setLightboxPost(null);
+          }}
+        />
+      )}
+    </div>
   );
 }

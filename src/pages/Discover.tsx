@@ -16,6 +16,7 @@ import { makeHashtagsClickable } from '../lib/hashtags';
 import CommentModal from '../components/CommentModal';
 import { RecipeDetailModal } from '../components/RecipeDetailModal';
 import { UserProfileView } from '../components/UserProfileView';
+import { PostLightbox } from '../components/PostLightbox';
 import { Recipe } from '../types/recipe';
 import { blockService } from '../services/blockService';
 
@@ -143,6 +144,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [socialPostsMap, setSocialPostsMap] = useState<Map<string, any>>(new Map());
   const [copiedLink, setCopiedLink] = useState(false);
   const [imageIndices, setImageIndices] = useState<Record<string, number>>({});
+  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number } | null>(null);
 
   const POSTS_PER_PAGE = 10;
 
@@ -1481,7 +1483,13 @@ if (post.video_url) {
             alt={post.title || 'Post'}
             loading="lazy"
             decoding="async"
-            className="w-full aspect-square object-cover"
+            className="w-full aspect-square object-cover cursor-pointer"
+            onClick={() => {
+              setLightboxPost({
+                media: mediaUrls.map((url, idx) => ({ url, type: mediaTypes[idx] as 'image' | 'video' })),
+                initialIndex: 0
+              });
+            }}
             onError={(e) => {
               console.error('[Discover] Image failed to load:', mediaUrls[0]);
               const target = e.target as HTMLImageElement;
@@ -1544,7 +1552,13 @@ if (post.video_url) {
               loading="lazy"
               decoding="async"
               alt={`${post.title || 'Post'} ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={() => {
+                setLightboxPost({
+                  media: mediaUrls.map((url, idx) => ({ url, type: mediaTypes[idx] as 'image' | 'video' })),
+                  initialIndex: currentImageIndex
+                });
+              }}
               onError={(e) => {
                 console.error('[Discover] Carousel image failed:', mediaUrls[currentImageIndex]);
                 const target = e.target as HTMLImageElement;
@@ -2172,6 +2186,18 @@ if (post.video_url) {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Post Lightbox */}
+        {lightboxPost && (
+          <PostLightbox
+            media={lightboxPost.media}
+            initialIndex={lightboxPost.initialIndex}
+            open={!!lightboxPost}
+            onOpenChange={(open) => {
+              if (!open) setLightboxPost(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );

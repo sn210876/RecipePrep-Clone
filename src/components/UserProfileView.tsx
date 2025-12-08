@@ -4,6 +4,7 @@ import { UserPlus, UserCheck, PiggyBank, Send, Heart, MessageCircle, Crown, Tras
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import CommentModal from './CommentModal';
+import { PostLightbox } from './PostLightbox';
 import {
   Dialog,
   DialogContent,
@@ -61,6 +62,7 @@ export function UserProfileView({
   const [userProfile, setUserProfile] = useState<{ username: string; avatar_url: string | null; bio?: string; banner_url?: string | null } | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [lightboxPost, setLightboxPost] = useState<{ media: Array<{ url: string; type: 'image' | 'video' }>; initialIndex: number } | null>(null);
 
   const [supportersCount, setSupportersCount] = useState(0);
   const [supportingCount, setSupportingCount] = useState(0);
@@ -339,20 +341,57 @@ export function UserProfileView({
               return (
                 <div key={post.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
                   <div className="relative">
-                    {post.image_url ? (
-                      <img
-                        src={post.image_url}
-                        alt={post.title || 'Post'}
-                        className="w-full aspect-square object-cover"
-                        loading="lazy"
-                      />
-                    ) : post.video_url ? (
-                      <video
-                        src={post.video_url}
-                        controls
-                        className="w-full aspect-square object-cover"
-                      />
-                    ) : null}
+                    {(() => {
+                      const mediaUrls: string[] = [];
+                      const mediaTypes: ('image' | 'video')[] = [];
+
+                      if (post.image_url) {
+                        try {
+                          const parsed = JSON.parse(post.image_url);
+                          if (Array.isArray(parsed)) {
+                            parsed.forEach(url => {
+                              mediaUrls.push(url);
+                              mediaTypes.push('image');
+                            });
+                          } else {
+                            mediaUrls.push(parsed);
+                            mediaTypes.push('image');
+                          }
+                        } catch {
+                          mediaUrls.push(post.image_url);
+                          mediaTypes.push('image');
+                        }
+                      }
+
+                      if (post.video_url) {
+                        mediaUrls.push(post.video_url);
+                        mediaTypes.push('video');
+                      }
+
+                      const firstMedia = mediaUrls[0];
+                      const firstType = mediaTypes[0];
+
+                      return firstType === 'video' ? (
+                        <video
+                          src={firstMedia}
+                          controls
+                          className="w-full aspect-square object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={firstMedia}
+                          alt={post.title || 'Post'}
+                          className="w-full aspect-square object-cover cursor-pointer"
+                          loading="lazy"
+                          onClick={() => {
+                            setLightboxPost({
+                              media: mediaUrls.map((url, idx) => ({ url, type: mediaTypes[idx] })),
+                              initialIndex: 0
+                            });
+                          }}
+                        />
+                      );
+                    })()}
                     {post.title && (
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2">
                         <h3 className="text-white text-sm font-semibold line-clamp-2">{post.title}</h3>
@@ -636,6 +675,18 @@ export function UserProfileView({
     </div>
   </DialogContent>
 </Dialog>
+
+      {/* Post Lightbox */}
+      {lightboxPost && (
+        <PostLightbox
+          media={lightboxPost.media}
+          initialIndex={lightboxPost.initialIndex}
+          open={!!lightboxPost}
+          onOpenChange={(open) => {
+            if (!open) setLightboxPost(null);
+          }}
+        />
+      )}
     </div>
   );
 }
