@@ -24,7 +24,7 @@ export function Home({ onNavigate }: HomeProps) {
           <div className="max-w-3xl mx-auto">
             <TutorialVideo
               src="https://vohvdarghgqskzqjclux.supabase.co/storage/v1/object/public/posts/videos/How%20To%20Use%20Mealscrape.mp4"
-                width="50%"
+                width="30%"
 
               title="Welcome to Meal Scrape - Quick Start Guide"
             />
