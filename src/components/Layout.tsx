@@ -275,7 +275,7 @@ const loadUnreadCount = async (userId: string) => {
       <div>
         
         {/* Top Header - Mobile Optimized */}
-<header className="sticky top-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
+<header className="fixed top-0 left-0 right-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
   <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
     {/* Mobile menu button */}
     <Button
@@ -397,16 +397,15 @@ const loadUnreadCount = async (userId: string) => {
   </div>
 </div>
 
-        {/* Main Content - Add bottom padding for fixed nav */}
-        <main className={`${socialPages.includes(currentPage) ? 'pt-0' : 'pt-0'} pb-20`}>
-           <div className={currentPage === 'discover' ? 'pt-24' : ''}></div>
+        {/* Main Content - Add top padding for fixed header and bottom padding for fixed nav */}
+        <main className="pt-14 sm:pt-16 pb-24">
   {children}
 </main>
 
          
 
        {/* Bottom Navigation - ALWAYS VISIBLE (Mobile & Desktop) */}
-<div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
+<div className="fixed bottom-4 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
   <div className="max-w-lg mx-auto px-4 py-3">
     <div className="flex items-center justify-around">
       
