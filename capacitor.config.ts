@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.mealscrape.app',
+  appId: 'com.mealscrape.newapp',
   appName: 'MealScrape',
   webDir: 'dist',
   server: {

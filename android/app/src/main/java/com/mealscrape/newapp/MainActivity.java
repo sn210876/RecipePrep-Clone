@@ -1,4 +1,4 @@
-package com.mealscrape.app;
+package com.mealscrape.newapp;
 
 import com.getcapacitor.BridgeActivity;
 
