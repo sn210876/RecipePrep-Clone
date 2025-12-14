@@ -34,7 +34,7 @@ export function CheckoutResultsDialog({
     result.unmappedItems.forEach((item, index) => {
       setTimeout(() => {
         window.open(item.searchUrl, '_blank');
-      }, index * 300);
+      }, index * 1000);
     });
   };
 
