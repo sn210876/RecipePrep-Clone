@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Recipe } from '@/types/recipe';
+import { downloadAndStoreImage } from '@/lib/imageStorage';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -148,7 +149,7 @@ export async function removeRecipeFromCloud(userId: string, recipeId: string): P
 }
 
 export async function createRecipe(recipe: Omit<Recipe, 'id'>): Promise<Recipe> {
-  const dbRecipe = recipeToDBRecipe(recipe);
+  let dbRecipe = recipeToDBRecipe(recipe);
 
   console.log('[createRecipe] Attempting to insert:', dbRecipe);
 
@@ -170,7 +171,48 @@ export async function createRecipe(recipe: Omit<Recipe, 'id'>): Promise<Recipe> 
     throw new Error(error.message || 'Failed to create recipe');
   }
 
-  return dbRecipeToRecipe(data);
+  const createdRecipe = dbRecipeToRecipe(data);
+
+  if (createdRecipe.imageUrl && isExternalUrl(createdRecipe.imageUrl)) {
+    console.log('[createRecipe] Detected external image URL, storing in Supabase...');
+    migrateRecipeImageInBackground(createdRecipe.id, createdRecipe.imageUrl);
+  }
+
+  return createdRecipe;
+}
+
+function isExternalUrl(url: string): boolean {
+  if (!url) return false;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  return !url.includes(supabaseUrl) && (
+    url.includes('instagram.com') ||
+    url.includes('cdninstagram.com') ||
+    url.includes('fbcdn.net') ||
+    url.includes('http://') ||
+    url.includes('https://')
+  );
+}
+
+async function migrateRecipeImageInBackground(recipeId: string, imageUrl: string) {
+  try {
+    console.log('[migrateRecipeImage] Starting migration for recipe:', recipeId);
+    const permanentUrl = await downloadAndStoreImage(imageUrl, recipeId);
+
+    if (permanentUrl !== imageUrl) {
+      const { error } = await supabase
+        .from('public_recipes')
+        .update({ image_url: permanentUrl })
+        .eq('id', recipeId);
+
+      if (error) {
+        console.error('[migrateRecipeImage] Failed to update recipe:', error);
+      } else {
+        console.log('[migrateRecipeImage] ✅ Successfully migrated image for recipe:', recipeId);
+      }
+    }
+  } catch (error) {
+    console.error('[migrateRecipeImage] Error migrating image:', error);
+  }
 }
 
 export async function getAllPublicRecipes(): Promise<Recipe[]> {
@@ -185,7 +227,24 @@ export async function getAllPublicRecipes(): Promise<Recipe[]> {
     throw new Error('Failed to fetch recipes');
   }
 
-  return (data || []).map(dbRecipeToRecipe);
+  const recipes = (data || []).map(dbRecipeToRecipe);
+
+  checkAndMigrateRecipeImages(recipes);
+
+  return recipes;
+}
+
+async function checkAndMigrateRecipeImages(recipes: Recipe[]) {
+  const recipesToMigrate = recipes.filter(r => r.imageUrl && isExternalUrl(r.imageUrl));
+
+  if (recipesToMigrate.length > 0) {
+    console.log(`[Migration] Found ${recipesToMigrate.length} recipes with external images to migrate`);
+
+    for (const recipe of recipesToMigrate.slice(0, 5)) {
+      migrateRecipeImageInBackground(recipe.id, recipe.imageUrl!);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
 }
 
 export async function getRecipeById(id: string): Promise<Recipe | null> {

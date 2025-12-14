@@ -199,6 +199,29 @@ export default function AdminImageMigration() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="flex gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm space-y-2">
+                <p className="font-medium text-green-900">Automatic Migration Active</p>
+                <p className="text-green-800">
+                  The app automatically detects and migrates external images in the background:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-green-800">
+                  <li>New recipes with external URLs are migrated immediately</li>
+                  <li>Existing recipes are checked and migrated in batches</li>
+                  <li>Migration runs every minute in the background</li>
+                  <li>Maximum 10 recipes per batch to avoid rate limits</li>
+                </ul>
+                <p className="text-green-800 mt-2">
+                  You can still use this page for manual bulk migration if needed.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

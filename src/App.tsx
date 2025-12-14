@@ -3,6 +3,7 @@ import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
+import { imageMonitorService } from './services/imageMonitorService';
 import { Discover as DiscoverRecipes } from './pages/DiscoverRecipes';
 import { Discover } from './pages/Discover';
 import { MyRecipes } from './pages/MyRecipes';
@@ -96,6 +97,15 @@ function AppContent() {
       window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
       window.history.replaceState({}, '', '/discover');
     }
+  }, []);
+
+  useEffect(() => {
+    console.log('[App] Starting image monitoring service...');
+    imageMonitorService.startMonitoring();
+
+    return () => {
+      imageMonitorService.stopMonitoring();
+    };
   }, []);
 
   // Sync back/forward buttons

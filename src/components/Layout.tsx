@@ -55,7 +55,10 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
   ];
 
   const navItems = isAdmin
-    ? [...baseNavItems.slice(0, -1), { id: 'admin-payouts', label: 'Admin Payouts', icon: Shield }, baseNavItems[baseNavItems.length - 1]]
+    ? [...baseNavItems.slice(0, -1),
+       { id: 'admin-payouts', label: 'Admin Payouts', icon: Shield },
+       { id: 'admin-image-migration', label: 'Image Migration', icon: Shield },
+       baseNavItems[baseNavItems.length - 1]]
     : baseNavItems;
 
   const socialPages = ['discover', 'upload', 'profile', 'messages', 'add-recipe'];
