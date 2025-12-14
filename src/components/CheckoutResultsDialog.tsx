@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { ShoppingCart, Search, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
+import { toast } from 'sonner';
 import type { CheckoutResult } from '../services/amazonSearchFallback';
 
 interface CheckoutResultsDialogProps {
@@ -31,19 +32,38 @@ export function CheckoutResultsDialog({
   };
 
   const handleSearchAllUnmapped = () => {
-    const windowsOpened: Window[] = [];
+    const totalItems = result.unmappedItems.length;
+    let openedCount = 0;
 
-    result.unmappedItems.forEach((item) => {
-      const newWindow = window.open(item.searchUrl, '_blank');
-      if (newWindow) {
-        windowsOpened.push(newWindow);
+    for (let i = 0; i < totalItems; i++) {
+      try {
+        const newWindow = window.open(result.unmappedItems[i].searchUrl, `search_${i}`);
+        if (newWindow && newWindow !== null) {
+          openedCount++;
+        }
+      } catch (error) {
+        console.error('Failed to open window:', error);
       }
-    });
+    }
 
-    if (windowsOpened.length < result.unmappedItems.length) {
-      alert(
-        `Only ${windowsOpened.length} of ${result.unmappedItems.length} windows opened. ` +
-        `Please allow popups in your browser settings to open all search windows at once.`
+    if (openedCount === totalItems) {
+      toast.success(`Opened all ${totalItems} search windows!`);
+    } else if (openedCount > 0) {
+      toast.warning(
+        `Only opened ${openedCount} of ${totalItems} windows. Your browser blocked ${totalItems - openedCount}. ` +
+        `Use the individual Search buttons for the rest.`,
+        { duration: 5000 }
+      );
+    } else {
+      const instructions = navigator.userAgent.includes('Chrome')
+        ? 'Settings → Privacy and Security → Site Settings → Pop-ups'
+        : navigator.userAgent.includes('Firefox')
+        ? 'Settings → Privacy & Security → Permissions → Block pop-up windows'
+        : 'Browser Settings → Popups';
+
+      toast.error(
+        `Browser blocked all popups. Please allow popups in: ${instructions}`,
+        { duration: 7000 }
       );
     }
   };
