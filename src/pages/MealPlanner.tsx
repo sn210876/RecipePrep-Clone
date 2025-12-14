@@ -40,6 +40,8 @@ import { useAuth } from '../context/AuthContext';
 import { getMealPlans, addMealPlan, updateMealPlan, deleteMealPlan, clearAllMealPlans } from '../services/mealPlannerService';
 import { saveGroceryItems, getGroceryItems } from '../services/groceryListService';
 import { useLanguage } from '../context/LanguageContext';
+import { createCheckoutResult, type CheckoutResult } from '../services/amazonSearchFallback';
+import { CheckoutResultsDialog } from '../components/CheckoutResultsDialog';
 
 const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'] as const;
 type MealType = typeof MEAL_TYPES[number];
@@ -121,6 +123,9 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [selectedDateForView, setSelectedDateForView] = useState<Date>(new Date());
+
+  const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
+  const [showResultsDialog, setShowResultsDialog] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -222,6 +227,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
 
       toast.info('Finding matching products...');
 
+      const itemsWithProducts: Array<{ name: string; quantity: string; unit: string; asin: string | null }> = [];
       const itemsToAdd: Array<{
         product: AmazonProduct;
         quantity: string;
@@ -238,21 +244,41 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
             unit: item.unit || '',
             sourceRecipeId: item.sourceRecipeIds?.[0],
           });
+          itemsWithProducts.push({
+            name: item.name,
+            quantity: item.quantity?.toString() || '1',
+            unit: item.unit || '',
+            asin: products[0].asin,
+          });
+        } else {
+          itemsWithProducts.push({
+            name: item.name,
+            quantity: item.quantity?.toString() || '1',
+            unit: item.unit || '',
+            asin: null,
+          });
         }
       }
 
-      if (itemsToAdd.length === 0) {
-        toast.info('No matching products found for your ingredients');
-        return;
+      if (itemsToAdd.length > 0) {
+        await bulkAddToCart(user.id, itemsToAdd);
       }
 
-      const addedItems = await bulkAddToCart(user.id, itemsToAdd);
-      toast.success(`Added ${addedItems.length} product${addedItems.length !== 1 ? 's' : ''} to cart!`);
+      const result = createCheckoutResult(itemsWithProducts, 'amazon');
+      setCheckoutResult(result);
+      setShowResultsDialog(true);
 
-      if (onNavigate) {
-        setTimeout(() => {
-          toast.info('View your cart to see the added products');
-        }, 1000);
+      if (result.hasCartItems && !result.hasUnmappedItems) {
+        toast.success(`Added ${result.mappedItems.length} items to cart!`);
+        if (onNavigate) {
+          setTimeout(() => {
+            toast.info('View your cart to see the added products');
+          }, 1000);
+        }
+      } else if (result.hasCartItems && result.hasUnmappedItems) {
+        toast.info(`${result.mappedItems.length} items added to cart, ${result.unmappedItems.length} need manual search`);
+      } else if (result.hasUnmappedItems) {
+        toast.info(`${result.unmappedItems.length} items need manual search on Amazon`);
       }
     } catch (error) {
       console.error('Error syncing to cart:', error);
@@ -1035,6 +1061,14 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Checkout Results Dialog */}
+      <CheckoutResultsDialog
+        open={showResultsDialog}
+        onClose={() => setShowResultsDialog(false)}
+        result={checkoutResult}
+        serviceName="Amazon"
+      />
     </div>
   );
 }
