@@ -14,6 +14,8 @@ import Settings from './pages/Settings';
 import Referrals from './pages/Referrals';
 import AdminPayouts from './pages/AdminPayouts';
 import AdminImageMigration from './pages/AdminImageMigration';
+import { AdminProducts } from './pages/AdminProducts';
+import { AdminMappings } from './pages/AdminMappings';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
@@ -58,6 +60,8 @@ function AppContent() {
   if (path === '/referrals') return 'referrals';
   if (path === '/admin-payouts') return 'admin-payouts';
   if (path === '/admin-image-migration') return 'admin-image-migration';
+  if (path === '/admin-products') return 'admin-products';
+  if (path === '/admin-mappings') return 'admin-mappings';
   if (path === '/faq') return 'faq';
   if (path === '/onboarding') return 'onboarding';
   if (path === '/blog') return 'blog';
@@ -73,7 +77,7 @@ function AppContent() {
   // Only treat as username if not a known route
   if (path !== '/' && path.length > 1 && !path.includes('.')) {
     const username = path.substring(1);
-    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings', 'admin-payouts', 'admin-image-migration', 'blog'];
+    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings', 'admin-payouts', 'admin-image-migration', 'admin-products', 'admin-mappings', 'blog'];
     if (username && !username.includes('/') && !knownRoutes.includes(username)) {
       return `profile:${username}`;
     }
@@ -116,6 +120,10 @@ function AppContent() {
         setCurrentPage('admin-payouts');
       } else if (path === '/admin-image-migration') {
         setCurrentPage('admin-image-migration');
+      } else if (path === '/admin-products') {
+        setCurrentPage('admin-products');
+      } else if (path === '/admin-mappings') {
+        setCurrentPage('admin-mappings');
       } else if (path === '/blog') {
         setCurrentPage('blog');
       } else if (path.startsWith('/blog/') && path !== '/blog') {
@@ -130,7 +138,7 @@ function AppContent() {
         setCurrentPage('discover');
       } else if (path !== '/' && path.length > 1 && !path.includes('.')) {
         const username = path.substring(1);
-        const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'admin-payouts', 'admin-image-migration', 'blog'];
+        const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'admin-payouts', 'admin-image-migration', 'admin-products', 'admin-mappings', 'blog'];
         if (username && !username.includes('/') && !knownRoutes.includes(username)) {
           setCurrentPage(`profile:${username}`);
         } else {
@@ -220,7 +228,9 @@ function AppContent() {
       'messages',
       'settings',
       'admin-payouts',
-      'admin-image-migration'
+      'admin-image-migration',
+      'admin-products',
+      'admin-mappings'
     ];
 
     // Check if user is trying to access a protected page without login
@@ -245,6 +255,8 @@ function AppContent() {
       'referrals': '/referrals',
       'admin-payouts': '/admin-payouts',
       'admin-image-migration': '/admin-image-migration',
+      'admin-products': '/admin-products',
+      'admin-mappings': '/admin-mappings',
       'faq': '/faq',
       'onboarding': '/onboarding',
       'blog': '/blog',
@@ -300,6 +312,8 @@ function AppContent() {
       case 'referrals': return <Referrals />;
       case 'admin-payouts': return <AdminPayouts />;
       case 'admin-image-migration': return <AdminImageMigration />;
+      case 'admin-products': return <AdminProducts />;
+      case 'admin-mappings': return <AdminMappings />;
       case 'faq': return <FAQ />;
       case 'onboarding': return <Onboarding onComplete={() => handleNavigate('discover-recipes')} />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;

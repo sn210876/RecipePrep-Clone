@@ -27,6 +27,8 @@ import {
   getServiceBackgroundColor,
 } from '../services/amazonGroceryService';
 import { findProductsForIngredient, bulkAddToCart } from '../services/amazonProductService';
+import { createCheckoutResult, type CheckoutResult } from '../services/amazonSearchFallback';
+import { CheckoutResultsDialog } from './CheckoutResultsDialog';
 
 interface DeliveryServiceSelectorProps {
   instacartItems: RoutedItem[];
@@ -52,6 +54,8 @@ export function DeliveryServiceSelector({
   const [loading, setLoading] = useState(false);
   const [selectedService, setSelectedService] = useState<DeliveryService | null>(null);
   const [showSummary, setShowSummary] = useState(true);
+  const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
+  const [showResultsDialog, setShowResultsDialog] = useState(false);
 
   const allAmazonItems = [
     ...amazonItems,
@@ -119,7 +123,9 @@ export function DeliveryServiceSelector({
     try {
       toast.info('Finding matching Amazon products...');
 
+      const itemsWithProducts: Array<{ name: string; quantity: string; unit: string; asin: string | null }> = [];
       const itemsToAdd = [];
+
       for (const item of items) {
         const products = await findProductsForIngredient(item.name, 1);
         if (products.length > 0) {
@@ -129,51 +135,42 @@ export function DeliveryServiceSelector({
             unit: item.unit,
             deliveryService: serviceType,
           });
-        }
-      }
-
-      if (itemsToAdd.length === 0) {
-        toast.error('No matching Amazon products found');
-        return;
-      }
-
-      const addedItems = await bulkAddToCart(userId, itemsToAdd);
-
-      await trackAmazonServiceClick(userId, serviceType, addedItems.length);
-
-      toast.success(`Added ${addedItems.length} items to cart for ${getServiceDisplayName(serviceType)}`);
-
-      const skippedCount = items.length - addedItems.length;
-      if (skippedCount > 0) {
-        toast.info(`${skippedCount} item${skippedCount !== 1 ? 's' : ''} skipped (no matching products)`);
-      }
-
-      // Build Amazon cart URL with ASINs
-      const itemsWithAsin = addedItems.filter((item: any) => item.asin);
-
-      if (itemsWithAsin.length > 0) {
-        const cartUrl = buildAmazonCartUrl(itemsWithAsin);
-        window.open(cartUrl, '_blank');
-
-        // Open any items without ASINs as individual product pages
-        const itemsWithoutAsin = addedItems.filter((item: any) => !item.asin && item.amazon_product_url);
-        if (itemsWithoutAsin.length > 0) {
-          itemsWithoutAsin.forEach((item: any, index: number) => {
-            setTimeout(() => {
-              window.open(item.amazon_product_url, '_blank');
-            }, (index + 1) * 300);
+          itemsWithProducts.push({
+            name: item.name,
+            quantity: item.quantity.toString(),
+            unit: item.unit,
+            asin: products[0].asin,
+          });
+        } else {
+          itemsWithProducts.push({
+            name: item.name,
+            quantity: item.quantity.toString(),
+            unit: item.unit,
+            asin: null,
           });
         }
-      } else {
-        // Fallback: open service homepage if no ASINs available
-        const deepLink = buildAmazonDeepLink(serviceType);
-        window.open(deepLink, '_blank');
       }
 
-      onClose();
+      if (itemsToAdd.length > 0) {
+        await bulkAddToCart(userId, itemsToAdd);
+      }
+
+      await trackAmazonServiceClick(userId, serviceType, itemsToAdd.length);
+
+      const result = createCheckoutResult(itemsWithProducts, serviceType);
+      setCheckoutResult(result);
+      setShowResultsDialog(true);
+
+      if (result.hasCartItems && !result.hasUnmappedItems) {
+        toast.success(`Added ${result.mappedItems.length} items to ${getServiceDisplayName(serviceType)} cart`);
+      } else if (result.hasCartItems && result.hasUnmappedItems) {
+        toast.info(`${result.mappedItems.length} items ready, ${result.unmappedItems.length} need manual search`);
+      } else if (result.hasUnmappedItems) {
+        toast.info(`${result.unmappedItems.length} items need manual search on Amazon`);
+      }
     } catch (error) {
       console.error(`Error processing ${serviceType}:`, error);
-      toast.error(`Failed to add items to cart`);
+      toast.error(`Failed to process items`);
     } finally {
       setLoading(false);
     }
@@ -220,8 +217,18 @@ export function DeliveryServiceSelector({
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    <>
+      <CheckoutResultsDialog
+        open={showResultsDialog}
+        onClose={() => {
+          setShowResultsDialog(false);
+          onClose();
+        }}
+        result={checkoutResult}
+        serviceName={selectedService ? getServiceDisplayName(selectedService) : 'Amazon'}
+      />
+      <Dialog open={!showResultsDialog} onOpenChange={onClose}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="w-5 h-5" />
@@ -382,7 +389,10 @@ export function DeliveryServiceSelector({
                   </span>
                   <Button
                     size="sm"
-                    onClick={() => handleCheckoutAmazon('amazon_fresh', amazonFreshItems)}
+                    onClick={() => {
+                      setSelectedService('amazon_fresh');
+                      handleCheckoutAmazon('amazon_fresh', amazonFreshItems);
+                    }}
                     disabled={loading}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -427,7 +437,10 @@ export function DeliveryServiceSelector({
                   </span>
                   <Button
                     size="sm"
-                    onClick={() => handleCheckoutAmazon('amazon_grocery', amazonGroceryItems)}
+                    onClick={() => {
+                      setSelectedService('amazon_grocery');
+                      handleCheckoutAmazon('amazon_grocery', amazonGroceryItems);
+                    }}
                     disabled={loading}
                     className="bg-orange-600 hover:bg-orange-700"
                   >
@@ -472,7 +485,10 @@ export function DeliveryServiceSelector({
                   </span>
                   <Button
                     size="sm"
-                    onClick={() => handleCheckoutAmazon('whole_foods', wholeFoodsItems)}
+                    onClick={() => {
+                      setSelectedService('whole_foods');
+                      handleCheckoutAmazon('whole_foods', wholeFoodsItems);
+                    }}
                     disabled={loading}
                     className="bg-emerald-600 hover:bg-emerald-700"
                   >
@@ -517,7 +533,10 @@ export function DeliveryServiceSelector({
                   </span>
                   <Button
                     size="sm"
-                    onClick={() => handleCheckoutAmazon('amazon', amazonItems)}
+                    onClick={() => {
+                      setSelectedService('amazon');
+                      handleCheckoutAmazon('amazon', amazonItems);
+                    }}
                     disabled={loading}
                     className="bg-orange-600 hover:bg-orange-700"
                   >
@@ -566,5 +585,6 @@ export function DeliveryServiceSelector({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

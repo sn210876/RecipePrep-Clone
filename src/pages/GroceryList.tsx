@@ -38,6 +38,8 @@ import { getMealPlans } from '../services/mealPlannerService';
 import { DeliveryServiceSelector } from '../components/DeliveryServiceSelector';
 import { routeGroceryItems, getUserDeliveryPreferences, type RoutedItem } from '../services/deliveryRoutingService';
 import { isInstacartEnabled } from '../services/instacartService';
+import { createCheckoutResult, type CheckoutResult } from '../services/amazonSearchFallback';
+import { CheckoutResultsDialog } from '../components/CheckoutResultsDialog';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -75,6 +77,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [routedAmazonItems, setRoutedAmazonItems] = useState<RoutedItem[]>([]);
   const [routedAmazonFreshItems, setRoutedAmazonFreshItems] = useState<RoutedItem[]>([]);
   const [routedAmazonGroceryItems, setRoutedAmazonGroceryItems] = useState<RoutedItem[]>([]);
+
+  // Checkout results
+  const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
+  const [showResultsDialog, setShowResultsDialog] = useState(false);
   const [routedWholeFoodsItems, setRoutedWholeFoodsItems] = useState<RoutedItem[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState<any>({});
   const [instacartEnabled, setInstacartEnabled] = useState(false);
@@ -653,6 +659,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
       toast.info('Finding matching Amazon products...');
 
+      const itemsWithProducts: Array<{ name: string; quantity: string; unit: string; asin: string | null }> = [];
       const itemsToAdd: Array<{
         product: AmazonProduct;
         quantity: string;
@@ -667,25 +674,39 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
             quantity: item.quantity.toString(),
             unit: item.unit,
           });
+          itemsWithProducts.push({
+            name: item.name,
+            quantity: item.quantity.toString(),
+            unit: item.unit,
+            asin: products[0].asin,
+          });
+        } else {
+          itemsWithProducts.push({
+            name: item.name,
+            quantity: item.quantity.toString(),
+            unit: item.unit,
+            asin: null,
+          });
         }
       }
 
-      if (itemsToAdd.length === 0) {
-        toast.error('No matching Amazon products found for your grocery items');
-        return;
+      if (itemsToAdd.length > 0) {
+        await bulkAddToCart(userData.user.id, itemsToAdd);
       }
 
-      const addedItems = await bulkAddToCart(userData.user.id, itemsToAdd);
+      const result = createCheckoutResult(itemsWithProducts, 'amazon');
+      setCheckoutResult(result);
+      setShowResultsDialog(true);
 
-      toast.success(`Added ${addedItems.length} product${addedItems.length !== 1 ? 's' : ''} to cart!`);
-
-      const skippedCount = items.length - addedItems.length;
-      if (skippedCount > 0) {
-        toast.info(`${skippedCount} item${skippedCount !== 1 ? 's' : ''} skipped (no matching products)`);
-      }
-
-      if (onNavigate) {
-        setTimeout(() => onNavigate('cart'), 1000);
+      if (result.hasCartItems && !result.hasUnmappedItems) {
+        toast.success(`Added ${result.mappedItems.length} items to cart!`);
+        if (onNavigate) {
+          setTimeout(() => onNavigate('cart'), 1000);
+        }
+      } else if (result.hasCartItems && result.hasUnmappedItems) {
+        toast.info(`${result.mappedItems.length} items added to cart, ${result.unmappedItems.length} need manual search`);
+      } else if (result.hasUnmappedItems) {
+        toast.info(`${result.unmappedItems.length} items need manual search on Amazon`);
       }
     } catch (error) {
       console.error('Failed to send to cart:', error);
@@ -1205,6 +1226,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
           onClose={() => setShowDeliverySelector(false)}
         />
       )}
+
+      {/* Checkout Results Dialog */}
+      <CheckoutResultsDialog
+        open={showResultsDialog}
+        onClose={() => setShowResultsDialog(false)}
+        result={checkoutResult}
+        serviceName="Amazon"
+      />
     </div>
   );
 }
