@@ -626,7 +626,7 @@ useEffect(() => {
 </div>
 
         {/* INPUT BAR - Fixed footer above bottom nav */}
-        <div className="fixed left-0 right-0 py-3 z-[51]" style={{ bottom: '64px' }}>
+        <div className="fixed left-0 right-0 py-3 z-[51]" style={{ bottom: '88px' }}>
           <div className="max-w-sm lg:max-w-md mx-auto px-4 flex gap-2">
             <input
               type="text"
