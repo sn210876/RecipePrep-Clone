@@ -106,6 +106,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     getUserId();
   }, []);
 
+  const deliveryServicesAvailable = true;
+
   // Helper function to get ingredient icon with comprehensive detection
   function getIngredientIcon(name: string, categoryId: string) {
     const nameLower = name.toLowerCase().trim();
@@ -829,14 +831,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                   Amazon Cart
                 </Button>
               )}
-              {totalCount > 0 && instacartEnabled && (
+              {totalCount > 0 && deliveryServicesAvailable && (
                 <Button
                   variant="outline"
                   onClick={handleDeliveryCheckout}
                   className="h-10 text-sm border-2 border-green-300 bg-white hover:bg-green-50 hover:border-green-500 hover:text-green-900"
                 >
                   <Truck className="w-4 h-4 mr-1" />
-                  Get Delivery
+                  Order Delivery
                 </Button>
               )}
               {totalCount > 0 && (
