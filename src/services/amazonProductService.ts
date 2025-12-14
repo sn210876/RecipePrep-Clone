@@ -152,7 +152,7 @@ export async function findProductsForIngredient(
     .eq('is_active', true);
 
   query = query.or(
-    `product_name.ilike.*${searchTerm}*,search_keywords.cs.{${searchTerm}}`
+    `product_name.ilike.%${searchTerm}%,search_keywords.cs.{${searchTerm}}`
   );
 
   const { data: products, error: searchError } = await query

@@ -148,8 +148,27 @@ export function DeliveryServiceSelector({
         toast.info(`${skippedCount} item${skippedCount !== 1 ? 's' : ''} skipped (no matching products)`);
       }
 
-      const deepLink = buildAmazonDeepLink(serviceType);
-      window.open(deepLink, '_blank');
+      // Build Amazon cart URL with ASINs
+      const itemsWithAsin = addedItems.filter((item: any) => item.asin);
+
+      if (itemsWithAsin.length > 0) {
+        const cartUrl = buildAmazonCartUrl(itemsWithAsin);
+        window.open(cartUrl, '_blank');
+
+        // Open any items without ASINs as individual product pages
+        const itemsWithoutAsin = addedItems.filter((item: any) => !item.asin && item.amazon_product_url);
+        if (itemsWithoutAsin.length > 0) {
+          itemsWithoutAsin.forEach((item: any, index: number) => {
+            setTimeout(() => {
+              window.open(item.amazon_product_url, '_blank');
+            }, (index + 1) * 300);
+          });
+        }
+      } else {
+        // Fallback: open service homepage if no ASINs available
+        const deepLink = buildAmazonDeepLink(serviceType);
+        window.open(deepLink, '_blank');
+      }
 
       onClose();
     } catch (error) {
@@ -158,6 +177,22 @@ export function DeliveryServiceSelector({
     } finally {
       setLoading(false);
     }
+  };
+
+  const buildAmazonCartUrl = (items: any[]): string => {
+    const AFFILIATE_TAG = 'mealscrape-20';
+    const baseUrl = 'https://www.amazon.com/gp/aws/cart/add.html';
+    const params = new URLSearchParams();
+
+    items.forEach((item, index) => {
+      const itemNum = index + 1;
+      params.append(`ASIN.${itemNum}`, item.asin);
+      const quantity = parseInt(item.quantity) || 1;
+      params.append(`Quantity.${itemNum}`, quantity.toString());
+    });
+
+    params.append('tag', AFFILIATE_TAG);
+    return `${baseUrl}?${params.toString()}`;
   };
 
   const handleCheckoutAll = async () => {
