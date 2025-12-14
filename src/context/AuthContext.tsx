@@ -143,9 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔔 Auth state change event:', event, { 
+      console.log('🔔 Auth state change event:', event, {
         hasSession: !!session,
-        userEmail: session?.user?.email 
+        userEmail: session?.user?.email
       });
 
       (async () => {
@@ -159,6 +159,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (wasUnverified || event === 'SIGNED_IN') {
             console.log('✉️ Email verified, showing verification screen');
             setShowVerifying(true);
+          }
+        }
+
+        // Track referral for OAuth signups
+        if (event === 'SIGNED_IN' && session?.user) {
+          const pendingReferralCode = localStorage.getItem('pending_referral_code');
+          if (pendingReferralCode) {
+            console.log('🎯 Found pending referral code, tracking signup:', pendingReferralCode);
+            try {
+              const { data: trackResult, error: trackError } = await supabase.rpc('track_referral_signup', {
+                p_user_id: session.user.id,
+                p_referral_code: pendingReferralCode
+              });
+              if (trackError) {
+                console.error('⚠️ Referral tracking error:', trackError);
+              } else {
+                console.log('✅ Referral tracked successfully for OAuth signup, result:', trackResult);
+              }
+            } catch (refError) {
+              console.error('⚠️ Referral tracking exception:', refError);
+            } finally {
+              // Clear the pending referral code
+              localStorage.removeItem('pending_referral_code');
+              console.log('🧹 Cleared pending referral code from localStorage');
+            }
           }
         }
 

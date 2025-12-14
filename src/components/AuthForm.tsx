@@ -124,9 +124,17 @@ export default function AuthForm() {
     setError('');
 
     try {
+      // Store referral code in localStorage before OAuth redirect
+      const urlParams = new URLSearchParams(window.location.search);
+      const referralCode = urlParams.get('ref');
+      if (referralCode) {
+        console.log('🎯 Storing referral code in localStorage:', referralCode);
+        localStorage.setItem('pending_referral_code', referralCode);
+      }
+
       const redirectUrl = getRedirectUrl();
       console.log('🔵 Calling signInWithOAuth with redirectTo:', redirectUrl);
-      
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -141,7 +149,7 @@ export default function AuthForm() {
       console.log('🔵 OAuth response:', { data, error });
 
       if (error) throw error;
-      
+
       // If we get here without redirect, something went wrong
       console.log('⚠️ OAuth called but no redirect happened');
     } catch (err: any) {
