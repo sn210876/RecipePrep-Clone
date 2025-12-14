@@ -970,35 +970,37 @@ return (
               />
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                onClick={() => {
-                  setUrlInput('');
-                  toast.success('Cleared!');
-                }}
-                disabled={isExtracting}
-variant="outline"
-className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"              >
-                Clear
-              </Button>
-              <Button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const text = await navigator.clipboard.readText();
-                    setUrlInput(text);
-                    toast.success('Pasted!');
-                  } catch (err) {
-                    toast.error('Failed to paste. Copy a URL first.');
-                  }
-                }}
-                disabled={isExtracting}
-variant="outline"
-className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"              >
-                Paste
-              </Button>
-            </div>
+          <div className="flex gap-2">
+  <Button
+    type="button"
+    onClick={async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        setUrlInput(text);
+        toast.success('Pasted!');
+      } catch (err) {
+        toast.error('Failed to paste. Copy a URL first.');
+      }
+    }}
+    disabled={isExtracting}
+    variant="outline"
+    className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"
+  >
+    Paste
+  </Button>
+  <Button
+    type="button"
+    onClick={() => {
+      setUrlInput('');
+      toast.success('Cleared!');
+    }}
+    disabled={isExtracting}
+    variant="outline"
+    className="flex-1 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors h-10"
+  >
+    Clear
+  </Button>
+</div>
 
             <Button
               type="button"
