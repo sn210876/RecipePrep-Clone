@@ -212,8 +212,6 @@ export function DeliveryServiceSelector({
     if (amazonItems.length > 0) {
       await handleCheckoutAmazon('amazon', amazonItems);
     }
-
-    onClose();
   };
 
   return (
