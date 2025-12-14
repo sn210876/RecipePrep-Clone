@@ -9,7 +9,6 @@ import { referralService, ReferralReward } from '@/services/referralService';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { RefreshCw, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface UserProfile {
   id: string;
@@ -25,7 +24,6 @@ interface PayoutWithUser extends ReferralReward {
 
 export default function AdminPayouts() {
   const { isAdmin } = useAuth();
-  const navigate = useNavigate();
   const [payouts, setPayouts] = useState<ReferralReward[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPayout, setSelectedPayout] = useState<PayoutWithUser | null>(null);
@@ -34,13 +32,11 @@ export default function AdminPayouts() {
 
   useEffect(() => {
     if (!isAdmin) {
-      toast.error('Access denied: Admin privileges required');
-      navigate('/');
       return;
     }
     loadPayouts();
     subscribeToPayouts();
-  }, [isAdmin, navigate]);
+  }, [isAdmin]);
 
   const loadPayouts = async () => {
     setLoading(true);
