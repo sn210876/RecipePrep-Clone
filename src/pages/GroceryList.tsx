@@ -6,7 +6,7 @@
 // 4. Add swipe-to-delete gesture
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X, Apple, Beef, Milk, Wheat, Carrot, Fish, Egg, Cookie, Droplet, Flame, ShoppingBag } from 'lucide-react';
+import { Plus, Trash2, Loader2, Calendar, ChefHat, ShoppingCart, GripVertical, X, Apple, Beef, Milk, Wheat, Carrot, Fish, Egg, Cookie, Droplet, Flame, ShoppingBag, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -35,6 +35,9 @@ import { ProductSelectorDialog } from '../components/ProductSelectorDialog';
 import { addProductToCart, findProductsForIngredient, bulkAddToCart, type AmazonProduct } from '../services/amazonProductService';
 import { getGroceryItems, saveGroceryItems, clearAllGroceryItems } from '../services/groceryListService';
 import { getMealPlans } from '../services/mealPlannerService';
+import { DeliveryServiceSelector } from '../components/DeliveryServiceSelector';
+import { routeGroceryItems, getUserDeliveryPreferences, type RoutedItem } from '../services/deliveryRoutingService';
+import { isInstacartEnabled } from '../services/instacartService';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -66,6 +69,13 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [selectedGroceryItem, setSelectedGroceryItem] = useState<GroceryListItem | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // Delivery service integration
+  const [showDeliverySelector, setShowDeliverySelector] = useState(false);
+  const [routedInstacartItems, setRoutedInstacartItems] = useState<RoutedItem[]>([]);
+  const [routedAmazonItems, setRoutedAmazonItems] = useState<RoutedItem[]>([]);
+  const [deliveryAddress, setDeliveryAddress] = useState<any>({});
+  const [instacartEnabled, setInstacartEnabled] = useState(false);
+
   const items = state.groceryList;
 
   // Get user ID on mount and load grocery items
@@ -77,6 +87,14 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         try {
           const dbItems = await getGroceryItems(data.user.id);
           dispatch({ type: 'UPDATE_GROCERY_LIST', payload: dbItems });
+
+          const enabled = await isInstacartEnabled();
+          setInstacartEnabled(enabled);
+
+          const prefs = await getUserDeliveryPreferences(data.user.id);
+          if (prefs?.deliveryAddress) {
+            setDeliveryAddress(prefs.deliveryAddress);
+          }
         } catch (error) {
           console.error('Error loading grocery items:', error);
         }
@@ -697,6 +715,36 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     }
   };
 
+  const handleDeliveryCheckout = async () => {
+    if (!userId) {
+      toast.error('Please sign in to order delivery');
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error('No items in grocery list');
+      return;
+    }
+
+    if (!deliveryAddress || !deliveryAddress.street) {
+      toast.error('Please set your delivery address in settings first');
+      return;
+    }
+
+    try {
+      toast.info('Routing items to delivery services...');
+
+      const { instacartItems, amazonItems } = await routeGroceryItems(items, userId);
+
+      setRoutedInstacartItems(instacartItems);
+      setRoutedAmazonItems(amazonItems);
+      setShowDeliverySelector(true);
+    } catch (error) {
+      console.error('Error routing items:', error);
+      toast.error('Failed to route items. Please try again.');
+    }
+  };
+
   // Swipe gesture handlers for mobile
   let touchStartX = 0;
   let touchEndX = 0;
@@ -772,12 +820,22 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                   className="h-10 text-sm border-2 border-gray-300 bg-white hover:bg-gray-100 hover:border-gray-500 hover:text-gray-900"
                 >
                   <ShoppingCart className="w-4 h-4 mr-1" />
-                  Send to Cart
+                  Amazon Cart
+                </Button>
+              )}
+              {totalCount > 0 && instacartEnabled && (
+                <Button
+                  variant="outline"
+                  onClick={handleDeliveryCheckout}
+                  className="h-10 text-sm border-2 border-green-300 bg-white hover:bg-green-50 hover:border-green-500 hover:text-green-900"
+                >
+                  <Truck className="w-4 h-4 mr-1" />
+                  Get Delivery
                 </Button>
               )}
               {totalCount > 0 && (
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={handleClearAll}
                   className="h-10 text-sm"
                 >
@@ -786,8 +844,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                 </Button>
               )}
               {checkedCount > 0 && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleClearChecked}
                   className="h-10 text-sm border-2 border-gray-300 bg-white hover:bg-gray-100 hover:border-gray-500 hover:text-gray-900 col-span-2"
                 >
@@ -1123,6 +1181,17 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
           quantity={selectedGroceryItem.quantity.toString()}
           unit={selectedGroceryItem.unit}
           onSelect={handleProductSelected}
+        />
+      )}
+
+      {/* Delivery Service Selector */}
+      {showDeliverySelector && userId && (
+        <DeliveryServiceSelector
+          instacartItems={routedInstacartItems}
+          amazonItems={routedAmazonItems}
+          userId={userId}
+          deliveryAddress={deliveryAddress}
+          onClose={() => setShowDeliverySelector(false)}
         />
       )}
     </div>

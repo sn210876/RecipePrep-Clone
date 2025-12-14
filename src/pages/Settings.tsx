@@ -14,6 +14,7 @@ import { isAdmin, supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { languages, type LanguageCode } from '@/lib/translations';
 import { useLanguage } from '@/context/LanguageContext';
+import { DeliveryPreferences } from '@/components/DeliveryPreferences';
 
 const COMMON_TIMEZONES = [
   { label: '--- Americas ---', value: 'header-americas', isHeader: true },
@@ -378,6 +379,9 @@ export default function Settings({ onNavigate }: SettingsProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Delivery Preferences */}
+          {user && <DeliveryPreferences userId={user.id} />}
 
           {/* Change Password Card */}
           <Card className="border-slate-200 shadow-sm overflow-hidden">
