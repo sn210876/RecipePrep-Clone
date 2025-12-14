@@ -31,11 +31,21 @@ export function CheckoutResultsDialog({
   };
 
   const handleSearchAllUnmapped = () => {
-    result.unmappedItems.forEach((item, index) => {
-      setTimeout(() => {
-        window.open(item.searchUrl, '_blank');
-      }, index * 1000);
+    const windowsOpened: Window[] = [];
+
+    result.unmappedItems.forEach((item) => {
+      const newWindow = window.open(item.searchUrl, '_blank');
+      if (newWindow) {
+        windowsOpened.push(newWindow);
+      }
     });
+
+    if (windowsOpened.length < result.unmappedItems.length) {
+      alert(
+        `Only ${windowsOpened.length} of ${result.unmappedItems.length} windows opened. ` +
+        `Please allow popups in your browser settings to open all search windows at once.`
+      );
+    }
   };
 
   return (

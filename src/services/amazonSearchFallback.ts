@@ -101,14 +101,55 @@ export function createCheckoutResult(
       unit: item.unit,
     }));
 
-  const unmappedItems = allItems
-    .filter(item => !item.asin)
-    .map(item => ({
-      ingredient: item.name,
-      searchUrl: generateAmazonSearchUrl(item.name, serviceType),
+  const unmappedItemsRaw = allItems.filter(item => !item.asin);
+
+  const unmappedItemsMap = new Map<string, {
+    ingredient: string;
+    searchUrl: string;
+    quantities: Array<{ quantity?: string; unit?: string }>;
+  }>();
+
+  unmappedItemsRaw.forEach(item => {
+    const normalizedName = item.name.toLowerCase().trim();
+
+    if (!unmappedItemsMap.has(normalizedName)) {
+      unmappedItemsMap.set(normalizedName, {
+        ingredient: item.name,
+        searchUrl: generateAmazonSearchUrl(item.name, serviceType),
+        quantities: []
+      });
+    }
+
+    unmappedItemsMap.get(normalizedName)!.quantities.push({
       quantity: item.quantity,
-      unit: item.unit,
-    }));
+      unit: item.unit
+    });
+  });
+
+  const unmappedItems = Array.from(unmappedItemsMap.values()).map(item => {
+    if (item.quantities.length === 1) {
+      return {
+        ingredient: item.ingredient,
+        searchUrl: item.searchUrl,
+        quantity: item.quantities[0].quantity,
+        unit: item.quantities[0].unit,
+      };
+    }
+
+    const totalQuantity = item.quantities.reduce((sum, q) => {
+      const qty = parseFloat(q.quantity || '0');
+      return sum + (isNaN(qty) ? 0 : qty);
+    }, 0);
+
+    const commonUnit = item.quantities[0].unit || '';
+
+    return {
+      ingredient: item.ingredient,
+      searchUrl: item.searchUrl,
+      quantity: totalQuantity > 0 ? totalQuantity.toString() : undefined,
+      unit: commonUnit,
+    };
+  });
 
   const cartUrl = mappedItems.length > 0
     ? buildAmazonCartUrl(mappedItems)
