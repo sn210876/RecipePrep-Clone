@@ -91,7 +91,6 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
   const [uploadedImageFile, setUploadedImageFile] = useState<File | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [showConflictDialog, setShowConflictDialog] = useState(false);
   const [isScanningPhoto, setIsScanningPhoto] = useState(false);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [selectedPhotoFiles, setSelectedPhotoFiles] = useState<File[]>([]);
@@ -520,26 +519,20 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       toast.loading('Extracting recipe...', { id: 'extract' });
       const data = await extractRecipeFromUrl(urlInput);
 
-      if (data.hasConflict) {
-        setExtractedData(data);
-        setShowConflictDialog(true);
-        toast.warning('Multiple recipe versions found! Please choose which to use.', { id: 'extract', duration: 2000 });
+      const isSocialMedia = urlInput.includes('instagram.com') || urlInput.includes('tiktok.com');
+      const hasNoIngredients = !data.ingredients || data.ingredients.length === 0;
+      const hasNoInstructions = !data.instructions || data.instructions.length === 0;
+
+      if (isSocialMedia && (hasNoIngredients || hasNoInstructions)) {
+        toast.info('This post has limited recipe details. Switch to "Paste Video Description" tab and manually add the recipe ingredients and instructions you see in the video!', {
+          id: 'extract',
+          duration: 6000
+        });
       } else {
-        const isSocialMedia = urlInput.includes('instagram.com') || urlInput.includes('tiktok.com');
-        const hasNoIngredients = !data.ingredients || data.ingredients.length === 0;
-        const hasNoInstructions = !data.instructions || data.instructions.length === 0;
-
-        if (isSocialMedia && (hasNoIngredients || hasNoInstructions)) {
-          toast.info('This post has limited recipe details. Switch to "Paste Video Description" tab and manually add the recipe ingredients and instructions you see in the video!', {
-            id: 'extract',
-            duration: 6000
-          });
-        } else {
-          toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
-        }
-
-        populateFormWithExtractedData(data, urlInput);
+        toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
       }
+
+      populateFormWithExtractedData(data, urlInput);
       setIsExtracting(false);
     } catch (error: any) {
       if (error.message.includes('waking up')) {
@@ -1891,95 +1884,6 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
           </DialogContent>
         </Dialog>
 
-        {/* Conflict Dialog - Mobile optimized */}
-        <Dialog open={showConflictDialog} onOpenChange={setShowConflictDialog}>
-          <DialogContent className="max-w-[95vw] sm:max-w-5xl max-h-[90vh] p-0">
-            <DialogHeader className="p-4 pb-3 border-b">
-              <DialogTitle className="text-lg leading-tight">Multiple Versions Found</DialogTitle>
-              <DialogDescription className="text-xs">
-                Choose which version to use:
-              </DialogDescription>
-            </DialogHeader>
-
-            <ScrollArea className="h-[60vh] p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {extractedData?.structuredVersion && (
-                  <Card className="cursor-pointer hover:border-blue-500 transition-colors" onClick={() => {
-                    if (extractedData.structuredVersion) {
-                      setExtractedData(extractedData.structuredVersion);
-                      setShowConflictDialog(false);
-                      setShowPreview(true);
-                      toast.success('Using recipe card version');
-                    }
-                  }}>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">Recipe Card</CardTitle>
-                      <CardDescription className="text-xs">From structured data</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex flex-wrap gap-1.5 text-xs">
-                        <Badge variant="secondary">{extractedData.structuredVersion.servings} servings</Badge>
-                        <Badge variant="secondary">{extractedData.structuredVersion.prepTime}min</Badge>
-                        <Badge variant="secondary">{extractedData.structuredVersion.cookTime}min</Badge>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-xs mb-1.5">Ingredients ({extractedData.structuredVersion.ingredients.length}):</p>
-                        <ul className="space-y-1 text-xs text-slate-600 max-h-32 overflow-y-auto">
-                          {extractedData.structuredVersion.ingredients.slice(0, 6).map((ing: Ingredient, idx: number) => (
-                            <li key={idx} className="break-words">• {ing.quantity} {ing.unit} {ing.name}</li>
-                          ))}
-                          {extractedData.structuredVersion.ingredients.length > 6 && (
-                            <li className="text-slate-400">+ {extractedData.structuredVersion.ingredients.length - 6} more...</li>
-                          )}
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {extractedData?.aiVersion && (
-                  <Card className="cursor-pointer hover:border-green-500 transition-colors" onClick={() => {
-                    if (extractedData.aiVersion) {
-                      setExtractedData(extractedData.aiVersion);
-                      setShowConflictDialog(false);
-                      setShowPreview(true);
-                      toast.success('Using blog content version');
-                    }
-                  }}>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">Blog Content</CardTitle>
-                      <CardDescription className="text-xs">From blog post</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex flex-wrap gap-1.5 text-xs">
-                        <Badge variant="secondary">{extractedData.aiVersion.servings} servings</Badge>
-                        <Badge variant="secondary">{extractedData.aiVersion.prepTime}min</Badge>
-                        <Badge variant="secondary">{extractedData.aiVersion.cookTime}min</Badge>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-xs mb-1.5">Ingredients ({extractedData.aiVersion.ingredients.length}):</p>
-                        <ul className="space-y-1 text-xs text-slate-600 max-h-32 overflow-y-auto">
-                          {extractedData.aiVersion.ingredients.slice(0, 6).map((ing: Ingredient, idx: number) => (
-                            <li key={idx} className="break-words">• {ing.quantity} {ing.unit} {ing.name}</li>
-                          ))}
-                          {extractedData.aiVersion.ingredients.length > 6 && (
-                            <li className="text-slate-400">+ {extractedData.aiVersion.ingredients.length - 6} more...</li>
-                          )}
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </ScrollArea>
-
-            <DialogFooter className="p-4 border-t">
-              <Button variant="outline" onClick={() => setShowConflictDialog(false)} className="w-full sm:w-auto">
-                Cancel
-              </Button>
-            </DialogFooter>
-</DialogContent>
-        </Dialog>
 
           </form>
           )}

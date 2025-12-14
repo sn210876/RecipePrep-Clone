@@ -75,7 +75,7 @@ export async function getAllBlogPosts(page = 1, limit = 20): Promise<BlogPost[]>
             .select('*')
             .eq('post_id', post.id)
             .eq('user_id', user.id)
-            .single();
+            .maybeSingle();
         })(),
       ]);
 
@@ -124,7 +124,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
         .select('*')
         .eq('post_id', post.id)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
     })(),
   ]);
 
@@ -194,7 +194,7 @@ export async function toggleBlogLike(postId: string): Promise<boolean> {
     .select('*')
     .eq('post_id', postId)
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (existing) {
     await supabase
@@ -244,7 +244,7 @@ export async function getBlogComments(postId: string): Promise<BlogComment[]> {
               .select('vote_type')
               .eq('comment_id', comment.id)
               .eq('user_id', user.id)
-              .single()
+              .maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
 
@@ -325,7 +325,7 @@ export async function voteOnComment(
     .select('*')
     .eq('comment_id', commentId)
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (existing) {
     if (existing.vote_type === voteType) {

@@ -393,25 +393,42 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
       const filteredPostIds = filteredPosts.map(p => p.id);
       const filteredUserIds = [...new Set(filteredPosts.map(p => p.user_id))];
 
-      const [profilesData, likesData, commentsDataRaw, ratingsData] = await Promise.all([
-        supabase
+      const queries = [];
+
+      if (filteredUserIds.length > 0) {
+        queries.push(supabase
           .from('profiles')
           .select('id, username, avatar_url')
-          .in('id', filteredUserIds),
-        supabase
-          .from('likes')
-          .select('user_id, post_id')
-          .in('post_id', filteredPostIds),
-        supabase
-          .from('comments')
-          .select('id, text, created_at, user_id, post_id, rating')
-          .in('post_id', filteredPostIds)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('post_ratings')
-          .select('rating, post_id')
-          .in('post_id', filteredPostIds)
-      ]);
+          .in('id', filteredUserIds));
+      } else {
+        queries.push(Promise.resolve({ data: [], error: null }));
+      }
+
+      if (filteredPostIds.length > 0) {
+        queries.push(
+          supabase
+            .from('likes')
+            .select('user_id, post_id')
+            .in('post_id', filteredPostIds),
+          supabase
+            .from('comments')
+            .select('id, text, created_at, user_id, post_id, rating')
+            .in('post_id', filteredPostIds)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('post_ratings')
+            .select('rating, post_id')
+            .in('post_id', filteredPostIds)
+        );
+      } else {
+        queries.push(
+          Promise.resolve({ data: [], error: null }),
+          Promise.resolve({ data: [], error: null }),
+          Promise.resolve({ data: [], error: null })
+        );
+      }
+
+      const [profilesData, likesData, commentsDataRaw, ratingsData] = await Promise.all(queries);
 
       // Fetch comment profiles
       const commentUserIds = [...new Set((commentsDataRaw.data || []).map(c => c.user_id))];

@@ -343,26 +343,28 @@ if (isSocial) {
     sourceUrl: url,
   };
 
-  if (data.hasConflict) {
-    result.hasConflict = true;
-    result.structuredVersion = {
-      ...result,
-      ingredients: parseIngredients(data.structuredVersion?.ingredients || []),
-      instructions: (data.structuredVersion?.instructions || []).map(decodeHtmlEntities),
-      prepTime: data.structuredVersion?.prep_time ? `${data.structuredVersion.prep_time} mins` : '30 mins',
-      cookTime: data.structuredVersion?.cook_time ? `${data.structuredVersion.cook_time} mins` : '45 mins',
-      servings: String(data.structuredVersion?.yield || '4'),
-      notes: '',
-    };
-    result.aiVersion = {
-      ...result,
-      ingredients: parseIngredients(data.aiVersion?.ingredients || []),
-      instructions: (data.aiVersion?.instructions || []).map(decodeHtmlEntities),
-      prepTime: data.aiVersion?.prep_time ? `${data.aiVersion.prep_time} mins` : '30 mins',
-      cookTime: data.aiVersion?.cook_time ? `${data.aiVersion.cook_time} mins` : '45 mins',
-      servings: String(data.aiVersion?.yield || '4'),
-      notes: '',
-    };
+  if (data.hasConflict && data.structuredVersion) {
+    const structuredIngredients = parseIngredients(data.structuredVersion?.ingredients || []);
+    const structuredInstructions = (data.structuredVersion?.instructions || []).map(decodeHtmlEntities);
+
+    if (structuredIngredients.length > 0 && structuredInstructions.length > 0) {
+      result.ingredients = structuredIngredients;
+      result.instructions = structuredInstructions;
+      result.prepTime = data.structuredVersion?.prep_time ? `${data.structuredVersion.prep_time} mins` : result.prepTime;
+      result.cookTime = data.structuredVersion?.cook_time ? `${data.structuredVersion.cook_time} mins` : result.cookTime;
+      result.servings = String(data.structuredVersion?.yield || result.servings);
+    } else if (data.aiVersion) {
+      const aiIngredients = parseIngredients(data.aiVersion?.ingredients || []);
+      const aiInstructions = (data.aiVersion?.instructions || []).map(decodeHtmlEntities);
+
+      if (aiIngredients.length > 0 && aiInstructions.length > 0) {
+        result.ingredients = aiIngredients;
+        result.instructions = aiInstructions;
+        result.prepTime = data.aiVersion?.prep_time ? `${data.aiVersion.prep_time} mins` : result.prepTime;
+        result.cookTime = data.aiVersion?.cook_time ? `${data.aiVersion.cook_time} mins` : result.cookTime;
+        result.servings = String(data.aiVersion?.yield || result.servings);
+      }
+    }
   }
 
   return result;
