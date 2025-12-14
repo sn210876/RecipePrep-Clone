@@ -192,28 +192,6 @@ export function DeliveryServiceSelector({
     return `${baseUrl}?${params.toString()}`;
   };
 
-  const handleCheckoutAll = async () => {
-    if (instacartItems.length > 0) {
-      await handleCheckoutInstacart();
-    }
-
-    if (amazonFreshItems.length > 0) {
-      await handleCheckoutAmazon('amazon_fresh', amazonFreshItems);
-    }
-
-    if (amazonGroceryItems.length > 0) {
-      await handleCheckoutAmazon('amazon_grocery', amazonGroceryItems);
-    }
-
-    if (wholeFoodsItems.length > 0) {
-      await handleCheckoutAmazon('whole_foods', wholeFoodsItems);
-    }
-
-    if (amazonItems.length > 0) {
-      await handleCheckoutAmazon('amazon', amazonItems);
-    }
-  };
-
   return (
     <>
       <CheckoutResultsDialog
@@ -574,12 +552,6 @@ export function DeliveryServiceSelector({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          {(instacartItems.length + allAmazonItems.length) > 1 && (
-            <Button onClick={handleCheckoutAll} disabled={loading}>
-              <Truck className="w-4 h-4 mr-2" />
-              Checkout All Services
-            </Button>
-          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
