@@ -12,6 +12,7 @@ import { GroceryList } from './pages/GroceryList';
 import { Cart } from './pages/CartEnhanced';
 import Settings from './pages/Settings';
 import Referrals from './pages/Referrals';
+import AdminPayouts from './pages/AdminPayouts';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
@@ -54,6 +55,7 @@ function AppContent() {
   if (path === '/messages') return 'messages';
   if (path === '/settings') return 'settings';
   if (path === '/referrals') return 'referrals';
+  if (path === '/admin-payouts') return 'admin-payouts';
   if (path === '/faq') return 'faq';
   if (path === '/onboarding') return 'onboarding';
   if (path === '/blog') return 'blog';
@@ -69,7 +71,7 @@ function AppContent() {
   // Only treat as username if not a known route
   if (path !== '/' && path.length > 1 && !path.includes('.')) {
     const username = path.substring(1);
-    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings', 'blog'];
+    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings', 'admin-payouts', 'blog'];
     if (username && !username.includes('/') && !knownRoutes.includes(username)) {
       return `profile:${username}`;
     }
@@ -108,6 +110,8 @@ function AppContent() {
         setCurrentPage('messages');
       } else if (path === '/settings') {
         setCurrentPage('settings');
+      } else if (path === '/admin-payouts') {
+        setCurrentPage('admin-payouts');
       } else if (path === '/blog') {
         setCurrentPage('blog');
       } else if (path.startsWith('/blog/') && path !== '/blog') {
@@ -122,7 +126,7 @@ function AppContent() {
         setCurrentPage('discover');
       } else if (path !== '/' && path.length > 1 && !path.includes('.')) {
         const username = path.substring(1);
-        const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'blog'];
+        const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'admin-payouts', 'blog'];
         if (username && !username.includes('/') && !knownRoutes.includes(username)) {
           setCurrentPage(`profile:${username}`);
         } else {
@@ -210,7 +214,8 @@ function AppContent() {
       'upload',
       'profile',
       'messages',
-      'settings'
+      'settings',
+      'admin-payouts'
     ];
 
     // Check if user is trying to access a protected page without login
@@ -233,6 +238,7 @@ function AppContent() {
       'messages': '/messages',
       'settings': '/settings',
       'referrals': '/referrals',
+      'admin-payouts': '/admin-payouts',
       'faq': '/faq',
       'onboarding': '/onboarding',
       'blog': '/blog',
@@ -286,6 +292,7 @@ function AppContent() {
       case 'messages': return <Messages onBack={() => handleNavigate('discover')} />;
       case 'settings': return <Settings onNavigate={handleNavigate} />;
       case 'referrals': return <Referrals />;
+      case 'admin-payouts': return <AdminPayouts />;
       case 'faq': return <FAQ />;
       case 'onboarding': return <Onboarding onComplete={() => handleNavigate('discover-recipes')} />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;

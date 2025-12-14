@@ -16,11 +16,13 @@ import {
   MessageSquare,
   TrendingUp,
   Gift,
-  HelpCircle
+  HelpCircle,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface LayoutProps {
   currentPage: string;
@@ -30,6 +32,7 @@ interface LayoutProps {
 
 export default function Layout({ currentPage: propCurrentPage, onNavigate, children }: LayoutProps) {
   const { t } = useLanguage();
+  const { isAdmin } = useAuth();
   const [currentPage, setCurrentPage] = useState(propCurrentPage);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
@@ -37,8 +40,7 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-
-  const navItems = [
+  const baseNavItems = [
     { id: 'discover-recipes', label: t.nav.discoverRecipes, icon: ChefHat },
     { id: 'discover', label: t.nav.socialFeed, icon: UtensilsCrossed },
     { id: 'my-recipes', label: t.nav.myRecipes, icon: BookMarked },
@@ -51,6 +53,10 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
     { id: 'faq', label: t.nav.faq, icon: HelpCircle },
     { id: 'settings', label: t.nav.settings, icon: Settings }
   ];
+
+  const navItems = isAdmin
+    ? [...baseNavItems.slice(0, -1), { id: 'admin-payouts', label: 'Admin Payouts', icon: Shield }, baseNavItems[baseNavItems.length - 1]]
+    : baseNavItems;
 
   const socialPages = ['discover', 'upload', 'profile', 'messages', 'add-recipe'];
 
