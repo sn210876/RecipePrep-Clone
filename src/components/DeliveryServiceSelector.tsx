@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Truck, ShoppingBag, ExternalLink } from 'lucide-react';
+import { Package, Truck, ShoppingBag, ExternalLink, Leaf } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -17,12 +17,22 @@ import {
   getServiceBadgeColor,
   getServiceDisplayName,
   getCategoryIcon,
+  type DeliveryService,
 } from '../services/deliveryRoutingService';
 import { createInstacartCart, type DeliveryAddress } from '../services/instacartService';
+import {
+  buildAmazonDeepLink,
+  trackAmazonServiceClick,
+  getServiceColor,
+  getServiceBackgroundColor,
+} from '../services/amazonGroceryService';
 
 interface DeliveryServiceSelectorProps {
   instacartItems: RoutedItem[];
   amazonItems: RoutedItem[];
+  amazonFreshItems?: RoutedItem[];
+  amazonGroceryItems?: RoutedItem[];
+  wholeFoodsItems?: RoutedItem[];
   userId: string;
   deliveryAddress: DeliveryAddress;
   onClose: () => void;
@@ -31,15 +41,24 @@ interface DeliveryServiceSelectorProps {
 export function DeliveryServiceSelector({
   instacartItems,
   amazonItems,
+  amazonFreshItems = [],
+  amazonGroceryItems = [],
+  wholeFoodsItems = [],
   userId,
   deliveryAddress,
   onClose,
 }: DeliveryServiceSelectorProps) {
   const [loading, setLoading] = useState(false);
-  const [selectedService, setSelectedService] = useState<'instacart' | 'amazon' | null>(null);
+  const [selectedService, setSelectedService] = useState<DeliveryService | null>(null);
   const [showSummary, setShowSummary] = useState(true);
 
-  const totalItems = instacartItems.length + amazonItems.length;
+  const allAmazonItems = [
+    ...amazonItems,
+    ...amazonFreshItems,
+    ...amazonGroceryItems,
+    ...wholeFoodsItems,
+  ];
+  const totalItems = instacartItems.length + allAmazonItems.length;
 
   const handleCheckoutInstacart = async () => {
     if (instacartItems.length === 0) {
@@ -67,28 +86,50 @@ export function DeliveryServiceSelector({
     }
   };
 
-  const handleCheckoutAmazon = async () => {
-    if (amazonItems.length === 0) {
-      toast.error('No items for Amazon delivery');
+  const handleCheckoutAmazon = async (serviceType: DeliveryService, items: RoutedItem[]) => {
+    if (items.length === 0) {
+      toast.error(`No items for ${getServiceDisplayName(serviceType)}`);
       return;
     }
 
     setLoading(true);
     try {
-      toast.info('Opening Amazon affiliate link...');
-      window.open('https://www.amazon.com/cart?tag=mealscrape-20', '_blank');
-      toast.success('Redirected to Amazon');
+      const deepLink = buildAmazonDeepLink(serviceType);
+
+      await trackAmazonServiceClick(userId, serviceType, items.length);
+
+      toast.info(`Opening ${getServiceDisplayName(serviceType)}...`);
+      window.open(deepLink, '_blank');
+      toast.success(`Redirected to ${getServiceDisplayName(serviceType)}`);
     } catch (error) {
-      console.error('Error opening Amazon:', error);
-      toast.error('Failed to open Amazon');
+      console.error(`Error opening ${serviceType}:`, error);
+      toast.error(`Failed to open ${getServiceDisplayName(serviceType)}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCheckoutBoth = async () => {
-    await handleCheckoutInstacart();
-    await handleCheckoutAmazon();
+  const handleCheckoutAll = async () => {
+    if (instacartItems.length > 0) {
+      await handleCheckoutInstacart();
+    }
+
+    if (amazonFreshItems.length > 0) {
+      await handleCheckoutAmazon('amazon_fresh', amazonFreshItems);
+    }
+
+    if (amazonGroceryItems.length > 0) {
+      await handleCheckoutAmazon('amazon_grocery', amazonGroceryItems);
+    }
+
+    if (wholeFoodsItems.length > 0) {
+      await handleCheckoutAmazon('whole_foods', wholeFoodsItems);
+    }
+
+    if (amazonItems.length > 0) {
+      await handleCheckoutAmazon('amazon', amazonItems);
+    }
+
     onClose();
   };
 
@@ -107,38 +148,96 @@ export function DeliveryServiceSelector({
 
         <div className="space-y-4">
           {showSummary && (
-            <div className="grid grid-cols-2 gap-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-green-600" />
-                    Instacart Fresh
-                  </CardTitle>
-                  <CardDescription>Fresh produce, meat, dairy</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    {instacartItems.length}
-                  </div>
-                  <div className="text-xs text-muted-foreground">items</div>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {instacartItems.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4 text-green-600" />
+                      Instacart
+                    </CardTitle>
+                    <CardDescription>Quick delivery</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      {instacartItems.length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">items</div>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Package className="w-4 h-4 text-orange-600" />
-                    Amazon Pantry
-                  </CardTitle>
-                  <CardDescription>Packaged goods, staples</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">
-                    {amazonItems.length}
-                  </div>
-                  <div className="text-xs text-muted-foreground">items</div>
-                </CardContent>
-              </Card>
+              {amazonFreshItems.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Leaf className="w-4 h-4 text-green-600" />
+                      Amazon Fresh
+                    </CardTitle>
+                    <CardDescription>Same-day delivery</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      {amazonFreshItems.length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">items</div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {amazonGroceryItems.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Package className="w-4 h-4 text-orange-600" />
+                      Amazon Grocery
+                    </CardTitle>
+                    <CardDescription>Standard shipping</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {amazonGroceryItems.length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">items</div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {wholeFoodsItems.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4 text-emerald-600" />
+                      Whole Foods
+                    </CardTitle>
+                    <CardDescription>Premium organic</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-emerald-600">
+                      {wholeFoodsItems.length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">items</div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {amazonItems.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Package className="w-4 h-4 text-orange-600" />
+                      Amazon
+                    </CardTitle>
+                    <CardDescription>General items</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {amazonItems.length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">items</div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
 
@@ -187,17 +286,152 @@ export function DeliveryServiceSelector({
             </Card>
           )}
 
+          {amazonFreshItems.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Leaf className="w-4 h-4 text-green-600" />
+                    Amazon Fresh ({amazonFreshItems.length})
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => handleCheckoutAmazon('amazon_fresh', amazonFreshItems)}
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    Checkout
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {amazonFreshItems.map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 rounded-lg bg-green-50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{getCategoryIcon(item.category)}</span>
+                        <div>
+                          <div className="font-medium text-sm">{item.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {item.quantity} {item.unit}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {item.category}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {amazonGroceryItems.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-orange-600" />
+                    Amazon Grocery ({amazonGroceryItems.length})
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => handleCheckoutAmazon('amazon_grocery', amazonGroceryItems)}
+                    disabled={loading}
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    Checkout
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {amazonGroceryItems.map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 rounded-lg bg-orange-50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{getCategoryIcon(item.category)}</span>
+                        <div>
+                          <div className="font-medium text-sm">{item.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {item.quantity} {item.unit}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {item.category}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {wholeFoodsItems.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 text-emerald-600" />
+                    Whole Foods ({wholeFoodsItems.length})
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => handleCheckoutAmazon('whole_foods', wholeFoodsItems)}
+                    disabled={loading}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    Checkout
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {wholeFoodsItems.map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 rounded-lg bg-emerald-50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{getCategoryIcon(item.category)}</span>
+                        <div>
+                          <div className="font-medium text-sm">{item.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {item.quantity} {item.unit}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {item.category}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {amazonItems.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <Package className="w-4 h-4 text-orange-600" />
-                    Amazon Items ({amazonItems.length})
+                    Amazon ({amazonItems.length})
                   </span>
                   <Button
                     size="sm"
-                    onClick={handleCheckoutAmazon}
+                    onClick={() => handleCheckoutAmazon('amazon', amazonItems)}
                     disabled={loading}
                     className="bg-orange-600 hover:bg-orange-700"
                   >
@@ -237,10 +471,10 @@ export function DeliveryServiceSelector({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          {instacartItems.length > 0 && amazonItems.length > 0 && (
-            <Button onClick={handleCheckoutBoth} disabled={loading}>
+          {(instacartItems.length + allAmazonItems.length) > 1 && (
+            <Button onClick={handleCheckoutAll} disabled={loading}>
               <Truck className="w-4 h-4 mr-2" />
-              Checkout Both
+              Checkout All Services
             </Button>
           )}
         </DialogFooter>

@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { GroceryListItem } from '../types/recipe';
 
-export type DeliveryService = 'instacart' | 'amazon' | 'manual';
+export type DeliveryService = 'instacart' | 'amazon' | 'amazon_fresh' | 'amazon_grocery' | 'whole_foods' | 'manual';
 
 export interface RoutedItem extends GroceryListItem {
   recommendedService: DeliveryService;
@@ -21,6 +21,11 @@ export interface UserDeliveryPreferences {
   autoRouteFreshItems: boolean;
   autoRoutePantryItems: boolean;
   enableCostOptimization: boolean;
+  preferredAmazonService?: 'auto' | 'amazon_fresh' | 'amazon_grocery' | 'whole_foods' | 'amazon';
+  enableAmazonFresh?: boolean;
+  enableAmazonGrocery?: boolean;
+  enableWholeFoods?: boolean;
+  userZipCode?: string;
 }
 
 const FRESH_KEYWORDS = [
@@ -50,57 +55,107 @@ const FROZEN_KEYWORDS = [
   'frozen berries', 'frozen vegetables'
 ];
 
-function categorizeIngredient(ingredientName: string): {
+const ORGANIC_PREMIUM_KEYWORDS = [
+  'organic', 'grass-fed', 'free-range', 'pasture-raised', 'wild-caught',
+  'non-gmo', 'gluten-free', 'vegan', 'sustainable', 'local', 'artisan'
+];
+
+function categorizeIngredient(
+  ingredientName: string,
+  preferences?: UserDeliveryPreferences | null
+): {
   category: string;
   freshnessPriority: number;
   recommendedService: DeliveryService;
 } {
   const nameLower = ingredientName.toLowerCase();
+  const isOrganic = ORGANIC_PREMIUM_KEYWORDS.some(keyword => nameLower.includes(keyword));
 
   if (FRESH_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
+    let service: DeliveryService = 'instacart';
+
+    if (isOrganic && preferences?.enableWholeFoods) {
+      service = 'whole_foods';
+    } else if (preferences?.enableAmazonFresh) {
+      service = 'amazon_fresh';
+    }
+
     return {
       category: 'fresh_produce',
       freshnessPriority: 10,
-      recommendedService: 'instacart',
+      recommendedService: service,
     };
   }
 
   if (MEAT_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
+    let service: DeliveryService = 'instacart';
+
+    if (isOrganic && preferences?.enableWholeFoods) {
+      service = 'whole_foods';
+    } else if (preferences?.enableAmazonFresh) {
+      service = 'amazon_fresh';
+    }
+
     return {
       category: 'meat',
       freshnessPriority: 10,
-      recommendedService: 'instacart',
+      recommendedService: service,
     };
   }
 
   if (DAIRY_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
+    let service: DeliveryService = 'instacart';
+
+    if (isOrganic && preferences?.enableWholeFoods) {
+      service = 'whole_foods';
+    } else if (preferences?.enableAmazonFresh) {
+      service = 'amazon_fresh';
+    }
+
     return {
       category: 'dairy',
       freshnessPriority: 9,
-      recommendedService: 'instacart',
+      recommendedService: service,
     };
   }
 
   if (FROZEN_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
+    let service: DeliveryService = 'instacart';
+
+    if (preferences?.enableAmazonFresh) {
+      service = 'amazon_fresh';
+    }
+
     return {
       category: 'frozen',
       freshnessPriority: 6,
-      recommendedService: 'instacart',
+      recommendedService: service,
     };
   }
 
   if (PANTRY_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
+    let service: DeliveryService = 'amazon';
+
+    if (preferences?.enableAmazonGrocery) {
+      service = 'amazon_grocery';
+    }
+
     return {
       category: 'pantry',
       freshnessPriority: 2,
-      recommendedService: 'amazon',
+      recommendedService: service,
     };
+  }
+
+  let service: DeliveryService = 'amazon';
+  if (preferences?.enableAmazonGrocery) {
+    service = 'amazon_grocery';
   }
 
   return {
     category: 'other',
     freshnessPriority: 5,
-    recommendedService: 'amazon',
+    recommendedService: service,
   };
 }
 
@@ -125,6 +180,9 @@ export async function routeGroceryItems(
 ): Promise<{
   instacartItems: RoutedItem[];
   amazonItems: RoutedItem[];
+  amazonFreshItems: RoutedItem[];
+  amazonGroceryItems: RoutedItem[];
+  wholeFoodsItems: RoutedItem[];
   manualItems: RoutedItem[];
 }> {
   const preferences = await getUserDeliveryPreferences(userId);
@@ -144,7 +202,7 @@ export async function routeGroceryItems(
         };
       }
 
-      const autoCategory = categorizeIngredient(item.name);
+      const autoCategory = categorizeIngredient(item.name, preferences);
       let service = autoCategory.recommendedService;
 
       if (preferences?.defaultService !== 'auto') {
@@ -173,6 +231,9 @@ export async function routeGroceryItems(
   return {
     instacartItems: routedItems.filter(item => item.recommendedService === 'instacart'),
     amazonItems: routedItems.filter(item => item.recommendedService === 'amazon'),
+    amazonFreshItems: routedItems.filter(item => item.recommendedService === 'amazon_fresh'),
+    amazonGroceryItems: routedItems.filter(item => item.recommendedService === 'amazon_grocery'),
+    wholeFoodsItems: routedItems.filter(item => item.recommendedService === 'whole_foods'),
     manualItems: routedItems.filter(item => item.recommendedService === 'manual'),
   };
 }
@@ -205,6 +266,11 @@ export async function getUserDeliveryPreferences(
     autoRouteFreshItems: data.auto_route_fresh_items,
     autoRoutePantryItems: data.auto_route_pantry_items,
     enableCostOptimization: data.enable_cost_optimization,
+    preferredAmazonService: data.preferred_amazon_service,
+    enableAmazonFresh: data.enable_amazon_fresh,
+    enableAmazonGrocery: data.enable_amazon_grocery,
+    enableWholeFoods: data.enable_whole_foods,
+    userZipCode: data.user_zip_code,
   };
 }
 
@@ -222,6 +288,11 @@ export async function saveUserDeliveryPreferences(
       auto_route_fresh_items: preferences.autoRouteFreshItems,
       auto_route_pantry_items: preferences.autoRoutePantryItems,
       enable_cost_optimization: preferences.enableCostOptimization,
+      preferred_amazon_service: preferences.preferredAmazonService || 'auto',
+      enable_amazon_fresh: preferences.enableAmazonFresh ?? true,
+      enable_amazon_grocery: preferences.enableAmazonGrocery ?? true,
+      enable_whole_foods: preferences.enableWholeFoods ?? false,
+      user_zip_code: preferences.userZipCode || '',
       updated_at: new Date().toISOString(),
     });
 
@@ -272,6 +343,9 @@ export function getServiceBadgeColor(service: DeliveryService): string {
   const colors: Record<DeliveryService, string> = {
     instacart: 'bg-green-100 text-green-800',
     amazon: 'bg-orange-100 text-orange-800',
+    amazon_fresh: 'bg-green-100 text-green-800',
+    amazon_grocery: 'bg-orange-100 text-orange-800',
+    whole_foods: 'bg-emerald-100 text-emerald-800',
     manual: 'bg-gray-100 text-gray-800',
   };
 
@@ -282,6 +356,9 @@ export function getServiceDisplayName(service: DeliveryService): string {
   const names: Record<DeliveryService, string> = {
     instacart: 'Instacart',
     amazon: 'Amazon',
+    amazon_fresh: 'Amazon Fresh',
+    amazon_grocery: 'Amazon Grocery',
+    whole_foods: 'Whole Foods',
     manual: 'Choose Service',
   };
 

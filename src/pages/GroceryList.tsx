@@ -73,6 +73,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [showDeliverySelector, setShowDeliverySelector] = useState(false);
   const [routedInstacartItems, setRoutedInstacartItems] = useState<RoutedItem[]>([]);
   const [routedAmazonItems, setRoutedAmazonItems] = useState<RoutedItem[]>([]);
+  const [routedAmazonFreshItems, setRoutedAmazonFreshItems] = useState<RoutedItem[]>([]);
+  const [routedAmazonGroceryItems, setRoutedAmazonGroceryItems] = useState<RoutedItem[]>([]);
+  const [routedWholeFoodsItems, setRoutedWholeFoodsItems] = useState<RoutedItem[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState<any>({});
   const [instacartEnabled, setInstacartEnabled] = useState(false);
 
@@ -734,10 +737,13 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     try {
       toast.info('Routing items to delivery services...');
 
-      const { instacartItems, amazonItems } = await routeGroceryItems(items, userId);
+      const { instacartItems, amazonItems, amazonFreshItems, amazonGroceryItems, wholeFoodsItems } = await routeGroceryItems(items, userId);
 
       setRoutedInstacartItems(instacartItems);
       setRoutedAmazonItems(amazonItems);
+      setRoutedAmazonFreshItems(amazonFreshItems);
+      setRoutedAmazonGroceryItems(amazonGroceryItems);
+      setRoutedWholeFoodsItems(wholeFoodsItems);
       setShowDeliverySelector(true);
     } catch (error) {
       console.error('Error routing items:', error);
@@ -1189,6 +1195,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         <DeliveryServiceSelector
           instacartItems={routedInstacartItems}
           amazonItems={routedAmazonItems}
+          amazonFreshItems={routedAmazonFreshItems}
+          amazonGroceryItems={routedAmazonGroceryItems}
+          wholeFoodsItems={routedWholeFoodsItems}
           userId={userId}
           deliveryAddress={deliveryAddress}
           onClose={() => setShowDeliverySelector(false)}
