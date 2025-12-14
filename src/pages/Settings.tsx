@@ -880,8 +880,8 @@ Instructions:
                 <li>Your profile and all posts</li>
                 <li>All uploaded photos and videos</li>
                 <li>Meal plans and grocery lists</li>
-                <li>Premium subscription (no refund)</li>
                 <li>Followers and following connections</li>
+                <li>All referral rewards</li>
               </ul>
             </div>
             <div>

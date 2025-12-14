@@ -15,7 +15,7 @@ import {
   User,
   MessageSquare,
   TrendingUp,
-  Crown,
+  Gift,
   HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,7 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
     { id: 'grocery-list', label: t.nav.groceryList, icon: ShoppingCart },
     { id: 'cart', label: t.nav.cart, icon: PiggyBank },
     { id: 'blog', label: t.nav.blog, icon: MessageSquare },
-    { id: 'subscription', label: t.nav.subscription, icon: Crown },
+    { id: 'referrals', label: 'Referrals', icon: Gift },
     { id: 'faq', label: t.nav.faq, icon: HelpCircle },
     { id: 'settings', label: t.nav.settings, icon: Settings }
   ];
@@ -329,9 +329,9 @@ const loadUnreadCount = async (userId: string) => {
         <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       </div>
     )}
-    {currentPage === 'subscription' && (
+    {currentPage === 'referrals' && (
       <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
-        <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+        <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       </div>
     )}
    {currentPage === 'settings' && (

@@ -314,49 +314,49 @@ export function FAQ() {
             </CardContent>
           </Card>
 
-          {/* Subscription & Payment */}
+          {/* Pricing & Referrals */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <CreditCard className="w-6 h-6 text-blue-600" />
-                Subscription & Payment
+                Pricing & Referrals
               </CardTitle>
-              <CardDescription>Learn about pricing and payment options</CardDescription>
+              <CardDescription>Learn about our free model and referral rewards</CardDescription>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="item-15">
                   <AccordionTrigger>Is Meal Scrape free?</AccordionTrigger>
                   <AccordionContent>
-                    Meal Scrape offers a generous 6-month early bird trial for new users! After the trial, we offer "pay what you want" plans, making it affordable for everyone.
+                    Yes! Meal Scrape is completely free for everyone. All features including recipe extraction, meal planning, grocery lists, social feed, and more are available at no cost. No trials, no subscriptions, no hidden fees.
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-16">
-                  <AccordionTrigger>What payment methods do you accept?</AccordionTrigger>
+                  <AccordionTrigger>How can I earn rewards?</AccordionTrigger>
                   <AccordionContent>
-                    We accept all major credit cards (Visa, Mastercard, American Express, Discover) through our secure payment processor Stripe. We do not store your payment information on our servers.
+                    Share Meal Scrape with your friends! For every 10 people who sign up using your referral link, you'll earn $5. You can track your referrals and request payouts from the Referrals page. It's our way of saying thank you for helping grow our community!
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-17">
-                  <AccordionTrigger>Can I cancel anytime?</AccordionTrigger>
+                  <AccordionTrigger>How do referral payouts work?</AccordionTrigger>
                   <AccordionContent>
-                    Yes! You can cancel your subscription at any time from the Settings page. You'll continue to have access until the end of your current billing period. All your recipes will remain saved but will need to subscribe to see them again.
+                    Once you reach 10 successful referrals, you can request a $5 payout through PayPal, Venmo, Cash App, or other payment methods. Your payout request will be reviewed and processed by our team, typically within a few business days. You can earn unlimited rewards - every 10 referrals gets you another $5!
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-18">
-                  <AccordionTrigger>Do you offer refunds?</AccordionTrigger>
+                  <AccordionTrigger>Where do I find my referral link?</AccordionTrigger>
                   <AccordionContent>
-                    Currently not offering refunds, but it is a pay what you want model.  You should be satisfied, if not, send "Mealscrape" a DM!
+                    Visit the Referrals page from the main navigation menu. You'll find your unique referral link there, along with stats showing how many people have signed up using your link. You can easily copy and share your link on social media, via text, or email.
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-19">
-                  <AccordionTrigger>Is there a family plan?</AccordionTrigger>
+                  <AccordionTrigger>How do you make money if the app is free?</AccordionTrigger>
                   <AccordionContent>
-                    Not at the moment, the app is very affordable, just refer your family for their own accounts.  You can view eachother's social media profile to see what recipes you like.
+                    Great question! We keep costs low and rely on affiliate partnerships (like Amazon product recommendations) and optional donations from users who love the app. We believe everyone should have access to great recipe tools, regardless of their budget.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

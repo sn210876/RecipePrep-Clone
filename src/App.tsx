@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { SubscriptionProvider } from './context/SubscriptionContext';
 import { LanguageProvider } from './context/LanguageContext';
-import { SubscriptionGate } from './components/SubscriptionGate';
 import Layout from './components/Layout';
 import { Discover as DiscoverRecipes } from './pages/DiscoverRecipes';
 import { Discover } from './pages/Discover';
@@ -13,8 +11,7 @@ import { MealPlanner } from './pages/MealPlanner';
 import { GroceryList } from './pages/GroceryList';
 import { Cart } from './pages/CartEnhanced';
 import Settings from './pages/Settings';
-import { Subscription } from './pages/Subscription';
-import SubscriptionSuccess from './pages/SubscriptionSuccess';
+import Referrals from './pages/Referrals';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { VerifyEmail } from './pages/VerifyEmail';
@@ -56,8 +53,7 @@ function AppContent() {
   if (path === '/profile') return 'profile';
   if (path === '/messages') return 'messages';
   if (path === '/settings') return 'settings';
-  if (path === '/subscription') return 'subscription';
-  if (path === '/subscription/success') return 'subscription-success';
+  if (path === '/referrals') return 'referrals';
   if (path === '/faq') return 'faq';
   if (path === '/onboarding') return 'onboarding';
   if (path === '/blog') return 'blog';
@@ -236,7 +232,7 @@ function AppContent() {
       'profile': '/profile',
       'messages': '/messages',
       'settings': '/settings',
-     'subscription': '/subscription',
+      'referrals': '/referrals',
       'faq': '/faq',
       'onboarding': '/onboarding',
       'blog': '/blog',
@@ -279,63 +275,17 @@ function AppContent() {
     }
     switch (currentPage) {
       case 'discover-recipes': return <DiscoverRecipes onNavigate={handleNavigate} />;
-      case 'discover':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="Social Feed">
-            <Discover onNavigate={handleNavigate} />
-          </SubscriptionGate>
-        );
-      case 'my-recipes':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="My Recipes">
-            <MyRecipes />
-          </SubscriptionGate>
-        );
-      case 'add-recipe':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="Add Recipe">
-            <AddRecipe onNavigate={handleNavigate} />
-          </SubscriptionGate>
-        );
-      case 'meal-planner':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="Meal Planner">
-            <MealPlanner onNavigate={handleNavigate} />
-          </SubscriptionGate>
-        );
-      case 'grocery-list':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="Grocery List">
-            <GroceryList onNavigate={handleNavigate} />
-          </SubscriptionGate>
-        );
-      case 'cart':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="Shopping Cart">
-            <Cart onNavigate={handleNavigate} />
-          </SubscriptionGate>
-        );
-      case 'upload':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="Upload">
-            <Upload onNavigate={handleNavigate} />
-          </SubscriptionGate>
-        );
-      case 'profile':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="Profile">
-            <Profile />
-          </SubscriptionGate>
-        );
-      case 'messages':
-        return (
-          <SubscriptionGate onNavigate={handleNavigate} featureName="Messages">
-            <Messages onBack={() => handleNavigate('discover')} />
-          </SubscriptionGate>
-        );
+      case 'discover': return <Discover onNavigate={handleNavigate} />;
+      case 'my-recipes': return <MyRecipes />;
+      case 'add-recipe': return <AddRecipe onNavigate={handleNavigate} />;
+      case 'meal-planner': return <MealPlanner onNavigate={handleNavigate} />;
+      case 'grocery-list': return <GroceryList onNavigate={handleNavigate} />;
+      case 'cart': return <Cart onNavigate={handleNavigate} />;
+      case 'upload': return <Upload onNavigate={handleNavigate} />;
+      case 'profile': return <Profile />;
+      case 'messages': return <Messages onBack={() => handleNavigate('discover')} />;
       case 'settings': return <Settings onNavigate={handleNavigate} />;
-      case 'subscription': return <Subscription onNavigate={handleNavigate} />;
-      case 'subscription-success': return <SubscriptionSuccess onNavigate={handleNavigate} />;
+      case 'referrals': return <Referrals />;
       case 'faq': return <FAQ />;
       case 'onboarding': return <Onboarding onComplete={() => handleNavigate('discover-recipes')} />;
       case 'blog': return <Blog onNavigate={handleNavigate} />;
@@ -393,8 +343,8 @@ if (loading || (user && isEmailVerified === undefined)) {
     handleNavigate('discover-recipes');
   };
 
-  // Allow access to DiscoverRecipes, Blog, FAQ, and Subscription without login
-  const publicPages = ['discover-recipes', 'blog', 'faq', 'subscription'];
+  // Allow access to DiscoverRecipes, Blog, and FAQ without login
+  const publicPages = ['discover-recipes', 'blog', 'faq'];
   const isPublicPage = publicPages.includes(currentPage) || currentPage.startsWith('blog:');
 
   // Show onboarding for new users
@@ -422,11 +372,9 @@ function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <SubscriptionProvider>
-          <RecipeProvider>
-            <AppContent />
-          </RecipeProvider>
-        </SubscriptionProvider>
+        <RecipeProvider>
+          <AppContent />
+        </RecipeProvider>
       </LanguageProvider>
     </AuthProvider>
   );
