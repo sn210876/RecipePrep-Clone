@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import type { DeliveryService } from './deliveryRoutingService';
 
 export interface AmazonProduct {
   id: string;
@@ -167,7 +168,8 @@ export async function addProductToCart(
   product: AmazonProduct,
   quantity: string = '1',
   unit: string = '',
-  sourceRecipeId?: string
+  sourceRecipeId?: string,
+  deliveryService?: DeliveryService
 ) {
   const { data, error } = await supabase
     .from('cart_items')
@@ -182,6 +184,7 @@ export async function addProductToCart(
       image_url: product.image_url,
       asin: product.asin,
       source_recipe_id: sourceRecipeId,
+      delivery_service: deliveryService || null,
     })
     .select()
     .single();
@@ -197,6 +200,7 @@ export async function bulkAddToCart(
     quantity: string;
     unit: string;
     sourceRecipeId?: string;
+    deliveryService?: DeliveryService;
   }>
 ) {
   const cartItems = items.map(item => ({
@@ -210,6 +214,7 @@ export async function bulkAddToCart(
     image_url: item.product.image_url,
     asin: item.product.asin,
     source_recipe_id: item.sourceRecipeId,
+    delivery_service: item.deliveryService || null,
   }));
 
   const { data, error } = await supabase

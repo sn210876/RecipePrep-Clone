@@ -26,6 +26,7 @@ import {
   getServiceColor,
   getServiceBackgroundColor,
 } from '../services/amazonGroceryService';
+import { findProductsForIngredient, bulkAddToCart } from '../services/amazonProductService';
 
 interface DeliveryServiceSelectorProps {
   instacartItems: RoutedItem[];
@@ -68,6 +69,26 @@ export function DeliveryServiceSelector({
 
     setLoading(true);
     try {
+      toast.info('Finding matching products for Instacart...');
+
+      const itemsToAdd = [];
+      for (const item of instacartItems) {
+        const products = await findProductsForIngredient(item.name, 1);
+        if (products.length > 0) {
+          itemsToAdd.push({
+            product: products[0],
+            quantity: item.quantity.toString(),
+            unit: item.unit,
+            deliveryService: 'instacart' as DeliveryService,
+          });
+        }
+      }
+
+      if (itemsToAdd.length > 0) {
+        await bulkAddToCart(userId, itemsToAdd);
+        toast.success(`Added ${itemsToAdd.length} items to cart for Instacart`);
+      }
+
       const cartItems = instacartItems.map(item => ({
         product_id: item.id,
         quantity: item.quantity,
@@ -78,6 +99,8 @@ export function DeliveryServiceSelector({
 
       window.open(session.checkout_url, '_blank');
       toast.success('Redirecting to Instacart checkout...');
+
+      onClose();
     } catch (error) {
       console.error('Error creating Instacart cart:', error);
       toast.error('Failed to create Instacart cart. Please try again.');
@@ -94,16 +117,44 @@ export function DeliveryServiceSelector({
 
     setLoading(true);
     try {
+      toast.info('Finding matching Amazon products...');
+
+      const itemsToAdd = [];
+      for (const item of items) {
+        const products = await findProductsForIngredient(item.name, 1);
+        if (products.length > 0) {
+          itemsToAdd.push({
+            product: products[0],
+            quantity: item.quantity.toString(),
+            unit: item.unit,
+            deliveryService: serviceType,
+          });
+        }
+      }
+
+      if (itemsToAdd.length === 0) {
+        toast.error('No matching Amazon products found');
+        return;
+      }
+
+      const addedItems = await bulkAddToCart(userId, itemsToAdd);
+
+      await trackAmazonServiceClick(userId, serviceType, addedItems.length);
+
+      toast.success(`Added ${addedItems.length} items to cart for ${getServiceDisplayName(serviceType)}`);
+
+      const skippedCount = items.length - addedItems.length;
+      if (skippedCount > 0) {
+        toast.info(`${skippedCount} item${skippedCount !== 1 ? 's' : ''} skipped (no matching products)`);
+      }
+
       const deepLink = buildAmazonDeepLink(serviceType);
-
-      await trackAmazonServiceClick(userId, serviceType, items.length);
-
-      toast.info(`Opening ${getServiceDisplayName(serviceType)}...`);
       window.open(deepLink, '_blank');
-      toast.success(`Redirected to ${getServiceDisplayName(serviceType)}`);
+
+      onClose();
     } catch (error) {
-      console.error(`Error opening ${serviceType}:`, error);
-      toast.error(`Failed to open ${getServiceDisplayName(serviceType)}`);
+      console.error(`Error processing ${serviceType}:`, error);
+      toast.error(`Failed to add items to cart`);
     } finally {
       setLoading(false);
     }
