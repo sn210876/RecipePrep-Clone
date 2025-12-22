@@ -1,5 +1,6 @@
 import { Component, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home, Bug, Download } from 'lucide-react';
+import { errorHandler } from '../lib/errorHandler';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -22,14 +23,42 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   static getDerivedStateFromError(error: Error) {
-    console.error('ErrorBoundary caught error:', error);
+    errorHandler.error('ErrorBoundary', 'React error boundary caught error', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: { componentStack: string }) {
-    console.error('ErrorBoundary componentDidCatch:', error, errorInfo);
+    errorHandler.error('ErrorBoundary', 'Component did catch', {
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      },
+      componentStack: errorInfo.componentStack
+    });
     this.setState({ errorInfo });
   }
+
+  handleDownloadLogs = () => {
+    try {
+      const logs = errorHandler.exportLogs();
+      const blob = new Blob([logs], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mealscrape-error-logs-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      errorHandler.error('ErrorBoundary', 'Failed to download logs', error);
+    }
+  };
 
   handleReload = () => {
     window.location.reload();
@@ -94,6 +123,15 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                     <span className="text-sm sm:text-base">Go Home</span>
                   </button>
                 </div>
+
+                {/* Download Logs Button */}
+                <button
+                  onClick={this.handleDownloadLogs}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg sm:rounded-xl px-4 py-3 transition-all hover:scale-105 active:scale-95 shadow-md"
+                >
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">Download Error Logs</span>
+                </button>
 
                 {/* Development Mode - Error Details */}
                 {isDevelopment && this.state.error && (

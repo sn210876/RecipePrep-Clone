@@ -145,8 +145,8 @@ export function AdminMappings() {
           }, {} as Record<string, number>);
 
           const unmapped = Object.entries(counts)
-            .map(([ingredient_name, count]) => ({ ingredient_name, count }))
-            .sort((a, b) => b.count - a.count);
+            .map(([ingredient_name, count]) => ({ ingredient_name, count: count as number }))
+            .sort((a, b) => (b.count as number) - (a.count as number));
 
           setUnmappedIngredients(unmapped);
         }

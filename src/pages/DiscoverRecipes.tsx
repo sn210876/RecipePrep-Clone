@@ -109,11 +109,11 @@ const loadAllSocialPosts = async (recipes: Recipe[]) => {
     // Process posts by URL
     const urlToRecipeMap = new Map(recipeUrls?.map(r => [r.video_url, r.id]) || []);
     postsByUrl?.forEach(post => {
-      const recipeId = urlToRecipeMap.get(post.recipe_url);
+      const recipeId = urlToRecipeMap.get(post.recipe_url) as string | undefined;
       if (recipeId && !postMap.has(recipeId)) {
         // ✅ If post doesn't have image, use recipe image
         if (!post.image_url && recipeImageMap.has(recipeId)) {
-          post.image_url = recipeImageMap.get(recipeId);
+          post.image_url = recipeImageMap.get(recipeId) as string;
         }
         postMap.set(recipeId, post);
       }

@@ -31,6 +31,9 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App as CapApp } from '@capacitor/app';
 import AuthForm from './components/AuthForm';
+import { ErrorBanner } from './components/ErrorBanner';
+import { errorHandler } from './lib/errorHandler';
+import { checkEnvironment } from './lib/envChecker';
 
 // Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
 const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -43,6 +46,26 @@ function AppContent() {
   const { user, loading, isEmailVerified } = useAuth();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [envError, setEnvError] = useState<{
+    message: string;
+    details: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    errorHandler.info('App', '🎬 AppContent mounted');
+    const envCheck = checkEnvironment();
+    if (!envCheck.isValid) {
+      errorHandler.error('App', '❌ Environment check failed in AppContent');
+      setEnvError({
+        message: 'Critical environment variables are missing. The app may not function correctly.',
+        details: envCheck.missing.map(v => `Missing: ${v}`)
+      });
+    }
+
+    return () => {
+      errorHandler.info('App', '🧹 AppContent unmounting');
+    };
+  }, []);
 
  const [currentPage, setCurrentPage] = useState<string>(() => {
   const path = window.location.pathname;
@@ -100,12 +123,21 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    console.log('[App] Starting image monitoring service...');
-    imageMonitorService.startMonitoring();
+    try {
+      errorHandler.info('App', '📸 Starting image monitoring service...');
+      imageMonitorService.startMonitoring();
 
-    return () => {
-      imageMonitorService.stopMonitoring();
-    };
+      return () => {
+        try {
+          errorHandler.info('App', '🛑 Stopping image monitoring service...');
+          imageMonitorService.stopMonitoring();
+        } catch (error) {
+          errorHandler.error('App', 'Failed to stop image monitoring', error);
+        }
+      };
+    } catch (error) {
+      errorHandler.error('App', 'Failed to start image monitoring', error);
+    }
   }, []);
 
   // Sync back/forward buttons
@@ -167,17 +199,26 @@ function AppContent() {
   useEffect(() => {
     const initializeMobileApp = async () => {
       if (Capacitor.isNativePlatform()) {
+        errorHandler.info('App', '📱 Initializing mobile app...');
         try {
+          errorHandler.info('App', '🎨 Setting status bar style...');
           await StatusBar.setStyle({ style: Style.Light });
           if (Capacitor.getPlatform() === 'android') {
+            errorHandler.info('App', '🤖 Setting Android status bar color...');
             await StatusBar.setBackgroundColor({ color: '#FF6B35' });
           }
+          errorHandler.info('App', '✅ Status bar configured');
         } catch (e) {
-          console.log('Status bar error:', e);
+          errorHandler.error('App', 'Status bar configuration error', e);
         }
 
         setTimeout(() => {
-          SplashScreen.hide();
+          try {
+            errorHandler.info('App', '👋 Hiding splash screen...');
+            SplashScreen.hide();
+          } catch (error) {
+            errorHandler.error('App', 'Failed to hide splash screen', error);
+          }
         }, 1000);
 
         CapApp.addListener('backButton', (data) => {
@@ -216,10 +257,18 @@ function AppContent() {
   // Check if onboarding should be shown
   useEffect(() => {
     if (user && !loading && isEmailVerified) {
-      const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
+      try {
+        errorHandler.info('App', '🎓 Checking onboarding status...');
+        const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
 
-      if (!hasSeenOnboarding) {
-        setShowOnboarding(true);
+        if (!hasSeenOnboarding) {
+          errorHandler.info('App', '🆕 New user detected, showing onboarding');
+          setShowOnboarding(true);
+        } else {
+          errorHandler.info('App', '✅ User has seen onboarding');
+        }
+      } catch (error) {
+        errorHandler.error('App', 'Failed to check onboarding status', error);
       }
     }
   }, [user, loading, isEmailVerified]);
@@ -398,6 +447,15 @@ if (loading || (user && isEmailVerified === undefined)) {
   // Main app with mobile-safe padding
   return (
     <MobileSafeWrapper>
+      {envError && (
+        <ErrorBanner
+          title="Configuration Error"
+          message={envError.message}
+          details={envError.details}
+          severity="error"
+          onDismiss={() => setEnvError(null)}
+        />
+      )}
       <Layout currentPage={currentPage} onNavigate={handleNavigate}>
         {renderPage()}
         <Toaster />
@@ -407,15 +465,27 @@ if (loading || (user && isEmailVerified === undefined)) {
 }
 
 function App() {
-  return (
-    <AuthProvider>
-      <LanguageProvider>
-        <RecipeProvider>
-          <AppContent />
-        </RecipeProvider>
-      </LanguageProvider>
-    </AuthProvider>
-  );
+  useEffect(() => {
+    errorHandler.info('App', '🚀 App component mounting...');
+    return () => {
+      errorHandler.info('App', '👋 App component unmounting...');
+    };
+  }, []);
+
+  try {
+    return (
+      <AuthProvider>
+        <LanguageProvider>
+          <RecipeProvider>
+            <AppContent />
+          </RecipeProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    );
+  } catch (error) {
+    errorHandler.error('App', '❌ Failed to render App', error);
+    throw error;
+  }
 }
 
 export default App;

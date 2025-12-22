@@ -80,8 +80,8 @@ export default function PayoutTable({ payouts, onViewDetails, filterStatus = 'al
 
     const enrichedPayouts = payouts.map(payout => ({
       ...payout,
-      profile: profileMap.get(payout.user_id),
-    }));
+      profile: profileMap.get(payout.user_id) || ({ id: payout.user_id, username: 'Unknown', email: '' } as UserProfile),
+    })) as PayoutWithUser[];
 
     setPayoutsWithUsers(enrichedPayouts);
     setLoading(false);
