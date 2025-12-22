@@ -3,14 +3,16 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, PlayCircle, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { migrateExistingRecipes, migrateExistingPosts } from '@/lib/imageStorage';
+import { migrateExistingRecipes, migrateExistingPosts, migrateSavedRecipes } from '@/lib/imageStorage';
 
 export default function AdminImageMigration() {
   const { isAdmin } = useAuth();
   const [migrating, setMigrating] = useState(false);
   const [recipeStatus, setRecipeStatus] = useState<string>('');
+  const [savedRecipeStatus, setSavedRecipeStatus] = useState<string>('');
   const [postStatus, setPostStatus] = useState<string>('');
   const [recipeResults, setRecipeResults] = useState<any>(null);
+  const [savedRecipeResults, setSavedRecipeResults] = useState<any>(null);
   const [postResults, setPostResults] = useState<any>(null);
 
   if (!isAdmin) {
@@ -38,6 +40,24 @@ export default function AdminImageMigration() {
       console.error('Migration failed:', error);
       setRecipeStatus('Recipe migration failed: ' + (error as Error).message);
       setRecipeResults({ success: false, error: (error as Error).message });
+    } finally {
+      setMigrating(false);
+    }
+  };
+
+  const handleMigrateSavedRecipes = async () => {
+    setMigrating(true);
+    setSavedRecipeStatus('Starting saved recipe migration...');
+    setSavedRecipeResults(null);
+
+    try {
+      const results = await migrateSavedRecipes();
+      setSavedRecipeStatus('Saved recipe migration complete!');
+      setSavedRecipeResults(results);
+    } catch (error) {
+      console.error('Saved recipe migration failed:', error);
+      setSavedRecipeStatus('Saved recipe migration failed: ' + (error as Error).message);
+      setSavedRecipeResults({ success: false, error: (error as Error).message });
     } finally {
       setMigrating(false);
     }
@@ -103,6 +123,68 @@ export default function AdminImageMigration() {
                   : 'bg-blue-50 border-blue-200'
               }`}>
                 <p className="text-sm font-medium">{recipeStatus}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-purple-500" />
+              User Saved Recipes
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This will find all user saved recipes with external URLs and download them to permanent Supabase storage.
+              This fixes disappearing images in "My Recipes" section.
+            </p>
+
+            <Button
+              onClick={handleMigrateSavedRecipes}
+              disabled={migrating}
+              className="w-full"
+            >
+              <PlayCircle className="h-4 w-4 mr-2" />
+              {migrating ? 'Migrating...' : 'Migrate Saved Recipe Images'}
+            </Button>
+
+            {savedRecipeStatus && (
+              <div className={`p-4 rounded-lg border ${
+                savedRecipeResults?.success === false
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <p className="text-sm font-medium mb-2">{savedRecipeStatus}</p>
+                {savedRecipeResults && (
+                  <div className="space-y-1 text-sm">
+                    {savedRecipeResults.successCount !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span>Migrated: {savedRecipeResults.successCount}</span>
+                      </div>
+                    )}
+                    {savedRecipeResults.failCount !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <XCircle className="h-4 w-4 text-red-600" />
+                        <span>Failed: {savedRecipeResults.failCount}</span>
+                      </div>
+                    )}
+                    {savedRecipeResults.skippedCount !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-yellow-600" />
+                        <span>Skipped: {savedRecipeResults.skippedCount}</span>
+                      </div>
+                    )}
+                    {savedRecipeResults.total !== undefined && (
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-blue-600" />
+                        <span>Total checked: {savedRecipeResults.total}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

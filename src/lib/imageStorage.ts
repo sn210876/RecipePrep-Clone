@@ -405,3 +405,112 @@ export async function migrateExistingPosts() {
     total: posts?.length || 0
   };
 }
+
+/**
+ * Migration function to fix user saved recipes with external URLs
+ * Run this to migrate all saved recipes with external image URLs
+ */
+export async function migrateSavedRecipes(userId?: string) {
+  console.log('[Migration] Starting saved recipes image migration...');
+
+  let query = supabase
+    .from('saved_recipes')
+    .select('id, user_id, recipe_id, recipe_data');
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data: savedRecipes, error } = await query;
+
+  if (error) {
+    console.error('[Migration] Error fetching saved recipes:', error);
+    return { successCount: 0, failCount: 0, skippedCount: 0, total: 0 };
+  }
+
+  console.log(`[Migration] Found ${savedRecipes?.length || 0} saved recipes to check`);
+
+  let successCount = 0;
+  let failCount = 0;
+  let skippedCount = 0;
+
+  for (const savedRecipe of savedRecipes || []) {
+    try {
+      const recipeData = savedRecipe.recipe_data;
+      const imageUrl = recipeData?.imageUrl;
+
+      if (!imageUrl) {
+        skippedCount++;
+        continue;
+      }
+
+      // Check if it's an external URL that needs migration
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+      const isExternal = !imageUrl.includes(supabaseUrl) && (
+        imageUrl.includes('instagram.com') ||
+        imageUrl.includes('cdninstagram.com') ||
+        imageUrl.includes('fbcdn.net') ||
+        imageUrl.includes('image-proxy') ||
+        imageUrl.includes('http://') ||
+        imageUrl.includes('https://')
+      );
+
+      if (!isExternal) {
+        skippedCount++;
+        continue;
+      }
+
+      console.log(`[Migration] Processing saved recipe "${recipeData.title}"...`);
+
+      // Download and store permanently
+      const recipeId = savedRecipe.recipe_id || savedRecipe.id;
+      const permanentUrl = await downloadAndStoreImage(imageUrl, recipeId);
+
+      // Only update if we got a different URL (means it worked)
+      if (permanentUrl !== imageUrl && permanentUrl.includes(supabaseUrl)) {
+        const updatedRecipeData = {
+          ...recipeData,
+          imageUrl: permanentUrl
+        };
+
+        const { error: updateError } = await supabase
+          .from('saved_recipes')
+          .update({
+            recipe_data: updatedRecipeData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', savedRecipe.id);
+
+        if (updateError) {
+          console.error(`[Migration] Failed to update saved recipe ${savedRecipe.id}:`, updateError);
+          failCount++;
+        } else {
+          console.log(`[Migration] ✅ Migrated saved recipe "${recipeData.title}"`);
+          successCount++;
+        }
+      } else {
+        console.warn(`[Migration] ⚠️ Skipped "${recipeData.title}" (download failed or expired)`);
+        failCount++;
+      }
+
+      // Add delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+    } catch (error) {
+      console.error(`[Migration] Error processing saved recipe:`, error);
+      failCount++;
+    }
+  }
+
+  console.log(`[Migration] ✅ Complete!`);
+  console.log(`  - Migrated: ${successCount}`);
+  console.log(`  - Failed: ${failCount}`);
+  console.log(`  - Skipped: ${skippedCount}`);
+
+  return {
+    successCount,
+    failCount,
+    skippedCount,
+    total: savedRecipes?.length || 0
+  };
+}

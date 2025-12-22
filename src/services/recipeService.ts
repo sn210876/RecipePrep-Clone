@@ -78,7 +78,7 @@ function recipeToDBRecipe(recipe: Omit<Recipe, 'id'>): Omit<DBRecipe, 'id' | 'cr
 export async function getSavedRecipes(userId: string): Promise<Recipe[]> {
   const { data, error } = await supabase
     .from('saved_recipes')
-    .select('recipe_data')
+    .select('id, recipe_id, recipe_data')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -87,10 +87,20 @@ export async function getSavedRecipes(userId: string): Promise<Recipe[]> {
     throw new Error('Failed to fetch saved recipes');
   }
 
-  return (data || []).map(item => ({
+  const recipes = (data || []).map(item => ({
     ...item.recipe_data,
     isSaved: true
   }));
+
+  for (const item of data || []) {
+    const recipe = item.recipe_data;
+    if (recipe?.imageUrl && isExternalUrl(recipe.imageUrl)) {
+      console.log('[getSavedRecipes] Detected external image URL, migrating in background...');
+      migrateSavedRecipeImageInBackground(item.id, item.recipe_id || recipe.id, recipe.imageUrl);
+    }
+  }
+
+  return recipes;
 }
 
 export async function saveRecipeToCloud(userId: string, recipe: Recipe): Promise<void> {
@@ -115,18 +125,30 @@ export async function saveRecipeToCloud(userId: string, recipe: Recipe): Promise
         console.error('Error updating recipe:', error);
         throw new Error('Failed to update recipe');
       }
+
+      if (recipe.imageUrl && isExternalUrl(recipe.imageUrl)) {
+        console.log('[saveRecipeToCloud] Detected external image URL, migrating in background...');
+        migrateSavedRecipeImageInBackground(existingRecord.data.id, recipe.id, recipe.imageUrl);
+      }
     } else {
-      const { error } = await supabase
+      const { data: insertData, error } = await supabase
         .from('saved_recipes')
         .insert({
           user_id: userId,
           recipe_id: recipe.id,
           recipe_data: { ...recipe, isSaved: true }
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) {
         console.error('Error saving recipe:', error);
         throw new Error('Failed to save recipe');
+      }
+
+      if (insertData && recipe.imageUrl && isExternalUrl(recipe.imageUrl)) {
+        console.log('[saveRecipeToCloud] Detected external image URL, migrating in background...');
+        migrateSavedRecipeImageInBackground(insertData.id, recipe.id, recipe.imageUrl);
       }
     }
   } catch (error: any) {
@@ -191,6 +213,40 @@ function isExternalUrl(url: string): boolean {
     url.includes('http://') ||
     url.includes('https://')
   );
+}
+
+async function migrateSavedRecipeImageInBackground(savedRecipeId: string, recipeId: string, imageUrl: string) {
+  try {
+    console.log('[migrateSavedRecipeImage] Starting migration for saved recipe:', savedRecipeId);
+    const permanentUrl = await downloadAndStoreImage(imageUrl, recipeId);
+
+    if (permanentUrl !== imageUrl) {
+      const { data: currentData } = await supabase
+        .from('saved_recipes')
+        .select('recipe_data')
+        .eq('id', savedRecipeId)
+        .single();
+
+      if (currentData) {
+        const updatedRecipeData = {
+          ...currentData.recipe_data,
+          imageUrl: permanentUrl
+        };
+
+        await supabase
+          .from('saved_recipes')
+          .update({
+            recipe_data: updatedRecipeData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', savedRecipeId);
+
+        console.log('[migrateSavedRecipeImage] ✅ Successfully migrated saved recipe image');
+      }
+    }
+  } catch (error) {
+    console.error('[migrateSavedRecipeImage] Failed to migrate:', error);
+  }
 }
 
 async function migrateRecipeImageInBackground(recipeId: string, imageUrl: string) {
