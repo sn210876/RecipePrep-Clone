@@ -31,6 +31,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { supabase } from './lib/supabase';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App as CapApp } from '@capacitor/app';
+import { SendIntent } from '@supernotes/capacitor-send-intent';
 import AuthForm from './components/AuthForm';
 import { ErrorBanner } from './components/ErrorBanner';
 import { errorHandler } from './lib/errorHandler';
@@ -286,6 +287,26 @@ function AppContent() {
             errorHandler.error('App', '❌ Exception checking session on resume', error);
           }
         });
+
+        try {
+          errorHandler.info('App', '📤 Checking for shared content...');
+          const intent = await SendIntent.checkSendIntentReceived();
+          if (intent && intent.url) {
+            errorHandler.info('App', '🔗 Shared URL received:', intent.url);
+            setCurrentPage('add-recipe');
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('shared-url', { detail: intent.url }));
+            }, 500);
+          } else if (intent && intent.title) {
+            errorHandler.info('App', '📝 Shared text received:', intent.title);
+            setCurrentPage('add-recipe');
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('shared-url', { detail: intent.title }));
+            }, 500);
+          }
+        } catch (error) {
+          errorHandler.info('App', 'No shared intent or error checking:', error);
+        }
       }
     };
 

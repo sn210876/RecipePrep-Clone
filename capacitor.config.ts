@@ -24,6 +24,9 @@ const config: CapacitorConfig = {
     StatusBar: {
       style: "LIGHT",
       backgroundColor: "#FF6B35"
+    },
+    SendIntent: {
+      checkOnLaunch: true
     }
   }
 };

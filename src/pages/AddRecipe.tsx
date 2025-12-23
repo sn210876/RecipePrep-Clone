@@ -204,6 +204,61 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     }
   }, [title, ingredients, instructions, prepTime, cookTime, servings, cuisineType, difficulty, selectedMealTypes, selectedDietaryTags, imageUrl, videoUrl, notes, urlInput, activeTab, isEditMode]);
 
+  useEffect(() => {
+    const handleSharedUrl = async (event: CustomEvent) => {
+      const sharedUrl = event.detail;
+      if (sharedUrl && typeof sharedUrl === 'string') {
+        console.log('[AddRecipe] Received shared URL:', sharedUrl);
+
+        if (isValidUrl(sharedUrl)) {
+          setUrlInput(sharedUrl);
+          setActiveTab('url');
+
+          toast.info('Starting automatic recipe extraction...');
+
+          setTimeout(async () => {
+            setIsExtracting(true);
+            try {
+              const data = await extractRecipeFromUrl(sharedUrl);
+              if (data) {
+                setExtractedData(data);
+                setShowPreview(true);
+                toast.success('Recipe extracted successfully!');
+              } else {
+                toast.error('Could not extract recipe from this URL');
+              }
+            } catch (error) {
+              console.error('Error extracting recipe:', error);
+              toast.error('Failed to extract recipe. You can still enter details manually.');
+            } finally {
+              setIsExtracting(false);
+            }
+          }, 500);
+        } else {
+          setUrlInput(sharedUrl);
+          setActiveTab('url');
+          toast.info('Shared content received. Please verify the URL.');
+        }
+      }
+    };
+
+    window.addEventListener('shared-url', handleSharedUrl as EventListener);
+
+    const params = new URLSearchParams(window.location.search);
+    const sharedUrl = params.get('url') || params.get('text');
+    if (sharedUrl && !isEditMode) {
+      console.log('[AddRecipe] PWA shared URL detected:', sharedUrl);
+      handleSharedUrl(new CustomEvent('shared-url', { detail: sharedUrl }));
+
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+
+    return () => {
+      window.removeEventListener('shared-url', handleSharedUrl as EventListener);
+    };
+  }, [isEditMode]);
+
   const addIngredient = () => {
     setIngredients([...ingredients, { quantity: '', unit: 'cup', name: '' }]);
   };
