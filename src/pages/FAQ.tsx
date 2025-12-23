@@ -16,7 +16,7 @@ export function FAQ() {
         {/* FAQ Categories */}
         <div className="space-y-6">
           {/* Getting Started */}
-          <Card>
+          <Card className="border-4 border-orange-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Sparkles className="w-6 h-6 text-blue-600" />
@@ -54,7 +54,7 @@ export function FAQ() {
             </CardContent>
           </Card>
   {/* Recipe Extraction */}
-          <Card>
+          <Card className="border-4 border-orange-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Link2 className="w-6 h-6 text-blue-600" />
@@ -225,8 +225,11 @@ export function FAQ() {
                     </div>
                   </div>
                 </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
         {/* Adding Recipes */}
-          <Card>
+          <Card className="border-4 border-orange-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <FileText className="w-6 h-6 text-blue-600" />
@@ -277,12 +280,6 @@ export function FAQ() {
                     URL extraction typically takes 5-15 seconds for most websites. Instagram and TikTok videos may take 30-60 seconds due to audio transcription. If it's your first request of the day, the server may need 20-30 seconds to wake up. For instant results, use the "Paste Notes" or "Upload Photo" options which take only 2-5 seconds.
                   </AccordionContent>
                 </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-
-     
-
                 <AccordionItem value="item-11">
                   <AccordionTrigger>Can I edit recipes after saving?</AccordionTrigger>
                   <AccordionContent>
@@ -315,7 +312,7 @@ export function FAQ() {
           </Card>
 
           {/* Pricing & Referrals */}
-          <Card>
+          <Card className="border-4 border-orange-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <CreditCard className="w-6 h-6 text-blue-600" />
@@ -364,7 +361,7 @@ export function FAQ() {
           </Card>
 
           {/* Features */}
-          <Card>
+          <Card className="border-4 border-orange-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Camera className="w-6 h-6 text-blue-600" />
@@ -413,7 +410,7 @@ export function FAQ() {
           </Card>
 
           {/* Troubleshooting */}
-          <Card>
+          <Card className="border-4 border-orange-500">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Clock className="w-6 h-6 text-blue-600" />
@@ -465,7 +462,7 @@ export function FAQ() {
         </div>
 
         {/* Still Have Questions */}
-        <Card className="mt-8 border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-white">
+        <Card className="mt-8 border-4 border-orange-500 bg-gradient-to-br from-blue-50 to-white">
           <CardContent className="pt-6">
             <div className="text-center">
               <h3 className="text-xl font-bold text-slate-900 mb-2">Still have questions?</h3>

@@ -159,7 +159,7 @@ export default function Referrals() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="border-4 border-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Referrals</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -172,7 +172,7 @@ export default function Referrals() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-4 border-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Unrewarded</CardTitle>
             <Gift className="h-4 w-4 text-muted-foreground" />
@@ -185,7 +185,7 @@ export default function Referrals() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-4 border-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -198,7 +198,7 @@ export default function Referrals() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-4 border-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Next Reward</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
@@ -214,7 +214,7 @@ export default function Referrals() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="border-4 border-orange-500">
         <CardHeader>
           <CardTitle>Your Referral Link</CardTitle>
           <CardDescription>
@@ -303,7 +303,7 @@ export default function Referrals() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-4 border-orange-500">
         <CardHeader>
           <CardTitle>Payout History</CardTitle>
           <CardDescription>

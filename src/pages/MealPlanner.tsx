@@ -479,7 +479,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                       <div className="space-y-3 pt-2">
                         {recipes.map(recipe => (
                           <div key={recipe.id} className="group">
-                            <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 ${selectedRecipeForAssignment?.id === recipe.id ? 'border-2 border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-blue-300 bg-white'}`}>
+                            <Card className={`overflow-hidden hover:shadow-md transition-all duration-200 ${selectedRecipeForAssignment?.id === recipe.id ? 'border-4 border-orange-500 bg-orange-50' : 'border-4 border-orange-500 hover:border-orange-600 bg-white'}`}>
                               <CardContent className="p-0">
                                 <div onClick={() => handleRecipeClick(recipe)} className="flex gap-3 p-3 cursor-pointer">
                                   {recipe.imageUrl && (

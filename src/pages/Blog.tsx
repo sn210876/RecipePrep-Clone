@@ -125,7 +125,7 @@ export function Blog({ onNavigate }: BlogPageProps) {
         <div className="max-w-4xl mx-auto px-4 pt-2 pb-8">
           <div className="space-y-6">
             {[...Array(5)].map((_, i) => (
-              <Card key={i} className="p-6 animate-pulse">
+              <Card key={i} className="p-6 animate-pulse border-4 border-orange-500">
                 <div className="h-6 bg-gray-200 rounded w-3/4 mb-4" />
                 <div className="h-4 bg-gray-200 rounded w-full mb-2" />
                 <div className="h-4 bg-gray-200 rounded w-2/3" />
@@ -160,7 +160,7 @@ export function Blog({ onNavigate }: BlogPageProps) {
 </div>
 
         {!user && (
-          <Card className="p-6 mb-6 bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200">
+          <Card className="p-6 mb-6 bg-gradient-to-r from-orange-50 to-amber-50 border-4 border-orange-500">
             <p className="text-center text-gray-700">
               <strong>Join the conversation!</strong> Log in to create posts, comment, and vote.
             </p>
@@ -171,7 +171,7 @@ export function Blog({ onNavigate }: BlogPageProps) {
           {posts.map((post) => (
             <Card
               key={post.id}
-              className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-4 border-orange-500"
               onClick={() => handlePostClick(post.slug)}
             >
               <div className="flex gap-4">

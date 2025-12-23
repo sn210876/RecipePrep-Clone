@@ -258,7 +258,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50 pb-32">
       <div className="max-w-7xl mx-auto p-4 md:p-6">
         {/* Product Catalog Section */}
-        <Card className="mb-6 border-2 border-orange-200">
+        <Card className="mb-6 border-4 border-orange-500">
         <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 text-center">
   <div>
     <CardTitle className="text-lg sm:text-xl mb-2">Amazon Product Catalog</CardTitle>
@@ -320,7 +320,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {products.map(product => (
-                    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
+                    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow group border-4 border-orange-500">
                       <div className="aspect-square bg-gray-100 flex items-center justify-center p-4">
                         {product.image_url ? (
                           <img
@@ -388,7 +388,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
 
         {/* Cart Items Section */}
         {cartItems.length === 0 ? (
-          <Card className="w-full max-w-sm mx-auto">
+          <Card className="w-full max-w-sm mx-auto border-4 border-orange-500">
             <CardContent className="flex flex-col items-center justify-center py-12 px-6">
               <ShoppingCart className="w-16 h-16 text-gray-300 mb-4" />
               <p className="text-gray-500 text-center mb-4 text-sm md:text-base">
@@ -418,7 +418,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
 
             <div className="space-y-3 md:space-y-4 mb-6">
               {cartItems.map(item => (
-                <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow border-4 border-orange-500">
                   <CardContent className="p-3 md:p-4">
                     <div className="flex gap-3 md:gap-4">
                       {item.image_url && (
@@ -516,7 +516,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
 
             {/* Summary and Checkout */}
             <div className="max-w-4xl mx-auto">
-              <Card className="mb-4 bg-slate-50 border-slate-200">
+              <Card className="mb-4 bg-slate-50 border-4 border-orange-500">
                 <CardContent className="p-4 md:p-6">
                   <div className="space-y-2 text-sm md:text-base">
                     <div className="flex justify-between text-slate-700">

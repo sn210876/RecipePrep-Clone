@@ -887,7 +887,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </div>
 
         {/* Meal planner date range - mobile optimized */}
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-4 border-orange-500">
           <CardContent className="pt-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -923,7 +923,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       </div>
 
       {totalCount === 0 ? (
-        <Card>
+        <Card className="border-4 border-orange-500">
           <CardContent className="py-12 text-center">
             <p className="text-gray-500 mb-4">
               Your grocery list is empty. Add recipes to your meal plan to automatically generate a grocery list.
@@ -947,7 +947,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                 onDragStart={() => handleCategoryDragStart(category.id)}
                 onDragOver={handleDragOver}
                 onDrop={() => handleCategoryDrop(category.id)}
-                className={`transition-all ${
+                className={`transition-all border-4 border-orange-500 ${
                   draggedCategory === category.id ? 'opacity-50' : ''
                 }`}
               >
