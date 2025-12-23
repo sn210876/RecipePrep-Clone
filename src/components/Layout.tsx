@@ -407,15 +407,15 @@ const loadUnreadCount = async (userId: string) => {
 </div>
 
         {/* Main Content - Add top padding for fixed header and bottom padding for fixed nav */}
-        <main className="pt-14 sm:pt-16 pb-24">
+        <main className="pt-14 sm:pt-16 pb-20">
   {children}
 </main>
 
          
 
        {/* Bottom Navigation - ALWAYS VISIBLE (Mobile & Desktop) */}
-<div className="fixed bottom-4 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg safe-area-bottom">
-  <div className="max-w-lg mx-auto px-4 py-3">
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
+  <div className="max-w-lg mx-auto px-4 py-3 pb-6">
     <div className="flex items-center justify-around">
       
       {/* Messages with Badge */}
