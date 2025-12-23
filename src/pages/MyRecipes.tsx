@@ -143,7 +143,7 @@ export function MyRecipes() {
         )}
 
         {/* Mobile-responsive grid: 2 per row on mobile, 3 per row on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-1 md:gap-1.5">
           {filteredRecipes.map((recipe) => (
             <RecipeCard
               key={recipe.id}
