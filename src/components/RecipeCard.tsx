@@ -111,7 +111,7 @@ useEffect(() => {
   return (
     <>
      <Card
-  className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white cursor-pointer active:scale-[0.98] flex flex-col h-full"
+  className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-4 border-orange-500 bg-white cursor-pointer active:scale-[0.98] flex flex-col h-full"
   onClick={(e) => {
     // Only open modal if clicking the card itself, not buttons or menu
     const target = e.target as HTMLElement;
