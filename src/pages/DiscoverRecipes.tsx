@@ -352,7 +352,7 @@ useEffect(() => {
       </div>
     </div>
     {/* ✅ ADDED: auto-rows-fr makes all rows same height */}
-  <div className={`grid gap-4 md:gap-6 auto-rows-fr ${
+  <div className={`grid gap-px md:gap-px auto-rows-fr ${
   isMobile
     ? 'grid-cols-2'
     : 'grid-cols-2 lg:grid-cols-3'
@@ -363,7 +363,6 @@ useEffect(() => {
     key={recipe.id}
     recipe={recipe}
     onSave={handleSave}
-    onCook={handleCook}
     onDelete={handleDeleteRecipe}
     onEdit={handleEditRecipe}
     isAdmin={isAdmin}
@@ -409,7 +408,7 @@ useEffect(() => {
                     <div className="h-6 bg-gray-300 rounded-lg w-56 mt-3 animate-pulse" />
                   </div>
                 </div>
-                <div className={`grid gap-6 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-3'} auto-rows-fr`}>
+                <div className={`grid gap-px ${isMobile ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-3'} auto-rows-fr`}>
                   {[...Array(isMobile ? 4 : 8)].map((_, j) => (
                     <RecipeCardSkeleton key={j} />
                   ))}
@@ -639,13 +638,12 @@ useEffect(() => {
               </p>
             </div>
             {filteredRecipes.length > 0 ? (
-              <div className={`grid gap-4 md:gap-6 auto-rows-fr ${isMobile ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-3'}`}>
+              <div className={`grid gap-px md:gap-px auto-rows-fr ${isMobile ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-3'}`}>
    {filteredRecipes.map((recipe) => (
   <RecipeCard
     key={recipe.id}
     recipe={recipe}
     onSave={handleSave}
-    onCook={handleCook}
     onDelete={handleDeleteRecipe}
     onEdit={handleEditRecipe}
     isAdmin={isAdmin}

@@ -144,8 +144,25 @@ useEffect(() => {
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute top-3 left-3 z-10">
+            {onSave && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSave(recipe.id);
+                }}
+                className={`${
+                  isSaved
+                    ? 'bg-rose-500 hover:bg-rose-600'
+                    : 'bg-white/95 hover:bg-white'
+                } backdrop-blur-sm rounded-full p-2.5 shadow-lg active:scale-95 transition-all touch-manipulation`}
+              >
+                <Bookmark className={`w-4 h-4 ${isSaved ? 'text-white fill-white' : 'text-gray-700'}`} />
+              </button>
+            )}
+          </div>
           <div className="absolute top-3 right-3 flex gap-2">
-            {isSaved && (
+            {isSaved && !onSave && (
               <div className="bg-white/95 backdrop-blur-sm rounded-full p-2 shadow-lg">
                 <Bookmark className="w-4 h-4 text-rose-500 fill-rose-500" />
               </div>
@@ -264,20 +281,6 @@ useEffect(() => {
         </CardContent>
 
        <CardFooter className="p-3 sm:p-4 pt-0 flex flex-col gap-2">
-  {onCook && (
-    <Button
-      size="sm"
-      className="w-full min-h-[44px] bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
-      onClick={(e) => {
-        e.stopPropagation();
-        onCook(recipe.id);
-      }}
-    >
-      <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-      <span className="leading-tight">Cook Now</span>
-    </Button>
-  )}
-
  {showReviewButton && (
   <>
 
