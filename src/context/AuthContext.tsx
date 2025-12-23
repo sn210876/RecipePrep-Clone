@@ -205,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
     };
-  }, [user?.email_confirmed_at]);
+  }, []);
 
   const signOut = async () => {
     console.log('👋 Signing out...');

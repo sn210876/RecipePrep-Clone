@@ -142,6 +142,9 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
   if (selectedConversation) {
     console.log('[Messages] Conversation selected:', selectedConversation.id);
 
+    // Reset initial load flag for new conversation
+    setIsInitialLoad(true);
+
     // Immediately update selected conversation state to remove badge
     setSelectedConversation(prev =>
       prev ? { ...prev, unread_count: 0 } : prev
@@ -165,14 +168,19 @@ export function Messages({ recipientUserId, recipientUsername, onBack }: Message
 }, [selectedConversation?.id]);
 
   const [previousMessageCount, setPreviousMessageCount] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
 useEffect(() => {
-  // Only scroll if a new message was added (not on initial load)
-  if (messages.length > previousMessageCount && previousMessageCount > 0) {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  if (messages.length > 0) {
+    if (isInitialLoad) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      setIsInitialLoad(false);
+    } else if (messages.length > previousMessageCount) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }
   setPreviousMessageCount(messages.length);
-}, [messages]);
+}, [messages, isInitialLoad, previousMessageCount]);
 
   const loadConversations = async (userId: string) => {
     console.log('[Messages] loadConversations called for userId:', userId);

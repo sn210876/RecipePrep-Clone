@@ -22,8 +22,14 @@ const isNativePlatform = Capacitor.isNativePlatform();
 errorHandler.info('Supabase', `📱 Platform: ${isNativePlatform ? 'Native' : 'Web'}`);
 
 let supabase;
+let storageInstance: CapacitorStorage | undefined;
 
 try {
+  if (isNativePlatform) {
+    storageInstance = new CapacitorStorage();
+    errorHandler.info('Supabase', '📱 Using CapacitorStorage for native platform');
+  }
+
   supabase = createClient(supabaseUrl, supabaseAnonKey, {
     db: {
       schema: 'public',
@@ -34,11 +40,12 @@ try {
       },
     },
     auth: {
-      storage: isNativePlatform ? new CapacitorStorage() : undefined,
+      storage: storageInstance,
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: !isNativePlatform,
       storageKey: 'mealscrape-auth',
+      flowType: 'pkce',
     },
     realtime: {
       params: {
@@ -47,12 +54,13 @@ try {
     },
   });
   errorHandler.info('Supabase', '✅ Supabase client created successfully');
+  errorHandler.info('Supabase', `🔐 Auth config: flowType=pkce, detectSessionInUrl=${!isNativePlatform}`);
 } catch (error) {
   errorHandler.error('Supabase', '❌ Failed to create Supabase client', error);
   throw error;
 }
 
-export { supabase };
+export { supabase, storageInstance };
 export const isAdmin = async (): Promise<boolean> => {
   try {
     errorHandler.info('Supabase', '🔐 Checking admin status...');

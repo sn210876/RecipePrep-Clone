@@ -28,6 +28,7 @@ import { Onboarding } from './pages/Onboarding';
 import { Toaster } from './components/ui/sonner';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { supabase } from './lib/supabase';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { App as CapApp } from '@capacitor/app';
 import AuthForm from './components/AuthForm';
@@ -240,6 +241,49 @@ function AppContent() {
             setTimeout(() => {
               window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
             }, 500);
+          }
+        });
+
+        CapApp.addListener('appStateChange', async ({ isActive }) => {
+          if (isActive) {
+            errorHandler.info('App', '🔄 App resumed - refreshing session');
+            try {
+              const { data: { session }, error } = await supabase.auth.getSession();
+              if (error) {
+                errorHandler.error('App', '❌ Failed to refresh session on resume', error);
+              } else if (session) {
+                errorHandler.info('App', '✅ Session refreshed successfully on resume');
+              } else {
+                errorHandler.info('App', '⚠️ No session found on resume');
+              }
+            } catch (error) {
+              errorHandler.error('App', '❌ Exception during session refresh', error);
+            }
+          } else {
+            errorHandler.info('App', '⏸️ App paused');
+          }
+        });
+
+        CapApp.addListener('pause', () => {
+          errorHandler.info('App', '⏸️ App paused event');
+        });
+
+        CapApp.addListener('resume', async () => {
+          errorHandler.info('App', '▶️ App resumed event - checking session');
+          try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error) {
+              errorHandler.error('App', '❌ Session check failed on resume', error);
+            } else if (session) {
+              errorHandler.info('App', '✅ Valid session exists', {
+                expiresAt: session.expires_at,
+                userId: session.user?.id
+              });
+            } else {
+              errorHandler.info('App', '⚠️ No active session on resume');
+            }
+          } catch (error) {
+            errorHandler.error('App', '❌ Exception checking session on resume', error);
           }
         });
       }
