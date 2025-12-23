@@ -234,9 +234,62 @@ function AppContent() {
           }
         });
 
-        CapApp.addListener('appUrlOpen', (data) => {
+        CapApp.addListener('appUrlOpen', async (data) => {
+          errorHandler.info('App', '🔗 Deep link received:', data.url);
           const url = new URL(data.url);
-          if (url.pathname.startsWith('/post/')) {
+
+          const hash = url.hash;
+          const searchParams = url.searchParams;
+
+          if (hash && hash.includes('access_token')) {
+            errorHandler.info('App', '🔐 OAuth callback detected in hash');
+            const params = new URLSearchParams(hash.substring(1));
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            const type = params.get('type');
+
+            if (accessToken && refreshToken) {
+              try {
+                errorHandler.info('App', '✅ Setting session from OAuth tokens');
+                const { data: sessionData, error } = await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken
+                });
+
+                if (error) {
+                  errorHandler.error('App', '❌ Failed to set session:', error);
+                } else {
+                  errorHandler.info('App', '✅ OAuth login successful');
+                  setCurrentPage('discover-recipes');
+                }
+              } catch (error) {
+                errorHandler.error('App', '❌ Exception setting session:', error);
+              }
+            }
+          } else if (searchParams.has('access_token')) {
+            errorHandler.info('App', '🔐 OAuth callback detected in query params');
+            const accessToken = searchParams.get('access_token');
+            const refreshToken = searchParams.get('refresh_token');
+
+            if (accessToken && refreshToken) {
+              try {
+                errorHandler.info('App', '✅ Setting session from OAuth tokens');
+                const { data: sessionData, error } = await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken
+                });
+
+                if (error) {
+                  errorHandler.error('App', '❌ Failed to set session:', error);
+                } else {
+                  errorHandler.info('App', '✅ OAuth login successful');
+                  setCurrentPage('discover-recipes');
+                }
+              } catch (error) {
+                errorHandler.error('App', '❌ Exception setting session:', error);
+              }
+            }
+          } else if (url.pathname.startsWith('/post/')) {
             const postId = url.pathname.split('/post/')[1];
             setCurrentPage('discover');
             setTimeout(() => {

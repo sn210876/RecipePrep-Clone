@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, Lock, User, ChefHat, ArrowRight, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { Capacitor } from '@capacitor/core';
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
@@ -20,9 +21,14 @@ export default function AuthForm() {
   });
 
   const getRedirectUrl = () => {
-    // CRITICAL: Must match exactly what's in Supabase Dashboard > Authentication > URL Configuration
+    if (Capacitor.isNativePlatform()) {
+      const redirectUrl = 'com.mealscrape.newapp://';
+      console.log('🔗 Mobile redirect URL:', redirectUrl);
+      return redirectUrl;
+    }
+
     const origin = window.location.origin;
-    console.log('🔗 Redirect URL will be:', origin);
+    console.log('🔗 Web redirect URL:', origin);
     return origin;
   };
 
@@ -57,12 +63,32 @@ export default function AuthForm() {
       if (isLogin) {
         // Sign In
         console.log('🔐 Attempting email/password sign in...');
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Sign in error:', error);
+
+          if (error.message.includes('Invalid login credentials')) {
+            throw new Error('Invalid email or password. Please check your credentials and try again.');
+          } else if (error.message.includes('Email not confirmed')) {
+            throw new Error('Please verify your email address before signing in. Check your inbox for the verification link.');
+          } else if (error.message.includes('User not found')) {
+            throw new Error('No account found with this email address. Please sign up first.');
+          } else {
+            throw error;
+          }
+        }
+
+        if (!data.user?.email_confirmed_at) {
+          console.warn('⚠️ Email not verified');
+          setError('Please verify your email address before signing in. Check your inbox for the verification link.');
+          setLoading(false);
+          return;
+        }
+
         console.log('✅ Sign in successful');
         // Auth state change will be handled by AuthContext
       } else {
