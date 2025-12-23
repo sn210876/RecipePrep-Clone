@@ -265,25 +265,6 @@ useEffect(() => {
 
        <CardFooter className="p-3 sm:p-4 pt-0 flex flex-col gap-2">
   <Button
-    variant={isSaved ? "default" : "outline"}
-    size="sm"
-    className={`w-full min-h-[44px] touch-manipulation active:scale-95 transition-all text-xs sm:text-sm ${
-      isSaved 
-        ? "bg-secondary hover:bg-secondary/90 text-white" 
-        : "border-gray-300 hover:bg-primary hover:text-white"
-    }`}
-    onClick={(e) => {
-      e.stopPropagation();
-      onSave?.(recipe.id);
-    }}
-  >
-    <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0 ${isSaved ? 'fill-white' : ''}`} />
-    <span className="truncate text-xs sm:text-sm leading-tight">
-      {isSaved ? t.recipe.saveRecipe : t.recipe.saveRecipe}
-    </span>
-  </Button>
-  
-  <Button
     size="sm"
     className="w-full min-h-[44px] bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
     onClick={(e) => {
@@ -292,7 +273,7 @@ useEffect(() => {
     }}
   >
     <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-    <span className="leading-tight">Cook</span>
+    <span className="leading-tight">Start Cooking</span>
   </Button>
   
  {showReviewButton && (
