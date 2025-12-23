@@ -352,7 +352,7 @@ useEffect(() => {
       </div>
     </div>
     {/* ✅ ADDED: auto-rows-fr makes all rows same height */}
-  <div className={`grid gap-px md:gap-px auto-rows-fr ${
+  <div className={`grid gap-0 md:gap-0 auto-rows-fr ${
   isMobile
     ? 'grid-cols-2'
     : 'grid-cols-3'
@@ -408,7 +408,7 @@ useEffect(() => {
                     <div className="h-6 bg-gray-300 rounded-lg w-56 mt-3 animate-pulse" />
                   </div>
                 </div>
-                <div className={`grid gap-px ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} auto-rows-fr`}>
+                <div className={`grid gap-0 ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} auto-rows-fr`}>
                   {[...Array(isMobile ? 4 : 8)].map((_, j) => (
                     <RecipeCardSkeleton key={j} />
                   ))}
