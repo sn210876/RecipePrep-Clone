@@ -264,20 +264,22 @@ useEffect(() => {
         </CardContent>
 
        <CardFooter className="p-3 sm:p-4 pt-0 flex flex-col gap-2">
-  <Button
-    size="sm"
-    className="w-full min-h-[44px] bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
-    onClick={(e) => {
-      e.stopPropagation();
-      onCook?.(recipe.id);
-    }}
-  >
-    <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-    <span className="leading-tight">Start Cooking</span>
-  </Button>
-  
+  {onCook && (
+    <Button
+      size="sm"
+      className="w-full min-h-[44px] bg-accent hover:bg-accent/90 text-white shadow-md hover:shadow-lg active:scale-95 transition-all touch-manipulation text-xs sm:text-sm"
+      onClick={(e) => {
+        e.stopPropagation();
+        onCook(recipe.id);
+      }}
+    >
+      <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+      <span className="leading-tight">Cook Now</span>
+    </Button>
+  )}
+
  {showReviewButton && (
-  <>     
+  <>
 
     {!loadingSocialPost && socialPost ? (
       <Button
