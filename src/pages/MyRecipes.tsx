@@ -145,17 +145,17 @@ export function MyRecipes() {
         {/* Mobile-responsive grid: 2 per row on mobile, 4 per row on desktop */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {filteredRecipes.map((recipe) => (
-            <RecipeCard
-              key={recipe.id}
-              recipe={recipe}
-              showReviewButton={true}
-              onCook={(recipeId) => {
-                const recipe = state.savedRecipes.find(r => r.id === recipeId);
-                if (recipe) {
-                  setCookingRecipe(recipe);
-                }
-              }}
-            />
+         <RecipeCard
+  key={recipe.id}
+  recipe={recipe}
+  showCookButton={true}
+  onCook={(recipeId) => {
+    const recipe = state.savedRecipes.find(r => r.id === recipeId);
+    if (recipe) {
+      setCookingRecipe(recipe);
+    }
+  }}
+/>
           ))}
         </div>
 
