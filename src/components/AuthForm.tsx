@@ -89,10 +89,7 @@ export default function AuthForm() {
           return;
         }
 
-        console.log('✅ Sign in successful');
-
-        await new Promise(resolve => setTimeout(resolve, 500));
-        window.location.href = '/discover-recipes';
+        console.log('✅ Sign in successful - auth state will update automatically');
       } else {
         // Sign Up
         console.log('📝 Attempting sign up...');

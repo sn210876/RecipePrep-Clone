@@ -407,16 +407,19 @@ const loadUnreadCount = async (userId: string) => {
 </div>
 
         {/* Main Content - Add top padding for fixed header and bottom padding for fixed nav */}
-        <main className="pt-[calc(3.5rem+env(safe-area-inset-top)+18px)] sm:pt-[calc(4rem+env(safe-area-inset-top)+18px)] pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <main className="pt-[calc(3.5rem+env(safe-area-inset-top)+18px)] sm:pt-[calc(4rem+env(safe-area-inset-top)+18px)] pb-[calc(5rem+env(safe-area-inset-bottom)+18px)]">
   {children}
 </main>
 
-         
+
 
        {/* Bottom Navigation - ALWAYS VISIBLE (Mobile & Desktop) */}
-<div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg pb-[env(safe-area-inset-bottom)]">
-  <div className="max-w-lg mx-auto px-4 py-3">
-    <div className="flex items-center justify-around">
+<div className="fixed bottom-0 left-0 right-0 z-50 mb-[18px]">
+  {/* White background extension to fill gap below nav */}
+  <div className="absolute inset-0 bg-white -bottom-[18px]"></div>
+  <div className="relative bg-white border-t border-gray-200 shadow-lg pb-[env(safe-area-inset-bottom)]">
+    <div className="max-w-lg mx-auto px-4 py-3">
+      <div className="flex items-center justify-around">
       
       {/* Messages with Badge */}
       <button
@@ -503,6 +506,7 @@ const loadUnreadCount = async (userId: string) => {
         </div>
         <span className="text-[10px] font-medium">Profile</span>
       </button>
+      </div>
     </div>
   </div>
 </div>
