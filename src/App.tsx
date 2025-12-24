@@ -373,6 +373,14 @@ function AppContent() {
     };
   }, []);
 
+  // Clear auth prompt when user logs in
+  useEffect(() => {
+    if (user && showAuthPrompt) {
+      errorHandler.info('App', '🔓 User logged in, clearing auth prompt');
+      setShowAuthPrompt(false);
+    }
+  }, [user, showAuthPrompt]);
+
   // Check if onboarding should be shown
   useEffect(() => {
     if (user && !loading && isEmailVerified) {

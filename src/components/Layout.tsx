@@ -284,7 +284,7 @@ const loadUnreadCount = async (userId: string) => {
       <div>
         
         {/* Top Header - Mobile Optimized */}
-<header className="fixed top-0 left-0 right-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm pt-[env(safe-area-inset-top)] mt-[18px]">
+<header className="fixed top-0 left-0 right-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm pt-[env(safe-area-inset-top)] mt-[42px]">
   <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
     {/* Mobile menu button */}
     <Button
@@ -407,7 +407,7 @@ const loadUnreadCount = async (userId: string) => {
 </div>
 
         {/* Main Content - Add top padding for fixed header and bottom padding for fixed nav */}
-        <main className="pt-[calc(3.5rem+env(safe-area-inset-top)+18px)] sm:pt-[calc(4rem+env(safe-area-inset-top)+18px)] pb-[calc(5rem+env(safe-area-inset-bottom)+18px)]">
+        <main className="pt-[calc(3.5rem+env(safe-area-inset-top)+42px)] sm:pt-[calc(4rem+env(safe-area-inset-top)+42px)] pb-[calc(5rem+env(safe-area-inset-bottom)+18px)]">
   {children}
 </main>
 

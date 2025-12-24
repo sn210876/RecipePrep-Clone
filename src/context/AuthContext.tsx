@@ -158,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (isVerificationEvent && session?.user?.email_confirmed_at) {
           const wasUnverified = !user?.email_confirmed_at;
-          if (wasUnverified || event === 'SIGNED_IN') {
+          if (wasUnverified) {
             console.log('✉️ Email verified, showing verification screen');
             setShowVerifying(true);
           }
