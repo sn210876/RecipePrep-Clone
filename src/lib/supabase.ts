@@ -43,7 +43,7 @@ try {
       storage: storageInstance,
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: !isNativePlatform,
       storageKey: 'mealscrape-auth',
       flowType: 'pkce',
     },
@@ -54,7 +54,7 @@ try {
     },
   });
   errorHandler.info('Supabase', '✅ Supabase client created successfully');
-  errorHandler.info('Supabase', `🔐 Auth config: flowType=pkce, detectSessionInUrl=false (handled by deep linking)`);
+  errorHandler.info('Supabase', `🔐 Auth config: flowType=pkce, detectSessionInUrl=${!isNativePlatform} (${isNativePlatform ? 'mobile uses deep linking' : 'web uses URL detection'})`);
 } catch (error) {
   errorHandler.error('Supabase', '❌ Failed to create Supabase client', error);
   throw error;

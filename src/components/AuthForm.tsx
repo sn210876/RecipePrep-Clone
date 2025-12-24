@@ -72,11 +72,11 @@ export default function AuthForm() {
           console.error('❌ Sign in error:', error);
 
           if (error.message.includes('Invalid login credentials')) {
-            throw new Error('Invalid email or password. Please check your credentials and try again.');
+            throw new Error('Invalid email or password. If you signed up with Google, please use the "Sign in with Google" button instead.');
           } else if (error.message.includes('Email not confirmed')) {
             throw new Error('Please verify your email address before signing in. Check your inbox for the verification link.');
           } else if (error.message.includes('User not found')) {
-            throw new Error('No account found with this email address. Please sign up first.');
+            throw new Error('No account found with this email address. Please sign up first or try signing in with Google.');
           } else {
             throw error;
           }
