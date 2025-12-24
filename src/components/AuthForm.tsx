@@ -91,10 +91,8 @@ export default function AuthForm() {
 
         console.log('✅ Sign in successful');
 
-        if (Capacitor.isNativePlatform()) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          window.location.href = '/discover-recipes';
-        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.location.href = '/discover-recipes';
       } else {
         // Sign Up
         console.log('📝 Attempting sign up...');
