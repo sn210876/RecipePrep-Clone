@@ -376,19 +376,32 @@ function AppContent() {
   // Check if onboarding should be shown
   useEffect(() => {
     if (user && !loading && isEmailVerified) {
-      try {
-        errorHandler.info('App', '🎓 Checking onboarding status...');
-        const hasSeenOnboarding = safeStorage.getItem(`onboarding_seen_${user.id}`);
+      const checkOnboarding = async () => {
+        try {
+          errorHandler.info('App', '🎓 Checking onboarding status...');
 
-        if (!hasSeenOnboarding) {
-          errorHandler.info('App', '🆕 New user detected, showing onboarding');
-          setShowOnboarding(true);
-        } else {
-          errorHandler.info('App', '✅ User has seen onboarding');
+          let hasSeenOnboarding: string | null = null;
+
+          if (Capacitor.isNativePlatform()) {
+            const { Preferences } = await import('@capacitor/preferences');
+            const result = await Preferences.get({ key: `onboarding_seen_${user.id}` });
+            hasSeenOnboarding = result.value;
+          } else {
+            hasSeenOnboarding = safeStorage.getItem(`onboarding_seen_${user.id}`);
+          }
+
+          if (!hasSeenOnboarding) {
+            errorHandler.info('App', '🆕 New user detected, showing onboarding');
+            setShowOnboarding(true);
+          } else {
+            errorHandler.info('App', '✅ User has seen onboarding');
+          }
+        } catch (error) {
+          errorHandler.error('App', 'Failed to check onboarding status', error);
         }
-      } catch (error) {
-        errorHandler.error('App', 'Failed to check onboarding status', error);
-      }
+      };
+
+      checkOnboarding();
     }
   }, [user, loading, isEmailVerified]);
 
@@ -541,9 +554,22 @@ if (loading || (user && isEmailVerified === undefined)) {
     );
   }
 
-  const handleOnboardingComplete = () => {
+  const handleOnboardingComplete = async () => {
     if (user) {
-      safeStorage.setItem(`onboarding_seen_${user.id}`, 'true');
+      try {
+        if (Capacitor.isNativePlatform()) {
+          const { Preferences } = await import('@capacitor/preferences');
+          await Preferences.set({
+            key: `onboarding_seen_${user.id}`,
+            value: 'true'
+          });
+        } else {
+          safeStorage.setItem(`onboarding_seen_${user.id}`, 'true');
+        }
+        errorHandler.info('App', '✅ Onboarding marked as complete');
+      } catch (error) {
+        errorHandler.error('App', 'Failed to save onboarding status', error);
+      }
     }
     setShowOnboarding(false);
     handleNavigate('discover-recipes');

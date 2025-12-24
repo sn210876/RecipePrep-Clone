@@ -90,7 +90,11 @@ export default function AuthForm() {
         }
 
         console.log('✅ Sign in successful');
-        // Auth state change will be handled by AuthContext
+
+        if (Capacitor.isNativePlatform()) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          window.location.href = '/discover-recipes';
+        }
       } else {
         // Sign Up
         console.log('📝 Attempting sign up...');

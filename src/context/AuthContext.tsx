@@ -149,6 +149,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       (async () => {
+        setLoading(false);
+
         const isVerificationEvent =
           event === 'SIGNED_IN' ||
           event === 'USER_UPDATED' ||
