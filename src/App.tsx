@@ -40,7 +40,7 @@ import { safeStorage } from './lib/safeStorage';
 
 // Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
 const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="min-h-screen pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] bg-gradient-to-br from-orange-50 to-amber-50">
+  <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
     {children}
   </div>
 );

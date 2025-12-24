@@ -284,7 +284,7 @@ const loadUnreadCount = async (userId: string) => {
       <div>
         
         {/* Top Header - Mobile Optimized */}
-<header className="fixed top-0 left-0 right-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
+<header className="fixed top-0 left-0 right-0 z-[150] border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm pt-[env(safe-area-inset-top)] mt-[18px]">
   <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6">
     {/* Mobile menu button */}
     <Button
@@ -407,15 +407,15 @@ const loadUnreadCount = async (userId: string) => {
 </div>
 
         {/* Main Content - Add top padding for fixed header and bottom padding for fixed nav */}
-        <main className="pt-14 sm:pt-16 pb-20">
+        <main className="pt-[calc(3.5rem+env(safe-area-inset-top)+18px)] sm:pt-[calc(4rem+env(safe-area-inset-top)+18px)] pb-[calc(5rem+env(safe-area-inset-bottom)+18px)]">
   {children}
 </main>
 
          
 
        {/* Bottom Navigation - ALWAYS VISIBLE (Mobile & Desktop) */}
-<div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
-  <div className="max-w-lg mx-auto px-4 py-3 pb-6">
+<div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg pb-[env(safe-area-inset-bottom)] mb-[18px]">
+  <div className="max-w-lg mx-auto px-4 py-3">
     <div className="flex items-center justify-around">
       
       {/* Messages with Badge */}
