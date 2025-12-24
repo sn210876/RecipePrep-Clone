@@ -26,9 +26,12 @@ export function checkEnvironment(): EnvCheckResult {
 
   REQUIRED_ENV_VARS.forEach(envVar => {
     const value = import.meta.env[envVar];
-    if (!value) {
+    if (!value || value === 'undefined' || value === 'null') {
       missing.push(envVar);
       errorHandler.error('EnvChecker', `Missing required environment variable: ${envVar}`);
+    } else if (value.length < 10) {
+      missing.push(envVar);
+      errorHandler.error('EnvChecker', `Invalid required environment variable (too short): ${envVar}`);
     } else {
       values[envVar] = value.substring(0, 20) + '...';
       errorHandler.info('EnvChecker', `✅ Found ${envVar}`);
@@ -37,7 +40,7 @@ export function checkEnvironment(): EnvCheckResult {
 
   OPTIONAL_ENV_VARS.forEach(envVar => {
     const value = import.meta.env[envVar];
-    if (!value) {
+    if (!value || value === 'undefined' || value === 'null') {
       warnings.push(envVar);
       errorHandler.warning('EnvChecker', `Optional environment variable missing: ${envVar}`);
     } else {
@@ -49,9 +52,12 @@ export function checkEnvironment(): EnvCheckResult {
   const isValid = missing.length === 0;
 
   if (isValid) {
-    errorHandler.info('EnvChecker', '✅ All required environment variables present');
+    errorHandler.info('EnvChecker', '✅ All required environment variables present and valid');
   } else {
     errorHandler.error('EnvChecker', '❌ Environment validation failed', { missing, warnings });
+    if (import.meta.env.PROD) {
+      console.error('CRITICAL: Missing required environment variables in production build:', missing);
+    }
   }
 
   return {

@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.mealscrape.newapp',
+  appId: 'com.mealscrape.app',
   appName: 'MealScrape',
   webDir: 'dist',
   server: {
@@ -17,9 +17,6 @@ const config: CapacitorConfig = {
       androidSpinnerStyle: "large",
       iosSpinnerStyle: "small",
       spinnerColor: "#ffffff",
-    },
-    PushNotifications: {
-      presentationOptions: ["badge", "sound", "alert"]
     },
     StatusBar: {
       style: "LIGHT",

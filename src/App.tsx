@@ -36,6 +36,7 @@ import AuthForm from './components/AuthForm';
 import { ErrorBanner } from './components/ErrorBanner';
 import { errorHandler } from './lib/errorHandler';
 import { checkEnvironment } from './lib/envChecker';
+import { safeStorage } from './lib/safeStorage';
 
 // Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
 const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -377,7 +378,7 @@ function AppContent() {
     if (user && !loading && isEmailVerified) {
       try {
         errorHandler.info('App', '🎓 Checking onboarding status...');
-        const hasSeenOnboarding = localStorage.getItem(`onboarding_seen_${user.id}`);
+        const hasSeenOnboarding = safeStorage.getItem(`onboarding_seen_${user.id}`);
 
         if (!hasSeenOnboarding) {
           errorHandler.info('App', '🆕 New user detected, showing onboarding');
@@ -542,7 +543,7 @@ if (loading || (user && isEmailVerified === undefined)) {
 
   const handleOnboardingComplete = () => {
     if (user) {
-      localStorage.setItem(`onboarding_seen_${user.id}`, 'true');
+      safeStorage.setItem(`onboarding_seen_${user.id}`, 'true');
     }
     setShowOnboarding(false);
     handleNavigate('discover-recipes');
