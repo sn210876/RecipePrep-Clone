@@ -205,7 +205,7 @@ const loadUnreadCount = async (userId: string) => {
  <aside className={`fixed left-0 top-0 z-[250] h-screen w-[240px] sm:w-60 lg:w-64 transform bg-white shadow-2xl transition-transform duration-300 ease-in-out ${
         (isMobileMenuOpen || isDesktopSidebarOpen) ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col pt-6">
 
        {/* Logo/Brand - Mobile Optimized */}
 <div className="flex items-center justify-between gap-2 border-b border-gray-200 p-3 sm:p-4 lg:p-6">
