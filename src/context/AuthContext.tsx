@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isAdmin as checkIsAdmin } from '../lib/supabase';
+import { withTimeout, forceSessionCheck, AuthTimeoutError } from '../lib/authTimeout';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +11,7 @@ interface AuthContextType {
   showVerifying: boolean;
   isAdmin: boolean;
   signOut: () => Promise<void>;
+  refreshSession: () => Promise<Session | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -217,8 +219,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('✅ Sign out complete');
   };
 
+  const refreshSession = async (): Promise<Session | null> => {
+    try {
+      console.log('🔄 Manually refreshing session...');
+
+      const session = await forceSessionCheck(
+        () => supabase.auth.getSession(),
+        3,
+        1000
+      );
+
+      if (session) {
+        console.log('✅ Session refreshed successfully');
+        setSession(session);
+        setUser(session.user);
+
+        const adminStatus = await checkIsAdmin();
+        setIsAdmin(adminStatus);
+
+        return session;
+      } else {
+        console.log('❌ No session found after refresh');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Failed to refresh session:', error);
+      return null;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, isEmailVerified, showVerifying, isAdmin, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isEmailVerified, showVerifying, isAdmin, signOut, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );

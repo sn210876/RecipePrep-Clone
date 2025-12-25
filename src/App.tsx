@@ -37,6 +37,7 @@ import { ErrorBanner } from './components/ErrorBanner';
 import { errorHandler } from './lib/errorHandler';
 import { checkEnvironment } from './lib/envChecker';
 import { safeStorage } from './lib/safeStorage';
+import { withTimeout, forceSessionCheck, AuthTimeoutError } from './lib/authTimeout';
 
 // Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
 const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -251,20 +252,57 @@ function AppContent() {
 
             if (accessToken && refreshToken) {
               try {
-                errorHandler.info('App', '✅ Setting session from OAuth tokens');
-                const { data: sessionData, error } = await supabase.auth.setSession({
-                  access_token: accessToken,
-                  refresh_token: refreshToken
-                });
+                errorHandler.info('App', '✅ Setting session from OAuth tokens with timeout');
 
-                if (error) {
-                  errorHandler.error('App', '❌ Failed to set session:', error);
+                const setSessionResult = await withTimeout(
+                  supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                  }),
+                  { timeoutMs: 10000, operationName: 'OAuth setSession' }
+                );
+
+                const { data: sessionData, error: setSessionError } = setSessionResult as any;
+
+                if (setSessionError) {
+                  errorHandler.error('App', '❌ Failed to set session:', setSessionError);
                 } else {
-                  errorHandler.info('App', '✅ OAuth login successful');
-                  setCurrentPage('discover-recipes');
+                  errorHandler.info('App', '✅ OAuth session set, forcing refresh...');
+
+                  setTimeout(async () => {
+                    const session = await forceSessionCheck(
+                      () => supabase.auth.getSession(),
+                      3,
+                      500
+                    );
+
+                    if (session) {
+                      errorHandler.info('App', '✅ OAuth login fully successful');
+                      setCurrentPage('discover-recipes');
+                    } else {
+                      errorHandler.error('App', '❌ No session found after OAuth');
+                    }
+                  }, 500);
                 }
               } catch (error) {
-                errorHandler.error('App', '❌ Exception setting session:', error);
+                if (error instanceof AuthTimeoutError) {
+                  errorHandler.error('App', '⏱️ OAuth session timeout, checking anyway...');
+
+                  setTimeout(async () => {
+                    const session = await forceSessionCheck(
+                      () => supabase.auth.getSession(),
+                      5,
+                      1000
+                    );
+
+                    if (session) {
+                      errorHandler.info('App', '✅ Session found after timeout!');
+                      setCurrentPage('discover-recipes');
+                    }
+                  }, 1000);
+                } else {
+                  errorHandler.error('App', '❌ Exception setting session:', error);
+                }
               }
             }
           } else if (searchParams.has('access_token')) {
@@ -274,20 +312,57 @@ function AppContent() {
 
             if (accessToken && refreshToken) {
               try {
-                errorHandler.info('App', '✅ Setting session from OAuth tokens');
-                const { data: sessionData, error } = await supabase.auth.setSession({
-                  access_token: accessToken,
-                  refresh_token: refreshToken
-                });
+                errorHandler.info('App', '✅ Setting session from OAuth tokens with timeout');
 
-                if (error) {
-                  errorHandler.error('App', '❌ Failed to set session:', error);
+                const setSessionResult = await withTimeout(
+                  supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                  }),
+                  { timeoutMs: 10000, operationName: 'OAuth setSession' }
+                );
+
+                const { data: sessionData, error: setSessionError } = setSessionResult as any;
+
+                if (setSessionError) {
+                  errorHandler.error('App', '❌ Failed to set session:', setSessionError);
                 } else {
-                  errorHandler.info('App', '✅ OAuth login successful');
-                  setCurrentPage('discover-recipes');
+                  errorHandler.info('App', '✅ OAuth session set, forcing refresh...');
+
+                  setTimeout(async () => {
+                    const session = await forceSessionCheck(
+                      () => supabase.auth.getSession(),
+                      3,
+                      500
+                    );
+
+                    if (session) {
+                      errorHandler.info('App', '✅ OAuth login fully successful');
+                      setCurrentPage('discover-recipes');
+                    } else {
+                      errorHandler.error('App', '❌ No session found after OAuth');
+                    }
+                  }, 500);
                 }
               } catch (error) {
-                errorHandler.error('App', '❌ Exception setting session:', error);
+                if (error instanceof AuthTimeoutError) {
+                  errorHandler.error('App', '⏱️ OAuth session timeout, checking anyway...');
+
+                  setTimeout(async () => {
+                    const session = await forceSessionCheck(
+                      () => supabase.auth.getSession(),
+                      5,
+                      1000
+                    );
+
+                    if (session) {
+                      errorHandler.info('App', '✅ Session found after timeout!');
+                      setCurrentPage('discover-recipes');
+                    }
+                  }, 1000);
+                } else {
+                  errorHandler.error('App', '❌ Exception setting session:', error);
+                }
               }
             }
           } else if (url.pathname.startsWith('/post/')) {

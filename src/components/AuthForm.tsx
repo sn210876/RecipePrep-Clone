@@ -7,12 +7,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, Lock, User, ChefHat, ArrowRight, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Capacitor } from '@capacitor/core';
+import { withTimeout, AuthTimeoutError } from '../lib/authTimeout';
+import { useAuth } from '../context/AuthContext';
 
 export default function AuthForm() {
+  const { refreshSession } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -63,33 +67,68 @@ export default function AuthForm() {
       if (isLogin) {
         // Sign In
         console.log('🔐 Attempting email/password sign in...');
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
 
-        if (error) {
-          console.error('❌ Sign in error:', error);
+        try {
+          const signInResult = await withTimeout(
+            supabase.auth.signInWithPassword({
+              email: formData.email,
+              password: formData.password,
+            }),
+            { timeoutMs: 15000, operationName: 'Sign In' }
+          );
 
-          if (error.message.includes('Invalid login credentials')) {
-            throw new Error('Invalid email or password. If you signed up with Google, please use the "Sign in with Google" button instead.');
-          } else if (error.message.includes('Email not confirmed')) {
-            throw new Error('Please verify your email address before signing in. Check your inbox for the verification link.');
-          } else if (error.message.includes('User not found')) {
-            throw new Error('No account found with this email address. Please sign up first or try signing in with Google.');
-          } else {
-            throw error;
+          const { data, error } = signInResult as any;
+
+          if (error) {
+            console.error('❌ Sign in error:', error);
+
+            if (error.message.includes('Invalid login credentials')) {
+              throw new Error('Invalid email or password. If you signed up with Google, please use the "Sign in with Google" button instead.');
+            } else if (error.message.includes('Email not confirmed')) {
+              throw new Error('Please verify your email address before signing in. Check your inbox for the verification link.');
+            } else if (error.message.includes('User not found')) {
+              throw new Error('No account found with this email address. Please sign up first or try signing in with Google.');
+            } else {
+              throw error;
+            }
           }
+
+          if (!data.user?.email_confirmed_at) {
+            console.warn('⚠️ Email not verified');
+            setError('Please verify your email address before signing in. Check your inbox for the verification link.');
+            setLoading(false);
+            return;
+          }
+
+          console.log('✅ Sign in successful - forcing session refresh...');
+
+          setTimeout(async () => {
+            console.log('🔄 Force checking session after login...');
+            await refreshSession();
+          }, 500);
+
+        } catch (authError) {
+          if (authError instanceof AuthTimeoutError) {
+            console.error('⏱️ Sign in timed out, attempting session refresh...');
+            setError('Sign in is taking longer than expected. Checking your session...');
+
+            setTimeout(async () => {
+              const session = await refreshSession();
+              if (session) {
+                console.log('✅ Session found after timeout!');
+                setError('');
+              } else {
+                console.log('❌ No session found after timeout');
+                setError('Sign in timed out. Please try again or contact support if the issue persists.');
+                setLoading(false);
+              }
+            }, 1000);
+            return;
+          }
+          throw authError;
         }
 
-        if (!data.user?.email_confirmed_at) {
-          console.warn('⚠️ Email not verified');
-          setError('Please verify your email address before signing in. Check your inbox for the verification link.');
-          setLoading(false);
-          return;
-        }
-
-        console.log('✅ Sign in successful - auth state will update automatically');
+        console.log('✅ Sign in completed');
       } else {
         // Sign Up
         console.log('📝 Attempting sign up...');
