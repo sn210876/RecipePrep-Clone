@@ -33,6 +33,7 @@ export default function AuthForm() {
       const searchParams = new URLSearchParams(window.location.search);
       const oauthInProgress = localStorage.getItem('oauth_in_progress');
       const oauthError = localStorage.getItem('oauth_error');
+      const oauthStartTime = localStorage.getItem('oauth_start_time');
 
       const hasTokenInHash = hash && hash.includes('access_token');
       const hasTokenInQuery = searchParams.has('access_token');
@@ -42,15 +43,30 @@ export default function AuthForm() {
         hasTokenInQuery,
         oauthInProgress,
         oauthError,
+        oauthStartTime,
         hash: hash.substring(0, 50),
         searchParams: searchParams.toString().substring(0, 50)
       });
+
+      if (oauthStartTime) {
+        const timeElapsed = Date.now() - parseInt(oauthStartTime);
+        console.log(`⏱️ Time since OAuth started: ${timeElapsed}ms`);
+
+        if (timeElapsed > 300000) {
+          console.log('⏱️ OAuth timeout (>5 minutes), cleaning up stale state');
+          localStorage.removeItem('oauth_in_progress');
+          localStorage.removeItem('oauth_start_time');
+          localStorage.removeItem('oauth_error');
+          return;
+        }
+      }
 
       if (oauthError) {
         console.log('❌ OAuth error detected:', oauthError);
         setError(`Sign in failed: ${oauthError}`);
         localStorage.removeItem('oauth_error');
         localStorage.removeItem('oauth_in_progress');
+        localStorage.removeItem('oauth_start_time');
         setLoading(false);
         setOauthInProgress(false);
         return;
@@ -63,8 +79,9 @@ export default function AuthForm() {
         setMessage('Completing sign in...');
 
         localStorage.removeItem('oauth_in_progress');
+        localStorage.removeItem('oauth_start_time');
 
-        const attemptSessionRefresh = async (maxAttempts = 5) => {
+        const attemptSessionRefresh = async (maxAttempts = 6) => {
           for (let i = 1; i <= maxAttempts; i++) {
             console.log(`🔄 Session refresh attempt ${i}/${maxAttempts}...`);
             const session = await refreshSession();
@@ -74,11 +91,12 @@ export default function AuthForm() {
               setLoading(false);
               setOauthInProgress(false);
               setError('');
+              localStorage.removeItem('oauth_error');
               return true;
             }
 
             if (i < maxAttempts) {
-              const delay = i * 1000;
+              const delay = Math.min(i * 1500, 5000);
               console.log(`❌ No session yet, waiting ${delay}ms before retry...`);
               await new Promise(resolve => setTimeout(resolve, delay));
             }
@@ -86,13 +104,14 @@ export default function AuthForm() {
 
           console.log('❌ Still no session after all attempts');
           const errorMsg = localStorage.getItem('oauth_error');
-          setError(errorMsg || 'Sign in completed but session not found. Please try again.');
+          setError(errorMsg || 'Sign in completed but session not found. Please try signing in again.');
           setLoading(false);
           setOauthInProgress(false);
+          localStorage.removeItem('oauth_error');
           return false;
         };
 
-        setTimeout(() => attemptSessionRefresh(), 1000);
+        setTimeout(() => attemptSessionRefresh(), 1500);
       } else if (hasTokenInHash || hasTokenInQuery) {
         console.log('✅ OAuth tokens detected in URL but no flag - handling anyway');
         setLoading(true);
@@ -113,7 +132,7 @@ export default function AuthForm() {
             setLoading(false);
             setOauthInProgress(false);
           }
-        }, 1000);
+        }, 1500);
       } else {
         console.log('ℹ️ No OAuth activity detected');
       }
@@ -125,6 +144,8 @@ export default function AuthForm() {
       if (event.detail.success) {
         console.log('✅ OAuth callback successful, refreshing session...');
         setMessage('Completing sign in...');
+        setLoading(true);
+        setOauthInProgress(true);
 
         setTimeout(async () => {
           const session = await refreshSession();
@@ -136,7 +157,7 @@ export default function AuthForm() {
           } else {
             console.log('⚠️ No session found, will retry...');
           }
-        }, 500);
+        }, 1000);
       } else {
         console.log('❌ OAuth callback failed');
         setError('Sign in failed. Please try again.');
@@ -313,10 +334,13 @@ export default function AuthForm() {
 
   const handleGoogleLogin = async () => {
     console.log('🔵 Google login initiated');
+
+    localStorage.removeItem('oauth_error');
+
     setLoading(true);
     setOauthInProgress(true);
     setError('');
-    setMessage('Redirecting to Google...');
+    setMessage('Opening Google sign in...');
 
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -327,6 +351,7 @@ export default function AuthForm() {
       }
 
       localStorage.setItem('oauth_in_progress', 'google');
+      localStorage.setItem('oauth_start_time', Date.now().toString());
       console.log('💾 Saved OAuth state to localStorage');
 
       const redirectUrl = getRedirectUrl();
@@ -348,20 +373,13 @@ export default function AuthForm() {
       if (error) {
         console.error('❌ OAuth error:', error);
         localStorage.removeItem('oauth_in_progress');
+        localStorage.removeItem('oauth_start_time');
         throw error;
       }
 
-      console.log('🔵 OAuth redirect initiated, should redirect now...');
-
-      setTimeout(() => {
-        if (localStorage.getItem('oauth_in_progress')) {
-          console.log('⚠️ OAuth redirect did not happen after 3 seconds');
-          localStorage.removeItem('oauth_in_progress');
-          setError('Failed to redirect to Google. Please try again.');
-          setLoading(false);
-          setOauthInProgress(false);
-        }
-      }, 3000);
+      console.log('🔵 OAuth redirect initiated successfully!');
+      console.log('🔵 User will be redirected to Google in a moment...');
+      console.log('🔵 When you return, the app will complete sign in automatically');
 
     } catch (err: any) {
       console.error('❌ Google OAuth error:', err);
@@ -369,6 +387,7 @@ export default function AuthForm() {
       setLoading(false);
       setOauthInProgress(false);
       localStorage.removeItem('oauth_in_progress');
+      localStorage.removeItem('oauth_start_time');
     }
   };
 
