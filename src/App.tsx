@@ -243,6 +243,13 @@ function AppContent() {
           const hash = url.hash;
           const searchParams = url.searchParams;
 
+          errorHandler.info('App', '🔍 Deep link details:', {
+            fullUrl: data.url,
+            hash: hash.substring(0, 100),
+            searchParams: searchParams.toString().substring(0, 100),
+            pathname: url.pathname
+          });
+
           if (hash && hash.includes('access_token')) {
             errorHandler.info('App', '🔐 OAuth callback detected in hash');
             const params = new URLSearchParams(hash.substring(1));
@@ -250,6 +257,13 @@ function AppContent() {
             const refreshToken = params.get('refresh_token');
             const type = params.get('type');
 
+            errorHandler.info('App', '🔑 Extracted tokens:', {
+              hasAccessToken: !!accessToken,
+              hasRefreshToken: !!refreshToken,
+              type,
+              accessTokenLength: accessToken?.length || 0
+            });
+
             if (accessToken && refreshToken) {
               try {
                 errorHandler.info('App', '✅ Setting session from OAuth tokens with timeout');
@@ -259,50 +273,32 @@ function AppContent() {
                     access_token: accessToken,
                     refresh_token: refreshToken
                   }),
-                  { timeoutMs: 10000, operationName: 'OAuth setSession' }
+                  { timeoutMs: 15000, operationName: 'OAuth setSession' }
                 );
 
                 const { data: sessionData, error: setSessionError } = setSessionResult as any;
 
                 if (setSessionError) {
                   errorHandler.error('App', '❌ Failed to set session:', setSessionError);
+                  localStorage.setItem('oauth_error', setSessionError.message);
                 } else {
-                  errorHandler.info('App', '✅ OAuth session set, forcing refresh...');
+                  errorHandler.info('App', '✅ OAuth session set successfully!', {
+                    hasUser: !!sessionData?.user,
+                    userEmail: sessionData?.user?.email
+                  });
 
-                  setTimeout(async () => {
-                    const session = await forceSessionCheck(
-                      () => supabase.auth.getSession(),
-                      3,
-                      500
-                    );
-
-                    if (session) {
-                      errorHandler.info('App', '✅ OAuth login fully successful');
-                      setCurrentPage('discover-recipes');
-                    } else {
-                      errorHandler.error('App', '❌ No session found after OAuth');
-                    }
-                  }, 500);
+                  errorHandler.info('App', '📢 Dispatching oauth-callback-complete event');
+                  window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                    detail: { success: true }
+                  }));
                 }
               } catch (error) {
-                if (error instanceof AuthTimeoutError) {
-                  errorHandler.error('App', '⏱️ OAuth session timeout, checking anyway...');
+                errorHandler.error('App', '❌ Exception setting session:', error);
+                localStorage.setItem('oauth_error', error instanceof Error ? error.message : 'Unknown error');
 
-                  setTimeout(async () => {
-                    const session = await forceSessionCheck(
-                      () => supabase.auth.getSession(),
-                      5,
-                      1000
-                    );
-
-                    if (session) {
-                      errorHandler.info('App', '✅ Session found after timeout!');
-                      setCurrentPage('discover-recipes');
-                    }
-                  }, 1000);
-                } else {
-                  errorHandler.error('App', '❌ Exception setting session:', error);
-                }
+                window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                  detail: { success: false, error }
+                }));
               }
             }
           } else if (searchParams.has('access_token')) {
@@ -310,6 +306,12 @@ function AppContent() {
             const accessToken = searchParams.get('access_token');
             const refreshToken = searchParams.get('refresh_token');
 
+            errorHandler.info('App', '🔑 Extracted tokens:', {
+              hasAccessToken: !!accessToken,
+              hasRefreshToken: !!refreshToken,
+              accessTokenLength: accessToken?.length || 0
+            });
+
             if (accessToken && refreshToken) {
               try {
                 errorHandler.info('App', '✅ Setting session from OAuth tokens with timeout');
@@ -319,50 +321,32 @@ function AppContent() {
                     access_token: accessToken,
                     refresh_token: refreshToken
                   }),
-                  { timeoutMs: 10000, operationName: 'OAuth setSession' }
+                  { timeoutMs: 15000, operationName: 'OAuth setSession' }
                 );
 
                 const { data: sessionData, error: setSessionError } = setSessionResult as any;
 
                 if (setSessionError) {
                   errorHandler.error('App', '❌ Failed to set session:', setSessionError);
+                  localStorage.setItem('oauth_error', setSessionError.message);
                 } else {
-                  errorHandler.info('App', '✅ OAuth session set, forcing refresh...');
+                  errorHandler.info('App', '✅ OAuth session set successfully!', {
+                    hasUser: !!sessionData?.user,
+                    userEmail: sessionData?.user?.email
+                  });
 
-                  setTimeout(async () => {
-                    const session = await forceSessionCheck(
-                      () => supabase.auth.getSession(),
-                      3,
-                      500
-                    );
-
-                    if (session) {
-                      errorHandler.info('App', '✅ OAuth login fully successful');
-                      setCurrentPage('discover-recipes');
-                    } else {
-                      errorHandler.error('App', '❌ No session found after OAuth');
-                    }
-                  }, 500);
+                  errorHandler.info('App', '📢 Dispatching oauth-callback-complete event');
+                  window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                    detail: { success: true }
+                  }));
                 }
               } catch (error) {
-                if (error instanceof AuthTimeoutError) {
-                  errorHandler.error('App', '⏱️ OAuth session timeout, checking anyway...');
+                errorHandler.error('App', '❌ Exception setting session:', error);
+                localStorage.setItem('oauth_error', error instanceof Error ? error.message : 'Unknown error');
 
-                  setTimeout(async () => {
-                    const session = await forceSessionCheck(
-                      () => supabase.auth.getSession(),
-                      5,
-                      1000
-                    );
-
-                    if (session) {
-                      errorHandler.info('App', '✅ Session found after timeout!');
-                      setCurrentPage('discover-recipes');
-                    }
-                  }, 1000);
-                } else {
-                  errorHandler.error('App', '❌ Exception setting session:', error);
-                }
+                window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                  detail: { success: false, error }
+                }));
               }
             }
           } else if (url.pathname.startsWith('/post/')) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -17,12 +17,141 @@ export default function AuthForm() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [retryCount, setRetryCount] = useState(0);
+  const [oauthInProgress, setOauthInProgress] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
     name: ''
   });
+
+  useEffect(() => {
+    const checkOAuthCallback = async () => {
+      console.log('🔍 Checking for OAuth callback on mount...');
+
+      const hash = window.location.hash;
+      const searchParams = new URLSearchParams(window.location.search);
+      const oauthInProgress = localStorage.getItem('oauth_in_progress');
+      const oauthError = localStorage.getItem('oauth_error');
+
+      const hasTokenInHash = hash && hash.includes('access_token');
+      const hasTokenInQuery = searchParams.has('access_token');
+
+      console.log('🔍 OAuth check:', {
+        hasTokenInHash,
+        hasTokenInQuery,
+        oauthInProgress,
+        oauthError,
+        hash: hash.substring(0, 50),
+        searchParams: searchParams.toString().substring(0, 50)
+      });
+
+      if (oauthError) {
+        console.log('❌ OAuth error detected:', oauthError);
+        setError(`Sign in failed: ${oauthError}`);
+        localStorage.removeItem('oauth_error');
+        localStorage.removeItem('oauth_in_progress');
+        setLoading(false);
+        setOauthInProgress(false);
+        return;
+      }
+
+      if (oauthInProgress) {
+        console.log(`✅ Returning from ${oauthInProgress} OAuth!`);
+        setLoading(true);
+        setOauthInProgress(true);
+        setMessage('Completing sign in...');
+
+        localStorage.removeItem('oauth_in_progress');
+
+        const attemptSessionRefresh = async (maxAttempts = 5) => {
+          for (let i = 1; i <= maxAttempts; i++) {
+            console.log(`🔄 Session refresh attempt ${i}/${maxAttempts}...`);
+            const session = await refreshSession();
+
+            if (session) {
+              console.log('✅ OAuth session established successfully!');
+              setLoading(false);
+              setOauthInProgress(false);
+              setError('');
+              return true;
+            }
+
+            if (i < maxAttempts) {
+              const delay = i * 1000;
+              console.log(`❌ No session yet, waiting ${delay}ms before retry...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
+          }
+
+          console.log('❌ Still no session after all attempts');
+          const errorMsg = localStorage.getItem('oauth_error');
+          setError(errorMsg || 'Sign in completed but session not found. Please try again.');
+          setLoading(false);
+          setOauthInProgress(false);
+          return false;
+        };
+
+        setTimeout(() => attemptSessionRefresh(), 1000);
+      } else if (hasTokenInHash || hasTokenInQuery) {
+        console.log('✅ OAuth tokens detected in URL but no flag - handling anyway');
+        setLoading(true);
+        setOauthInProgress(true);
+        setMessage('Processing sign in...');
+
+        setTimeout(async () => {
+          console.log('🔄 Forcing session refresh after OAuth...');
+          const session = await refreshSession();
+
+          if (session) {
+            console.log('✅ OAuth session established successfully!');
+            setLoading(false);
+            setOauthInProgress(false);
+          } else {
+            console.log('❌ No session found after OAuth');
+            setError('Sign in completed but session not found. Please try again.');
+            setLoading(false);
+            setOauthInProgress(false);
+          }
+        }, 1000);
+      } else {
+        console.log('ℹ️ No OAuth activity detected');
+      }
+    };
+
+    const handleOAuthComplete = async (event: any) => {
+      console.log('📢 Received oauth-callback-complete event:', event.detail);
+
+      if (event.detail.success) {
+        console.log('✅ OAuth callback successful, refreshing session...');
+        setMessage('Completing sign in...');
+
+        setTimeout(async () => {
+          const session = await refreshSession();
+          if (session) {
+            console.log('✅ Session confirmed after OAuth!');
+            setLoading(false);
+            setOauthInProgress(false);
+            setError('');
+          } else {
+            console.log('⚠️ No session found, will retry...');
+          }
+        }, 500);
+      } else {
+        console.log('❌ OAuth callback failed');
+        setError('Sign in failed. Please try again.');
+        setLoading(false);
+        setOauthInProgress(false);
+      }
+    };
+
+    window.addEventListener('oauth-callback-complete', handleOAuthComplete);
+    checkOAuthCallback();
+
+    return () => {
+      window.removeEventListener('oauth-callback-complete', handleOAuthComplete);
+    };
+  }, [refreshSession]);
 
   const getRedirectUrl = () => {
     if (Capacitor.isNativePlatform()) {
@@ -185,16 +314,20 @@ export default function AuthForm() {
   const handleGoogleLogin = async () => {
     console.log('🔵 Google login initiated');
     setLoading(true);
+    setOauthInProgress(true);
     setError('');
+    setMessage('Redirecting to Google...');
 
     try {
-      // Store referral code in localStorage before OAuth redirect
       const urlParams = new URLSearchParams(window.location.search);
       const referralCode = urlParams.get('ref');
       if (referralCode) {
         console.log('🎯 Storing referral code in localStorage:', referralCode);
         localStorage.setItem('pending_referral_code', referralCode);
       }
+
+      localStorage.setItem('oauth_in_progress', 'google');
+      console.log('💾 Saved OAuth state to localStorage');
 
       const redirectUrl = getRedirectUrl();
       console.log('🔵 Calling signInWithOAuth with redirectTo:', redirectUrl);
@@ -212,14 +345,30 @@ export default function AuthForm() {
 
       console.log('🔵 OAuth response:', { data, error });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ OAuth error:', error);
+        localStorage.removeItem('oauth_in_progress');
+        throw error;
+      }
 
-      // If we get here without redirect, something went wrong
-      console.log('⚠️ OAuth called but no redirect happened');
+      console.log('🔵 OAuth redirect initiated, should redirect now...');
+
+      setTimeout(() => {
+        if (localStorage.getItem('oauth_in_progress')) {
+          console.log('⚠️ OAuth redirect did not happen after 3 seconds');
+          localStorage.removeItem('oauth_in_progress');
+          setError('Failed to redirect to Google. Please try again.');
+          setLoading(false);
+          setOauthInProgress(false);
+        }
+      }, 3000);
+
     } catch (err: any) {
       console.error('❌ Google OAuth error:', err);
       setError(err.message || 'Failed to sign in with Google');
       setLoading(false);
+      setOauthInProgress(false);
+      localStorage.removeItem('oauth_in_progress');
     }
   };
 
