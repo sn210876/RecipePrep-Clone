@@ -176,7 +176,7 @@ export default function AuthForm() {
 
   const getRedirectUrl = () => {
     if (Capacitor.isNativePlatform()) {
-      const redirectUrl = 'com.mealscrape.app://';
+      const redirectUrl = 'com.mealscrape.app://oauth-callback';
       console.log('🔗 Mobile redirect URL:', redirectUrl);
       return redirectUrl;
     }
