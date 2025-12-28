@@ -156,12 +156,8 @@ export async function downloadAndStorePostImage(
                       actualUrl.includes('cdninstagram.com') ||
                       actualUrl.includes('fbcdn.net');
 
-    // If it's an expired Instagram URL, we can't download it
-    // These URLs have time-based tokens that have expired
-    if (needsProxy && (actualUrl.includes('x-expires') || actualUrl.includes('_nc_ht'))) {
-      console.warn('[ImageStorage] ⚠️ Instagram URL has expired tokens, cannot download');
-      throw new Error('Instagram URL expired - image no longer accessible');
-    }
+    // Note: We'll attempt to download and let the fetch fail if the URL is actually expired
+    // Don't pre-emptively block based on URL parameters since _nc_ht is standard for all Instagram CDN URLs
 
     let fetchUrl = actualUrl;
     if (needsProxy) {
@@ -337,13 +333,8 @@ export async function migrateExistingPosts() {
               permanentUrls.push(imageUrl);
             }
           } catch (error: any) {
-            if (error.message.includes('expired')) {
-              console.warn(`[Migration] ⚠️ Post ${post.id} has expired Instagram URL`);
-              hasExpired = true;
-              expiredPosts.push({ id: post.id, title: post.title, url: imageUrl });
-            } else {
-              permanentUrls.push(imageUrl);
-            }
+            console.warn(`[Migration] ⚠️ Failed to migrate image for post ${post.id}:`, error.message);
+            permanentUrls.push(imageUrl);
           }
         } else {
           permanentUrls.push(imageUrl);
