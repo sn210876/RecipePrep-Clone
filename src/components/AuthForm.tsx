@@ -202,16 +202,18 @@ export default function AuthForm() {
   }, [refreshSession]);
 
   const getRedirectUrl = () => {
-    if (Capacitor.isNativePlatform()) {
-      const redirectUrl = 'com.mealscrape.app://oauth-callback';
-      console.log('🔗 Mobile redirect URL:', redirectUrl);
-      return redirectUrl;
-    }
+  if (Capacitor.isNativePlatform()) {
+    // Use HTTPS URL for mobile - the Android manifest will intercept it
+    const redirectUrl = 'https://mealscrape.com/auth/callback';
+    console.log('🔗 Mobile redirect URL:', redirectUrl);
+    return redirectUrl;
+  }
 
-    const origin = window.location.origin;
-    console.log('🔗 Web redirect URL:', origin);
-    return origin;
-  };
+  // For web, use the current origin
+  const origin = window.location.origin;
+  console.log('🔗 Web redirect URL:', origin);
+  return origin;
+};
 
   const handleSubmit = async () => {
     setError('');
