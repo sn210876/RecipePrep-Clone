@@ -37,16 +37,39 @@ export default function AuthForm() {
 
       const hasTokenInHash = hash && hash.includes('access_token');
       const hasTokenInQuery = searchParams.has('access_token');
+      const hasError = searchParams.has('error');
+      const errorDescription = searchParams.get('error_description');
 
       console.log('🔍 OAuth check:', {
         hasTokenInHash,
         hasTokenInQuery,
+        hasError,
+        errorDescription,
         oauthInProgress,
         oauthError,
         oauthStartTime,
         hash: hash.substring(0, 50),
         searchParams: searchParams.toString().substring(0, 50)
       });
+
+      if (hasError) {
+        console.error('❌ OAuth error in URL:', {
+          error: searchParams.get('error'),
+          description: errorDescription
+        });
+        let errorMsg = 'Google sign in failed';
+        if (errorDescription?.includes('redirect_uri_mismatch')) {
+          errorMsg = 'OAuth configuration error. Please check that redirect URLs match in Google Console and Supabase Dashboard.';
+        } else if (errorDescription) {
+          errorMsg = `Sign in failed: ${errorDescription}`;
+        }
+        setError(errorMsg);
+        localStorage.removeItem('oauth_in_progress');
+        localStorage.removeItem('oauth_start_time');
+        setLoading(false);
+        setOauthInProgress(false);
+        return;
+      }
 
       if (oauthStartTime) {
         const timeElapsed = Date.now() - parseInt(oauthStartTime);
@@ -103,8 +126,12 @@ export default function AuthForm() {
           }
 
           console.log('❌ Still no session after all attempts');
+          console.error('⚠️ No tokens found in URL after OAuth redirect!');
+          console.error('⚠️ This usually means redirect URLs are not configured correctly.');
+          console.error('⚠️ Check GOOGLE_OAUTH_SETUP.md for configuration instructions.');
+
           const errorMsg = localStorage.getItem('oauth_error');
-          setError(errorMsg || 'Sign in completed but session not found. Please try signing in again.');
+          setError(errorMsg || 'OAuth redirect succeeded but no authentication tokens received. Please verify your redirect URLs are configured correctly in both Google Console and Supabase Dashboard. See GOOGLE_OAUTH_SETUP.md for details.');
           setLoading(false);
           setOauthInProgress(false);
           localStorage.removeItem('oauth_error');
@@ -334,6 +361,8 @@ export default function AuthForm() {
 
   const handleGoogleLogin = async () => {
     console.log('🔵 Google login initiated');
+    console.log('🔵 Platform:', Capacitor.isNativePlatform() ? 'Mobile' : 'Web');
+    console.log('🔵 Current URL:', window.location.href);
 
     localStorage.removeItem('oauth_error');
 
@@ -355,7 +384,10 @@ export default function AuthForm() {
       console.log('💾 Saved OAuth state to localStorage');
 
       const redirectUrl = getRedirectUrl();
-      console.log('🔵 Calling signInWithOAuth with redirectTo:', redirectUrl);
+      console.log('🔵 Redirect URL that will be sent to Google:', redirectUrl);
+      console.log('🔵 ⚠️ This URL must be configured in:');
+      console.log('🔵    1. Google Cloud Console > Credentials > Authorized redirect URIs');
+      console.log('🔵    2. Supabase Dashboard > Authentication > URL Configuration');
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
