@@ -8,12 +8,12 @@ Before Google OAuth will work, you must:
 
 - [ ] Add redirect URIs to **Google Cloud Console**
   - [ ] `https://YOUR_SUPABASE_PROJECT_ID.supabase.co/auth/v1/callback`
-  - [ ] `https://yourdomain.com` (your production URL)
-  - [ ] `com.mealscrape.app://oauth-callback` (for mobile)
+  - [ ] `https://mealscrape.com` (your production URL)
+  - [ ] `https://mealscrape.com/auth/callback` (for mobile deep linking)
 
 - [ ] Add redirect URLs to **Supabase Dashboard**
-  - [ ] `https://yourdomain.com`
-  - [ ] `com.mealscrape.app://oauth-callback`
+  - [ ] `https://mealscrape.com`
+  - [ ] `https://mealscrape.com/**`
 
 - [ ] Enable Google provider in **Supabase Dashboard**
   - [ ] Add Client ID
@@ -57,8 +57,14 @@ https://yourdomain.com
 
 ### For Mobile (Android):
 ```
-com.mealscrape.app://oauth-callback
+https://mealscrape.com
+https://mealscrape.com/auth/callback
 ```
+
+**IMPORTANT FOR MOBILE:** You must use the HTTPS URL (not a custom scheme) because:
+1. Google redirects to `https://mealscrape.com/auth/callback`
+2. Android deep linking intercepts this URL and reopens your app
+3. The app then extracts the OAuth tokens from the URL
 
 6. **Save** the changes
 
@@ -71,16 +77,15 @@ com.mealscrape.app://oauth-callback
 3. Navigate to **Authentication** > **URL Configuration**
 4. Add these **Redirect URLs**:
 
-### For Web:
+### For Web & Mobile:
 ```
+https://mealscrape.com
+https://mealscrape.com/**
 https://yourdomain.com
 https://yourdomain.com/**
 ```
 
-### For Mobile:
-```
-com.mealscrape.app://oauth-callback
-```
+**Note:** Mobile uses the same HTTPS URLs as web because deep linking intercepts the URL and reopens the app.
 
 5. Navigate to **Authentication** > **Providers**
 6. Enable **Google** provider
@@ -140,8 +145,42 @@ The following is already set up in your `AndroidManifest.xml`:
 ### Issue: "redirect_uri_mismatch" error from Google
 **Solution:** The redirect URL doesn't match. Add the exact URL from the error message to Google Console.
 
+### Issue: Mobile - Opens browser instead of returning to app
+**Problem:** After selecting Google account, browser opens with mealscrape.com instead of returning to the app.
+
+**Cause:** Deep linking is not configured correctly or Google OAuth redirect URLs don't match.
+
+**Solution:**
+1. Make sure `https://mealscrape.com` is added to **Google Console** Authorized redirect URIs
+2. Make sure `https://mealscrape.com/**` is added to **Supabase Dashboard** Redirect URLs
+3. Verify AndroidManifest.xml has deep linking configured (already done in your app):
+   ```xml
+   <intent-filter android:autoVerify="true">
+       <action android:name="android.intent.action.VIEW" />
+       <category android:name="android.intent.category.DEFAULT" />
+       <category android:name="android.intent.category.BROWSABLE" />
+       <data android:scheme="https" android:host="mealscrape.com" />
+   </intent-filter>
+   ```
+4. Check the console logs when you return to the app - you should see "🔗 Deep link received"
+5. If the deep link is received but has NO tokens, the error will say "OAuth callback received but no authentication tokens found"
+
+### Issue: Mobile - App says "completing signing in" but nothing happens
+**Cause:** The app received the OAuth callback but Google didn't include authentication tokens in the URL.
+
+**Solution:**
+1. Open the app and trigger Google OAuth again
+2. Check the console logs for:
+   - "🔗 Deep link received" - confirms the app reopened
+   - "📋 Deep link URL" - shows the exact URL received
+   - "⚠️ OAuth in progress but NO tokens" - confirms tokens are missing
+3. The most common cause is redirect URL mismatch:
+   - Google Console must have: `https://YOUR_SUPABASE_PROJECT_ID.supabase.co/auth/v1/callback`
+   - Google Console must have: `https://mealscrape.com/auth/callback`
+   - Supabase Dashboard must have: `https://mealscrape.com` and `https://mealscrape.com/**`
+
 ### Issue: Works on web but not on mobile
-**Solution:** Make sure `com.mealscrape.app://oauth-callback` is added to both Google Console and Supabase.
+**Solution:** Make sure `https://mealscrape.com` is added to both Google Console and Supabase, not `com.mealscrape.app://oauth-callback`.
 
 ### Issue: Works on mobile but not on web
 **Solution:** Add your production domain to both Google Console and Supabase.

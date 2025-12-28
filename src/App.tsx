@@ -242,13 +242,29 @@ function AppContent() {
 
           const hash = url.hash;
           const searchParams = url.searchParams;
+          const hasError = searchParams.has('error');
+          const errorDescription = searchParams.get('error_description');
 
           errorHandler.info('App', '🔍 Deep link details:', {
             fullUrl: data.url,
             hash: hash.substring(0, 100),
             searchParams: searchParams.toString().substring(0, 100),
-            pathname: url.pathname
+            pathname: url.pathname,
+            hasError,
+            errorDescription
           });
+
+          if (hasError) {
+            errorHandler.error('App', '❌ OAuth error in deep link:', {
+              error: searchParams.get('error'),
+              description: errorDescription
+            });
+            localStorage.setItem('oauth_error', errorDescription || 'OAuth failed');
+            window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+              detail: { success: false, error: errorDescription }
+            }));
+            return;
+          }
 
           if (hash && hash.includes('access_token')) {
             errorHandler.info('App', '🔐 OAuth callback detected in hash');
@@ -355,6 +371,16 @@ function AppContent() {
             setTimeout(() => {
               window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
             }, 500);
+          } else if (localStorage.getItem('oauth_in_progress')) {
+            errorHandler.error('App', '⚠️ OAuth in progress but NO tokens in deep link URL!');
+            errorHandler.error('App', '⚠️ This means Google redirected without tokens.');
+            errorHandler.error('App', '⚠️ Check GOOGLE_OAUTH_SETUP.md for configuration steps.');
+            errorHandler.error('App', '📋 Deep link URL:', data.url);
+
+            localStorage.setItem('oauth_error', 'OAuth callback received but no authentication tokens found. Please check your Google OAuth configuration.');
+            window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+              detail: { success: false, error: 'No tokens in callback' }
+            }));
           }
         });
 
