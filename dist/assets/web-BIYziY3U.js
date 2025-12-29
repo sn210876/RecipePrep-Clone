@@ -1,0 +1,1 @@
+import{W as n}from"./index-CkUg_WPP.js";import"./ui-vendor-f93QKSUu.js";import"./react-vendor-Bh3ye5P1.js";import"./supabase-vendor-BRTiG-8S.js";class p extends n{async show(e){}async hide(e){}}export{p as SplashScreenWeb};
