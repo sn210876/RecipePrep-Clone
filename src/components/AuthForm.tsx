@@ -29,6 +29,16 @@ export default function AuthForm() {
     const checkOAuthCallback = async () => {
       console.log('🔍 Checking for OAuth callback on mount...');
 
+      // First, check if there's already a valid session - if so, clean up OAuth flags
+      const { data: { session: existingSession } } = await supabase.auth.getSession();
+      if (existingSession) {
+        console.log('✅ Valid session already exists, cleaning up OAuth flags');
+        localStorage.removeItem('oauth_in_progress');
+        localStorage.removeItem('oauth_start_time');
+        localStorage.removeItem('oauth_error');
+        return;
+      }
+
       const hash = window.location.hash;
       const searchParams = new URLSearchParams(window.location.search);
       const oauthInProgress = localStorage.getItem('oauth_in_progress');

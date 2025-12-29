@@ -45,6 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('🚀 Initializing auth...');
 
       try {
+        // Clean up stale OAuth flags if session already exists
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        if (existingSession) {
+          console.log('✅ Existing session found on init, cleaning OAuth flags');
+          localStorage.removeItem('oauth_in_progress');
+          localStorage.removeItem('oauth_start_time');
+          localStorage.removeItem('oauth_error');
+        }
+
         const hash = window.location.hash;
         console.log('🔗 URL hash:', hash);
 
@@ -213,22 +222,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       appResumeListener = CapApp.addListener('appStateChange', async ({ isActive }) => {
         if (isActive) {
           console.log('📱 App resumed - checking session in AuthContext');
+          setLoading(true);
           try {
+            // Wait a bit for storage to be ready
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             const { data: { session }, error } = await supabase.auth.getSession();
             if (session && !error) {
               console.log('✅ Session exists, updating state');
               setSession(session);
               setUser(session.user);
-              setLoading(false);
+
+              // Check admin status
+              const adminStatus = await checkIsAdmin();
+              setIsAdmin(adminStatus);
             } else if (error) {
               console.error('❌ Session error on resume:', error);
-              setLoading(false);
             } else {
-              console.log('⚠️ No session on resume');
-              setLoading(false);
+              console.log('⚠️ No session on resume - user needs to log in');
+              setSession(null);
+              setUser(null);
             }
           } catch (err) {
             console.error('❌ Exception on resume:', err);
+          } finally {
             setLoading(false);
           }
         }

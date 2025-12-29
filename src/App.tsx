@@ -659,7 +659,8 @@ if (loading || (user && isEmailVerified === undefined)) {
   }
 
   // Show auth form if not logged in and trying to access protected content OR if showAuthPrompt is true
-  if ((!user && !isPublicPage) || showAuthPrompt) return <AuthForm />;
+  // But DON'T show it if we're still loading (session might be restoring)
+  if ((!user && !isPublicPage && !loading) || showAuthPrompt) return <AuthForm />;
   // Only check email verification if user is logged in and not on public pages
   if (user && !isEmailVerified && !isPublicPage) return <VerifyEmail />;
 
