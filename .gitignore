@@ -1,2 +1,11 @@
 node_modules/
 .env
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+requirements.txt
+runtime.txt
+.python-version
