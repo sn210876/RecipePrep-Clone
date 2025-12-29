@@ -392,7 +392,11 @@ function AppContent() {
               if (error) {
                 errorHandler.error('App', '❌ Failed to refresh session on resume', error);
               } else if (session) {
-                errorHandler.info('App', '✅ Session refreshed successfully on resume');
+                errorHandler.info('App', '✅ Session found, triggering auth state update');
+                await supabase.auth.setSession({
+                  access_token: session.access_token,
+                  refresh_token: session.refresh_token
+                });
               } else {
                 errorHandler.info('App', '⚠️ No session found on resume');
               }
@@ -401,29 +405,6 @@ function AppContent() {
             }
           } else {
             errorHandler.info('App', '⏸️ App paused');
-          }
-        });
-
-        CapApp.addListener('pause', () => {
-          errorHandler.info('App', '⏸️ App paused event');
-        });
-
-        CapApp.addListener('resume', async () => {
-          errorHandler.info('App', '▶️ App resumed event - checking session');
-          try {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (error) {
-              errorHandler.error('App', '❌ Session check failed on resume', error);
-            } else if (session) {
-              errorHandler.info('App', '✅ Valid session exists', {
-                expiresAt: session.expires_at,
-                userId: session.user?.id
-              });
-            } else {
-              errorHandler.info('App', '⚠️ No active session on resume');
-            }
-          } catch (error) {
-            errorHandler.error('App', '❌ Exception checking session on resume', error);
           }
         });
 

@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, isAdmin as checkIsAdmin } from '../lib/supabase';
 import { withTimeout, forceSessionCheck, AuthTimeoutError } from '../lib/authTimeout';
+import { App as CapApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 interface AuthContextType {
   user: User | null;
@@ -136,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const timeoutId = setTimeout(() => {
       console.warn('⚠️ Auth initialization timeout - forcing loading to false');
       setLoading(false);
-    }, 5000);
+    }, 10000);
 
     initAuth().finally(() => {
       clearTimeout(timeoutId);
@@ -205,9 +207,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })();
     });
 
+    // Listen for app resume on mobile to refresh session
+    let appResumeListener: any;
+    if (Capacitor.isNativePlatform()) {
+      appResumeListener = CapApp.addListener('appStateChange', async ({ isActive }) => {
+        if (isActive) {
+          console.log('📱 App resumed - checking session in AuthContext');
+          try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (session && !error) {
+              console.log('✅ Session exists, updating state');
+              setSession(session);
+              setUser(session.user);
+              setLoading(false);
+            } else if (error) {
+              console.error('❌ Session error on resume:', error);
+              setLoading(false);
+            } else {
+              console.log('⚠️ No session on resume');
+              setLoading(false);
+            }
+          } catch (err) {
+            console.error('❌ Exception on resume:', err);
+            setLoading(false);
+          }
+        }
+      });
+    }
+
     return () => {
       console.log('🧹 Cleaning up auth subscription');
       subscription.unsubscribe();
+      if (appResumeListener) {
+        appResumeListener.remove();
+      }
     };
   }, []);
 
