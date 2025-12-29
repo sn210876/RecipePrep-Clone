@@ -3,7 +3,20 @@
 ## Overview
 The app now uses **in-app browser (Chrome Custom Tabs on Android)** for OAuth authentication. This provides a seamless user experience without leaving the app.
 
-## Recent Fix (Session Persistence Issue)
+## Recent Fixes
+
+### Fix #1: Opening in DuckDuckGo Instead of App (LATEST)
+**Problem**: OAuth opened DuckDuckGo browser and stayed there, didn't redirect back to app.
+
+**Root Cause**: Used `https://mealscrape.com/auth/callback` which opened in the user's default browser (DuckDuckGo) instead of the app.
+
+**Solution**: Changed to custom scheme `com.mealscrape.app://auth/callback` which ALWAYS opens the app.
+
+**⚠️ CONFIGURATION REQUIRED**: You MUST add `com.mealscrape.app://auth/callback` to:
+1. Google Cloud Console > Authorized redirect URIs
+2. Supabase Dashboard > URL Configuration > Redirect URLs
+
+### Fix #2: Session Persistence Issue
 **Problem**: OAuth worked initially but session was lost after minimizing the app, showing "OAuth redirect succeeded but no authentication tokens received" error.
 
 **Root Cause**: The `checkOAuthCallback()` function was running on mobile when the component remounted (after minimize), trying to find tokens in the URL. On mobile, tokens come through the deep link listener, not the URL, so it failed.
@@ -28,8 +41,8 @@ When a user clicks "Sign in with Google":
 
 ### 3. Deep Link Callback
 When OAuth completes:
-1. Google redirects to `https://mealscrape.com/auth/callback` with tokens
-2. Android App Links catches the redirect (configured in AndroidManifest.xml)
+1. Google redirects to `com.mealscrape.app://auth/callback` with tokens
+2. Android opens the MealScrape app (custom scheme always opens the app)
 3. The app receives the URL through `App.addListener('appUrlOpen')`
 4. In-app browser closes automatically
 5. Tokens are extracted and session is established

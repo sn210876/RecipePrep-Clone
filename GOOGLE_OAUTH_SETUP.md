@@ -57,14 +57,13 @@ https://yourdomain.com
 
 ### For Mobile (Android):
 ```
-https://mealscrape.com
-https://mealscrape.com/auth/callback
+com.mealscrape.app://auth/callback
 ```
 
-**IMPORTANT FOR MOBILE:** You must use the HTTPS URL (not a custom scheme) because:
-1. Google redirects to `https://mealscrape.com/auth/callback`
-2. Android deep linking intercepts this URL and reopens your app
-3. The app then extracts the OAuth tokens from the URL
+**IMPORTANT FOR MOBILE:**
+- The app uses the custom scheme `com.mealscrape.app://` for OAuth redirects
+- This ensures the redirect ALWAYS opens the app (not the browser)
+- Custom schemes bypass browser interference and work reliably
 
 6. **Save** the changes
 
@@ -77,7 +76,7 @@ https://mealscrape.com/auth/callback
 3. Navigate to **Authentication** > **URL Configuration**
 4. Add these **Redirect URLs**:
 
-### For Web & Mobile:
+### For Web:
 ```
 https://mealscrape.com
 https://mealscrape.com/**
@@ -85,7 +84,12 @@ https://yourdomain.com
 https://yourdomain.com/**
 ```
 
-**Note:** Mobile uses the same HTTPS URLs as web because deep linking intercepts the URL and reopens the app.
+### For Mobile (Android):
+```
+com.mealscrape.app://auth/callback
+```
+
+**Note:** Mobile uses a custom scheme that directly opens the app without going through the browser.
 
 5. Navigate to **Authentication** > **Providers**
 6. Enable **Google** provider

@@ -330,8 +330,9 @@ export default function AuthForm() {
 
  const getRedirectUrl = () => {
   if (Capacitor.isNativePlatform()) {
-    const redirectUrl = 'https://mealscrape.com/auth/callback';  // ✅ CORRECT
-    console.log('🔗 Mobile redirect URL:', redirectUrl);
+    // Use custom scheme for mobile to ensure it opens the app, not browser
+    const redirectUrl = 'com.mealscrape.app://auth/callback';
+    console.log('🔗 Mobile redirect URL (custom scheme):', redirectUrl);
     return redirectUrl;
   }
 
@@ -514,7 +515,9 @@ export default function AuthForm() {
       console.log('🔵 Redirect URL that will be sent to Google:', redirectUrl);
       console.log('🔵 ⚠️ This URL must be configured in:');
       console.log('🔵    1. Google Cloud Console > Credentials > Authorized redirect URIs');
-      console.log('🔵    2. Supabase Dashboard > Authentication > URL Configuration');
+      console.log('🔵       Add: com.mealscrape.app://auth/callback');
+      console.log('🔵    2. Supabase Dashboard > Authentication > URL Configuration > Redirect URLs');
+      console.log('🔵       Add: com.mealscrape.app://auth/callback');
 
       // For mobile, use in-app browser
       if (Capacitor.isNativePlatform()) {
@@ -545,11 +548,12 @@ export default function AuthForm() {
           // Open in in-app browser (Chrome Custom Tabs on Android)
           await Browser.open({
             url: data.url,
+            windowName: '_self',  // Forces Chrome Custom Tabs on Android
             presentationStyle: 'popover',
             toolbarColor: '#FF6B35',
           });
 
-          console.log('🔵 In-app browser opened, waiting for callback...');
+          console.log('🔵 Chrome Custom Tabs opened, waiting for callback...');
         }
       } else {
         // For web, use default redirect behavior
