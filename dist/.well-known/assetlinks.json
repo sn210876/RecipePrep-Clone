@@ -1,0 +1,11 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.mealscrape.app",
+    "sha256_cert_fingerprints": [
+      "43:89:E2:ED:11:0C:91:83:FA:1F:9D:61:5D:AD:2B:03:EA:0B:EB:EF:26:E4:AB:57:6C:60:86:CC:18:A9:74:84",
+      "C3:04:2A:55:AE:0A:50:17:60:CA:83:7E:A0:7A:39:30:AA:4D:21:E4:D1:F1:B0:42:E0:02:78:92:5C:C2:B6:39"
+    ]
+  }
+}]

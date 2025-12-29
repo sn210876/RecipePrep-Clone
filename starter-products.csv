@@ -1,0 +1,52 @@
+asin,name,price,image_url,category,keywords,brand,package_size,is_prime
+B001E5E3KG,Gold Medal All-Purpose Flour 5lb,4.99,https://m.media-amazon.com/images/I/81V4zqJPjFL._SX679_.jpg,baking,flour;all-purpose;baking;white flour,Gold Medal,5 lb,true
+B00I8G8AKO,Domino Pure Cane Granulated Sugar 4lb,3.99,https://m.media-amazon.com/images/I/71GXn8ZUMJL._SX679_.jpg,baking,sugar;white;granulated;cane sugar,Domino,4 lb,true
+B001EO5Q64,Morton Iodized Salt 26oz,1.49,https://m.media-amazon.com/images/I/71o+-1o6dQL._SX679_.jpg,spices,salt;iodized;table salt,Morton,26 oz,true
+B00K3KV8J0,Land O Lakes Butter Sticks 4ct,5.99,https://m.media-amazon.com/images/I/71N8oE3Y8BL._SX679_.jpg,dairy,butter;unsalted;salted;sticks,Land O Lakes,1 lb,true
+B078TSK7KW,365 Organic Large Brown Eggs 12ct,4.29,https://m.media-amazon.com/images/I/71LqM5RFYRL._SX679_.jpg,dairy,eggs;large;brown;organic,365 by Whole Foods Market,12 count,true
+B00CMKYHFC,Horizon Organic Whole Milk Half Gallon,5.99,https://m.media-amazon.com/images/I/71JRsj3QSPL._SX679_.jpg,dairy,milk;whole;organic;vitamin d,Horizon Organic,0.5 gallon,true
+B000LQOBDK,McCormick Pure Vanilla Extract 2oz,8.99,https://m.media-amazon.com/images/I/71jK8vZF+xL._SX679_.jpg,baking,vanilla;extract;pure;baking,McCormick,2 oz,true
+B00JKKE00O,Arm & Hammer Baking Soda 1lb,2.49,https://m.media-amazon.com/images/I/81qKvWn+VWL._SX679_.jpg,baking,baking soda;sodium bicarbonate;leavening,Arm & Hammer,1 lb,true
+B0014D5HUQ,Clabber Girl Double Acting Baking Powder 8.1oz,3.49,https://m.media-amazon.com/images/I/71t9XPDxBsL._SX679_.jpg,baking,baking powder;double acting;leavening,Clabber Girl,8.1 oz,true
+B002PQMV1S,Barilla Spaghetti Pasta 16oz,1.99,https://m.media-amazon.com/images/I/81rZvb5OOLL._SX679_.jpg,grains,pasta;spaghetti;italian,Barilla,1 lb,true
+B00NMSG45M,Minute White Rice 28oz,4.49,https://m.media-amazon.com/images/I/71P6YKjWwSL._SX679_.jpg,grains,rice;white;instant;minute rice,Minute Rice,28 oz,true
+B0000VLFP2,Quaker Old Fashioned Oats 42oz,5.99,https://m.media-amazon.com/images/I/81i1G0TmRaL._SX679_.jpg,grains,oats;oatmeal;rolled oats;breakfast,Quaker,42 oz,true
+B00B037AEG,Hunt's Tomato Sauce 15oz,1.29,https://m.media-amazon.com/images/I/81gRjBgmneL._SX679_.jpg,canned,tomato sauce;sauce;pasta sauce,Hunt's,15 oz,true
+B005HSJYM0,Hunt's Crushed Tomatoes 28oz,2.49,https://m.media-amazon.com/images/I/71Z8FtRjMLK._SX679_.jpg,canned,tomatoes;crushed;canned tomatoes,Hunt's,28 oz,true
+B000WHKQMM,Hunt's Tomato Paste 6oz,0.99,https://m.media-amazon.com/images/I/71yH5V1iDDL._SX679_.jpg,canned,tomato paste;paste;concentrated tomato,Hunt's,6 oz,true
+B00N2BRVHQ,Bush's Best Black Beans 15oz,1.49,https://m.media-amazon.com/images/I/81kFMZ7XZGL._SX679_.jpg,canned,black beans;beans;canned beans,Bush's Best,15 oz,true
+B0029NCKHS,Progresso Chicken Broth 32oz,2.99,https://m.media-amazon.com/images/I/81xz9lHTJwL._SX679_.jpg,canned,chicken broth;broth;stock,Progresso,32 oz,true
+B00B037BFS,College Inn Beef Broth 32oz,2.99,https://m.media-amazon.com/images/I/71rQd+TH7gL._SX679_.jpg,canned,beef broth;broth;stock,College Inn,32 oz,true
+B0014D5J3K,Swanson Vegetable Broth 32oz,2.49,https://m.media-amazon.com/images/I/71YWr5QfQ3L._SX679_.jpg,canned,vegetable broth;broth;veggie stock,Swanson,32 oz,true
+B000LQOE24,Heinz Tomato Ketchup 32oz,3.99,https://m.media-amazon.com/images/I/61olKJjqQxL._SX679_.jpg,condiments,ketchup;tomato ketchup;condiment,Heinz,32 oz,true
+B00I8N5R2S,French's Classic Yellow Mustard 14oz,2.49,https://m.media-amazon.com/images/I/61VNhWmVFRL._SX679_.jpg,condiments,mustard;yellow mustard;condiment,French's,14 oz,true
+B07FNYH2PC,Hellmann's Real Mayonnaise 30oz,5.99,https://m.media-amazon.com/images/I/61L4BcdAa6L._SX679_.jpg,condiments,mayonnaise;mayo;condiment,Hellmann's,30 oz,true
+B07HHJGKJN,Tabasco Original Red Sauce 5oz,4.49,https://m.media-amazon.com/images/I/71h+yqL3dKL._SX679_.jpg,condiments,hot sauce;tabasco;spicy;pepper sauce,Tabasco,5 oz,true
+B001SAWTNM,Kikkoman Soy Sauce 10oz,3.99,https://m.media-amazon.com/images/I/71K2Cx7XKwL._SX679_.jpg,condiments,soy sauce;sauce;asian;seasoning,Kikkoman,10 oz,true
+B0025UGWU4,Kraft Original BBQ Sauce 18oz,2.99,https://m.media-amazon.com/images/I/81zKo0iYKjL._SX679_.jpg,condiments,bbq sauce;barbecue;grilling sauce,Kraft,18 oz,true
+B000LQOOJW,Wesson Vegetable Oil 48oz,5.49,https://m.media-amazon.com/images/I/71HH5A+fXCL._SX679_.jpg,oils,vegetable oil;cooking oil;oil,Wesson,48 oz,true
+B000LQOKOI,Bertolli Extra Virgin Olive Oil 17oz,8.99,https://m.media-amazon.com/images/I/71YKo1R8ZpL._SX679_.jpg,oils,olive oil;extra virgin;evoo;cooking oil,Bertolli,17 oz,true
+B00VKOP9YA,Heinz Apple Cider Vinegar 32oz,3.99,https://m.media-amazon.com/images/I/71f9S5oZ3LL._SX679_.jpg,oils,apple cider vinegar;vinegar;acv,Heinz,32 oz,true
+B001TW49AG,Heinz White Vinegar 32oz,2.99,https://m.media-amazon.com/images/I/71r4KiJE36L._SX679_.jpg,oils,white vinegar;vinegar;distilled,Heinz,32 oz,true
+B00B039G66,Spectrum Organic Coconut Oil 14oz,8.99,https://m.media-amazon.com/images/I/71rjwLq0OkL._SX679_.jpg,oils,coconut oil;organic;cooking oil,Spectrum,14 oz,true
+B0014D5HVG,McCormick Ground Black Pepper 3oz,5.49,https://m.media-amazon.com/images/I/71w5TGU+-HL._SX679_.jpg,spices,black pepper;pepper;ground pepper,McCormick,3 oz,true
+B001SAWT5M,McCormick Garlic Powder 3.12oz,4.99,https://m.media-amazon.com/images/I/71E+JLMwzVL._SX679_.jpg,spices,garlic powder;garlic;seasoning,McCormick,3.12 oz,true
+B001SAWUCA,McCormick Onion Powder 2.62oz,4.99,https://m.media-amazon.com/images/I/71hqJg0JLNL._SX679_.jpg,spices,onion powder;onion;seasoning,McCormick,2.62 oz,true
+B001SAWU4C,McCormick Ground Cinnamon 2.37oz,5.49,https://m.media-amazon.com/images/I/71ZxvKCnk9L._SX679_.jpg,spices,cinnamon;ground cinnamon;spice,McCormick,2.37 oz,true
+B00IJSNFXM,McCormick Chili Powder 2.5oz,4.99,https://m.media-amazon.com/images/I/71AkWEJ9+OL._SX679_.jpg,spices,chili powder;chili;spice,McCormick,2.5 oz,true
+B001SAWUEO,McCormick Ground Cumin 1.5oz,4.49,https://m.media-amazon.com/images/I/71gYGiYzc8L._SX679_.jpg,spices,cumin;ground cumin;spice,McCormick,1.5 oz,true
+B001SAWT7K,McCormick Oregano Leaves 0.75oz,3.99,https://m.media-amazon.com/images/I/71TmrXI8YYL._SX679_.jpg,spices,oregano;herb;italian seasoning,McCormick,0.75 oz,true
+B001SAWT6G,McCormick Basil Leaves 0.62oz,3.99,https://m.media-amazon.com/images/I/71p8fz1x4PL._SX679_.jpg,spices,basil;herb;italian seasoning,McCormick,0.62 oz,true
+B001SAWT8Y,McCormick Paprika 2.12oz,4.49,https://m.media-amazon.com/images/I/71e0Hw4fYNL._SX679_.jpg,spices,paprika;spice;red pepper,McCormick,2.12 oz,true
+B00B039FW2,McCormick Crushed Red Pepper 1.5oz,3.99,https://m.media-amazon.com/images/I/71nfVzp+MbL._SX679_.jpg,spices,red pepper flakes;crushed red pepper;spicy,McCormick,1.5 oz,true
+B000LQOOIQ,Crisco All-Vegetable Shortening 48oz,6.99,https://m.media-amazon.com/images/I/71OW+0G6CWL._SX679_.jpg,baking,shortening;vegetable shortening;baking,Crisco,48 oz,true
+B001SAWT2A,Hershey's Cocoa Powder 8oz,4.99,https://m.media-amazon.com/images/I/71aXCc7tIFL._SX679_.jpg,baking,cocoa powder;chocolate;unsweetened cocoa,Hershey's,8 oz,true
+B000LQOEZC,Nestle Toll House Semi-Sweet Chocolate Chips 12oz,3.99,https://m.media-amazon.com/images/I/81J4ZXM7HZL._SX679_.jpg,baking,chocolate chips;semi-sweet;baking chocolate,Nestle Toll House,12 oz,true
+B001SAWT4I,C&H Light Brown Sugar 2lb,3.49,https://m.media-amazon.com/images/I/71Gc5yrAOWL._SX679_.jpg,baking,brown sugar;light brown;sugar,C&H,2 lb,true
+B000LQOFW4,Karo Light Corn Syrup 16oz,4.49,https://m.media-amazon.com/images/I/71V5X5PuGRL._SX679_.jpg,baking,corn syrup;light;syrup,Karo,16 oz,true
+B000LQOF5M,Bob's Red Mill Active Dry Yeast 8oz,6.99,https://m.media-amazon.com/images/I/81Q8zqLqPUL._SX679_.jpg,baking,yeast;active dry;baking yeast,Bob's Red Mill,8 oz,true
+B000LQOF4I,Planters Dry Roasted Peanuts 16oz,5.99,https://m.media-amazon.com/images/I/71e8rN4w+DL._SX679_.jpg,snacks,peanuts;roasted;nuts,Planters,16 oz,true
+B00I5LNPEI,Blue Diamond Whole Natural Almonds 16oz,9.99,https://m.media-amazon.com/images/I/71WJnJdZ6XL._SX679_.jpg,snacks,almonds;whole;nuts,Blue Diamond,16 oz,true
+B000LQOF0E,Jif Creamy Peanut Butter 40oz,6.99,https://m.media-amazon.com/images/I/71nBLHWYkiL._SX679_.jpg,condiments,peanut butter;creamy;spread,Jif,40 oz,true
+B001SAWUBW,Smucker's Strawberry Jam 18oz,4.49,https://m.media-amazon.com/images/I/71G8cRyqJtL._SX679_.jpg,condiments,jam;strawberry;preserves,Smucker's,18 oz,true
+B078STBRPQ,General Mills Cheerios Cereal 18oz,4.99,https://m.media-amazon.com/images/I/81MvGQ-PsmL._SX679_.jpg,grains,cheerios;cereal;breakfast;oat,General Mills,18 oz,true

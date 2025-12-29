@@ -1,0 +1,85 @@
+import { errorHandler } from './errorHandler';
+
+export interface EnvCheckResult {
+  isValid: boolean;
+  missing: string[];
+  warnings: string[];
+  values: Record<string, string>;
+}
+
+const REQUIRED_ENV_VARS = [
+  'VITE_SUPABASE_URL',
+  'VITE_SUPABASE_ANON_KEY'
+];
+
+const OPTIONAL_ENV_VARS = [
+  'VITE_OPENAI_API_KEY',
+  'VITE_RECIPE_SERVER_URL'
+];
+
+export function checkEnvironment(): EnvCheckResult {
+  errorHandler.info('EnvChecker', '🔍 Starting environment validation...');
+
+  const missing: string[] = [];
+  const warnings: string[] = [];
+  const values: Record<string, string> = {};
+
+  REQUIRED_ENV_VARS.forEach(envVar => {
+    const value = import.meta.env[envVar];
+    if (!value || value === 'undefined' || value === 'null') {
+      missing.push(envVar);
+      errorHandler.error('EnvChecker', `Missing required environment variable: ${envVar}`);
+    } else if (value.length < 10) {
+      missing.push(envVar);
+      errorHandler.error('EnvChecker', `Invalid required environment variable (too short): ${envVar}`);
+    } else {
+      values[envVar] = value.substring(0, 20) + '...';
+      errorHandler.info('EnvChecker', `✅ Found ${envVar}`);
+    }
+  });
+
+  OPTIONAL_ENV_VARS.forEach(envVar => {
+    const value = import.meta.env[envVar];
+    if (!value || value === 'undefined' || value === 'null') {
+      warnings.push(envVar);
+      errorHandler.warning('EnvChecker', `Optional environment variable missing: ${envVar}`);
+    } else {
+      values[envVar] = value.substring(0, 20) + '...';
+      errorHandler.info('EnvChecker', `✅ Found ${envVar}`);
+    }
+  });
+
+  const isValid = missing.length === 0;
+
+  if (isValid) {
+    errorHandler.info('EnvChecker', '✅ All required environment variables present and valid');
+  } else {
+    errorHandler.error('EnvChecker', '❌ Environment validation failed', { missing, warnings });
+    if (import.meta.env.PROD) {
+      console.error('CRITICAL: Missing required environment variables in production build:', missing);
+    }
+  }
+
+  return {
+    isValid,
+    missing,
+    warnings,
+    values
+  };
+}
+
+export function logSystemInfo() {
+  errorHandler.info('System', '📱 System Information:', {
+    userAgent: navigator.userAgent,
+    platform: navigator.platform,
+    language: navigator.language,
+    online: navigator.onLine,
+    cookieEnabled: navigator.cookieEnabled,
+    screenSize: `${window.screen.width}x${window.screen.height}`,
+    viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+    devicePixelRatio: window.devicePixelRatio,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    url: window.location.href,
+    timestamp: new Date().toISOString()
+  });
+}
