@@ -31,6 +31,20 @@ export default function AuthForm() {
     const checkOAuthCallback = async () => {
       console.log('🔍 Checking for OAuth callback on mount...');
 
+      // On mobile, OAuth is handled by the appUrlOpen listener, not this function
+      if (Capacitor.isNativePlatform()) {
+        console.log('📱 Mobile platform - skipping checkOAuthCallback (handled by deep link listener)');
+        // Still clean up any stale OAuth flags
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        if (existingSession) {
+          console.log('✅ Valid session exists, cleaning up OAuth flags');
+          localStorage.removeItem('oauth_in_progress');
+          localStorage.removeItem('oauth_start_time');
+          localStorage.removeItem('oauth_error');
+        }
+        return;
+      }
+
       // First, check if there's already a valid session - if so, clean up OAuth flags
       const { data: { session: existingSession } } = await supabase.auth.getSession();
       if (existingSession) {
@@ -215,6 +229,10 @@ export default function AuthForm() {
       appUrlListener = CapApp.addListener('appUrlOpen', async (event: any) => {
         console.log('🔗 App URL opened:', event.url);
 
+        // Clean up OAuth flags immediately to prevent checkOAuthCallback from running
+        localStorage.removeItem('oauth_in_progress');
+        localStorage.removeItem('oauth_start_time');
+
         // Close the in-app browser
         try {
           await Browser.close();
@@ -240,10 +258,20 @@ export default function AuthForm() {
           setMessage('Completing sign in...');
 
           try {
-            // Let Supabase handle the token
+            const hashParams = new URLSearchParams(hash.substring(1));
+            const accessToken = hashParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token');
+
+            if (!accessToken) {
+              throw new Error('No access token found in callback');
+            }
+
+            console.log('🔑 Setting session with tokens...');
+
+            // Set the session with the tokens
             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-              access_token: new URLSearchParams(hash.substring(1)).get('access_token') || '',
-              refresh_token: new URLSearchParams(hash.substring(1)).get('refresh_token') || '',
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
             });
 
             if (sessionError) {
@@ -252,36 +280,40 @@ export default function AuthForm() {
 
             console.log('✅ Session set successfully from OAuth callback');
 
-            // Give Supabase a moment to process
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Give Supabase a moment to persist the session
+            await new Promise(resolve => setTimeout(resolve, 1500));
 
-            const session = await refreshSession();
-            if (session) {
-              console.log('✅ OAuth session confirmed!');
-              localStorage.removeItem('oauth_in_progress');
-              localStorage.removeItem('oauth_start_time');
-              localStorage.removeItem('oauth_error');
-              setLoading(false);
-              setOauthInProgress(false);
-              setError('');
-            } else {
-              throw new Error('Session not found after setting tokens');
+            // Verify the session was saved
+            const { data: { session: verifySession } } = await supabase.auth.getSession();
+            if (!verifySession) {
+              throw new Error('Session not persisted after setting tokens');
             }
+
+            console.log('✅ Session verified and persisted!');
+
+            // Update the context
+            await refreshSession();
+
+            // Clean up all OAuth-related data
+            localStorage.removeItem('oauth_error');
+
+            setLoading(false);
+            setOauthInProgress(false);
+            setError('');
+
+            console.log('✅ OAuth flow completed successfully!');
           } catch (err: any) {
             console.error('❌ Error processing OAuth callback:', err);
             setError(err.message || 'Failed to complete sign in');
             setLoading(false);
             setOauthInProgress(false);
-            localStorage.removeItem('oauth_in_progress');
-            localStorage.removeItem('oauth_start_time');
           }
         } else if (searchParams.has('error')) {
           console.error('❌ OAuth error in callback:', searchParams.get('error'));
           setError(`Sign in failed: ${searchParams.get('error_description') || searchParams.get('error')}`);
           setLoading(false);
           setOauthInProgress(false);
-          localStorage.removeItem('oauth_in_progress');
-          localStorage.removeItem('oauth_start_time');
+          localStorage.removeItem('oauth_error');
         }
       });
     }

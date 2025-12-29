@@ -3,6 +3,16 @@
 ## Overview
 The app now uses **in-app browser (Chrome Custom Tabs on Android)** for OAuth authentication. This provides a seamless user experience without leaving the app.
 
+## Recent Fix (Session Persistence Issue)
+**Problem**: OAuth worked initially but session was lost after minimizing the app, showing "OAuth redirect succeeded but no authentication tokens received" error.
+
+**Root Cause**: The `checkOAuthCallback()` function was running on mobile when the component remounted (after minimize), trying to find tokens in the URL. On mobile, tokens come through the deep link listener, not the URL, so it failed.
+
+**Solution**:
+1. Skip `checkOAuthCallback()` entirely on mobile platforms
+2. Clean up OAuth flags immediately in the deep link listener (before any other processing)
+3. Verify session persistence after setting tokens
+
 ## How It Works
 
 ### 1. OAuth Initiation
