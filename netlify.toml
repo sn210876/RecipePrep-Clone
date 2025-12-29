@@ -1,12 +1,11 @@
 [build]
   command = "npm run build"
   publish = "dist"
-  ignore = "python-main.py"
 
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
-  PYTHON_VERSION = ""
+  SECRETS_SCAN_OMIT_PATHS = "*.md,dist/**,android/**,ios/**"
 
 [[redirects]]
   from = "/*"
