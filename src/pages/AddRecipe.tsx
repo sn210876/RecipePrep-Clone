@@ -46,7 +46,7 @@ const UNITS = [
 ];
 
 const CUISINE_TYPES = [
-  'American', 'Chinese', 'Culinary/Baked Goods', 'French', 'Greek, Middle Eastern', 'Healing/Medicine', 'Indian', 'Italian', 'Juices/Smoothies',
+  'American', 'Chinese', 'Culinary/Baked Goods', 'Filipino', 'French', 'Greek, Middle Eastern', 'Healing/Medicine', 'Indian', 'Italian', 'Juices/Smoothies',
   'Japanese', 'Korean', 'Mediterranean', 'Mexican/Spanish', 'Other', 'Pet Meals',
   'Thai', 'Vegan/Vegetarian', 'Vietnamese'
 ];

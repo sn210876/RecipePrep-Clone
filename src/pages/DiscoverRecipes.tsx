@@ -264,7 +264,7 @@ useEffect(() => {
   }, [allRecipes, showAllHealthy, isMobile]);
 
   const internationalRecipes = useMemo(() => {
-    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Vegan/Vegetarian'];
+    const cuisines = ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Filipino', 'Vegan/Vegetarian'];
     const filtered = allRecipes
       .filter((r) => cuisines.includes(r.cuisineType));
     return showAllInternational ? filtered : filtered.slice(0, isMobile ? 6 : 12);
@@ -598,7 +598,7 @@ useEffect(() => {
               recipes={internationalRecipes}
               showAll={showAllInternational}
               onToggle={setShowAllInternational}
-              allCount={allRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese'].includes(r.cuisineType)).length}
+              allCount={allRecipes.filter((r) => ['Thai', 'Japanese', 'Korean', 'Indian', 'Middle Eastern', 'Mexican', 'Vietnamese', 'Filipino'].includes(r.cuisineType)).length}
               buttonColor="from-amber-500 to-orange-500"
             />
 
