@@ -829,6 +829,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
             console.log('[AddRecipe] ✅ Updated recipe with permanent URL');
             finalImageUrl = permanentUrl;
             postImageUrl = permanentUrl;
+            createdRecipe.imageUrl = permanentUrl;
           }
         } catch (imageError) {
           console.error('[AddRecipe] Base64 image upload failed:', imageError);
@@ -863,6 +864,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
               console.log('[AddRecipe] ✅ Updated recipe with permanent URL');
               finalImageUrl = permanentUrl;
               postImageUrl = permanentUrl;
+              createdRecipe.imageUrl = permanentUrl;
             }
           }
         } catch (imageError) {
@@ -906,10 +908,15 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
       }
 
-      // 7. Add to saved recipes
+      // 7. Add to saved recipes with permanent image URL
       try {
-        await saveRecipe(createdRecipe);
-        console.log('[AddRecipe] ✅ Recipe saved to My Recipes');
+        // Ensure we're saving with the permanent URL if available
+        const recipeToSave = {
+          ...createdRecipe,
+          imageUrl: finalImageUrl || createdRecipe.imageUrl
+        };
+        await saveRecipe(recipeToSave);
+        console.log('[AddRecipe] ✅ Recipe saved to My Recipes with permanent image URL:', recipeToSave.imageUrl);
       } catch (saveError) {
         console.error('[AddRecipe] Failed to save recipe:', saveError);
         toast.error('Recipe created but failed to add to My Recipes. Please save it from Discover page.');
