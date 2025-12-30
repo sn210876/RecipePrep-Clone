@@ -330,9 +330,9 @@ export default function AuthForm() {
 
  const getRedirectUrl = () => {
   if (Capacitor.isNativePlatform()) {
-    // Use HTTPS URL - Android App Links will intercept and open the app
-    const redirectUrl = 'https://mealscrape.com/auth/callback';
-    console.log('🔗 Mobile redirect URL (App Links):', redirectUrl);
+    // Use custom URI scheme - this ALWAYS works on mobile and closes the browser
+    const redirectUrl = 'com.mealscrape.app://auth/callback';
+    console.log('🔗 Mobile redirect URL (Custom Scheme):', redirectUrl);
     return redirectUrl;
   }
 
@@ -514,12 +514,19 @@ export default function AuthForm() {
       const redirectUrl = getRedirectUrl();
       console.log('🔵 Redirect URL that will be sent to Google:', redirectUrl);
       console.log('🔵 ⚠️ This URL must be configured in:');
-      console.log('🔵    1. Google Cloud Console > Credentials > Authorized redirect URIs');
-      console.log('🔵       Add: https://mealscrape.com/auth/callback');
-      console.log('🔵    2. Supabase Dashboard > Authentication > URL Configuration > Redirect URLs');
-      console.log('🔵       Add: https://mealscrape.com/auth/callback');
-      console.log('🔵    3. Android App Links must be verified');
-      console.log('🔵       File: https://mealscrape.com/.well-known/assetlinks.json');
+      if (Capacitor.isNativePlatform()) {
+        console.log('🔵    Mobile - Using custom URI scheme:');
+        console.log('🔵    1. Supabase Dashboard > Authentication > URL Configuration > Redirect URLs');
+        console.log('🔵       Add: com.mealscrape.app://auth/callback');
+        console.log('🔵    2. Google Cloud Console > Credentials > Authorized redirect URIs');
+        console.log('🔵       Add: com.mealscrape.app://auth/callback');
+      } else {
+        console.log('🔵    Web - Using HTTPS redirect:');
+        console.log('🔵    1. Google Cloud Console > Credentials > Authorized redirect URIs');
+        console.log('🔵       Add: https://mealscrape.com/auth/callback');
+        console.log('🔵    2. Supabase Dashboard > Authentication > URL Configuration > Redirect URLs');
+        console.log('🔵       Add: https://mealscrape.com/auth/callback');
+      }
 
       // For mobile, use in-app browser
       if (Capacitor.isNativePlatform()) {
