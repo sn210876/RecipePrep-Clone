@@ -318,8 +318,20 @@ useEffect(() => {
           await saveRecipe(recipe);
           toast.success('Recipe saved to your collection');
         }
-      } catch (error) {
-        toast.error('Failed to update recipe');
+      } catch (error: any) {
+        console.error('[DiscoverRecipes] Error saving/removing recipe:', error);
+
+        const errorMessage = error?.message || '';
+
+        if (errorMessage.includes('session') || errorMessage.includes('expired') || errorMessage.includes('401')) {
+          toast.error('Your session has expired. Please log in again.');
+        } else if (errorMessage.includes('mismatch') || errorMessage.includes('authentication')) {
+          toast.error('Authentication error. Please log out and log back in.');
+        } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+          toast.error('Network error. Please check your connection and try again.');
+        } else {
+          toast.error(errorMessage || 'Failed to update recipe. Please try again.');
+        }
       }
     }
   };

@@ -190,8 +190,19 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
 
     if (auth?.user) {
       try {
+        console.log('[RecipeContext] Refreshing session before saving recipe...');
+        const session = await auth.refreshSession();
+
+        if (!session) {
+          console.error('[RecipeContext] Failed to refresh session');
+          dispatch({ type: 'REMOVE_RECIPE', payload: recipe.id });
+          throw new Error('Your session has expired. Please log in again.');
+        }
+
+        console.log('[RecipeContext] Session refreshed successfully, saving recipe...');
         await saveRecipeToCloud(auth.user.id, recipe);
-      } catch (error) {
+        console.log('[RecipeContext] Recipe saved successfully');
+      } catch (error: any) {
         console.error('Failed to save recipe to cloud:', error);
         dispatch({ type: 'REMOVE_RECIPE', payload: recipe.id });
         throw error;
@@ -205,8 +216,21 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
 
     if (auth?.user) {
       try {
+        console.log('[RecipeContext] Refreshing session before removing recipe...');
+        const session = await auth.refreshSession();
+
+        if (!session) {
+          console.error('[RecipeContext] Failed to refresh session');
+          if (removedRecipe) {
+            dispatch({ type: 'SAVE_RECIPE', payload: removedRecipe });
+          }
+          throw new Error('Your session has expired. Please log in again.');
+        }
+
+        console.log('[RecipeContext] Session refreshed successfully, removing recipe...');
         await removeRecipeFromCloud(auth.user.id, recipeId);
-      } catch (error) {
+        console.log('[RecipeContext] Recipe removed successfully');
+      } catch (error: any) {
         console.error('Failed to remove recipe from cloud:', error);
         if (removedRecipe) {
           dispatch({ type: 'SAVE_RECIPE', payload: removedRecipe });

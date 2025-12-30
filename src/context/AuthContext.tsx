@@ -158,11 +158,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('🔔 Auth state change event:', event, {
         hasSession: !!session,
-        userEmail: session?.user?.email
+        userEmail: session?.user?.email,
+        expiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A'
       });
 
       (async () => {
         setLoading(false);
+
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('✅ Token refreshed successfully:', {
+            userId: session?.user?.id,
+            newExpiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A'
+          });
+        }
+
+        if (event === 'SIGNED_OUT') {
+          console.log('👋 User signed out, clearing state');
+        }
 
         const isVerificationEvent =
           event === 'SIGNED_IN' ||

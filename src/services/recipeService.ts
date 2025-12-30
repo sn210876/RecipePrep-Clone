@@ -1,11 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import { Recipe } from '@/types/recipe';
 import { downloadAndStoreImage } from '@/lib/imageStorage';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/lib/supabase';
 
 export interface DBRecipe {
   id: string;
@@ -105,6 +100,20 @@ export async function getSavedRecipes(userId: string): Promise<Recipe[]> {
 
 export async function saveRecipeToCloud(userId: string, recipe: Recipe): Promise<void> {
   try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (!session || sessionError) {
+      console.error('[saveRecipeToCloud] Session validation failed:', sessionError);
+      throw new Error('Your session has expired. Please log in again.');
+    }
+
+    if (session.user.id !== userId) {
+      console.error('[saveRecipeToCloud] User ID mismatch:', { sessionId: session.user.id, paramId: userId });
+      throw new Error('User authentication mismatch. Please log in again.');
+    }
+
+    console.log('[saveRecipeToCloud] Session validated successfully for user:', userId);
+
     const existingRecord = await supabase
       .from('saved_recipes')
       .select('id')
@@ -158,6 +167,20 @@ export async function saveRecipeToCloud(userId: string, recipe: Recipe): Promise
 }
 
 export async function removeRecipeFromCloud(userId: string, recipeId: string): Promise<void> {
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+  if (!session || sessionError) {
+    console.error('[removeRecipeFromCloud] Session validation failed:', sessionError);
+    throw new Error('Your session has expired. Please log in again.');
+  }
+
+  if (session.user.id !== userId) {
+    console.error('[removeRecipeFromCloud] User ID mismatch:', { sessionId: session.user.id, paramId: userId });
+    throw new Error('User authentication mismatch. Please log in again.');
+  }
+
+  console.log('[removeRecipeFromCloud] Session validated successfully for user:', userId);
+
   const { error } = await supabase
     .from('saved_recipes')
     .delete()
