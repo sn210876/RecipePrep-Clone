@@ -741,9 +741,19 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       // Show loading toast
       const loadingToastId = toast.loading(isEditMode ? 'Updating recipe...' : 'Creating recipe...');
 
-      // 1. Create or update the recipe
+      // 1. Get current user
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error('You must be logged in to create a recipe', { id: loadingToastId });
+        return;
+      }
+
+      // 2. Create or update the recipe
       const { createRecipe, updateRecipe } = await import('@/services/recipeService');
       const tempRecipe = {
+        userId: user.id,
         title: title.trim(),
         ingredients: validIngredients,
         instructions: validInstructions,
@@ -768,7 +778,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
       console.log(`[AddRecipe] Recipe ${isEditMode ? 'updated' : 'created'} with ID:`, createdRecipe.id);
 
-      // 2. If it's a base64 image from photo scan, upload it to storage
+      // 3. If it's a base64 image from photo scan, upload it to storage
       if (isBase64Image && finalImageUrl) {
         try {
           toast.loading('Uploading scanned photo...', { id: loadingToastId });
@@ -826,7 +836,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         }
       }
 
-      // 3. If it's an Instagram URL, download and store it permanently
+      // 4. If it's an Instagram URL, download and store it permanently
       if (needsDownload && finalImageUrl) {
         try {
           toast.loading('Downloading and storing image permanently...', { id: loadingToastId });
@@ -839,7 +849,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
 
           console.log('[AddRecipe] Permanent URL:', permanentUrl);
 
-          // 4. Update the recipe with the permanent URL
+          // 5. Update the recipe with the permanent URL
           if (permanentUrl !== finalImageUrl) {
             const { supabase } = await import('@/lib/supabase');
             const { error: updateError } = await supabase
@@ -861,7 +871,7 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         }
       }
 
-      // 5. Create social post
+      // 6. Create social post
       try {
         const { supabase } = await import('@/lib/supabase');
         const { data: { user } } = await supabase.auth.getUser();
@@ -896,20 +906,22 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
         toast.success(isEditMode ? 'Recipe updated successfully!' : 'Recipe created successfully!', { id: loadingToastId });
       }
 
-      // 5. Add to saved recipes
+      // 7. Add to saved recipes
       try {
         await saveRecipe(createdRecipe);
+        console.log('[AddRecipe] ✅ Recipe saved to My Recipes');
       } catch (saveError) {
         console.error('[AddRecipe] Failed to save recipe:', saveError);
+        toast.error('Recipe created but failed to add to My Recipes. Please save it from Discover page.');
       }
 
-      // 6. Clear saved form data after successful submission
+      // 8. Clear saved form data after successful submission
       sessionStorage.removeItem('addRecipeFormData');
 
-      // 7. Dispatch event to refresh Discover page
+      // 9. Dispatch event to refresh Discover page
       window.dispatchEvent(new CustomEvent('recipe-created'));
 
-      // 8. Navigate to my recipes
+      // 10. Navigate to my recipes
       if (onNavigate) {
         onNavigate('my-recipes');
       }
