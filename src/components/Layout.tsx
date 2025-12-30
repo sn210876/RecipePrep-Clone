@@ -414,7 +414,7 @@ const loadUnreadCount = async (userId: string) => {
 
 
        {/* Bottom Navigation - ALWAYS VISIBLE (Mobile & Desktop) */}
-<div className="fixed bottom-0 left-0 right-0 z-50 mb-0">
+<div className="fixed bottom-0 left-0 right-0 z-50 mb-18">
   {/* White background extension to fill gap below nav */}
   <div className="absolute inset-0 bg-white -bottom-0"></div>
   <div className="relative bg-white border-t border-gray-200 shadow-lg pb-[env(safe-area-inset-bottom)]">
