@@ -92,6 +92,7 @@ function AppContent() {
   if (path === '/admin-mappings') return 'admin-mappings';
   if (path === '/faq') return 'faq';
   if (path === '/onboarding') return 'onboarding';
+  if (path === '/auth/callback') return 'auth-callback';
   if (path === '/blog') return 'blog';
   if (path.startsWith('/blog/') && path !== '/blog') {
     const slug = path.split('/blog/')[1];
@@ -581,6 +582,15 @@ function AppContent() {
       case 'admin-mappings': return <AdminMappings />;
       case 'faq': return <FAQ />;
       case 'onboarding': return <Onboarding onComplete={() => handleNavigate('discover-recipes')} />;
+      case 'auth-callback': return (
+        <div className="fixed inset-0 bg-gradient-to-br from-orange-50 to-rose-50 flex items-center justify-center p-8">
+          <div className="text-center max-w-md">
+            <img src="/spoon-nobg.png" alt="MealScrape" className="w-32 h-32 mx-auto mb-6 animate-bounce" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Completing Sign In</h1>
+            <p className="text-gray-600">Redirecting to app...</p>
+          </div>
+        </div>
+      );
       case 'blog': return <Blog onNavigate={handleNavigate} />;
       default: return <DiscoverRecipes onNavigate={handleNavigate} />;
     }
