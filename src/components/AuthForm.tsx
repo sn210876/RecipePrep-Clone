@@ -262,27 +262,32 @@ export default function AuthForm() {
 
           try {
             const code = searchParams.get('code');
-            console.log('🔑 Exchanging code for session...');
+            if (!code) {
+              throw new Error('No code found in callback URL');
+            }
 
-            // Let Supabase handle the PKCE code exchange automatically
-            // by getting the session - it will detect the code from storage
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log('🔑 Exchanging code for session with Supabase...');
 
-            const { data: { session }, error } = await supabase.auth.getSession();
+            // Exchange the authorization code for a session
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
             if (error) {
+              console.error('❌ Code exchange error:', error);
               throw error;
             }
 
-            if (!session) {
-              // Try refreshing to trigger the exchange
-              const refreshResult = await refreshSession();
-              if (!refreshResult) {
-                throw new Error('Failed to exchange code for session');
-              }
+            if (!data.session) {
+              throw new Error('No session returned from code exchange');
             }
 
             console.log('✅ PKCE code exchange successful!');
+            console.log('Session user:', data.session.user.email);
+
+            // Give Supabase a moment to persist the session
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Update the context
+            await refreshSession();
 
             // Clean up all OAuth-related data
             localStorage.removeItem('oauth_error');

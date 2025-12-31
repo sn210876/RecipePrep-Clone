@@ -1,10 +1,13 @@
-# Mobile Google OAuth Setup Guide
+# Mobile Google OAuth Setup Guide - UPDATED 2025-12-30
 
 ## Problem
-Google OAuth login on the mobile app fails because tokens are not being passed back to the app after authentication.
+Google OAuth login on the mobile app fails because the OAuth callback doesn't properly exchange the authorization code for tokens.
 
 ## Solution
-The app now uses a custom URL scheme (`com.mealscrape.app://`) for OAuth callbacks on mobile, which is more reliable than App Links for this use case.
+The app now uses:
+1. **Custom URL scheme** (`com.mealscrape.app://`) for deep linking back to the app
+2. **PKCE flow** for secure OAuth on mobile
+3. **Proper code exchange** using `supabase.auth.exchangeCodeForSession()`
 
 ## Required Configuration Steps
 
@@ -64,17 +67,20 @@ After making the above changes:
 
 ## How It Works
 
-### OAuth Flow on Mobile:
+### OAuth Flow on Mobile (PKCE):
 
 1. User taps "Continue with Google"
-2. App opens Chrome Custom Tabs with the Google OAuth URL
-3. User authenticates with Google
-4. Google redirects to Supabase: `https://PROJECT_REF.supabase.co/auth/v1/callback`
-5. Supabase processes the OAuth response
-6. Supabase redirects to: `com.mealscrape.app://auth/callback#access_token=...`
+2. App generates a code_verifier and code_challenge (PKCE)
+3. App opens Chrome Custom Tabs with the Google OAuth URL + code_challenge
+4. User authenticates with Google
+5. Google redirects to Supabase: `https://PROJECT_REF.supabase.co/auth/v1/callback?code=...`
+6. Supabase validates the code and redirects to: `com.mealscrape.app://auth/callback?code=...`
 7. Android intercepts the custom scheme URL and opens the app
-8. App extracts tokens from the URL and creates a session
-9. User is logged in!
+8. App calls `supabase.auth.exchangeCodeForSession(code)` with the code_verifier
+9. Supabase exchanges the code for access_token and refresh_token
+10. User is logged in!
+
+**Key Point:** The PKCE flow is more secure than implicit flow. The app receives a short-lived `code` instead of tokens directly, then exchanges it using the code_verifier that was stored locally.
 
 ## Troubleshooting
 
