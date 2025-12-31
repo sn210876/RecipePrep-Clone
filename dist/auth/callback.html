@@ -65,6 +65,24 @@
             margin-bottom: 30px;
         }
 
+        .debug {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 20px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .debug.visible {
+            display: block;
+        }
+
         .spinner {
             width: 40px;
             height: 40px;
@@ -141,6 +159,8 @@
         <h1 id="title">Completing Sign In</h1>
         <p class="status" id="status">Please wait while we complete your authentication...</p>
 
+        <div class="debug" id="debug"></div>
+
         <div class="spinner" id="spinner"></div>
 
         <button class="button" id="openAppBtn" onclick="openApp()">
@@ -159,15 +179,38 @@
         const errorEl = document.getElementById('error');
         const instructionsEl = document.getElementById('instructions');
         const titleEl = document.getElementById('title');
+        const debugEl = document.getElementById('debug');
+
+        function log(message) {
+            console.log('[Callback]', message);
+            const current = debugEl.innerHTML;
+            debugEl.innerHTML = current + '<br>' + message;
+        }
 
         function getTokensFromUrl() {
+            log('Getting tokens from URL...');
+            log('Full URL: ' + window.location.href);
+            log('Hash: ' + window.location.hash);
+            log('Search: ' + window.location.search);
+
+            // Try to get tokens from hash first (OAuth implicit flow)
             const hash = window.location.hash.substring(1);
             const search = window.location.search.substring(1);
-            const combined = hash || search;
 
-            const params = new URLSearchParams(combined);
+            // Combine both - prefer hash if it has tokens
+            let params;
+            if (hash && hash.includes('access_token')) {
+                log('Found tokens in hash');
+                params = new URLSearchParams(hash);
+            } else if (search && search.includes('access_token')) {
+                log('Found tokens in search params');
+                params = new URLSearchParams(search);
+            } else {
+                log('No tokens found in hash or search');
+                params = new URLSearchParams(hash || search);
+            }
 
-            return {
+            const tokens = {
                 access_token: params.get('access_token'),
                 refresh_token: params.get('refresh_token'),
                 token_type: params.get('token_type'),
@@ -175,6 +218,14 @@
                 error: params.get('error'),
                 error_description: params.get('error_description')
             };
+
+            log('Tokens extracted: ' + JSON.stringify({
+                hasAccessToken: !!tokens.access_token,
+                hasRefreshToken: !!tokens.refresh_token,
+                hasError: !!tokens.error
+            }));
+
+            return tokens;
         }
 
         function isAndroid() {
@@ -185,35 +236,77 @@
             return /iPhone|iPad|iPod/i.test(navigator.userAgent);
         }
 
+        function buildDeepLinkUrl(tokens) {
+            // Build a deep link URL with tokens as query params
+            const params = new URLSearchParams();
+
+            if (tokens.access_token) params.append('access_token', tokens.access_token);
+            if (tokens.refresh_token) params.append('refresh_token', tokens.refresh_token);
+            if (tokens.token_type) params.append('token_type', tokens.token_type);
+            if (tokens.expires_in) params.append('expires_in', tokens.expires_in);
+            if (tokens.error) params.append('error', tokens.error);
+            if (tokens.error_description) params.append('error_description', tokens.error_description);
+
+            const queryString = params.toString();
+            log('Built query string: ' + queryString.substring(0, 100) + '...');
+
+            return queryString;
+        }
+
         function openApp() {
+            log('Opening app...');
             const tokens = getTokensFromUrl();
-            const currentUrl = window.location.href;
+            const queryString = buildDeepLinkUrl(tokens);
 
             if (isAndroid()) {
-                const intentUrl = `intent://mealscrape.com/auth/callback${window.location.hash}#Intent;scheme=https;package=com.mealscrape.app;end`;
-                window.location.href = intentUrl;
+                // For Android, use https scheme with App Links
+                // The app should handle this via appUrlOpen listener
+                const deepLinkUrl = `https://mealscrape.com/auth/callback?${queryString}`;
+                log('Android deep link: ' + deepLinkUrl.substring(0, 100) + '...');
+
+                // Try App Links first (preferred method)
+                window.location.href = deepLinkUrl;
+
+                // Fallback to intent after a delay
+                setTimeout(() => {
+                    const intentUrl = `intent://mealscrape.com/auth/callback?${queryString}#Intent;scheme=https;package=com.mealscrape.app;end`;
+                    log('Fallback to intent: ' + intentUrl.substring(0, 100) + '...');
+                    window.location.href = intentUrl;
+                }, 1000);
 
                 setTimeout(() => {
                     statusEl.textContent = 'If the app didn\'t open, please make sure MealScrape is installed.';
                     instructionsEl.textContent = 'You can close this page and open the MealScrape app manually to complete sign in.';
-                }, 2000);
+                }, 3000);
             } else if (isIOS()) {
-                window.location.href = `mealscrape://auth/callback${window.location.hash}`;
+                // For iOS, use custom scheme
+                const deepLinkUrl = `mealscrape://auth/callback?${queryString}`;
+                log('iOS deep link: ' + deepLinkUrl.substring(0, 100) + '...');
+                window.location.href = deepLinkUrl;
 
                 setTimeout(() => {
                     statusEl.textContent = 'If the app didn\'t open, please make sure MealScrape is installed.';
                     instructionsEl.textContent = 'You can close this page and open the MealScrape app manually to complete sign in.';
                 }, 2000);
             } else {
+                log('Not mobile device');
                 statusEl.textContent = 'Please open this link on your mobile device.';
                 instructionsEl.textContent = 'Copy this URL and open it in the MealScrape app on your phone.';
             }
         }
 
         function handleCallback() {
+            log('Handling callback...');
+            log('User agent: ' + navigator.userAgent);
+
+            // Show debug info during development
+            // Comment this out in production
+            debugEl.classList.add('visible');
+
             const tokens = getTokensFromUrl();
 
             if (tokens.error) {
+                log('Error in tokens: ' + tokens.error);
                 titleEl.textContent = 'Sign In Error';
                 statusEl.textContent = tokens.error_description || 'An error occurred during sign in.';
                 spinnerEl.style.display = 'none';
@@ -224,17 +317,22 @@
             }
 
             if (!tokens.access_token) {
+                log('No access token found!');
                 titleEl.textContent = 'Redirecting';
-                statusEl.textContent = 'No authentication data found. You may have already completed sign in.';
+                statusEl.textContent = 'Attempting to open the app...';
                 spinnerEl.style.display = 'none';
-                instructionsEl.textContent = 'Please open the MealScrape app to continue.';
+                instructionsEl.textContent = 'If you just signed in, please tap the button below.';
 
+                // Still try to open the app even without tokens
+                // The user might have already completed sign in
                 setTimeout(() => {
                     openAppBtn.classList.add('visible');
                 }, 1000);
                 return;
             }
 
+            // We have tokens! Redirect to app
+            log('Tokens found, redirecting to app...');
             if (isAndroid() || isIOS()) {
                 statusEl.textContent = 'Opening MealScrape app...';
 
@@ -249,6 +347,7 @@
                     instructionsEl.textContent = 'Tap the button above to open MealScrape and complete sign in.';
                 }, 3000);
             } else {
+                log('Not on mobile');
                 titleEl.textContent = 'Sign In Successful';
                 statusEl.textContent = 'Please open this page on your mobile device.';
                 spinnerEl.style.display = 'none';
@@ -256,10 +355,14 @@
             }
         }
 
+        // Run on page load
+        log('Page loaded');
         window.addEventListener('DOMContentLoaded', handleCallback);
 
+        // Handle back/forward navigation
         window.addEventListener('pageshow', function(event) {
             if (event.persisted) {
+                log('Page shown from cache');
                 handleCallback();
             }
         });
