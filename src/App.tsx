@@ -245,6 +245,8 @@ function AppContent() {
           const searchParams = url.searchParams;
           const hasError = searchParams.has('error');
           const errorDescription = searchParams.get('error_description');
+          const hasCode = searchParams.has('code');
+          const code = searchParams.get('code');
 
           errorHandler.info('App', '🔍 Deep link details:', {
             fullUrl: data.url,
@@ -252,9 +254,12 @@ function AppContent() {
             searchParams: searchParams.toString().substring(0, 100),
             pathname: url.pathname,
             hasError,
+            hasCode,
+            codePreview: code ? code.substring(0, 8) + '...' : 'none',
             errorDescription
           });
 
+          // 1. Handle OAuth errors
           if (hasError) {
             const errorMsg = searchParams.get('error');
             errorHandler.error('App', '❌ OAuth error in deep link:', {
@@ -268,6 +273,7 @@ function AppContent() {
               userFriendlyError = 'OAuth configuration error: The redirect URL does not match. Expected: https://mealscrape.com/auth/callback. Please verify your Google Cloud Console and Supabase settings.';
             }
 
+            localStorage.removeItem('oauth_in_progress');
             localStorage.setItem('oauth_error', userFriendlyError);
             window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
               detail: { success: false, error: userFriendlyError }
@@ -275,47 +281,47 @@ function AppContent() {
             return;
           }
 
-          // Handle PKCE flow - exchange code for session
-          if (searchParams.has('code')) {
-            errorHandler.info('App', '🔑 PKCE code detected, exchanging for session');
-            const code = searchParams.get('code');
+          // 2. Handle PKCE flow - exchange code for session
+          if (hasCode && code) {
+            errorHandler.info('App', '🔑 PKCE authorization code detected!');
+            errorHandler.info('App', '🔄 Exchanging code for session...');
 
-            if (code) {
-              try {
-                errorHandler.info('App', '🔄 Calling exchangeCodeForSession with code:', code.substring(0, 8) + '...');
+            try {
+              const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-                if (error) {
-                  errorHandler.error('App', '❌ Code exchange failed:', error);
-                  localStorage.setItem('oauth_error', error.message);
-                  window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
-                    detail: { success: false, error }
-                  }));
-                } else if (data.session) {
-                  errorHandler.info('App', '✅ Code exchanged successfully!', {
-                    hasUser: !!data.user,
-                    userEmail: data.user?.email
-                  });
-
-                  errorHandler.info('App', '📢 Dispatching oauth-callback-complete event');
-                  window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
-                    detail: { success: true }
-                  }));
-                } else {
-                  errorHandler.error('App', '❌ No session returned from code exchange');
-                  localStorage.setItem('oauth_error', 'No session returned');
-                  window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
-                    detail: { success: false, error: 'No session returned' }
-                  }));
-                }
-              } catch (error) {
-                errorHandler.error('App', '❌ Exception during code exchange:', error);
-                localStorage.setItem('oauth_error', error instanceof Error ? error.message : 'Unknown error');
+              if (error) {
+                errorHandler.error('App', '❌ Code exchange failed:', error);
+                localStorage.removeItem('oauth_in_progress');
+                localStorage.setItem('oauth_error', error.message);
                 window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
-                  detail: { success: false, error }
+                  detail: { success: false, error: error.message }
+                }));
+              } else if (data.session) {
+                errorHandler.info('App', '✅ Code exchanged successfully!', {
+                  hasUser: !!data.user,
+                  userEmail: data.user?.email
+                });
+
+                localStorage.removeItem('oauth_in_progress');
+                errorHandler.info('App', '📢 Dispatching oauth-callback-complete event');
+                window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                  detail: { success: true }
+                }));
+              } else {
+                errorHandler.error('App', '❌ No session returned from code exchange');
+                localStorage.removeItem('oauth_in_progress');
+                localStorage.setItem('oauth_error', 'No session returned from code exchange');
+                window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                  detail: { success: false, error: 'No session returned' }
                 }));
               }
+            } catch (error) {
+              errorHandler.error('App', '❌ Exception during code exchange:', error);
+              localStorage.removeItem('oauth_in_progress');
+              localStorage.setItem('oauth_error', error instanceof Error ? error.message : 'Unknown error');
+              window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                detail: { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+              }));
             }
             return;
           }
@@ -420,35 +426,16 @@ function AppContent() {
               }
             }
           } else if (url.pathname.startsWith('/post/')) {
+            // Handle shared post deep link
             const postId = url.pathname.split('/post/')[1];
             setCurrentPage('discover');
             setTimeout(() => {
               window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
             }, 500);
           } else if (localStorage.getItem('oauth_in_progress')) {
-            errorHandler.error('App', '⚠️ OAuth in progress but NO code/tokens in deep link URL!');
-            errorHandler.error('App', '📋 Deep link URL received:', data.url);
-            errorHandler.error('App', '📋 Expected: https://mealscrape.com/auth/callback?code=...');
-            errorHandler.error('App', '⚠️ This usually means the redirect URL in Google Console does not match.');
-            errorHandler.error('App', '⚠️ Check that https://mealscrape.com/auth/callback is configured in:');
-            errorHandler.error('App', '   1. Google Cloud Console > APIs & Services > Credentials > OAuth 2.0 Client > Authorized redirect URIs');
-            errorHandler.error('App', '   2. Supabase Dashboard > Authentication > URL Configuration > Redirect URLs');
-
-            const detailedError = `OAuth callback received but missing authorization code or tokens.
-
-Received URL: ${data.url}
-Expected format: https://mealscrape.com/auth/callback?code=...
-
-This error means the OAuth redirect URL configuration doesn't match between:
-• Google Cloud Console (should have: https://mealscrape.com/auth/callback)
-• Supabase Dashboard (should have: https://mealscrape.com/auth/callback)
-
-Please verify both configurations match exactly.`;
-
-            localStorage.setItem('oauth_error', detailedError);
-            window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
-              detail: { success: false, error: 'OAuth redirect URL mismatch' }
-            }));
+            // OAuth was expected but we got a different deep link
+            errorHandler.info('App', '⚠️ OAuth was in progress but received unexpected URL:', data.url);
+            errorHandler.info('App', '💡 This might be a different deep link or the OAuth flow was interrupted');
           }
         });
 
