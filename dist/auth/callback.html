@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#fff7ed">
+    <meta name="description" content="Completing your sign-in to MealScrape">
+    <title>Signing In - MealScrape</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #fff7ed 0%, #ffe4e6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: env(safe-area-inset-top, 20px) env(safe-area-inset-right, 20px) env(safe-area-inset-bottom, 20px) env(safe-area-inset-left, 20px);
+        }
+
+        .container {
+            text-align: center;
+            max-width: 400px;
+            padding: 40px 20px;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .status {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 30px;
+            border: 4px solid #fed7aa;
+            border-top-color: #ea580c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: none;
+            display: none;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.visible {
+            display: inline-block;
+        }
+
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.visible {
+            display: block;
+        }
+
+        .instructions {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="/spoon-nobg.png" alt="MealScrape Logo">
+        </div>
+
+        <h1 id="title">Completing Sign In</h1>
+        <p class="status" id="status">Please wait while we complete your authentication...</p>
+
+        <div class="spinner" id="spinner"></div>
+
+        <button class="button" id="openAppBtn" onclick="openApp()">
+            Open MealScrape App
+        </button>
+
+        <div class="error" id="error"></div>
+
+        <p class="instructions" id="instructions"></p>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const spinnerEl = document.getElementById('spinner');
+        const openAppBtn = document.getElementById('openAppBtn');
+        const errorEl = document.getElementById('error');
+        const instructionsEl = document.getElementById('instructions');
+        const titleEl = document.getElementById('title');
+
+        function getTokensFromUrl() {
+            const hash = window.location.hash.substring(1);
+            const search = window.location.search.substring(1);
+            const combined = hash || search;
+
+            const params = new URLSearchParams(combined);
+
+            return {
+                access_token: params.get('access_token'),
+                refresh_token: params.get('refresh_token'),
+                token_type: params.get('token_type'),
+                expires_in: params.get('expires_in'),
+                error: params.get('error'),
+                error_description: params.get('error_description')
+            };
+        }
+
+        function isAndroid() {
+            return /Android/i.test(navigator.userAgent);
+        }
+
+        function isIOS() {
+            return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        }
+
+        function openApp() {
+            const tokens = getTokensFromUrl();
+            const currentUrl = window.location.href;
+
+            if (isAndroid()) {
+                const intentUrl = `intent://mealscrape.com/auth/callback${window.location.hash}#Intent;scheme=https;package=com.mealscrape.app;end`;
+                window.location.href = intentUrl;
+
+                setTimeout(() => {
+                    statusEl.textContent = 'If the app didn\'t open, please make sure MealScrape is installed.';
+                    instructionsEl.textContent = 'You can close this page and open the MealScrape app manually to complete sign in.';
+                }, 2000);
+            } else if (isIOS()) {
+                window.location.href = `mealscrape://auth/callback${window.location.hash}`;
+
+                setTimeout(() => {
+                    statusEl.textContent = 'If the app didn\'t open, please make sure MealScrape is installed.';
+                    instructionsEl.textContent = 'You can close this page and open the MealScrape app manually to complete sign in.';
+                }, 2000);
+            } else {
+                statusEl.textContent = 'Please open this link on your mobile device.';
+                instructionsEl.textContent = 'Copy this URL and open it in the MealScrape app on your phone.';
+            }
+        }
+
+        function handleCallback() {
+            const tokens = getTokensFromUrl();
+
+            if (tokens.error) {
+                titleEl.textContent = 'Sign In Error';
+                statusEl.textContent = tokens.error_description || 'An error occurred during sign in.';
+                spinnerEl.style.display = 'none';
+                errorEl.textContent = `Error: ${tokens.error}`;
+                errorEl.classList.add('visible');
+                instructionsEl.textContent = 'Please try signing in again from the app.';
+                return;
+            }
+
+            if (!tokens.access_token) {
+                titleEl.textContent = 'Redirecting';
+                statusEl.textContent = 'No authentication data found. You may have already completed sign in.';
+                spinnerEl.style.display = 'none';
+                instructionsEl.textContent = 'Please open the MealScrape app to continue.';
+
+                setTimeout(() => {
+                    openAppBtn.classList.add('visible');
+                }, 1000);
+                return;
+            }
+
+            if (isAndroid() || isIOS()) {
+                statusEl.textContent = 'Opening MealScrape app...';
+
+                setTimeout(() => {
+                    openApp();
+                }, 500);
+
+                setTimeout(() => {
+                    spinnerEl.style.display = 'none';
+                    openAppBtn.classList.add('visible');
+                    statusEl.textContent = 'App didn\'t open automatically?';
+                    instructionsEl.textContent = 'Tap the button above to open MealScrape and complete sign in.';
+                }, 3000);
+            } else {
+                titleEl.textContent = 'Sign In Successful';
+                statusEl.textContent = 'Please open this page on your mobile device.';
+                spinnerEl.style.display = 'none';
+                instructionsEl.textContent = 'Copy this URL and paste it in your mobile browser, or open the MealScrape app directly.';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', handleCallback);
+
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                handleCallback();
+            }
+        });
+    </script>
+</body>
+</html>
