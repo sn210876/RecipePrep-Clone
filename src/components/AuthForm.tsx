@@ -59,12 +59,16 @@ export default function AuthForm() {
       const oauthError = localStorage.getItem('oauth_error');
       const oauthStartTime = localStorage.getItem('oauth_start_time');
 
+      const hasCode = searchParams.has('code');
+      const code = searchParams.get('code');
       const hasTokenInHash = hash && hash.includes('access_token');
       const hasTokenInQuery = searchParams.has('access_token');
       const hasError = searchParams.has('error');
       const errorDescription = searchParams.get('error_description');
 
       console.log('🔍 OAuth check:', {
+        hasCode,
+        codePreview: code ? code.substring(0, 8) + '...' : 'none',
         hasTokenInHash,
         hasTokenInQuery,
         hasError,
@@ -83,7 +87,7 @@ export default function AuthForm() {
         });
         let errorMsg = 'Google sign in failed';
         if (errorDescription?.includes('redirect_uri_mismatch')) {
-          errorMsg = 'OAuth configuration error. Please check that redirect URLs match in Google Console and Supabase Dashboard.';
+          errorMsg = 'OAuth configuration error: Redirect URL mismatch. Make sure https://mealscrape.com/auth/callback is added to both Google Console and Supabase Dashboard redirect URLs.';
         } else if (errorDescription) {
           errorMsg = `Sign in failed: ${errorDescription}`;
         }
@@ -92,6 +96,37 @@ export default function AuthForm() {
         localStorage.removeItem('oauth_start_time');
         setLoading(false);
         setOauthInProgress(false);
+        return;
+      }
+
+      // Handle PKCE authorization code (modern OAuth flow)
+      if (hasCode && code && oauthInProgress) {
+        console.log('🔑 PKCE authorization code detected!');
+        console.log('🔄 Code exchange will be handled by AuthContext');
+        setLoading(true);
+        setOauthInProgress(true);
+        setMessage('Completing sign in...');
+
+        localStorage.removeItem('oauth_in_progress');
+        localStorage.removeItem('oauth_start_time');
+
+        setTimeout(async () => {
+          console.log('🔄 Refreshing session after code exchange...');
+          const session = await refreshSession();
+
+          if (session) {
+            console.log('✅ OAuth session established successfully!');
+            setLoading(false);
+            setOauthInProgress(false);
+            setError('');
+            localStorage.removeItem('oauth_error');
+          } else {
+            console.log('❌ No session found after code exchange');
+            setError('Sign in completed but session not found. Please try again.');
+            setLoading(false);
+            setOauthInProgress(false);
+          }
+        }, 1500);
         return;
       }
 
@@ -150,12 +185,15 @@ export default function AuthForm() {
           }
 
           console.log('❌ Still no session after all attempts');
-          console.error('⚠️ No tokens found in URL after OAuth redirect!');
+          console.error('⚠️ No tokens or authorization code found after OAuth redirect!');
           console.error('⚠️ This usually means redirect URLs are not configured correctly.');
-          console.error('⚠️ Check GOOGLE_OAUTH_SETUP.md for configuration instructions.');
+          console.error('⚠️ Required configuration:');
+          console.error('   1. Google Console: Add https://mealscrape.com/auth/callback to Authorized redirect URIs');
+          console.error('   2. Supabase Dashboard: Add https://mealscrape.com/auth/callback to Redirect URLs');
+          console.error('   3. Mobile: Ensure Android App Links are verified (assetlinks.json)');
 
           const errorMsg = localStorage.getItem('oauth_error');
-          setError(errorMsg || 'OAuth redirect succeeded but no authentication tokens received. Please verify your redirect URLs are configured correctly in both Google Console and Supabase Dashboard. See GOOGLE_OAUTH_SETUP.md for details.');
+          setError(errorMsg || 'Sign in failed: No session received after OAuth redirect. This usually means redirect URLs are misconfigured. Please ensure https://mealscrape.com/auth/callback is added to both Google Console (Authorized redirect URIs) and Supabase Dashboard (Redirect URLs).');
           setLoading(false);
           setOauthInProgress(false);
           localStorage.removeItem('oauth_error');

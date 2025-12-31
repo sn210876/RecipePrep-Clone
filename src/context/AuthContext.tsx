@@ -55,10 +55,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const hash = window.location.hash;
-        console.log('🔗 URL hash:', hash);
+        const searchParams = new URLSearchParams(window.location.search);
+        const code = searchParams.get('code');
 
-        if (hash && hash.includes('access_token')) {
-          console.log('✅ Found access_token in URL');
+        console.log('🔗 URL info:', {
+          hash: hash.substring(0, 50),
+          hasCode: !!code,
+          codePreview: code ? code.substring(0, 8) + '...' : 'none'
+        });
+
+        // Handle PKCE authorization code (modern OAuth flow)
+        if (code) {
+          console.log('🔑 PKCE authorization code detected in URL');
+          try {
+            console.log('🔄 Exchanging code for session...');
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+            if (error) {
+              console.error('❌ Code exchange error:', error);
+              // Don't block initialization, just log the error
+            } else if (data.session) {
+              console.log('✅ Code exchanged successfully!', {
+                hasUser: !!data.user,
+                userEmail: data.user?.email
+              });
+              // Clean up URL
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          } catch (err) {
+            console.error('❌ Code exchange exception:', err);
+          }
+        }
+        // Handle implicit flow tokens (legacy OAuth flow)
+        else if (hash && hash.includes('access_token')) {
+          console.log('✅ Found access_token in URL hash');
           const params = new URLSearchParams(hash.substring(1));
           const accessToken = params.get('access_token');
           const type = params.get('type');
@@ -96,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               access_token: accessToken,
               refresh_token: refreshToken || ''
             });
-            
+
             if (error) {
               console.error('❌ setSession error:', error);
             } else {
