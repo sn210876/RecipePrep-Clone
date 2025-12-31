@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, Lock, User, ChefHat, ArrowRight, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
 import { App as CapApp } from '@capacitor/app';
 import { withTimeout, AuthTimeoutError } from '../lib/authTimeout';
 import { useAuth } from '../context/AuthContext';
@@ -229,76 +228,49 @@ export default function AuthForm() {
       appUrlListener = CapApp.addListener('appUrlOpen', async (event: any) => {
         console.log('🔗 App URL opened:', event.url);
 
-        // Clean up OAuth flags immediately to prevent checkOAuthCallback from running
+        // Clean up OAuth flags
         localStorage.removeItem('oauth_in_progress');
         localStorage.removeItem('oauth_start_time');
-
-        // Close the in-app browser
-        try {
-          await Browser.close();
-          console.log('✅ In-app browser closed');
-        } catch (e) {
-          console.log('ℹ️ Browser was already closed or error closing:', e);
-        }
 
         const url = new URL(event.url);
         const hash = url.hash;
         const searchParams = url.searchParams;
 
-        console.log('🔍 Processing OAuth callback URL:', {
-          fullUrl: event.url.substring(0, 100),
-          hash: hash.substring(0, 50),
-          searchParams: searchParams.toString().substring(0, 50),
+        console.log('🔍 Processing OAuth callback:', {
           hasCode: searchParams.has('code'),
-          hasAccessToken: hash.includes('access_token') || searchParams.has('access_token')
+          hasAccessToken: hash.includes('access_token') || searchParams.has('access_token'),
+          hasError: searchParams.has('error')
         });
 
         // Handle PKCE flow - exchange code for session
         if (searchParams.has('code')) {
-          console.log('✅ OAuth code found in URL (PKCE flow)');
+          console.log('✅ OAuth code found (PKCE flow)');
           setLoading(true);
           setOauthInProgress(true);
           setMessage('Completing sign in...');
 
           try {
             const code = searchParams.get('code');
-            if (!code) {
-              throw new Error('No code found in callback URL');
-            }
+            if (!code) throw new Error('No code in callback URL');
 
-            console.log('🔑 Exchanging code for session with Supabase...');
+            console.log('🔑 Exchanging code for session...');
 
-            // Exchange the authorization code for a session
             const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-            if (error) {
-              console.error('❌ Code exchange error:', error);
-              throw error;
-            }
+            if (error) throw error;
+            if (!data.session) throw new Error('No session returned');
 
-            if (!data.session) {
-              throw new Error('No session returned from code exchange');
-            }
+            console.log('✅ Sign in successful!');
 
-            console.log('✅ PKCE code exchange successful!');
-            console.log('Session user:', data.session.user.email);
-
-            // Give Supabase a moment to persist the session
             await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Update the context
             await refreshSession();
 
-            // Clean up all OAuth-related data
             localStorage.removeItem('oauth_error');
-
             setLoading(false);
             setOauthInProgress(false);
             setError('');
-
-            console.log('✅ OAuth flow completed successfully!');
           } catch (err: any) {
-            console.error('❌ Error processing PKCE callback:', err);
+            console.error('❌ Code exchange error:', err);
             setError(err.message || 'Failed to complete sign in');
             setLoading(false);
             setOauthInProgress(false);
@@ -306,9 +278,9 @@ export default function AuthForm() {
           return;
         }
 
-        // Handle implicit flow - tokens in hash or query
+        // Handle implicit flow (fallback)
         if (hash && hash.includes('access_token')) {
-          console.log('✅ OAuth tokens found in URL hash (implicit flow)');
+          console.log('✅ Access token found (implicit flow)');
           setLoading(true);
           setOauthInProgress(true);
           setMessage('Completing sign in...');
@@ -318,48 +290,26 @@ export default function AuthForm() {
             const accessToken = hashParams.get('access_token');
             const refreshToken = hashParams.get('refresh_token');
 
-            if (!accessToken) {
-              throw new Error('No access token found in callback');
-            }
+            if (!accessToken) throw new Error('No access token in callback');
 
-            console.log('🔑 Setting session with tokens...');
-
-            // Set the session with the tokens
-            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            const { error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken || '',
             });
 
-            if (sessionError) {
-              throw sessionError;
-            }
+            if (error) throw error;
 
-            console.log('✅ Session set successfully from OAuth callback');
+            console.log('✅ Sign in successful!');
 
-            // Give Supabase a moment to persist the session
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Verify the session was saved
-            const { data: { session: verifySession } } = await supabase.auth.getSession();
-            if (!verifySession) {
-              throw new Error('Session not persisted after setting tokens');
-            }
-
-            console.log('✅ Session verified and persisted!');
-
-            // Update the context
+            await new Promise(resolve => setTimeout(resolve, 500));
             await refreshSession();
 
-            // Clean up all OAuth-related data
             localStorage.removeItem('oauth_error');
-
             setLoading(false);
             setOauthInProgress(false);
             setError('');
-
-            console.log('✅ OAuth flow completed successfully!');
           } catch (err: any) {
-            console.error('❌ Error processing OAuth callback:', err);
+            console.error('❌ Session error:', err);
             setError(err.message || 'Failed to complete sign in');
             setLoading(false);
             setOauthInProgress(false);
@@ -369,7 +319,7 @@ export default function AuthForm() {
 
         // Handle errors
         if (searchParams.has('error')) {
-          console.error('❌ OAuth error in callback:', searchParams.get('error'));
+          console.error('❌ OAuth error:', searchParams.get('error'));
           setError(`Sign in failed: ${searchParams.get('error_description') || searchParams.get('error')}`);
           setLoading(false);
           setOauthInProgress(false);
@@ -377,9 +327,7 @@ export default function AuthForm() {
           return;
         }
 
-        // No tokens found
-        console.log('⚠️ No OAuth code or tokens found in callback URL');
-        console.log('Full URL for debugging:', event.url);
+        console.log('⚠️ No code or tokens in callback URL');
       });
     }
 
@@ -392,19 +340,6 @@ export default function AuthForm() {
       }
     };
   }, [refreshSession]);
-
- const getRedirectUrl = () => {
-  if (Capacitor.isNativePlatform()) {
-    // For mobile, use custom scheme that will be captured by app
-    const redirectUrl = 'com.mealscrape.app://auth/callback';
-    console.log('🔗 Mobile redirect URL (custom scheme):', redirectUrl);
-    return redirectUrl;
-  }
-
-  const origin = window.location.origin;
-  console.log('🔗 Web redirect URL:', origin);
-  return origin;
-};
 
   const handleSubmit = async () => {
     setError('');
@@ -515,7 +450,9 @@ export default function AuthForm() {
               full_name: formData.name,
               referral_code: referralCode || null,
             },
-            emailRedirectTo: getRedirectUrl(),
+            emailRedirectTo: Capacitor.isNativePlatform()
+              ? 'com.mealscrape.app://auth/callback'
+              : `${window.location.origin}/auth/callback`,
           },
         });
 
@@ -555,7 +492,6 @@ export default function AuthForm() {
   const handleGoogleLogin = async () => {
     console.log('🔵 Google login initiated');
     console.log('🔵 Platform:', Capacitor.isNativePlatform() ? 'Mobile' : 'Web');
-    console.log('🔵 Current URL:', window.location.href);
 
     localStorage.removeItem('oauth_error');
 
@@ -574,80 +510,35 @@ export default function AuthForm() {
 
       localStorage.setItem('oauth_in_progress', 'google');
       localStorage.setItem('oauth_start_time', Date.now().toString());
-      console.log('💾 Saved OAuth state to localStorage');
 
-      const redirectUrl = getRedirectUrl();
-      console.log('🔵 Redirect URL that will be sent to Google:', redirectUrl);
-      console.log('🔵 ⚠️ This URL must be configured in:');
-      console.log('🔵    1. Google Cloud Console > Credentials > Authorized redirect URIs');
-      console.log('🔵       Add: https://mealscrape.com/auth/callback');
-      console.log('🔵    2. Supabase Dashboard > Authentication > URL Configuration > Redirect URLs');
-      console.log('🔵       Add: https://mealscrape.com/auth/callback');
-      if (Capacitor.isNativePlatform()) {
-        console.log('🔵    3. Android App Links must be verified');
-        console.log('🔵       File: https://mealscrape.com/.well-known/assetlinks.json');
-        console.log('🔵       App should intercept mealscrape.com URLs and open in-app');
+      // Use custom scheme for mobile, web URL for browser
+      const redirectUrl = Capacitor.isNativePlatform()
+        ? 'com.mealscrape.app://auth/callback'
+        : `${window.location.origin}/auth/callback`;
+
+      console.log('🔵 Redirect URL:', redirectUrl);
+      console.log('🔵 Supabase will handle the OAuth flow automatically');
+
+      // Let Supabase handle everything - no skipBrowserRedirect, no manual Browser.open()
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        console.error('❌ OAuth error:', error);
+        localStorage.removeItem('oauth_in_progress');
+        localStorage.removeItem('oauth_start_time');
+        throw error;
       }
 
-      // For mobile, use in-app browser (PKCE flow is automatic)
-      if (Capacitor.isNativePlatform()) {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-            },
-            skipBrowserRedirect: true
-          },
-        });
-
-        console.log('🔵 OAuth URL response:', { data, error });
-
-        if (error) {
-          console.error('❌ OAuth error:', error);
-          localStorage.removeItem('oauth_in_progress');
-          localStorage.removeItem('oauth_start_time');
-          throw error;
-        }
-
-        if (data?.url) {
-          console.log('🔵 Opening OAuth in Chrome Custom Tabs with PKCE:', data.url);
-
-          // Open in Chrome Custom Tabs (in-app browser on Android)
-          await Browser.open({
-            url: data.url,
-            presentationStyle: 'popover',
-            toolbarColor: '#FF6B35',
-          });
-
-          console.log('🔵 Chrome Custom Tabs opened, waiting for custom scheme callback...');
-        }
-      } else {
-        // For web, use default redirect behavior
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: redirectUrl,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-            },
-          },
-        });
-
-        console.log('🔵 OAuth response:', { data, error });
-
-        if (error) {
-          console.error('❌ OAuth error:', error);
-          localStorage.removeItem('oauth_in_progress');
-          localStorage.removeItem('oauth_start_time');
-          throw error;
-        }
-
-        console.log('🔵 OAuth redirect initiated successfully!');
-      }
+      console.log('✅ OAuth initiated, Supabase will handle browser opening');
 
     } catch (err: any) {
       console.error('❌ Google OAuth error:', err);
@@ -665,9 +556,10 @@ export default function AuthForm() {
     setError('');
 
     try {
-      const redirectUrl = getRedirectUrl();
-      console.log('🍎 Calling signInWithOAuth with redirectTo:', redirectUrl);
-      
+      const redirectUrl = Capacitor.isNativePlatform()
+        ? 'com.mealscrape.app://auth/callback'
+        : `${window.location.origin}/auth/callback`;
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
@@ -675,11 +567,9 @@ export default function AuthForm() {
         },
       });
 
-      console.log('🍎 OAuth response:', { data, error });
-
       if (error) throw error;
-      
-      console.log('⚠️ OAuth called but no redirect happened');
+
+      console.log('✅ OAuth initiated');
     } catch (err: any) {
       console.error('❌ Apple OAuth error:', err);
       setError(err.message || 'Failed to sign in with Apple');
