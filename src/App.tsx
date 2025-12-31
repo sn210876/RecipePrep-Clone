@@ -267,6 +267,51 @@ function AppContent() {
             return;
           }
 
+          // Handle PKCE flow - exchange code for session
+          if (searchParams.has('code')) {
+            errorHandler.info('App', '🔑 PKCE code detected, exchanging for session');
+            const code = searchParams.get('code');
+
+            if (code) {
+              try {
+                errorHandler.info('App', '🔄 Calling exchangeCodeForSession with code:', code.substring(0, 8) + '...');
+
+                const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+                if (error) {
+                  errorHandler.error('App', '❌ Code exchange failed:', error);
+                  localStorage.setItem('oauth_error', error.message);
+                  window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                    detail: { success: false, error }
+                  }));
+                } else if (data.session) {
+                  errorHandler.info('App', '✅ Code exchanged successfully!', {
+                    hasUser: !!data.user,
+                    userEmail: data.user?.email
+                  });
+
+                  errorHandler.info('App', '📢 Dispatching oauth-callback-complete event');
+                  window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                    detail: { success: true }
+                  }));
+                } else {
+                  errorHandler.error('App', '❌ No session returned from code exchange');
+                  localStorage.setItem('oauth_error', 'No session returned');
+                  window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                    detail: { success: false, error: 'No session returned' }
+                  }));
+                }
+              } catch (error) {
+                errorHandler.error('App', '❌ Exception during code exchange:', error);
+                localStorage.setItem('oauth_error', error instanceof Error ? error.message : 'Unknown error');
+                window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
+                  detail: { success: false, error }
+                }));
+              }
+            }
+            return;
+          }
+
           if (hash && hash.includes('access_token')) {
             errorHandler.info('App', '🔐 OAuth callback detected in hash');
             const params = new URLSearchParams(hash.substring(1));
