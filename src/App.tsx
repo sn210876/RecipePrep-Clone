@@ -256,13 +256,21 @@ function AppContent() {
           });
 
           if (hasError) {
+            const errorMsg = searchParams.get('error');
             errorHandler.error('App', '❌ OAuth error in deep link:', {
-              error: searchParams.get('error'),
-              description: errorDescription
+              error: errorMsg,
+              description: errorDescription,
+              fullUrl: data.url
             });
-            localStorage.setItem('oauth_error', errorDescription || 'OAuth failed');
+
+            let userFriendlyError = errorDescription || 'OAuth authentication failed';
+            if (errorDescription?.includes('redirect_uri_mismatch')) {
+              userFriendlyError = 'OAuth configuration error: The redirect URL does not match. Expected: https://mealscrape.com/auth/callback. Please verify your Google Cloud Console and Supabase settings.';
+            }
+
+            localStorage.setItem('oauth_error', userFriendlyError);
             window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
-              detail: { success: false, error: errorDescription }
+              detail: { success: false, error: userFriendlyError }
             }));
             return;
           }
@@ -418,14 +426,28 @@ function AppContent() {
               window.dispatchEvent(new CustomEvent('open-shared-post', { detail: postId }));
             }, 500);
           } else if (localStorage.getItem('oauth_in_progress')) {
-            errorHandler.error('App', '⚠️ OAuth in progress but NO tokens in deep link URL!');
-            errorHandler.error('App', '⚠️ This means Google redirected without tokens.');
-            errorHandler.error('App', '⚠️ Check GOOGLE_OAUTH_SETUP.md for configuration steps.');
-            errorHandler.error('App', '📋 Deep link URL:', data.url);
+            errorHandler.error('App', '⚠️ OAuth in progress but NO code/tokens in deep link URL!');
+            errorHandler.error('App', '📋 Deep link URL received:', data.url);
+            errorHandler.error('App', '📋 Expected: https://mealscrape.com/auth/callback?code=...');
+            errorHandler.error('App', '⚠️ This usually means the redirect URL in Google Console does not match.');
+            errorHandler.error('App', '⚠️ Check that https://mealscrape.com/auth/callback is configured in:');
+            errorHandler.error('App', '   1. Google Cloud Console > APIs & Services > Credentials > OAuth 2.0 Client > Authorized redirect URIs');
+            errorHandler.error('App', '   2. Supabase Dashboard > Authentication > URL Configuration > Redirect URLs');
 
-            localStorage.setItem('oauth_error', 'OAuth callback received but no authentication tokens found. Please check your Google OAuth configuration.');
+            const detailedError = `OAuth callback received but missing authorization code or tokens.
+
+Received URL: ${data.url}
+Expected format: https://mealscrape.com/auth/callback?code=...
+
+This error means the OAuth redirect URL configuration doesn't match between:
+• Google Cloud Console (should have: https://mealscrape.com/auth/callback)
+• Supabase Dashboard (should have: https://mealscrape.com/auth/callback)
+
+Please verify both configurations match exactly.`;
+
+            localStorage.setItem('oauth_error', detailedError);
             window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
-              detail: { success: false, error: 'No tokens in callback' }
+              detail: { success: false, error: 'OAuth redirect URL mismatch' }
             }));
           }
         });

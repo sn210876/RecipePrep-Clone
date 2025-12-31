@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, Lock, User, ChefHat, ArrowRight, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Capacitor } from '@capacitor/core';
-import { App as CapApp } from '@capacitor/app';
 import { withTimeout, AuthTimeoutError } from '../lib/authTimeout';
 import { useAuth } from '../context/AuthContext';
 
@@ -220,124 +219,13 @@ export default function AuthForm() {
 
     window.addEventListener('oauth-callback-complete', handleOAuthComplete);
 
-    // Setup deep link listener for mobile OAuth callback
-    let appUrlListener: any;
-    if (Capacitor.isNativePlatform()) {
-      console.log('📱 Setting up App URL listener for OAuth callbacks');
-
-      appUrlListener = CapApp.addListener('appUrlOpen', async (event: any) => {
-        console.log('🔗 App URL opened:', event.url);
-
-        // Clean up OAuth flags
-        localStorage.removeItem('oauth_in_progress');
-        localStorage.removeItem('oauth_start_time');
-
-        const url = new URL(event.url);
-        const hash = url.hash;
-        const searchParams = url.searchParams;
-
-        console.log('🔍 Processing OAuth callback:', {
-          hasCode: searchParams.has('code'),
-          hasAccessToken: hash.includes('access_token') || searchParams.has('access_token'),
-          hasError: searchParams.has('error')
-        });
-
-        // Handle PKCE flow - exchange code for session
-        if (searchParams.has('code')) {
-          console.log('✅ OAuth code found (PKCE flow)');
-          setLoading(true);
-          setOauthInProgress(true);
-          setMessage('Completing sign in...');
-
-          try {
-            const code = searchParams.get('code');
-            if (!code) throw new Error('No code in callback URL');
-
-            console.log('🔑 Exchanging code for session...');
-
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-            if (error) throw error;
-            if (!data.session) throw new Error('No session returned');
-
-            console.log('✅ Sign in successful!');
-
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await refreshSession();
-
-            localStorage.removeItem('oauth_error');
-            setLoading(false);
-            setOauthInProgress(false);
-            setError('');
-          } catch (err: any) {
-            console.error('❌ Code exchange error:', err);
-            setError(err.message || 'Failed to complete sign in');
-            setLoading(false);
-            setOauthInProgress(false);
-          }
-          return;
-        }
-
-        // Handle implicit flow (fallback)
-        if (hash && hash.includes('access_token')) {
-          console.log('✅ Access token found (implicit flow)');
-          setLoading(true);
-          setOauthInProgress(true);
-          setMessage('Completing sign in...');
-
-          try {
-            const hashParams = new URLSearchParams(hash.substring(1));
-            const accessToken = hashParams.get('access_token');
-            const refreshToken = hashParams.get('refresh_token');
-
-            if (!accessToken) throw new Error('No access token in callback');
-
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken || '',
-            });
-
-            if (error) throw error;
-
-            console.log('✅ Sign in successful!');
-
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await refreshSession();
-
-            localStorage.removeItem('oauth_error');
-            setLoading(false);
-            setOauthInProgress(false);
-            setError('');
-          } catch (err: any) {
-            console.error('❌ Session error:', err);
-            setError(err.message || 'Failed to complete sign in');
-            setLoading(false);
-            setOauthInProgress(false);
-          }
-          return;
-        }
-
-        // Handle errors
-        if (searchParams.has('error')) {
-          console.error('❌ OAuth error:', searchParams.get('error'));
-          setError(`Sign in failed: ${searchParams.get('error_description') || searchParams.get('error')}`);
-          setLoading(false);
-          setOauthInProgress(false);
-          localStorage.removeItem('oauth_error');
-          return;
-        }
-
-        console.log('⚠️ No code or tokens in callback URL');
-      });
-    }
+    // Note: Deep link handling for OAuth is done in App.tsx to avoid duplicate processing
+    // This component only listens for the 'oauth-callback-complete' event dispatched by App.tsx
 
     checkOAuthCallback();
 
     return () => {
       window.removeEventListener('oauth-callback-complete', handleOAuthComplete);
-      if (appUrlListener) {
-        appUrlListener.remove();
-      }
     };
   }, [refreshSession]);
 
@@ -451,7 +339,7 @@ export default function AuthForm() {
               referral_code: referralCode || null,
             },
             emailRedirectTo: Capacitor.isNativePlatform()
-              ? 'com.mealscrape.app://auth/callback'
+              ? 'https://mealscrape.com/auth/callback'
               : `${window.location.origin}/auth/callback`,
           },
         });
@@ -511,9 +399,9 @@ export default function AuthForm() {
       localStorage.setItem('oauth_in_progress', 'google');
       localStorage.setItem('oauth_start_time', Date.now().toString());
 
-      // Use custom scheme for mobile, web URL for browser
+      // Use HTTPS deep link for mobile (Android App Links), web URL for browser
       const redirectUrl = Capacitor.isNativePlatform()
-        ? 'com.mealscrape.app://auth/callback'
+        ? 'https://mealscrape.com/auth/callback'
         : `${window.location.origin}/auth/callback`;
 
       console.log('🔵 Redirect URL:', redirectUrl);
@@ -557,7 +445,7 @@ export default function AuthForm() {
 
     try {
       const redirectUrl = Capacitor.isNativePlatform()
-        ? 'com.mealscrape.app://auth/callback'
+        ? 'https://mealscrape.com/auth/callback'
         : `${window.location.origin}/auth/callback`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({
