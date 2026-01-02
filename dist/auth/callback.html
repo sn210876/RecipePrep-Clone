@@ -298,8 +298,8 @@
                 log('Desktop device - redirecting to main app');
                 statusEl.textContent = 'Redirecting you back to MealScrape...';
 
-                // Redirect to main app with tokens in URL
-                const redirectUrl = `/auth/callback?${queryString}`;
+                // Redirect to root with tokens in URL (AuthContext will handle code exchange)
+                const redirectUrl = `/?${queryString}`;
                 log('Redirecting to: ' + redirectUrl);
 
                 setTimeout(() => {
@@ -370,7 +370,7 @@
                 statusEl.textContent = 'Redirecting you back to MealScrape...';
 
                 const queryString = buildDeepLinkUrl(tokens);
-                const redirectUrl = `/auth/callback?${queryString}`;
+                const redirectUrl = `/?${queryString}`;
 
                 setTimeout(() => {
                     window.location.href = redirectUrl;
