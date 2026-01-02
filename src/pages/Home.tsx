@@ -58,7 +58,7 @@ export function Home({ onNavigate }: HomeProps) {
               className="w-full sm:w-auto min-w-48 h-14 sm:h-16 text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 gap-3"
             >
               <UtensilsCrossed className="w-5 h-5" />
-              <span>asdfed</span>
+              <span>ed</span>
             </Button>
             <Button
               onClick={() => onNavigate('my-recipes')}
