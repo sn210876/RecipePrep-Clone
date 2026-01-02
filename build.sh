@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
-# Install yt-dlp for recipe extraction from Instagram/TikTok/YouTube
+# Install yt-dlp and ffmpeg for recipe extraction from Instagram/TikTok/YouTube
+
+echo "📦 Installing ffmpeg..."
+# Try to install ffmpeg (required by yt-dlp for audio conversion)
+# On Render, ffmpeg should be available, but we'll check
+if ! command -v ffmpeg &> /dev/null; then
+    echo "⚠️  ffmpeg not found in system. Attempting apt-get install..."
+    sudo apt-get update && sudo apt-get install -y ffmpeg || {
+        echo "⚠️  Could not install ffmpeg via apt-get. This may cause audio extraction to fail."
+    }
+fi
+
+if command -v ffmpeg &> /dev/null; then
+    echo "✅ ffmpeg is available: $(ffmpeg -version | head -n 1)"
+else
+    echo "⚠️  ffmpeg is not available. Audio extraction may not work."
+fi
 
 echo "📦 Installing yt-dlp..."
 
