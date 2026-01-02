@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { downloadAndStoreImage } from '@/lib/imageStorage';
 import { compressImage, formatFileSize, isImageFile } from '@/lib/imageCompression';
+import { Clipboard } from '@capacitor/clipboard';
+import { Capacitor } from '@capacitor/core';
 
 
 function parseTimeValue(value: string | number): number {
@@ -1041,7 +1043,13 @@ return (
     type="button"
     onClick={async () => {
       try {
-        const text = await navigator.clipboard.readText();
+        let text = '';
+        if (Capacitor.isNativePlatform()) {
+          const result = await Clipboard.read();
+          text = result.value;
+        } else {
+          text = await navigator.clipboard.readText();
+        }
         const trimmedText = text.trim();
 
         if (!trimmedText) {
@@ -1258,7 +1266,13 @@ return (
                 type="button"
                 onClick={async () => {
                   try {
-                    const text = await navigator.clipboard.readText();
+                    let text = '';
+                    if (Capacitor.isNativePlatform()) {
+                      const result = await Clipboard.read();
+                      text = result.value;
+                    } else {
+                      text = await navigator.clipboard.readText();
+                    }
                     const trimmedText = text.trim();
 
                     if (!trimmedText) {
