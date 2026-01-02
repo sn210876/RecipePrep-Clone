@@ -32,6 +32,23 @@ const openai = new OpenAI({
 
 const tempDir = path.join(process.cwd(), 'temp');
 
+// Find yt-dlp in system path or local bin directory
+function getYtDlpPath() {
+  const localPath = path.join(process.cwd(), 'bin', 'yt-dlp');
+  try {
+    // Check if local version exists
+    if (require('fs').existsSync(localPath)) {
+      return localPath;
+    }
+  } catch (e) {
+    // Ignore error, fall back to system yt-dlp
+  }
+  return 'yt-dlp'; // Use system PATH
+}
+
+const ytDlpCmd = getYtDlpPath();
+console.log('🔍 Using yt-dlp at:', ytDlpCmd);
+
 async function ensureTempDir() {
   try {
     await fs.mkdir(tempDir, { recursive: true });
@@ -42,7 +59,7 @@ async function ensureTempDir() {
 
 async function downloadAudio(videoUrl, videoId) {
   const audioPath = path.join(tempDir, `${videoId}_audio.mp3`);
-  const command = `yt-dlp -f "bestaudio" -x --audio-format mp3 -o "${audioPath.replace(/\.mp3$/, '')}" "${videoUrl}"`;
+  const command = `${ytDlpCmd} -f "bestaudio" -x --audio-format mp3 -o "${audioPath.replace(/\.mp3$/, '')}" "${videoUrl}"`;
 
   try {
     await execPromise(command);
@@ -54,7 +71,7 @@ async function downloadAudio(videoUrl, videoId) {
 
 async function downloadThumbnail(videoUrl, videoId) {
   const thumbnailPath = path.join(tempDir, videoId);
-  const command = `yt-dlp --skip-download --write-thumbnail --convert-thumbnails jpg -o "${thumbnailPath}" "${videoUrl}"`;
+  const command = `${ytDlpCmd} --skip-download --write-thumbnail --convert-thumbnails jpg -o "${thumbnailPath}" "${videoUrl}"`;
 
   try {
     await execPromise(command);
@@ -68,7 +85,7 @@ async function downloadThumbnail(videoUrl, videoId) {
 
 async function getVideoMetadata(videoUrl, videoId) {
   const infoPath = path.join(tempDir, `${videoId}.info.json`);
-  const command = `yt-dlp --skip-download --write-info-json -o "${path.join(tempDir, videoId)}" "${videoUrl}"`;
+  const command = `${ytDlpCmd} --skip-download --write-info-json -o "${path.join(tempDir, videoId)}" "${videoUrl}"`;
 
   try {
     await execPromise(command);
