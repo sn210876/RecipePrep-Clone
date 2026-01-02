@@ -1,53 +1,53 @@
 #!/usr/bin/env bash
-# Install yt-dlp and ffmpeg for recipe extraction from Instagram/TikTok/YouTube
+set -e  # Exit on any error
 
-echo "📦 Installing ffmpeg..."
-# Try to install ffmpeg (required by yt-dlp for audio conversion)
-# On Render, ffmpeg should be available, but we'll check
-if ! command -v ffmpeg &> /dev/null; then
-    echo "⚠️  ffmpeg not found in system. Attempting apt-get install..."
-    sudo apt-get update && sudo apt-get install -y ffmpeg || {
-        echo "⚠️  Could not install ffmpeg via apt-get. This may cause audio extraction to fail."
-    }
-fi
+echo "================================================"
+echo "📦 Starting Recipe Extractor Build Process"
+echo "================================================"
 
+# Create bin directory
+echo "📁 Creating bin directory..."
+mkdir -p ./bin
+
+# Install ffmpeg check (Render should have this in their base image)
+echo "🔍 Checking for ffmpeg..."
 if command -v ffmpeg &> /dev/null; then
     echo "✅ ffmpeg is available: $(ffmpeg -version | head -n 1)"
 else
-    echo "⚠️  ffmpeg is not available. Audio extraction may not work."
+    echo "⚠️  ffmpeg not found. Audio extraction may fail."
+    echo "   Note: Render should provide ffmpeg in their environment."
 fi
 
-echo "📦 Installing yt-dlp..."
-
-# Install yt-dlp using curl (works on Render's environment)
-curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp || {
-    echo "⚠️  Failed to install to /usr/local/bin, trying local directory..."
-    mkdir -p ./bin
-    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ./bin/yt-dlp
-    chmod a+rx ./bin/yt-dlp
-    export PATH="$PATH:$(pwd)/bin"
-    echo "✅ yt-dlp installed to ./bin"
-}
+# Download yt-dlp to local bin directory (no sudo needed)
+echo "📦 Downloading yt-dlp to ./bin/yt-dlp..."
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ./bin/yt-dlp
 
 # Make it executable
-chmod a+rx /usr/local/bin/yt-dlp 2>/dev/null || chmod a+rx ./bin/yt-dlp
+echo "🔧 Making yt-dlp executable..."
+chmod +x ./bin/yt-dlp
 
 # Verify installation
-if command -v yt-dlp &> /dev/null; then
-    echo "✅ yt-dlp installed successfully: $(yt-dlp --version)"
+if [ -f "./bin/yt-dlp" ]; then
+    echo "✅ yt-dlp installed successfully at: $(pwd)/bin/yt-dlp"
+    # Test it works
+    ./bin/yt-dlp --version && echo "✅ yt-dlp version check passed"
 else
-    if [ -f "./bin/yt-dlp" ]; then
-        echo "✅ yt-dlp available at: ./bin/yt-dlp"
-    else
-        echo "❌ yt-dlp installation failed"
-        exit 1
-    fi
+    echo "❌ ERROR: yt-dlp installation failed"
+    exit 1
 fi
 
+# Install npm dependencies
 echo "📦 Installing npm dependencies..."
-npm install
+npm ci --only=production
 
+# Build frontend
 echo "🏗️  Building frontend..."
 npm run build
 
-echo "✅ Build complete!"
+echo "================================================"
+echo "✅ Build Complete!"
+echo "================================================"
+echo "yt-dlp location: $(pwd)/bin/yt-dlp"
+echo "Node modules installed: $([ -d node_modules ] && echo 'YES' || echo 'NO')"
+echo "Dist folder created: $([ -d dist ] && echo 'YES' || echo 'NO')"
+echo "================================================"
