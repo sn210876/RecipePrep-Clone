@@ -414,97 +414,99 @@ const loadUnreadCount = async (userId: string) => {
 
 
        {/* Bottom Navigation - ALWAYS VISIBLE (Mobile & Desktop) */}
+{/* Bottom Navigation - ALWAYS VISIBLE (Mobile & Desktop) */}
 <div className="fixed bottom-0 left-0 right-0 z-50">
   {/* White background extension to fill gap below nav */}
   <div className="absolute inset-0 bg-white -bottom-0"></div>
   <div className="relative bg-white border-t border-gray-200 shadow-lg pb-[calc(env(safe-area-inset-bottom)+20px)]">
-    <div className="max-w-lg mx-auto px-4 py-3">
+    <div className="max-w-lg mx-auto px-4 py-2"> {/* Changed py-3 to py-2 */}
       <div className="flex items-center justify-around">
       
       {/* Messages with Badge */}
       <button
         onClick={() => handleNavigate('messages')}
-        className={`relative flex flex-col items-center gap-1 transition-all touch-manipulation ${
+        className={`relative flex flex-col items-center gap-0.5 transition-all touch-manipulation ${
           currentPage === 'messages' 
             ? 'text-cyan-500 scale-110' 
             : 'text-gray-600'
         }`}
-        style={{ minWidth: '50px', minHeight: '48px' }}
+        style={{ minWidth: '45px', minHeight: '44px' }} {/* Reduced from 50px/48px */}
       >
         <div className="relative">
           <MessageCircle 
-            className="w-6 h-6" 
+            className="w-5 h-5" {/* Changed from w-6 h-6 */}
             strokeWidth={currentPage === 'messages' ? 2.5 : 2} 
           />
           {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold animate-pulse">
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold animate-pulse">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </div>
-        <span className="text-[10px] font-medium">Messages</span>
+        <span className="text-[9px] font-medium">Messages</span> {/* Changed from text-[10px] */}
       </button>
 
       {/* Social Feed Button */}
       <button
         onClick={() => handleNavigate('discover')}
-        className={`relative flex flex-col items-center gap-1 transition-all touch-manipulation ${
+        className={`relative flex flex-col items-center gap-0.5 transition-all touch-manipulation ${
           currentPage === 'discover' 
             ? 'text-orange-500 scale-110' 
             : 'text-gray-600'
         }`}
-        style={{ minWidth: '50px', minHeight: '48px' }}
+        style={{ minWidth: '45px', minHeight: '44px' }} {/* Reduced from 50px/48px */}
       >
         <UtensilsCrossed 
-          className="w-6 h-6" 
+          className="w-5 h-5" {/* Changed from w-6 h-6 */}
           strokeWidth={currentPage === 'discover' ? 2.5 : 2} 
         />
-        <span className="text-[10px] font-medium">Feed</span>
+        <span className="text-[9px] font-medium">Feed</span> {/* Changed from text-[10px] */}
       </button>
 
       {/* Upload Button - Elevated */}
       <button
         onClick={() => handleNavigate('upload')}
-        className="relative -mt-6 flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95 touch-manipulation"
-        style={{ width: '56px', height: '56px' }}
+        className="relative -mt-4 flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95 touch-manipulation"
+        style={{ width: '52px', height: '52px' }} {/* Reduced from 56px */}
       >
-        <Camera className="w-7 h-7 text-white" strokeWidth={2.5} />
+        <Camera className="w-6 h-6 text-white" strokeWidth={2.5} /> {/* Reduced from w-7 h-7 */}
       </button>
-{/* Profile */}
+
+      {/* Profile */}
       <button
         onClick={() => handleNavigate('profile')}
-        className={`flex flex-col items-center gap-1 transition-all touch-manipulation ${
+        className={`flex flex-col items-center gap-0.5 transition-all touch-manipulation ${
           currentPage === 'profile' 
             ? 'text-orange-600 scale-110' 
             : 'text-gray-600'
         }`}
-        style={{ minWidth: '50px', minHeight: '48px' }}
+        style={{ minWidth: '45px', minHeight: '44px' }} {/* Reduced from 50px/48px */}
       >
         <div className="relative">
           {avatarUrl ? (
             <img
               src={avatarUrl}
               alt="Profile"
-              className={`w-7 h-7 rounded-full object-cover ${
+              className={`w-6 h-6 rounded-full object-cover ${  {/* Changed from w-7 h-7 */}
                 currentPage === 'profile' 
                   ? 'ring-2 ring-orange-600 ring-offset-2' 
                   : 'ring-1 ring-gray-300'
               }`}
             />
           ) : (
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${ {/* Changed from w-7 h-7 */}
               currentPage === 'profile'
                 ? 'bg-orange-100 ring-2 ring-orange-600'
                 : 'bg-gray-100'
             }`}>
               <User 
-                className="w-4 h-4" 
+                className="w-3.5 h-3.5" {/* Changed from w-4 h-4 */}
                 strokeWidth={currentPage === 'profile' ? 2.5 : 2} 
               />
             </div>
           )}
         </div>
-        <span className="text-[10px] font-medium">Profile</span>
+        <span className="text-[9px] font-medium">Profile</span> {/* Changed from text-[10px] */}
       </button>
       </div>
     </div>
