@@ -200,14 +200,14 @@
             // Combine both - prefer hash if it has tokens
             let params;
             if (hash && hash.includes('access_token')) {
-                log('Found tokens in hash');
+                log('Found tokens in hash (implicit flow)');
                 params = new URLSearchParams(hash);
             } else if (search && search.includes('access_token')) {
-                log('Found tokens in search params');
+                log('Found tokens in search params (implicit flow)');
                 params = new URLSearchParams(search);
             } else {
-                log('No tokens found in hash or search');
-                params = new URLSearchParams(hash || search);
+                log('Checking for authorization code (PKCE flow)');
+                params = new URLSearchParams(search || hash);
             }
 
             const tokens = {
@@ -215,6 +215,7 @@
                 refresh_token: params.get('refresh_token'),
                 token_type: params.get('token_type'),
                 expires_in: params.get('expires_in'),
+                code: params.get('code'),
                 error: params.get('error'),
                 error_description: params.get('error_description')
             };
@@ -222,6 +223,7 @@
             log('Tokens extracted: ' + JSON.stringify({
                 hasAccessToken: !!tokens.access_token,
                 hasRefreshToken: !!tokens.refresh_token,
+                hasCode: !!tokens.code,
                 hasError: !!tokens.error
             }));
 
@@ -237,13 +239,14 @@
         }
 
         function buildDeepLinkUrl(tokens) {
-            // Build a deep link URL with tokens as query params
+            // Build a deep link URL with tokens/code as query params
             const params = new URLSearchParams();
 
             if (tokens.access_token) params.append('access_token', tokens.access_token);
             if (tokens.refresh_token) params.append('refresh_token', tokens.refresh_token);
             if (tokens.token_type) params.append('token_type', tokens.token_type);
             if (tokens.expires_in) params.append('expires_in', tokens.expires_in);
+            if (tokens.code) params.append('code', tokens.code);
             if (tokens.error) params.append('error', tokens.error);
             if (tokens.error_description) params.append('error_description', tokens.error_description);
 
@@ -259,25 +262,27 @@
             const queryString = buildDeepLinkUrl(tokens);
 
             if (isAndroid()) {
-                // For Android, use https scheme with App Links
-                // The app should handle this via appUrlOpen listener
-                const deepLinkUrl = `https://mealscrape.com/auth/callback?${queryString}`;
-                log('Android deep link: ' + deepLinkUrl.substring(0, 100) + '...');
+                // For Android, use intent URL immediately (more reliable from OAuth browser)
+                const intentUrl = `intent://mealscrape.com/auth/callback?${queryString}#Intent;scheme=https;package=com.mealscrape.app;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.mealscrape.app;end`;
+                log('Android intent URL: ' + intentUrl.substring(0, 100) + '...');
 
-                // Try App Links first (preferred method)
-                window.location.href = deepLinkUrl;
+                // Use intent URL first - this works better from OAuth browser
+                window.location.href = intentUrl;
 
-                // Fallback to intent after a delay
+                // Also try custom scheme as backup
                 setTimeout(() => {
-                    const intentUrl = `intent://mealscrape.com/auth/callback?${queryString}#Intent;scheme=https;package=com.mealscrape.app;end`;
-                    log('Fallback to intent: ' + intentUrl.substring(0, 100) + '...');
-                    window.location.href = intentUrl;
-                }, 1000);
+                    const customSchemeUrl = `com.mealscrape.app://auth/callback?${queryString}`;
+                    log('Trying custom scheme: ' + customSchemeUrl.substring(0, 100) + '...');
+                    window.location.href = customSchemeUrl;
+                }, 500);
 
+                // Show manual button quickly
                 setTimeout(() => {
-                    statusEl.textContent = 'If the app didn\'t open, please make sure MealScrape is installed.';
-                    instructionsEl.textContent = 'You can close this page and open the MealScrape app manually to complete sign in.';
-                }, 3000);
+                    spinnerEl.style.display = 'none';
+                    openAppBtn.classList.add('visible');
+                    statusEl.textContent = 'Tap below to open the app';
+                    instructionsEl.textContent = 'If the app didn\'t open automatically, tap the button to continue.';
+                }, 1500);
             } else if (isIOS()) {
                 // For iOS, use custom scheme
                 const deepLinkUrl = `mealscrape://auth/callback?${queryString}`;
@@ -289,9 +294,17 @@
                     instructionsEl.textContent = 'You can close this page and open the MealScrape app manually to complete sign in.';
                 }, 2000);
             } else {
-                log('Not mobile device');
-                statusEl.textContent = 'Please open this link on your mobile device.';
-                instructionsEl.textContent = 'Copy this URL and open it in the MealScrape app on your phone.';
+                // Desktop: Redirect back to main app with tokens
+                log('Desktop device - redirecting to main app');
+                statusEl.textContent = 'Redirecting you back to MealScrape...';
+
+                // Redirect to main app with tokens in URL
+                const redirectUrl = `/auth/callback?${queryString}`;
+                log('Redirecting to: ' + redirectUrl);
+
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 500);
             }
         }
 
@@ -301,7 +314,7 @@
 
             // Show debug info during development
             // Comment this out in production
-            debugEl.classList.add('visible');
+            // debugEl.classList.add('visible'); // DISABLED FOR PRODUCTION
 
             const tokens = getTokensFromUrl();
 
@@ -316,8 +329,8 @@
                 return;
             }
 
-            if (!tokens.access_token) {
-                log('No access token found!');
+            if (!tokens.access_token && !tokens.code) {
+                log('No access token or authorization code found!');
                 titleEl.textContent = 'Redirecting';
                 statusEl.textContent = 'Attempting to open the app...';
                 spinnerEl.style.display = 'none';
@@ -331,8 +344,12 @@
                 return;
             }
 
-            // We have tokens! Redirect to app
-            log('Tokens found, redirecting to app...');
+            // We have tokens or authorization code! Redirect to app
+            if (tokens.code) {
+                log('Authorization code found (PKCE flow), redirecting to app...');
+            } else {
+                log('Access token found (implicit flow), redirecting to app...');
+            }
             if (isAndroid() || isIOS()) {
                 statusEl.textContent = 'Opening MealScrape app...';
 
@@ -347,11 +364,17 @@
                     instructionsEl.textContent = 'Tap the button above to open MealScrape and complete sign in.';
                 }, 3000);
             } else {
-                log('Not on mobile');
+                // Desktop: Redirect back to main app
+                log('Desktop - redirecting to main app');
                 titleEl.textContent = 'Sign In Successful';
-                statusEl.textContent = 'Please open this page on your mobile device.';
-                spinnerEl.style.display = 'none';
-                instructionsEl.textContent = 'Copy this URL and paste it in your mobile browser, or open the MealScrape app directly.';
+                statusEl.textContent = 'Redirecting you back to MealScrape...';
+
+                const queryString = buildDeepLinkUrl(tokens);
+                const redirectUrl = `/auth/callback?${queryString}`;
+
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 1000);
             }
         }
 
