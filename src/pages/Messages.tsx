@@ -688,18 +688,8 @@ useEffect(() => {
       <div className="fixed top-14 sm:top-16 left-0 right-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-sm lg:max-w-md mx-auto">
         <div className="flex items-center gap-3 px-4 py-3">
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
-          <h1 className="text-xl font-bold">
-            {onBack ? 'Social Feed' : 'Messages'}
-          </h1>
-        </div>
+  <h1 className="text-xl font-bold">Messages</h1>
+</div>
 
         {/* Search Bar */}
         <div className="px-4 pb-3">
