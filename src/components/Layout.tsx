@@ -469,7 +469,7 @@ style={{ minWidth: '45px', minHeight: '44px' }}
   className="relative -mt-3 flex items-center justify-center bg-gradient-to-br from-orange-500 to-red-600 rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95 touch-manipulation"
   style={{ width: '48px', height: '48px' }}
 >
-  <Camera className="w-5 h-5 text-white" strokeWidth={2.5} />
+  <Camera className="w-6 h-6 text-white" strokeWidth={2.5} />
 </button>
 
       {/* Profile */}
