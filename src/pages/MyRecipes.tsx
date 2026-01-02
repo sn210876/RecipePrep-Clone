@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRecipes } from '../context/RecipeContext';
 import { RecipeCard } from '../components/RecipeCard';
 import { BookmarkCheck, ChefHat, Search } from 'lucide-react';
@@ -8,10 +8,27 @@ import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 export function MyRecipes() {
-  const { state } = useRecipes();
+  const { state, syncRecipesFromCloud } = useRecipes();
   const [cookingRecipe, setCookingRecipe] = useState<Recipe | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<string>('all');
+
+  // Sync recipes when component mounts
+  useEffect(() => {
+    console.log('[MyRecipes] Component mounted, syncing recipes from cloud...');
+    syncRecipesFromCloud();
+  }, []);
+
+  // Listen for refresh event from AddRecipe page
+  useEffect(() => {
+    const handleRefresh = () => {
+      console.log('[MyRecipes] Refresh event received, syncing from cloud...');
+      syncRecipesFromCloud();
+    };
+
+    window.addEventListener('refresh-my-recipes', handleRefresh);
+    return () => window.removeEventListener('refresh-my-recipes', handleRefresh);
+  }, [syncRecipesFromCloud]);
 
   const filteredRecipes = useMemo(() => {
     let filtered = state.savedRecipes;

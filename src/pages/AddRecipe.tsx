@@ -928,9 +928,13 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
       // 9. Dispatch event to refresh Discover page
       window.dispatchEvent(new CustomEvent('recipe-created'));
 
-      // 10. Navigate to my recipes
+      // 10. Navigate to my recipes and trigger refresh
       if (onNavigate) {
         onNavigate('my-recipes');
+        // Force refresh of recipes from cloud after navigation
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('refresh-my-recipes'));
+        }, 100);
       }
     } catch (error: any) {
       console.error('[AddRecipe] Recipe creation failed:', error);
