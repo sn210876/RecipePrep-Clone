@@ -61,7 +61,7 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
        baseNavItems[baseNavItems.length - 1]]
     : baseNavItems;
 
-  const socialPages = ['discover', 'upload', 'profile', 'add-recipe'];
+  const socialPages = ['discover', 'upload', 'profile', 'messages', 'add-recipe'];
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
