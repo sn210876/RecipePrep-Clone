@@ -67,8 +67,22 @@ function AppContent() {
       });
     }
 
+    const RENDER_SERVER = import.meta.env.VITE_API_URL || 'https://recipe-backend-nodejs-1.onrender.com';
+    const pingServer = async () => {
+      try {
+        await fetch(`${RENDER_SERVER}/api/health`, { method: 'GET' });
+        console.log('✅ Server keep-alive ping sent');
+      } catch (error) {
+        console.log('⚠️ Server ping failed (expected if server is cold)');
+      }
+    };
+
+    pingServer();
+    const keepAliveInterval = setInterval(pingServer, 5 * 60 * 1000);
+
     return () => {
       errorHandler.info('App', '🧹 AppContent unmounting');
+      clearInterval(keepAliveInterval);
     };
   }, []);
 

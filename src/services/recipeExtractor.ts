@@ -62,9 +62,9 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 if (isSocial) {
   try {
     console.log('[Extractor] Sending to Render server:', url);
-    
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 50000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
     const response = await fetch(RENDER_SERVER, {
       method: 'POST',
@@ -454,7 +454,7 @@ async function extractFromRenderServer(url: string): Promise<ExtractedRecipeData
   console.log('[Extractor] Sending to Render server for audio extraction:', url);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 90000);
 
   try {
     const response = await fetch(RENDER_SERVER, {
