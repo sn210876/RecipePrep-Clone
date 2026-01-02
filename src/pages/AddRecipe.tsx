@@ -1152,6 +1152,23 @@ return (
   </Button>
 </div>
 
+            {/* Create Recipe Button - Sticky */}
+            <div className="sticky top-0 z-10 pt-3">
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const form = document.querySelector('form');
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                  }
+                }}
+                className="w-auto mx-auto bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 text-sm font-semibold shadow-md rounded-full transition-all transform active:scale-95 block"
+              >
+                {isEditMode ? 'Update Recipe' : 'Create Recipe'}
+              </Button>
+            </div>
+
             {/* Instructions moved below the action buttons */}
             <div className="mt-4 pt-4 border-t border-slate-200">
               <div className="space-y-2 text-xs leading-relaxed">
@@ -1346,6 +1363,23 @@ return (
               </Button>
             </div>
 
+            {/* Create Recipe Button - Sticky */}
+            <div className="sticky top-0 z-10 pt-3">
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const form = document.querySelector('form');
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                  }
+                }}
+                className="w-auto mx-auto bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 text-sm font-semibold shadow-md rounded-full transition-all transform active:scale-95 block"
+              >
+                {isEditMode ? 'Update Recipe' : 'Create Recipe'}
+              </Button>
+            </div>
+
             {/* Image Upload Section */}
             <div className="space-y-3 pt-3 border-t border-purple-200">
               <div>
@@ -1502,6 +1536,23 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
                   )}
                 </Button>
               )}
+            </div>
+
+            {/* Create Recipe Button - Sticky */}
+            <div className="sticky top-0 z-10 pt-3">
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const form = document.querySelector('form');
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                  }
+                }}
+                className="w-auto mx-auto bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 text-sm font-semibold shadow-md rounded-full transition-all transform active:scale-95 block"
+              >
+                {isEditMode ? 'Update Recipe' : 'Create Recipe'}
+              </Button>
             </div>
 
             <div className="mt-4 pt-4 border-t border-emerald-200">
@@ -1928,7 +1979,23 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
               />
             </CardContent>
           </Card>
-         
+
+          {/* Create Recipe Button - Sticky */}
+          <div className="sticky top-0 z-10 pt-3 pb-6">
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                const form = document.querySelector('form');
+                if (form) {
+                  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                }
+              }}
+              className="w-auto mx-auto bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 text-sm font-semibold shadow-md rounded-full transition-all transform active:scale-95 block"
+            >
+              {isEditMode ? 'Update Recipe' : 'Create Recipe'}
+            </Button>
+          </div>
 
         {/* Preview Dialog - Mobile optimized */}
         <Dialog open={showPreview} onOpenChange={setShowPreview}>
@@ -2076,25 +2143,6 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
 
           </form>
           )}
-
-        {/* RECIPE ACTION BUTTON - Fixed footer on mobile (above nav), sticky on desktop */}
-        <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 z-[150] lg:z-10 pointer-events-none">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center pointer-events-auto">
-            <Button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                const form = document.querySelector('form');
-                if (form) {
-                  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-                }
-              }}
-              className="w-full max-w-md bg-orange-500 hover:bg-orange-600 text-white px-8 h-14 text-lg font-bold shadow-lg rounded-full transition-all transform active:scale-95"
-            >
-              {isEditMode ? 'Update Recipe' : 'Create Recipe'}
-            </Button>
-        </div>
-        </div>
           </div>
         </div>
       </div>
