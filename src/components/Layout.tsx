@@ -500,7 +500,7 @@ style={{ minWidth: '45px', minHeight: '44px' }}
                 : 'bg-gray-100'
             }`}>
               <User 
-                className="w-3.5 h-3.5" {/* Changed from w-4 h-4 */}
+                className="w-3.5 h-3.5" 
                 strokeWidth={currentPage === 'profile' ? 2.5 : 2} 
               />
             </div>
