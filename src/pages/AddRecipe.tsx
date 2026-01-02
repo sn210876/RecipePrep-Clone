@@ -676,11 +676,6 @@ export function AddRecipe({ onNavigate }: AddRecipeProps = {}) {
     toast.success('Recipe loaded! Edit any details as needed.');
   };
 
-  const handleCancelExtraction = () => {
-    setShowPreview(false);
-    setExtractedData(null);
-  };
-
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
@@ -2065,19 +2060,11 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
             )}
 
           <DialogFooter className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 md:p-6 flex flex-col sm:flex-row justify-center items-center gap-3 shadow-2xl z-50">
-  <div className="w-full max-w-md flex flex-col sm:flex-row gap-3">
-    <Button
-      type="button"
-      variant="outline"
-      onClick={handleCancelExtraction}
-      className="w-full sm:w-auto px-8 h-12 sm:h-14 text-base font-semibold rounded-full border-2 hover:bg-gray-50 active:scale-95 transition-transform"
-    >
-      Cancel
-    </Button>
+  <div className="w-full max-w-md flex justify-center">
     <Button
       type="button"
       onClick={handleAcceptExtraction}
-      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-12 h-12 sm:h-14 text-base font-semibold rounded-full shadow-lg active:scale-95 transition-transform"
+      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-12 h-14 text-lg font-bold rounded-full shadow-lg active:scale-95 transition-transform"
     >
       Use This Recipe
     </Button>
@@ -2090,19 +2077,9 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
           </form>
           )}
 
-        {/* RECIPE ACTION BUTTONS - Fixed footer on mobile (above nav), sticky on desktop */}
+        {/* RECIPE ACTION BUTTON - Fixed footer on mobile (above nav), sticky on desktop */}
         <div className="fixed bottom-[80px] lg:sticky lg:bottom-0 left-0 right-0 z-[150] lg:z-10 pointer-events-none">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center gap-3 pointer-events-auto">
-            {onNavigate && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onNavigate('my-recipes')}
-                className="bg-white shadow-md border-2 border-gray-300 hover:bg-gray-50 px-6 h-12 text-base font-semibold rounded-full"
-              >
-                Cancel
-              </Button>
-            )}
+          <div className="max-w-4xl mx-auto px-4 py-3 flex justify-center items-center pointer-events-auto">
             <Button
               type="button"
               onClick={(e) => {
@@ -2112,7 +2089,7 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
                   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
                 }
               }}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 h-12 text-base font-semibold shadow-lg rounded-full transition-all transform active:scale-95"
+              className="w-full max-w-md bg-orange-500 hover:bg-orange-600 text-white px-8 h-14 text-lg font-bold shadow-lg rounded-full transition-all transform active:scale-95"
             >
               {isEditMode ? 'Update Recipe' : 'Create Recipe'}
             </Button>
