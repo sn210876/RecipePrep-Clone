@@ -1036,7 +1036,7 @@ return (
               />
             </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-1">
   <Button
     type="button"
     onClick={async () => {
@@ -1153,7 +1153,7 @@ return (
 </div>
 
             {/* Create Recipe Button - Sticky */}
-            <div className="sticky top-0 z-10 pt-3">
+            <div className="sticky top-0 z-10 pt-2">
               <Button
                 type="button"
                 onClick={(e) => {
@@ -1170,7 +1170,7 @@ return (
             </div>
 
             {/* Instructions moved below the action buttons */}
-            <div className="mt-4 pt-4 border-t border-slate-200">
+            <div className="mt-2 pt-2 border-t border-slate-200">
               <div className="space-y-2 text-xs leading-relaxed">
                 {/* Underlined solid black INSTRUCTIONS */}
                 <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
@@ -1253,7 +1253,7 @@ return (
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Button
                 type="button"
                 onClick={async () => {
@@ -1364,7 +1364,7 @@ return (
             </div>
 
             {/* Create Recipe Button - Sticky */}
-            <div className="sticky top-0 z-10 pt-3">
+            <div className="sticky top-0 z-10 pt-2">
               <Button
                 type="button"
                 onClick={(e) => {
@@ -1381,7 +1381,7 @@ return (
             </div>
 
             {/* Image Upload Section */}
-            <div className="space-y-3 pt-3 border-t border-purple-200">
+            <div className="space-y-3 pt-2 border-t border-purple-200">
               <div>
                 <Label className="text-sm font-medium flex items-center gap-2">
                   <ImageIcon className="w-4 h-4" />
@@ -1504,7 +1504,7 @@ return (
               id="photo-upload"
             />
 
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Button
                 type="button"
                 onClick={() => document.getElementById('photo-upload')?.click()}
@@ -1539,7 +1539,7 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
             </div>
 
             {/* Create Recipe Button - Sticky */}
-            <div className="sticky top-0 z-10 pt-3">
+            <div className="sticky top-0 z-10 pt-2">
               <Button
                 type="button"
                 onClick={(e) => {
@@ -1555,7 +1555,7 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
               </Button>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-emerald-200">
+            <div className="mt-2 pt-2 border-t border-emerald-200">
               <div className="space-y-2 text-xs leading-relaxed">
                 <p className="font-bold text-black pb-0.5 border-b-2 border-black inline-block">
                   WHAT YOU CAN SCAN
@@ -1981,7 +1981,7 @@ className="flex-1 h-12 border-2 border-emerald-600 text-emerald-600 hover:bg-eme
           </Card>
 
           {/* Create Recipe Button - Sticky */}
-          <div className="sticky top-0 z-10 pt-3 pb-6">
+          <div className="sticky top-0 z-10 pt-2 pb-6">
             <Button
               type="button"
               onClick={(e) => {
