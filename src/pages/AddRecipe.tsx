@@ -1043,11 +1043,83 @@ return (
     onClick={async () => {
       try {
         const text = await navigator.clipboard.readText();
-        setUrlInput(text);
-        toast.success('Pasted! Scraping...');
-        setTimeout(() => {
-          handleUrlExtract();
-        }, 100);
+        const trimmedText = text.trim();
+
+        if (!trimmedText) {
+          toast.error('Clipboard is empty. Copy a URL first.');
+          return;
+        }
+
+        if (!isValidUrl(trimmedText)) {
+          toast.error('Please copy a valid URL');
+          return;
+        }
+
+        setUrlInput(trimmedText);
+
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+        const isImageUrl = imageExtensions.some(ext => trimmedText.toLowerCase().includes(ext));
+
+        if (isImageUrl) {
+          toast.error('Please paste a recipe page URL, not a direct image link.');
+          return;
+        }
+
+        setIsExtracting(true);
+
+        try {
+          toast.loading('Extracting recipe...', { id: 'extract' });
+          const data = await extractRecipeFromUrl(trimmedText);
+
+          const isSocialMedia = trimmedText.includes('instagram.com') || trimmedText.includes('tiktok.com');
+          const hasNoIngredients = !data.ingredients || data.ingredients.length === 0;
+          const hasNoInstructions = !data.instructions || data.instructions.length === 0;
+
+          if (isSocialMedia && (hasNoIngredients || hasNoInstructions)) {
+            toast.info('This post has limited recipe details. Switch to "Paste Video Description" tab and manually add the recipe ingredients and instructions you see in the video!', {
+              id: 'extract',
+              duration: 6000
+            });
+          } else {
+            toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
+          }
+
+          populateFormWithExtractedData(data, trimmedText);
+          setIsExtracting(false);
+        } catch (error: any) {
+          if (error.message.includes('waking up')) {
+            toast.info('Server starting up... retrying in 30 seconds', { id: 'extract', duration: 30000 });
+
+            setTimeout(async () => {
+              try {
+                toast.loading('Retrying extraction...', { id: 'extract' });
+                const data = await extractRecipeFromUrl(trimmedText);
+
+                const isSocialMedia = trimmedText.includes('instagram.com') || trimmedText.includes('tiktok.com');
+                const hasNoIngredients = !data.ingredients || data.ingredients.length === 0;
+                const hasNoInstructions = !data.instructions || data.instructions.length === 0;
+
+                if (isSocialMedia && (hasNoIngredients || hasNoInstructions)) {
+                  toast.info('This post has limited recipe details. Switch to "Paste Video Description" tab and manually add the recipe ingredients and instructions you see in the video!', {
+                    id: 'extract',
+                    duration: 6000
+                  });
+                } else {
+                  toast.success('Recipe extracted! Review and edit before saving.', { id: 'extract', duration: 2000 });
+                }
+
+                populateFormWithExtractedData(data, trimmedText);
+                setIsExtracting(false);
+              } catch (retryError: any) {
+                toast.error(retryError.message || 'Failed to extract recipe after retry', { id: 'extract' });
+                setIsExtracting(false);
+              }
+            }, 30000);
+          } else {
+            toast.error(error.message || 'Failed to extract recipe', { id: 'extract' });
+            setIsExtracting(false);
+          }
+        }
       } catch (err) {
         toast.error('Failed to paste. Copy a URL first.');
       }
@@ -1171,11 +1243,76 @@ return (
                 onClick={async () => {
                   try {
                     const text = await navigator.clipboard.readText();
-                    setDescriptionInput(text);
-                    toast.success('Pasted! Scraping...');
-                    setTimeout(() => {
-                      handleDescriptionExtract();
-                    }, 100);
+                    const trimmedText = text.trim();
+
+                    if (!trimmedText) {
+                      toast.error('Clipboard is empty. Copy text first.');
+                      return;
+                    }
+
+                    setDescriptionInput(trimmedText);
+                    setIsExtractingFromDescription(true);
+
+                    try {
+                      toast.loading('Extracting recipe from description...', { id: 'extract-desc' });
+
+                      const RENDER_SERVER = import.meta.env.VITE_API_URL || 'https://recipe-backend-nodejs-1.onrender.com';
+                      const response = await fetch(`${RENDER_SERVER}/extract-manual-description`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          title: videoTitle.trim() || '',
+                          description: trimmedText,
+                          thumbnail: '',
+                          channelTitle: '',
+                        }),
+                      });
+
+                      if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('[Description Extract] Error:', errorText);
+                        throw new Error('Failed to scrape recipe from description');
+                      }
+
+                      const data = await response.json();
+
+                      const extractedRecipe: ExtractedRecipeData = {
+                        title: data.title || videoTitle.trim() || 'Recipe from Video',
+                        description: data.description || '',
+                        creator: data.creator || 'Unknown',
+                        ingredients: data.ingredients.map((ing: string) => {
+                          const parts = ing.split(' ');
+                          return {
+                            quantity: parts[0] || '',
+                            unit: parts[1] || 'piece',
+                            name: parts.slice(2).join(' ') || ing
+                          };
+                        }),
+                        instructions: data.instructions || [],
+                        prepTime: String(data.prep_time || 15),
+                        cookTime: String(data.cook_time || 30),
+                        servings: String(data.servings || 4),
+                        cuisineType: data.cuisineType || 'Global',
+                        difficulty: data.difficulty || 'Medium',
+                        mealTypes: ['Dinner'],
+                        dietaryTags: data.dietaryTags || [],
+                        imageUrl: data.image || data.imageUrl || '',
+                        videoUrl: '',
+                        notes: data.notes || '',
+                        sourceUrl: '',
+                      };
+
+                      toast.success('Recipe extracted from description! Review and edit before saving.', { id: 'extract-desc', duration: 2000 });
+                      populateFormWithExtractedData(extractedRecipe, '');
+                      setIsExtractingFromDescription(false);
+
+                      setDescriptionInput('');
+                      setVideoTitle('');
+                    } catch (error: any) {
+                      console.error('[Description Extract] Error:', error);
+                      toast.error(error.message || 'Failed to scrape recipe from description.', { id: 'extract-desc' });
+                      setIsExtractingFromDescription(false);
+                    }
                   } catch (err) {
                     toast.error('Failed to paste. Copy text first.');
                   }
