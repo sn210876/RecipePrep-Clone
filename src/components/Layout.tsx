@@ -506,7 +506,7 @@ style={{ minWidth: '45px', minHeight: '44px' }}
             </div>
           )}
         </div>
-        <span className="text-[9px] font-medium">Profile</span> {/* Changed from text-[10px] */}
+        <span className="text-[9px] font-medium">Profile</span> 
       </button>
       </div>
     </div>
