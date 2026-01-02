@@ -454,7 +454,7 @@ style={{ minWidth: '45px', minHeight: '44px' }}
             ? 'text-orange-500 scale-110' 
             : 'text-gray-600'
         }`}
-        style={{ minWidth: '45px', minHeight: '44px' }} {/* Reduced from 50px/48px */}
+        style={{ minWidth: '45px', minHeight: '44px' }} 
       >
         <UtensilsCrossed 
           className="w-5 h-5" {/* Changed from w-6 h-6 */}
@@ -480,7 +480,7 @@ style={{ minWidth: '45px', minHeight: '44px' }}
             ? 'text-orange-600 scale-110' 
             : 'text-gray-600'
         }`}
-        style={{ minWidth: '45px', minHeight: '44px' }} {/* Reduced from 50px/48px */}
+        style={{ minWidth: '45px', minHeight: '44px' }} 
       >
         <div className="relative">
           {avatarUrl ? (
