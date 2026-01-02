@@ -202,6 +202,61 @@ function AppContent() {
   }, []);
 
   // Mobile app initialization
+  // Handle OAuth callback on web (desktop)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() && window.location.pathname === '/auth/callback') {
+      errorHandler.info('App', '🌐 Web OAuth callback detected');
+
+      const searchParams = new URLSearchParams(window.location.search);
+      const hasCode = searchParams.has('code');
+      const code = searchParams.get('code');
+      const hasError = searchParams.has('error');
+      const errorDescription = searchParams.get('error_description');
+
+      // Handle OAuth errors
+      if (hasError) {
+        const errorMsg = searchParams.get('error');
+        errorHandler.error('App', '❌ OAuth error:', errorMsg);
+        localStorage.removeItem('oauth_in_progress');
+        localStorage.setItem('oauth_error', errorDescription || 'OAuth authentication failed');
+        window.history.replaceState({}, '', '/');
+        return;
+      }
+
+      // Handle PKCE flow
+      if (hasCode && code) {
+        errorHandler.info('App', '🔑 Web PKCE code detected, exchanging...');
+        setOauthExchangeInProgress(true);
+
+        supabase.auth.exchangeCodeForSession(code)
+          .then(({ data, error }) => {
+            if (error) {
+              errorHandler.error('App', '❌ Code exchange failed:', error);
+              localStorage.removeItem('oauth_in_progress');
+              localStorage.setItem('oauth_error', error.message);
+              setOauthExchangeInProgress(false);
+              window.history.replaceState({}, '', '/');
+            } else if (data.session) {
+              errorHandler.info('App', '✅ Web OAuth successful!');
+              localStorage.removeItem('oauth_in_progress');
+
+              setTimeout(() => {
+                setOauthExchangeInProgress(false);
+                window.history.replaceState({}, '', '/discover');
+                setCurrentPage('discover');
+              }, 1000);
+            }
+          })
+          .catch((error) => {
+            errorHandler.error('App', '❌ Exception during code exchange:', error);
+            localStorage.removeItem('oauth_in_progress');
+            setOauthExchangeInProgress(false);
+            window.history.replaceState({}, '', '/');
+          });
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const initializeMobileApp = async () => {
       if (Capacitor.isNativePlatform()) {

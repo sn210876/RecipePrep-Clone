@@ -294,9 +294,17 @@
                     instructionsEl.textContent = 'You can close this page and open the MealScrape app manually to complete sign in.';
                 }, 2000);
             } else {
-                log('Not mobile device');
-                statusEl.textContent = 'Please open this link on your mobile device.';
-                instructionsEl.textContent = 'Copy this URL and open it in the MealScrape app on your phone.';
+                // Desktop: Redirect back to main app with tokens
+                log('Desktop device - redirecting to main app');
+                statusEl.textContent = 'Redirecting you back to MealScrape...';
+
+                // Redirect to main app with tokens in URL
+                const redirectUrl = `/auth/callback?${queryString}`;
+                log('Redirecting to: ' + redirectUrl);
+
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 500);
             }
         }
 
@@ -306,7 +314,7 @@
 
             // Show debug info during development
             // Comment this out in production
-            debugEl.classList.add('visible');
+            // debugEl.classList.add('visible'); // DISABLED FOR PRODUCTION
 
             const tokens = getTokensFromUrl();
 
@@ -356,11 +364,17 @@
                     instructionsEl.textContent = 'Tap the button above to open MealScrape and complete sign in.';
                 }, 3000);
             } else {
-                log('Not on mobile');
+                // Desktop: Redirect back to main app
+                log('Desktop - redirecting to main app');
                 titleEl.textContent = 'Sign In Successful';
-                statusEl.textContent = 'Please open this page on your mobile device.';
-                spinnerEl.style.display = 'none';
-                instructionsEl.textContent = 'Copy this URL and paste it in your mobile browser, or open the MealScrape app directly.';
+                statusEl.textContent = 'Redirecting you back to MealScrape...';
+
+                const queryString = buildDeepLinkUrl(tokens);
+                const redirectUrl = `/auth/callback?${queryString}`;
+
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 1000);
             }
         }
 
