@@ -32,32 +32,18 @@ const openai = new OpenAI({
 
 const tempDir = path.join(process.cwd(), 'temp');
 
-// Find yt-dlp in local bin directory first, then system path
+// Find yt-dlp in system path or local bin directory
 function getYtDlpPath() {
-  // Try local bin first (this is where build.sh installs it)
   const localPath = path.join(process.cwd(), 'bin', 'yt-dlp');
-  
   try {
-    const fsSync = require('fs');
-    if (fsSync.existsSync(localPath)) {
-      // Verify it's executable
-      try {
-        fsSync.accessSync(localPath, fsSync.constants.X_OK);
-        console.log('✅ Found yt-dlp at:', localPath);
-        return localPath;
-      } catch (execError) {
-        console.warn('⚠️  Found yt-dlp but not executable:', localPath);
-      }
-    } else {
-      console.log('⚠️  Local yt-dlp not found at:', localPath);
+    // Check if local version exists
+    if (require('fs').existsSync(localPath)) {
+      return localPath;
     }
   } catch (e) {
-    console.warn('⚠️  Error checking for local yt-dlp:', e.message);
+    // Ignore error, fall back to system yt-dlp
   }
-  
-  // Fall back to system PATH
-  console.log('⚠️  Using system PATH yt-dlp (may not exist)');
-  return 'yt-dlp';
+  return 'yt-dlp'; // Use system PATH
 }
 
 const ytDlpCmd = getYtDlpPath();
