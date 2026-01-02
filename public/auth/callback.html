@@ -262,25 +262,27 @@
             const queryString = buildDeepLinkUrl(tokens);
 
             if (isAndroid()) {
-                // For Android, use https scheme with App Links
-                // The app should handle this via appUrlOpen listener
-                const deepLinkUrl = `https://mealscrape.com/auth/callback?${queryString}`;
-                log('Android deep link: ' + deepLinkUrl.substring(0, 100) + '...');
+                // For Android, use intent URL immediately (more reliable from OAuth browser)
+                const intentUrl = `intent://mealscrape.com/auth/callback?${queryString}#Intent;scheme=https;package=com.mealscrape.app;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.mealscrape.app;end`;
+                log('Android intent URL: ' + intentUrl.substring(0, 100) + '...');
 
-                // Try App Links first (preferred method)
-                window.location.href = deepLinkUrl;
+                // Use intent URL first - this works better from OAuth browser
+                window.location.href = intentUrl;
 
-                // Fallback to intent after a delay
+                // Also try custom scheme as backup
                 setTimeout(() => {
-                    const intentUrl = `intent://mealscrape.com/auth/callback?${queryString}#Intent;scheme=https;package=com.mealscrape.app;end`;
-                    log('Fallback to intent: ' + intentUrl.substring(0, 100) + '...');
-                    window.location.href = intentUrl;
-                }, 1000);
+                    const customSchemeUrl = `com.mealscrape.app://auth/callback?${queryString}`;
+                    log('Trying custom scheme: ' + customSchemeUrl.substring(0, 100) + '...');
+                    window.location.href = customSchemeUrl;
+                }, 500);
 
+                // Show manual button quickly
                 setTimeout(() => {
-                    statusEl.textContent = 'If the app didn\'t open, please make sure MealScrape is installed.';
-                    instructionsEl.textContent = 'You can close this page and open the MealScrape app manually to complete sign in.';
-                }, 3000);
+                    spinnerEl.style.display = 'none';
+                    openAppBtn.classList.add('visible');
+                    statusEl.textContent = 'Tap below to open the app';
+                    instructionsEl.textContent = 'If the app didn\'t open automatically, tap the button to continue.';
+                }, 1500);
             } else if (isIOS()) {
                 // For iOS, use custom scheme
                 const deepLinkUrl = `mealscrape://auth/callback?${queryString}`;
