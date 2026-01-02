@@ -38,7 +38,7 @@ fi
 
 # Install npm dependencies
 echo "📦 Installing npm dependencies..."
-npm ci --only=production
+npm ci
 
 # Build frontend
 echo "🏗️  Building frontend..."

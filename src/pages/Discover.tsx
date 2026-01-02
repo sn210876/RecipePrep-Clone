@@ -131,7 +131,7 @@ export function Discover({ onNavigateToMessages, onNavigate: _onNavigate, shared
   const [searchResults, setSearchResults] = useState<Array<{ id: string; username: string; avatar_url: string | null }>>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const [filterHashtag, setFilterHashtag] = useState<string | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
