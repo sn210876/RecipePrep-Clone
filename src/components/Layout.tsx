@@ -419,7 +419,6 @@ const loadUnreadCount = async (userId: string) => {
   <div className="absolute inset-0 bg-white -bottom-0"></div>
 <div className="relative bg-white border-t border-gray-200 shadow-lg pb-[calc(env(safe-area-inset-bottom)+8px)]">
     <div className="max-w-lg mx-auto px-4 py-1.5">
-    <div className="max-w-lg mx-auto px-4 py-3">
       <div className="flex items-center justify-around">
       
       {/* Messages with Badge */}
