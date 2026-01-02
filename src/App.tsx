@@ -50,6 +50,7 @@ function AppContent() {
   const { user, loading, isEmailVerified } = useAuth();
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [oauthExchangeInProgress, setOauthExchangeInProgress] = useState(false);
   const [envError, setEnvError] = useState<{
     message: string;
     details: string[];
@@ -285,6 +286,7 @@ function AppContent() {
           if (hasCode && code) {
             errorHandler.info('App', '🔑 PKCE authorization code detected!');
             errorHandler.info('App', '🔄 Exchanging code for session...');
+            setOauthExchangeInProgress(true);
 
             try {
               const { data, error } = await supabase.auth.exchangeCodeForSession(code);
@@ -293,6 +295,7 @@ function AppContent() {
                 errorHandler.error('App', '❌ Code exchange failed:', error);
                 localStorage.removeItem('oauth_in_progress');
                 localStorage.setItem('oauth_error', error.message);
+                setOauthExchangeInProgress(false);
                 window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
                   detail: { success: false, error: error.message }
                 }));
@@ -304,6 +307,12 @@ function AppContent() {
 
                 localStorage.removeItem('oauth_in_progress');
                 errorHandler.info('App', '📢 Dispatching oauth-callback-complete event');
+
+                // Wait a bit for AuthContext to update before clearing the flag
+                setTimeout(() => {
+                  setOauthExchangeInProgress(false);
+                }, 1000);
+
                 window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
                   detail: { success: true }
                 }));
@@ -311,6 +320,7 @@ function AppContent() {
                 errorHandler.error('App', '❌ No session returned from code exchange');
                 localStorage.removeItem('oauth_in_progress');
                 localStorage.setItem('oauth_error', 'No session returned from code exchange');
+                setOauthExchangeInProgress(false);
                 window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
                   detail: { success: false, error: 'No session returned' }
                 }));
@@ -319,6 +329,7 @@ function AppContent() {
               errorHandler.error('App', '❌ Exception during code exchange:', error);
               localStorage.removeItem('oauth_in_progress');
               localStorage.setItem('oauth_error', error instanceof Error ? error.message : 'Unknown error');
+              setOauthExchangeInProgress(false);
               window.dispatchEvent(new CustomEvent('oauth-callback-complete', {
                 detail: { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
               }));
@@ -650,8 +661,8 @@ function AppContent() {
     }
   };
 
-  // Beautiful hourglass while loading or checking email
-if (loading || (user && isEmailVerified === undefined)) {
+  // Beautiful hourglass while loading, checking email, or during OAuth code exchange
+if (loading || (user && isEmailVerified === undefined) || oauthExchangeInProgress) {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
         <div className="text-center">
@@ -723,8 +734,8 @@ if (loading || (user && isEmailVerified === undefined)) {
   }
 
   // Show auth form if not logged in and trying to access protected content OR if showAuthPrompt is true
-  // But DON'T show it if we're still loading (session might be restoring)
-  if ((!user && !isPublicPage && !loading) || showAuthPrompt) return <AuthForm />;
+  // But DON'T show it if we're still loading (session might be restoring) or if OAuth exchange is in progress
+  if (((!user && !isPublicPage && !loading) || showAuthPrompt) && !oauthExchangeInProgress) return <AuthForm />;
   // Only check email verification if user is logged in and not on public pages
   if (user && !isEmailVerified && !isPublicPage) return <VerifyEmail />;
 
