@@ -33,21 +33,43 @@ const openai = new OpenAI({
 const tempDir = path.join(process.cwd(), 'temp');
 
 // Find yt-dlp in system path or local bin directory
-function getYtDlpPath() {
-  const localPath = path.join(process.cwd(), 'bin', 'yt-dlp');
-  try {
-    // Check if local version exists
-    if (require('fs').existsSync(localPath)) {
-      return localPath;
+async function getYtDlpPath() {
+  // Try multiple possible paths
+  const possiblePaths = [
+    path.join(process.cwd(), 'bin', 'yt-dlp'),
+    './bin/yt-dlp',
+    '/opt/render/project/bin/yt-dlp',
+  ];
+
+  for (const testPath of possiblePaths) {
+    try {
+      await fs.access(testPath);
+      console.log('✅ Found yt-dlp at:', testPath);
+      return testPath;
+    } catch (e) {
+      // Path doesn't exist, try next
     }
-  } catch (e) {
-    // Ignore error, fall back to system yt-dlp
   }
+
+  console.log('⚠️  Local yt-dlp not found, using system PATH');
   return 'yt-dlp'; // Use system PATH
 }
 
-const ytDlpCmd = getYtDlpPath();
+let ytDlpCmd = await getYtDlpPath();
 console.log('🔍 Using yt-dlp at:', ytDlpCmd);
+
+// Verify yt-dlp is accessible
+try {
+  if (ytDlpCmd !== 'yt-dlp') {
+    await fs.access(ytDlpCmd, fs.constants.X_OK);
+    console.log('✅ yt-dlp is executable');
+  }
+  const { stdout } = await execPromise(`${ytDlpCmd} --version`);
+  console.log('✅ yt-dlp version:', stdout.trim());
+} catch (error) {
+  console.error('⚠️  WARNING: yt-dlp verification failed:', error.message);
+  console.error('⚠️  Video extraction will not work until yt-dlp is available');
+}
 
 async function ensureTempDir() {
   try {
@@ -626,5 +648,10 @@ await ensureTempDir();
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log('================================================');
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📁 Working directory: ${process.cwd()}`);
+  console.log(`🔧 yt-dlp command: ${ytDlpCmd}`);
+  console.log(`📂 Temp directory: ${tempDir}`);
+  console.log('================================================');
 });
