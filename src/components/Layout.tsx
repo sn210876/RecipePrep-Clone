@@ -430,7 +430,7 @@ const loadUnreadCount = async (userId: string) => {
             ? 'text-cyan-500 scale-110' 
             : 'text-gray-600'
         }`}
-        style={{ minWidth: '45px', minHeight: '44px' }} {/* Reduced from 50px/48px */}
+style={{ minWidth: '45px', minHeight: '44px' }}
       >
         <div className="relative">
           <MessageCircle 
