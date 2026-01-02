@@ -407,7 +407,7 @@ const loadUnreadCount = async (userId: string) => {
 </div>
 
         {/* Main Content - Add top padding for fixed header and bottom padding for fixed nav */}
-        <main className="pt-[calc(5rem+env(safe-area-inset-top))] sm:pt-[calc(5.5rem+env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom)+24px)]">
+      <main className="pt-[calc(4.5rem+env(safe-area-inset-top))] sm:pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom)+32px)]">
   {children}
 </main>
 
