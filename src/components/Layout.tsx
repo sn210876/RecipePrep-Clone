@@ -417,8 +417,8 @@ const loadUnreadCount = async (userId: string) => {
 <div className="fixed bottom-0 left-0 right-0 z-50">
   {/* White background extension to fill gap below nav */}
   <div className="absolute inset-0 bg-white -bottom-0"></div>
-  <div className="relative bg-white border-t border-gray-200 shadow-lg pb-[calc(env(safe-area-inset-bottom)+20px)]">
-    <div className="max-w-lg mx-auto px-4 py-2"> {/* Changed py-3 to py-2 */}
+ <div className="relative bg-white border-t border-gray-200 shadow-lg pb-[calc(env(safe-area-inset-bottom)+32px)]">
+    <div className="max-w-lg mx-auto px-4 py-3">
       <div className="flex items-center justify-around">
       
       {/* Messages with Badge */}
