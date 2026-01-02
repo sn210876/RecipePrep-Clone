@@ -494,7 +494,7 @@ style={{ minWidth: '45px', minHeight: '44px' }}
               }`}
             />
           ) : (
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${ {/* Changed from w-7 h-7 */}
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${ 
               currentPage === 'profile'
                 ? 'bg-orange-100 ring-2 ring-orange-600'
                 : 'bg-gray-100'
