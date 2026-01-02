@@ -371,7 +371,7 @@ const loadUnreadCount = async (userId: string) => {
       )}
     </div>
     <span className="text-base sm:text-lg font-semibold text-gray-900">
-      {currentPage === 'add-recipe' ? 'Add Recipe' : currentPage === 'upload' ? 'New Post' : 'asdf Feed'}
+      {currentPage === 'add-recipe' ? 'Add Recipe' : currentPage === 'upload' ? 'New Post' : 'Messages'}
     </span>
   </div>
 )}
