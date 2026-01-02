@@ -434,7 +434,7 @@ style={{ minWidth: '45px', minHeight: '44px' }}
       >
         <div className="relative">
           <MessageCircle 
-            className="w-5 h-5" {/* Changed from w-6 h-6 */}
+            className="w-5 h-5" 
             strokeWidth={currentPage === 'messages' ? 2.5 : 2} 
           />
           {unreadCount > 0 && (
