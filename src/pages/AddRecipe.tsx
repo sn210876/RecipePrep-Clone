@@ -1044,16 +1044,28 @@ return (
       try {
         const text = await navigator.clipboard.readText();
         setUrlInput(text);
-        toast.success('Pasted!');
+        toast.success('Pasted! Scraping...');
+        setTimeout(() => {
+          handleUrlExtract();
+        }, 100);
       } catch (err) {
         toast.error('Failed to paste. Copy a URL first.');
       }
     }}
     disabled={isExtracting}
-    variant="outline"
-    className="flex-1 border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors h-10"
+    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-10"
   >
-    Paste
+    {isExtracting ? (
+      <>
+        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+        <span className="text-sm">Scraping...</span>
+      </>
+    ) : (
+      <>
+        <Sparkles className="w-4 h-4 mr-2" />
+        <span className="text-sm">Paste & Scrape</span>
+      </>
+    )}
   </Button>
   <Button
     type="button"
@@ -1069,25 +1081,6 @@ return (
   </Button>
 </div>
 
-            <Button
-              type="button"
-              onClick={handleUrlExtract}
-              disabled={isExtracting || !urlInput.trim()}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-10"
-            >
-              {isExtracting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span className="text-sm">Scraping... can take up to 2 min</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Scrape Recipe</span>
-                </>
-              )}
-            </Button>
-
             {/* Instructions moved below the action buttons */}
             <div className="mt-4 pt-4 border-t border-slate-200">
               <div className="space-y-2 text-xs leading-relaxed">
@@ -1101,13 +1094,12 @@ return (
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-black-600 min-w-[14px]">1.</span>
                     <span>
-                      <span className="font-bold text-black">COPY</span> a link from online/social media &amp;{' '}
-                      <span className="font-bold text-black">PASTE</span> above
+                      <span className="font-bold text-black">COPY</span> a link from online/social media
                     </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-black-600 min-w-[14px]">2.</span>
-                    <span>Click <span className="font-bold text-blue-600">"Scrape Recipe"</span></span>
+                    <span>Click <span className="font-bold text-blue-600">"Paste & Scrape"</span> — it will paste and scrape automatically</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="font-bold text-black-600 min-w-[14px]">3.</span>
@@ -1176,52 +1168,47 @@ return (
             <div className="flex gap-2">
               <Button
                 type="button"
+                onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    setDescriptionInput(text);
+                    toast.success('Pasted! Scraping...');
+                    setTimeout(() => {
+                      handleDescriptionExtract();
+                    }, 100);
+                  } catch (err) {
+                    toast.error('Failed to paste. Copy text first.');
+                  }
+                }}
+                disabled={isExtractingFromDescription}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white h-10"
+              >
+                {isExtractingFromDescription ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <span className="text-sm">Extracting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    <span className="text-sm">Paste & Scrape</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
                 onClick={() => {
                   setDescriptionInput('');
                   setVideoTitle('');
                   toast.success('Cleared!');
                 }}
                 disabled={isExtractingFromDescription}
-variant="outline"
-className="flex-1 border-2 border-purple-600 text-purple-600 hover:bg-purple-700 hover:text-white transition-colors h-10"              >
+                variant="outline"
+                className="flex-1 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors h-10"
+              >
                 Clear
               </Button>
-              <Button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const text = await navigator.clipboard.readText();
-                    setDescriptionInput(text);
-                    toast.success('Pasted!');
-                  } catch (err) {
-                    toast.error('Failed to paste. Copy text first.');
-                  }
-                }}
-                disabled={isExtractingFromDescription}
-variant="outline"
-className="flex-1 border-2 border-purple-600 text-purple-600 hover:bg-purple-700 hover:text-white transition-colors h-10"              >
-                Paste
-              </Button>
             </div>
-
-            <Button
-              type="button"
-              onClick={handleDescriptionExtract}
-              disabled={isExtractingFromDescription || !descriptionInput.trim()}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white h-10"
-            >
-              {isExtractingFromDescription ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span className="text-sm">Extracting...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  <span className="text-sm">Scrape Recipe</span>
-                </>
-              )}
-            </Button>
 
             {/* Image Upload Section */}
             <div className="space-y-3 pt-3 border-t border-purple-200">
