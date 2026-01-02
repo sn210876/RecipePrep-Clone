@@ -61,7 +61,7 @@ export default function Layout({ currentPage: propCurrentPage, onNavigate, child
        baseNavItems[baseNavItems.length - 1]]
     : baseNavItems;
 
-  const socialPages = ['discover', 'upload', 'profile', '', 'add-recipe'];
+  const socialPages = ['discover', 'upload', 'profile', 'messages', 'add-recipe'];
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
@@ -370,8 +370,9 @@ const loadUnreadCount = async (userId: string) => {
         <UtensilsCrossed className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
       )}
     </div>
-    <span className="text-base sm:text-lg font-semibold text-gray-900">
-      {currentPage === 'add-recipe' ? 'Add Recipe' : currentPage === 'upload' ? 'New Post' : 'Messages'}
+   <span className="text-base sm:text-lg font-semibold text-gray-900">
+  {currentPage === 'add-recipe' ? 'Add Recipe' : currentPage === 'upload' ? 'New Post' : currentPage === 'messages' ? 'Messages' : 'Social Feed'}
+</span>
     </span>
   </div>
 )}
