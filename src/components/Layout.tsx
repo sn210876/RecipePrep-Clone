@@ -487,7 +487,7 @@ style={{ minWidth: '45px', minHeight: '44px' }}
             <img
               src={avatarUrl}
               alt="Profile"
-              className={`w-6 h-6 rounded-full object-cover ${  {/* Changed from w-7 h-7 */}
+              className={`w-6 h-6 rounded-full object-cover ${  
                 currentPage === 'profile' 
                   ? 'ring-2 ring-orange-600 ring-offset-2' 
                   : 'ring-1 ring-gray-300'
