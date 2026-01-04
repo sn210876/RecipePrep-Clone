@@ -40,6 +40,9 @@ import { routeGroceryItems, getUserDeliveryPreferences, type RoutedItem } from '
 import { isInstacartEnabled } from '../services/instacartService';
 import { createCheckoutResult, type CheckoutResult } from '../services/amazonSearchFallback';
 import { CheckoutResultsDialog } from '../components/CheckoutResultsDialog';
+import { App } from '@capacitor/app';
+import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -110,6 +113,83 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       }
     };
     getUserId();
+  }, []);
+
+  // Persist checkout and delivery dialog states when they open
+  useEffect(() => {
+    const saveDialogState = async () => {
+      if (!Capacitor.isNativePlatform()) return;
+
+      if (showResultsDialog || showDeliverySelector) {
+        try {
+          await Preferences.set({
+            key: 'groceryDialogState',
+            value: JSON.stringify({
+              showResultsDialog,
+              showDeliverySelector,
+              checkoutResult,
+              routedInstacartItems,
+              routedAmazonItems,
+              routedAmazonFreshItems,
+              routedAmazonGroceryItems,
+              routedWholeFoodsItems,
+              deliveryAddress,
+            }),
+          });
+        } catch (error) {
+          console.error('Error saving dialog state:', error);
+        }
+      } else {
+        // Clear saved state when all dialogs are closed
+        try {
+          await Preferences.remove({ key: 'groceryDialogState' });
+        } catch (error) {
+          console.error('Error removing dialog state:', error);
+        }
+      }
+    };
+    saveDialogState();
+  }, [showResultsDialog, showDeliverySelector, checkoutResult, routedInstacartItems, routedAmazonItems, routedAmazonFreshItems, routedAmazonGroceryItems, routedWholeFoodsItems, deliveryAddress]);
+
+  // Restore dialog states on mount and when app resumes
+  useEffect(() => {
+    const restoreDialogState = async () => {
+      if (!Capacitor.isNativePlatform()) return;
+
+      try {
+        const { value } = await Preferences.get({ key: 'groceryDialogState' });
+        if (value) {
+          const savedState = JSON.parse(value);
+          if (savedState.showResultsDialog) setShowResultsDialog(true);
+          if (savedState.showDeliverySelector) setShowDeliverySelector(true);
+          if (savedState.checkoutResult) setCheckoutResult(savedState.checkoutResult);
+          if (savedState.routedInstacartItems) setRoutedInstacartItems(savedState.routedInstacartItems);
+          if (savedState.routedAmazonItems) setRoutedAmazonItems(savedState.routedAmazonItems);
+          if (savedState.routedAmazonFreshItems) setRoutedAmazonFreshItems(savedState.routedAmazonFreshItems);
+          if (savedState.routedAmazonGroceryItems) setRoutedAmazonGroceryItems(savedState.routedAmazonGroceryItems);
+          if (savedState.routedWholeFoodsItems) setRoutedWholeFoodsItems(savedState.routedWholeFoodsItems);
+          if (savedState.deliveryAddress) setDeliveryAddress(savedState.deliveryAddress);
+        }
+      } catch (error) {
+        console.error('Error restoring dialog state:', error);
+      }
+    };
+
+    // Restore on mount
+    restoreDialogState();
+
+    // Listen for app state changes (when app resumes from background)
+    if (Capacitor.isNativePlatform()) {
+      const listener = App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) {
+          restoreDialogState();
+        }
+      });
+
+      return () => {
+        listener.then(l => l.remove());
+      };
+    }
   }, []);
 
   const deliveryServicesAvailable = true;
