@@ -285,7 +285,7 @@ const loadUnreadCount = async (userId: string) => {
         
         {/* Top Header - Mobile Optimized */}
 <header className="fixed top-0 left-0 right-0 z-[150] border-b border-gray-200 bg-white shadow-sm pt-[env(safe-area-inset-top)]">
-  <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 md:px-6 pt-2">
+  <div className="flex h-12 sm:h-14 items-center justify-between px-3 sm:px-4 md:px-6">
     <Button
       variant="ghost"
       size="icon"
