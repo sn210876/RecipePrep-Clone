@@ -596,15 +596,7 @@ export function MealPlanner({ onNavigate }: MealPlannerProps = {}) {
                   See Grocery List
                 </Button>
 
-                <Button
-                  onClick={syncToCart}
-                  className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white gap-2 text-xs md:text-sm"
-                  size="sm"
-                  disabled={state.mealPlan.length === 0}
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  Sync to Cart
-                </Button>
+               
 
                 <Button
                   variant="destructive"
