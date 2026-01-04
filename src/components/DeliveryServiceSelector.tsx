@@ -203,8 +203,16 @@ export function DeliveryServiceSelector({
         result={checkoutResult}
         serviceName={selectedService ? getServiceDisplayName(selectedService) : 'Amazon'}
       />
-      <Dialog open={!showResultsDialog} onOpenChange={onClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={!showResultsDialog} onOpenChange={onClose} modal={true}>
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto"
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault();
+          }}
+        >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="w-5 h-5" />
