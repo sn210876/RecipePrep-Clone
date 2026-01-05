@@ -568,8 +568,8 @@ export function DeliveryServiceSelector({
         
           </Button>
         </DialogFooter>
-    <div></div>  
-    </DialogContent>
+   </div>
+      </DialogContent>
     </Dialog>
     </>
   );
