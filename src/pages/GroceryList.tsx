@@ -1239,9 +1239,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </DialogContent>
       </Dialog>
 
-      {/* Add Recipe Dialog - Mobile optimized */}
+     {/* Add Recipe Dialog - Mobile optimized */}
       <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
-        <DialogContent>
+        <DialogContent className="z-[150]">
           <DialogHeader>
             <DialogTitle>Add Recipe to Grocery List</DialogTitle>
             <DialogDescription>
@@ -1255,7 +1255,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Select a recipe" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[200]">
                   {state.savedRecipes.map(recipe => (
                     <SelectItem key={recipe.id} value={recipe.id}>
                       {recipe.title}
