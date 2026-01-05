@@ -1255,7 +1255,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Select a recipe" />
                 </SelectTrigger>
-                <SelectContent className="z-[200]">
+                <SelectContent className="z-[350]">
                   {state.savedRecipes.map(recipe => (
                     <SelectItem key={recipe.id} value={recipe.id}>
                       {recipe.title}
