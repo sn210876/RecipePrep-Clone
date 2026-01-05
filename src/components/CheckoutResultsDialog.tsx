@@ -20,8 +20,6 @@ export function CheckoutResultsDialog({
   result,
   serviceName = 'Amazon',
 }: CheckoutResultsDialogProps) {
-  const [preventClose, setPreventClose] = useState(true);
-
   if (!result) return null;
 
   const handleOpenCart = () => {
@@ -72,24 +70,8 @@ export function CheckoutResultsDialog({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        if (!open && !preventClose) {
-          onClose();
-        }
-      }}
-      modal={true}
-    >
-      <DialogContent
-        className="max-w-2xl max-h-[80vh]"
-        onInteractOutside={(e) => {
-          e.preventDefault();
-        }}
-        onEscapeKeyDown={(e) => {
-          e.preventDefault();
-        }}
-      >
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5" />
@@ -196,18 +178,6 @@ export function CheckoutResultsDialog({
             </div>
           </div>
         </ScrollArea>
-
-        <div className="flex justify-end pt-4 border-t">
-          <Button
-            onClick={() => {
-              setPreventClose(false);
-              setTimeout(() => onClose(), 0);
-            }}
-            variant="outline"
-          >
-            Close
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );
