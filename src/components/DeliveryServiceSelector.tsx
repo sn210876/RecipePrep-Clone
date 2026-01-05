@@ -229,12 +229,16 @@ const handleClose = () => {
       >       
         <DialogContent
           className="max-w-3xl max-h-[90vh] overflow-y-auto"
-          onPointerDownOutside={(e) => {
-            // Allow closing by clicking the X button or outside
+          onPointerDownOutside={() => {
+            // Allow closing by clicking outside
             setIsUserClosing(true);
           }}
-          onEscapeKeyDown={(e) => {
+          onEscapeKeyDown={() => {
             // Allow closing with Escape key
+            setIsUserClosing(true);
+          }}
+          onInteractOutside={() => {
+            // Allow closing by clicking X button or outside
             setIsUserClosing(true);
           }}
         >
