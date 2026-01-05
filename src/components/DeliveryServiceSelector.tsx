@@ -66,8 +66,6 @@ const handleClose = () => {
   setIsUserClosing(true);
   onClose();
 };
-
-const allAmazonItems = [
   const allAmazonItems = [
     ...amazonItems,
     ...amazonFreshItems,
