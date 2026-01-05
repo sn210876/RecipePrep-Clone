@@ -207,7 +207,7 @@ export function DeliveryServiceSelector({
       <Dialog
         open={!showResultsDialog}
         onOpenChange={(open) => {
-          if (!open && !preventClose) {
+          if (!open) {
             onClose();
           }
         }}
@@ -215,12 +215,7 @@ export function DeliveryServiceSelector({
       >
         <DialogContent
           className="max-w-3xl max-h-[90vh] overflow-y-auto"
-          onInteractOutside={(e) => {
-            e.preventDefault();
-          }}
-          onEscapeKeyDown={(e) => {
-            e.preventDefault();
-          }}
+        >
         >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
