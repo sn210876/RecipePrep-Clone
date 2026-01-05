@@ -1239,9 +1239,9 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         </DialogContent>
       </Dialog>
 
-     {/* Add Recipe Dialog - Mobile optimized */}
+   {/* Add Recipe Dialog - Mobile optimized */}
       <Dialog open={showAddRecipeDialog} onOpenChange={setShowAddRecipeDialog}>
-        <DialogContent className="z-[150]">
+        <DialogContent className="z-[300]">
           <DialogHeader>
             <DialogTitle>Add Recipe to Grocery List</DialogTitle>
             <DialogDescription>
