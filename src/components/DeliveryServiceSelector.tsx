@@ -56,7 +56,7 @@ export function DeliveryServiceSelector({
   const [showSummary, setShowSummary] = useState(true);
   const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
   const [showResultsDialog, setShowResultsDialog] = useState(false);
-  const [preventClose, setPreventClose] = useState(false);
+const [isUserClosing, setIsUserClosing] = useState(false);
 
   const allAmazonItems = [
     ...amazonItems,
