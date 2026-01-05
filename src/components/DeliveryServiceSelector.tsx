@@ -578,9 +578,9 @@ const handleClose = () => {
        </div>
 
         <DialogFooter>
-          <Button
+         <Button
             variant="outline"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
           >
             Close
