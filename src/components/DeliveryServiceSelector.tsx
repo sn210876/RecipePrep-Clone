@@ -57,7 +57,17 @@ export function DeliveryServiceSelector({
   const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
   const [showResultsDialog, setShowResultsDialog] = useState(false);
 const [isUserClosing, setIsUserClosing] = useState(false);
+useEffect(() => {
+  // Reset the user closing flag when dialog opens
+  setIsUserClosing(false);
+}, []);
 
+const handleClose = () => {
+  setIsUserClosing(true);
+  onClose();
+};
+
+const allAmazonItems = [
   const allAmazonItems = [
     ...amazonItems,
     ...amazonFreshItems,
