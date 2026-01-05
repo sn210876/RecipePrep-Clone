@@ -565,18 +565,9 @@ export function DeliveryServiceSelector({
           )}
         </div>
 
-        <DialogFooter className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setPreventClose(false);
-              setTimeout(() => onClose(), 0);
-            }}
-          >
-            Cancel
+        
           </Button>
         </DialogFooter>
- </div>
       </DialogContent>
     </Dialog>
     </>
