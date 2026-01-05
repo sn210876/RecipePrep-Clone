@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { ShoppingCart, Search, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
@@ -19,6 +20,8 @@ export function CheckoutResultsDialog({
   result,
   serviceName = 'Amazon',
 }: CheckoutResultsDialogProps) {
+  const [preventClose, setPreventClose] = useState(true);
+
   if (!result) return null;
 
   const handleOpenCart = () => {
@@ -69,7 +72,15 @@ export function CheckoutResultsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose} modal={true}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open && !preventClose) {
+          onClose();
+        }
+      }}
+      modal={true}
+    >
       <DialogContent
         className="max-w-2xl max-h-[80vh]"
         onInteractOutside={(e) => {
@@ -187,7 +198,13 @@ export function CheckoutResultsDialog({
         </ScrollArea>
 
         <div className="flex justify-end pt-4 border-t">
-          <Button onClick={onClose} variant="outline">
+          <Button
+            onClick={() => {
+              setPreventClose(false);
+              setTimeout(() => onClose(), 0);
+            }}
+            variant="outline"
+          >
             Close
           </Button>
         </div>

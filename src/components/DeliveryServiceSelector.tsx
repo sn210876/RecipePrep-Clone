@@ -56,6 +56,7 @@ export function DeliveryServiceSelector({
   const [showSummary, setShowSummary] = useState(true);
   const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
   const [showResultsDialog, setShowResultsDialog] = useState(false);
+  const [preventClose, setPreventClose] = useState(true);
 
   const allAmazonItems = [
     ...amazonItems,
@@ -203,7 +204,15 @@ export function DeliveryServiceSelector({
         result={checkoutResult}
         serviceName={selectedService ? getServiceDisplayName(selectedService) : 'Amazon'}
       />
-      <Dialog open={!showResultsDialog} onOpenChange={onClose} modal={true}>
+      <Dialog
+        open={!showResultsDialog}
+        onOpenChange={(open) => {
+          if (!open && !preventClose) {
+            onClose();
+          }
+        }}
+        modal={true}
+      >
         <DialogContent
           className="max-w-3xl max-h-[90vh] overflow-y-auto"
           onInteractOutside={(e) => {
@@ -557,7 +566,13 @@ export function DeliveryServiceSelector({
         </div>
 
         <DialogFooter className="flex items-center gap-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setPreventClose(false);
+              setTimeout(() => onClose(), 0);
+            }}
+          >
             Cancel
           </Button>
         </DialogFooter>

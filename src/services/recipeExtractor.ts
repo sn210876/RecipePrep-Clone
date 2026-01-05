@@ -7,6 +7,7 @@ import {
   extractRecipeFromDescription
 } from './youtubeService';
 import { trackExtraction } from './extractionMonitor';
+import { toast } from 'sonner';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -60,61 +61,84 @@ export async function extractRecipeFromUrl(url: string): Promise<ExtractedRecipe
 
   // ALL OTHER SOCIAL MEDIA (TikTok, Instagram) → YOUR RENDER SERVER ONLY
 if (isSocial) {
-  try {
-    console.log('[Extractor] Sending to Render server:', url);
+  // Retry logic with exponential backoff for rate limits
+  const maxRetries = 3;
+  let lastError: Error | null = null;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90000);
-
-    const response = await fetch(RENDER_SERVER, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.trim() }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      console.error('[Extractor] Server response not OK:', response.status);
-      if (response.status >= 500 || response.status === 429) {
-        throw new Error('Server waking up — try again in 20 seconds');
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        const waitTime = Math.min(1000 * Math.pow(2, attempt), 30000); // Cap at 30 seconds
+        console.log(`[Extractor] Retry attempt ${attempt + 1}/${maxRetries}, waiting ${waitTime}ms...`);
+        toast.info(`Server busy, retrying in ${Math.ceil(waitTime / 1000)} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
-      const errorText = await response.text();
-      console.error('[Extractor] Error response:', errorText);
-      throw new Error('Video extraction failed');
-    }
 
-    const data = await response.json();
-    console.log('[Extractor] Raw data from server:', data);
-    console.log('[Extractor] Server description field:', data.description || 'NONE');
-    console.log('[Extractor] Server content field:', data.content || 'NONE');
+      console.log('[Extractor] Sending to Render server:', url);
 
-    // Get the raw image URL
-    const rawImageUrl = data.thumbnail || data.image || '';
-    console.log('[Extractor] Raw image URL:', rawImageUrl);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
 
-    // ✅ NEW: Check if it's an Instagram/Facebook CDN URL that needs proxying
-    let finalImageUrl = rawImageUrl;
-    if (rawImageUrl) {
-      const needsProxy = rawImageUrl.includes('cdninstagram.com') ||
-                         rawImageUrl.includes('fbcdn.net') ||
-                         rawImageUrl.includes('instagram.com');
+      const response = await fetch(RENDER_SERVER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() }),
+        signal: controller.signal,
+      });
 
-      if (needsProxy) {
-        // Wrap it with your Supabase proxy
-        const cleanUrl = rawImageUrl.replace(/&amp;/g, '&');
-        finalImageUrl = `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
-        console.log('[Extractor] Instagram image detected, proxying:', finalImageUrl);
-      } else {
-        console.log('[Extractor] Direct image URL (no proxy needed):', finalImageUrl);
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.error('[Extractor] Server response not OK:', response.status);
+        if (response.status === 429 && attempt < maxRetries - 1) {
+          // Rate limited, will retry
+          lastError = new Error('Rate limit exceeded, retrying...');
+          continue;
+        }
+        if (response.status >= 500 && attempt < maxRetries - 1) {
+          // Server error, will retry
+          lastError = new Error('Server error, retrying...');
+          continue;
+        }
+        if (response.status >= 500 || response.status === 429) {
+          throw new Error('Server is busy or waking up. Please wait 30 seconds and try again, or use the "Paste Description" option to manually enter the recipe text.');
+        }
+        const errorText = await response.text();
+        console.error('[Extractor] Error response:', errorText);
+        throw new Error('Video extraction failed');
       }
-    }
 
-    const rawIngredients = Array.isArray(data.ingredients) ? data.ingredients : [];
-    console.log('[Extractor] Processing ingredients:', rawIngredients);
+      // Success - break out of retry loop
+      const data = await response.json();
+      console.log('[Extractor] Raw data from server:', data);
+      console.log('[Extractor] Server description field:', data.description || 'NONE');
+      console.log('[Extractor] Server content field:', data.content || 'NONE');
 
-    const ingredients = rawIngredients.map((ing: string) => {
+      // Get the raw image URL
+      const rawImageUrl = data.thumbnail || data.image || '';
+      console.log('[Extractor] Raw image URL:', rawImageUrl);
+
+      // ✅ NEW: Check if it's an Instagram/Facebook CDN URL that needs proxying
+      let finalImageUrl = rawImageUrl;
+      if (rawImageUrl) {
+        const needsProxy = rawImageUrl.includes('cdninstagram.com') ||
+                           rawImageUrl.includes('fbcdn.net') ||
+                           rawImageUrl.includes('instagram.com');
+
+        if (needsProxy) {
+          // Wrap it with your Supabase proxy
+          const cleanUrl = rawImageUrl.replace(/&amp;/g, '&');
+          finalImageUrl = `${SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(cleanUrl)}`;
+          console.log('[Extractor] Instagram image detected, proxying:', finalImageUrl);
+        } else {
+          console.log('[Extractor] Direct image URL (no proxy needed):', finalImageUrl);
+        }
+      }
+
+      const rawIngredients = Array.isArray(data.ingredients) ? data.ingredients : [];
+      console.log('[Extractor] Processing ingredients:', rawIngredients);
+
+      const ingredients = rawIngredients.map((ing: string) => {
       const cleaned = decodeHtmlEntities(ing.trim());
       if (!cleaned) return { quantity: '', unit: '', name: '' };
 
@@ -227,31 +251,44 @@ if (isSocial) {
       }
     }
 
-    return {
-      title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
-      description,
-      creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
-      ingredients,
-      instructions: rawInstructions.map((i: string) => decodeHtmlEntities(i)),
-      prepTime: formatTime(data.prep_time || 15),
-      cookTime: formatTime(data.cook_time || 35),
-      servings: data.servings || data.yield || '4',
-      cuisineType: 'Global',
-      difficulty: 'Medium',
-      mealTypes: ['Dinner'],
-      dietaryTags: [],
-      imageUrl: finalImageUrl,
-      videoUrl: url,
-      notes: `Recipe from ${data.channel || data.creator || 'video'}`,
-      sourceUrl: url,
-    };
-  } catch (err: any) {
-    console.error('[Extractor] Catch block error:', err);
-    if (err.name === 'AbortError') {
-      throw new Error('Server is waking up — please wait 20-30 seconds and try again');
+      return {
+        title: decodeHtmlEntities(data.title || data.channel || 'Video Recipe'),
+        description,
+        creator: decodeHtmlEntities(data.channel || data.creator || 'Unknown'),
+        ingredients,
+        instructions: rawInstructions.map((i: string) => decodeHtmlEntities(i)),
+        prepTime: formatTime(data.prep_time || 15),
+        cookTime: formatTime(data.cook_time || 35),
+        servings: data.servings || data.yield || '4',
+        cuisineType: 'Global',
+        difficulty: 'Medium',
+        mealTypes: ['Dinner'],
+        dietaryTags: [],
+        imageUrl: finalImageUrl,
+        videoUrl: url,
+        notes: `Recipe from ${data.channel || data.creator || 'video'}`,
+        sourceUrl: url,
+      };
+    } catch (err: any) {
+      console.error('[Extractor] Attempt error:', err);
+      lastError = err;
+      if (err.name === 'AbortError' && attempt < maxRetries - 1) {
+        // Timeout, will retry
+        continue;
+      }
+      if (err.name === 'AbortError') {
+        throw new Error('Server is waking up — please wait 30 seconds and try again, or use the "Paste Description" option to manually enter the recipe text.');
+      }
+      // If this was the last attempt, throw the error
+      if (attempt === maxRetries - 1) {
+        throw err;
+      }
+      // Otherwise, continue to next retry
     }
-    throw new Error('Video extraction temporarily unavailable — try again soon');
   }
+
+  // If we got here, all retries failed
+  throw lastError || new Error('Video extraction temporarily unavailable — try again soon');
 }
 
   // Normal websites → Supabase Edge Function
