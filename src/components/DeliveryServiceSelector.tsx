@@ -563,14 +563,18 @@ export function DeliveryServiceSelector({
               </CardContent>
             </Card>
           )}
-        </div>
+            </div>
 
-        
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setPreventClose(false);
+              setTimeout(() => onClose(), 0);
+            }}
+            disabled={loading}
+          >
+            Close
           </Button>
         </DialogFooter>
-   </div>
       </DialogContent>
-    </Dialog>
-    </>
-  );
-}
