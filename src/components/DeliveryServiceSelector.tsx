@@ -212,17 +212,21 @@ const handleClose = () => {
         result={checkoutResult}
         serviceName={selectedService ? getServiceDisplayName(selectedService) : 'Amazon'}
       />
-      <Dialog
+<Dialog
         open={!showResultsDialog}
         onOpenChange={(open) => {
-          // Only allow closing if user explicitly clicked close/X button
-          if (!open && isUserClosing) {
-            onClose();
+          // Only allow closing if user explicitly initiated it
+          if (!open) {
+            // Small delay to let event handlers set isUserClosing flag
+            setTimeout(() => {
+              if (isUserClosing) {
+                onClose();
+              }
+            }, 0);
           }
         }}
         modal={true}
-    
-      >
+      >       
         <DialogContent
           className="max-w-3xl max-h-[90vh] overflow-y-auto"
           onPointerDownOutside={(e) => {
