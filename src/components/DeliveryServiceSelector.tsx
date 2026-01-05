@@ -563,10 +563,7 @@ export function DeliveryServiceSelector({
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() => {
-              setPreventClose(false);
-              setTimeout(() => onClose(), 0);
-            }}
+            onClick={onClose}
             disabled={loading}
           >
             Close
