@@ -225,7 +225,14 @@ const handleClose = () => {
       >
         <DialogContent
           className="max-w-3xl max-h-[90vh] overflow-y-auto"
-        
+          onPointerDownOutside={(e) => {
+            // Allow closing by clicking the X button or outside
+            setIsUserClosing(true);
+          }}
+          onEscapeKeyDown={(e) => {
+            // Allow closing with Escape key
+            setIsUserClosing(true);
+          }}
         >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
