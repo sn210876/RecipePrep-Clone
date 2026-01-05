@@ -56,16 +56,6 @@ export function DeliveryServiceSelector({
   const [showSummary, setShowSummary] = useState(true);
   const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
   const [showResultsDialog, setShowResultsDialog] = useState(false);
-const [isUserClosing, setIsUserClosing] = useState(false);
-useEffect(() => {
-  // Reset the user closing flag when dialog opens
-  setIsUserClosing(false);
-}, []);
-
-const handleClose = () => {
-  setIsUserClosing(true);
-  onClose();
-};
   const allAmazonItems = [
     ...amazonItems,
     ...amazonFreshItems,
@@ -212,36 +202,16 @@ const handleClose = () => {
         result={checkoutResult}
         serviceName={selectedService ? getServiceDisplayName(selectedService) : 'Amazon'}
       />
-<Dialog
+      <Dialog
         open={!showResultsDialog}
         onOpenChange={(open) => {
-          // Only allow closing if user explicitly initiated it
           if (!open) {
-            // Small delay to let event handlers set isUserClosing flag
-            setTimeout(() => {
-              if (isUserClosing) {
-                onClose();
-              }
-            }, 0);
+            onClose();
           }
         }}
         modal={true}
-      >       
-        <DialogContent
-          className="max-w-3xl max-h-[90vh] overflow-y-auto"
-          onPointerDownOutside={() => {
-            // Allow closing by clicking outside
-            setIsUserClosing(true);
-          }}
-          onEscapeKeyDown={() => {
-            // Allow closing with Escape key
-            setIsUserClosing(true);
-          }}
-          onInteractOutside={() => {
-            // Allow closing by clicking X button or outside
-            setIsUserClosing(true);
-          }}
-        >
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="w-5 h-5" />
@@ -586,9 +556,9 @@ const handleClose = () => {
        </div>
 
         <DialogFooter>
-         <Button
+          <Button
             variant="outline"
-            onClick={handleClose}
+            onClick={onClose}
             disabled={loading}
           >
             Close

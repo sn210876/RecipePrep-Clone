@@ -87,6 +87,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [routedWholeFoodsItems, setRoutedWholeFoodsItems] = useState<RoutedItem[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState<any>({});
   const [instacartEnabled, setInstacartEnabled] = useState(false);
+  const [isAppActive, setIsAppActive] = useState(true);
 
   const items = state.groceryList;
 
@@ -181,6 +182,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     // Listen for app state changes (when app resumes from background)
     if (Capacitor.isNativePlatform()) {
       const listener = App.addListener('appStateChange', ({ isActive }) => {
+        console.log('[GroceryList] App state changed, isActive:', isActive);
+        setIsAppActive(isActive);
         if (isActive) {
           restoreDialogState();
         }
@@ -1303,14 +1306,26 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
           wholeFoodsItems={routedWholeFoodsItems}
           userId={userId}
           deliveryAddress={deliveryAddress}
-          onClose={() => setShowDeliverySelector(false)}
+          onClose={() => {
+            console.log('[GroceryList] DeliveryServiceSelector onClose called, isAppActive:', isAppActive);
+            // Only close if app is active (not backgrounded)
+            if (isAppActive || !Capacitor.isNativePlatform()) {
+              setShowDeliverySelector(false);
+            }
+          }}
         />
       )}
 
       {/* Checkout Results Dialog */}
       <CheckoutResultsDialog
         open={showResultsDialog}
-        onClose={() => setShowResultsDialog(false)}
+        onClose={() => {
+          console.log('[GroceryList] CheckoutResultsDialog onClose called, isAppActive:', isAppActive);
+          // Only close if app is active (not backgrounded)
+          if (isAppActive || !Capacitor.isNativePlatform()) {
+            setShowResultsDialog(false);
+          }
+        }}
         result={checkoutResult}
         serviceName="Amazon"
       />

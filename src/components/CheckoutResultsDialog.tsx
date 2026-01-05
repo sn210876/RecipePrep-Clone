@@ -70,7 +70,15 @@ export function CheckoutResultsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose();
+        }
+      }}
+      modal={true}
+    >
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -178,6 +186,12 @@ export function CheckoutResultsDialog({
             </div>
           </div>
         </ScrollArea>
+
+        <div className="flex justify-end pt-4 border-t mt-4">
+          <Button onClick={onClose} variant="outline">
+            Close
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
