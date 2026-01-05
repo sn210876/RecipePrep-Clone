@@ -563,7 +563,7 @@ export function DeliveryServiceSelector({
               </CardContent>
             </Card>
           )}
-            </div>
+       </div>
 
         <DialogFooter>
           <Button
@@ -578,3 +578,10 @@ export function DeliveryServiceSelector({
           </Button>
         </DialogFooter>
       </DialogContent>
+    </Dialog>
+    </>
+  );
+}
+
+        
+          
