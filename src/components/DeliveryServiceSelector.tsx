@@ -215,11 +215,13 @@ const handleClose = () => {
       <Dialog
         open={!showResultsDialog}
         onOpenChange={(open) => {
-          if (!open) {
+          // Only allow closing if user explicitly clicked close/X button
+          if (!open && isUserClosing) {
             onClose();
           }
         }}
         modal={true}
+      >
       >
         <DialogContent
           className="max-w-3xl max-h-[90vh] overflow-y-auto"
