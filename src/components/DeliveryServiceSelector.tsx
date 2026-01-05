@@ -576,6 +576,7 @@ export function DeliveryServiceSelector({
             Cancel
           </Button>
         </DialogFooter>
+ </div>
       </DialogContent>
     </Dialog>
     </>
