@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -57,7 +56,6 @@
     --chart-5: 340 75% 55%;
   }
 }
-
 @layer base {
   * {
     @apply border-border;
@@ -68,8 +66,18 @@
     min-width: 320px;
     font-family: Inter, system-ui, -apple-system, sans-serif;
   }
-
   #root {
     min-height: 100vh;
+  }
+}
+
+/* Fix dialog positioning on mobile to avoid header */
+[role="dialog"] {
+  margin-top: 4rem !important;
+}
+
+@media (min-width: 768px) {
+  [role="dialog"] {
+    margin-top: 0 !important;
   }
 }
