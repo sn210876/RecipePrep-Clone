@@ -117,9 +117,7 @@ function AppContent() {
     if (slug) return `blog:${slug}`;
   }
   if (path.startsWith('/profile/') && path !== '/profile') {
-    const use      } else if (path === '/admin-mappings') {
-
-    rname = path.split('/profile/')[1];
+    const username = path.split('/profile/')[1];
     if (username) return `profile:${username}`;
   }
 
@@ -191,6 +189,8 @@ function AppContent() {
         setCurrentPage('admin-products');
       } else if (path === '/admin-mappings') {
         setCurrentPage('admin-mappings');
+        } else if (path === '/checkout-redirect') {
+        setCurrentPage('checkout-redirect');
       } else if (path === '/blog') {
         setCurrentPage('blog');
       } else if (path.startsWith('/blog/') && path !== '/blog') {
