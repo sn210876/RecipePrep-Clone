@@ -1,155 +1,151 @@
-import { useEffect, useState } from 'react';
-import { ExternalLink, ArrowLeft, Loader2 } from 'lucide-react';
+import { ExternalLink, ShoppingCart, Package, Search, Check, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
+import { ScrollArea } from './ui/scroll-area';
+import { Badge } from './ui/badge';
+import { type CheckoutResult } from '../services/amazonSearchFallback';
+import { appendAffiliateTag } from '../services/amazonProductService';
 
-export function CheckoutRedirectPage() {
-  const [targetUrl, setTargetUrl] = useState<string>('');
-  const [redirectType, setRedirectType] = useState<'checkout' | 'search'>('checkout');
-  const [countdown, setCountdown] = useState(3);
-  const [manualMode, setManualMode] = useState(false);
+interface CheckoutResultsDialogProps {
+  open: boolean;
+  onClose: () => void;
+  result: CheckoutResult | null;
+  serviceName: string;
+}
 
-  useEffect(() => {
-    // Listen for messages from the parent window
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'checkout' || event.data.type === 'search') {
-        setTargetUrl(event.data.url);
-        setRedirectType(event.data.type);
-      }
-    };
+export function CheckoutResultsDialog({
+  open,
+  onClose,
+  result,
+  serviceName
+}: CheckoutResultsDialogProps) {
+  if (!result) return null;
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
-
-  useEffect(() => {
-    if (!targetUrl || manualMode) return;
-
-    // Countdown timer
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
+  const handleProceedToCheckout = () => {
+    if (result.cartUrl) {
+      const affiliateUrl = appendAffiliateTag(result.cartUrl);
+      window.open(affiliateUrl, '_blank');
     }
-
-    // Redirect after countdown
-    if (countdown === 0) {
-      window.location.href = targetUrl;
-    }
-  }, [countdown, targetUrl, manualMode]);
-
-  const handleManualRedirect = () => {
-    window.location.href = targetUrl;
+    onClose();
   };
 
-  const handleCancel = () => {
-    window.close();
+  const handleSearchItem = (searchUrl: string) => {
+    const affiliateUrl = appendAffiliateTag(searchUrl);
+    window.open(affiliateUrl, '_blank');
   };
-
-  if (!targetUrl) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Loading...
-            </CardTitle>
-            <CardDescription>
-              Preparing your checkout experience
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <ExternalLink className="w-6 h-6 text-blue-600" />
-            {redirectType === 'checkout' ? 'Redirecting to Checkout' : 'Redirecting to Search'}
-          </CardTitle>
-          <CardDescription>
-            {redirectType === 'checkout' 
-              ? "You're being redirected to complete your purchase"
-              : "You're being redirected to search for products"}
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          {!manualMode && (
-            <div className="text-center py-8">
-              <div className="relative inline-flex items-center justify-center w-24 h-24 mb-4">
-                <div className="absolute inset-0 rounded-full border-4 border-blue-100"></div>
-                <div 
-                  className="absolute inset-0 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"
-                  style={{ animationDuration: '1s' }}
-                ></div>
-                <span className="text-3xl font-bold text-blue-600">{countdown}</span>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent
+        className="max-w-2xl max-h-[80vh]"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5" />
+            {serviceName} Checkout Ready
+          </DialogTitle>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[calc(80vh-120px)]">
+          <div className="space-y-6 pr-4">
+            {result.hasCartItems && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-green-900 mb-2">
+                      {result.mappedItems.length} Item{result.mappedItems.length !== 1 ? 's' : ''} Added to Cart
+                    </h3>
+                    <div className="space-y-2">
+                      {result.mappedItems.map((item, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-sm">
+                          <Package className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <span className="text-green-900 font-medium">{item.name}</span>
+                            {item.quantity && (
+                              <span className="text-green-700 ml-2">
+                                ({item.quantity} {item.unit || ''})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-lg text-gray-700 mb-2">
-                Redirecting in {countdown} second{countdown !== 1 ? 's' : ''}...
-              </p>
-              <p className="text-sm text-gray-500">
-                You'll be taken to the external site shortly
-              </p>
-            </div>
-          )}
+            )}
 
-          {manualMode && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-              <p className="text-gray-700 mb-4">
-                Auto-redirect paused. Click the button below when you're ready.
-              </p>
-              <Button 
-                onClick={handleManualRedirect}
-                className="bg-blue-600 hover:bg-blue-700"
-                size="lg"
-              >
-                <ExternalLink className="w-5 h-5 mr-2" />
-                Continue to {redirectType === 'checkout' ? 'Checkout' : 'Search'}
-              </Button>
-            </div>
-          )}
-
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-1">
-                <h4 className="font-medium text-yellow-900 mb-1">Leaving Our App</h4>
-                <p className="text-sm text-yellow-700">
-                  You're being redirected to an external website. We use affiliate links to support the app.
-                </p>
+            {result.hasUnmappedItems && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-yellow-900 mb-2">
+                      {result.unmappedItems.length} Item{result.unmappedItems.length !== 1 ? 's' : ''} Need Manual Search
+                    </h3>
+                    <p className="text-sm text-yellow-700 mb-3">
+                      These items weren't found in our database. Click to search on {serviceName}:
+                    </p>
+                    <div className="space-y-2">
+                      {result.unmappedItems.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSearchItem(item.searchUrl)}
+                            className="flex-1 justify-start text-left"
+                          >
+                            <Search className="w-4 h-4 mr-2 flex-shrink-0" />
+                            <span className="truncate">{item.ingredient}</span>
+                            {item.quantity && (
+                              <Badge variant="secondary" className="ml-auto flex-shrink-0">
+                                {item.quantity} {item.unit || ''}
+                              </Badge>
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            )}
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setManualMode(!manualMode)}
-              className="flex-1"
-            >
-              {manualMode ? 'Resume Auto-Redirect' : 'Wait, Let Me Review'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              className="flex-1"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Cancel & Go Back
-            </Button>
+            {!result.hasCartItems && !result.hasUnmappedItems && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                <ShoppingCart className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600">No items to process</p>
+              </div>
+            )}
           </div>
+        </ScrollArea>
 
-          <div className="text-center">
-            <p className="text-xs text-gray-500">
-              Target: <span className="font-mono text-gray-700">{new URL(targetUrl).hostname}</span>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        <DialogFooter className="flex gap-2 sm:gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+          {result.hasCartItems && result.cartUrl && (
+            <Button onClick={handleProceedToCheckout}>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Proceed to {serviceName} Checkout
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
+}
+
+export function CheckoutRedirectPage() {
+  return null;
 }
