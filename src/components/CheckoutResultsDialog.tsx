@@ -70,16 +70,12 @@ export function CheckoutResultsDialog({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose();
-        }
-      }}
-      modal={true}
-    >
-      <DialogContent className="max-w-2xl max-h-[80vh]">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent 
+        className="max-w-2xl max-h-[80vh]"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5" />
@@ -186,12 +182,6 @@ export function CheckoutResultsDialog({
             </div>
           </div>
         </ScrollArea>
-
-        <div className="flex justify-end pt-4 border-t mt-4">
-          <Button onClick={onClose} variant="outline">
-            Close
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );
