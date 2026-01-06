@@ -117,7 +117,9 @@ function AppContent() {
     if (slug) return `blog:${slug}`;
   }
   if (path.startsWith('/profile/') && path !== '/profile') {
-    const username = path.split('/profile/')[1];
+    const use      } else if (path === '/admin-mappings') {
+
+    rname = path.split('/profile/')[1];
     if (username) return `profile:${username}`;
   }
 
