@@ -146,6 +146,5 @@ export function CheckoutResultsDialog({
   );
 }
 
-export function CheckoutRedirectPage() {
-  return null;
+
 }
