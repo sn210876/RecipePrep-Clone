@@ -37,6 +37,7 @@ import { ErrorBanner } from './components/ErrorBanner';
 import { errorHandler } from './lib/errorHandler';
 import { checkEnvironment } from './lib/envChecker';
 import { safeStorage } from './lib/safeStorage';
+import { CheckoutRedirectPage } from './components/CheckoutRedirectPage';
 import { withTimeout, forceSessionCheck, AuthTimeoutError } from './lib/authTimeout';
 
 // Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
