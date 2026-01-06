@@ -410,19 +410,23 @@ export function CommentModal({ postId, isOpen, onClose, onCommentPosted }: Comme
       <Dialog open={isOpen && !isMinimized} onOpenChange={onClose}>
         <DialogPortal>
           <DialogOverlay className="z-[10000000]" />
-          <DialogContent className="
-            max-w-5xl
-            w-[calc(100vw-1rem)]
-            sm:w-[95vw]
-            h-[calc(100vh-2rem)]
-            sm:h-[85vh]
-            p-0
-            gap-0
-            overflow-hidden
-            z-[10000001]
-            mx-2
-            sm:mx-auto
-          ">
+         <DialogContent 
+  className="
+    max-w-5xl
+    w-[calc(100vw-1rem)]
+    sm:w-[95vw]
+    h-[calc(100vh-2rem)]
+    sm:h-[85vh]
+    p-0
+    gap-0
+    overflow-hidden
+    z-[10000001]
+    mx-2
+    sm:mx-auto
+  "
+  onInteractOutside={(e) => e.preventDefault()}
+  onEscapeKeyDown={(e) => e.preventDefault()}
+>
           {/* Close button */}
           <button
             onClick={onClose}
