@@ -204,14 +204,14 @@ export function DeliveryServiceSelector({
       />
       <Dialog
         open={!showResultsDialog}
-        onOpenChange={(open) => {
-          if (!open) {
-            onClose();
-          }
-        }}
+        onOpenChange={onClose}
         modal={true}
       >
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-y-auto"
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="w-5 h-5" />
