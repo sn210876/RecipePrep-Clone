@@ -13,7 +13,7 @@ import { Badge } from './ui/badge';
 import { Package, ExternalLink, Check } from 'lucide-react';
 import { findProductsForIngredient, type AmazonProduct, appendAffiliateTag } from '../services/amazonProductService';
 import { toast } from 'sonner';
-
+a
 interface ProductSelectorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
