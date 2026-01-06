@@ -109,6 +109,8 @@ function AppContent() {
   if (path === '/faq') return 'faq';
   if (path === '/onboarding') return 'onboarding';
   if (path === '/auth/callback') return 'auth-callback';
+     if (path === '/checkout-redirect') return 'checkout-redirect';  // ADD THIS LINE
+
   if (path === '/blog') return 'blog';
   if (path.startsWith('/blog/') && path !== '/blog') {
     const slug = path.split('/blog/')[1];
