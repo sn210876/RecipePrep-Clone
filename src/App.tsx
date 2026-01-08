@@ -25,6 +25,8 @@ import { Blog } from './pages/Blog';
 import { BlogPostPage } from './pages/BlogPost';
 import { FAQ } from './pages/FAQ';
 import { Onboarding } from './pages/Onboarding';
+import { Checkout } from './pages/Checkout';
+import { CheckoutResults } from './pages/CheckoutResults';
 import { Toaster } from './components/ui/sonner';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -97,6 +99,8 @@ function AppContent() {
   if (path === '/meal-planner') return 'meal-planner';
   if (path === '/grocery-list') return 'grocery-list';
   if (path === '/cart') return 'cart';
+  if (path === '/checkout') return 'checkout';
+  if (path === '/checkout-results') return 'checkout-results';
   if (path === '/upload') return 'upload';
   if (path === '/profile') return 'profile';
   if (path === '/messages') return 'messages';
@@ -109,7 +113,7 @@ function AppContent() {
   if (path === '/faq') return 'faq';
   if (path === '/onboarding') return 'onboarding';
   if (path === '/auth/callback') return 'auth-callback';
-     if (path === '/checkout-redirect') return 'checkout-redirect';  // ADD THIS LINE
+  if (path === '/checkout-redirect') return 'checkout-redirect';
 
   if (path === '/blog') return 'blog';
   if (path.startsWith('/blog/') && path !== '/blog') {
@@ -189,7 +193,11 @@ function AppContent() {
         setCurrentPage('admin-products');
       } else if (path === '/admin-mappings') {
         setCurrentPage('admin-mappings');
-        } else if (path === '/checkout-redirect') {
+      } else if (path === '/checkout') {
+        setCurrentPage('checkout');
+      } else if (path === '/checkout-results') {
+        setCurrentPage('checkout-results');
+      } else if (path === '/checkout-redirect') {
         setCurrentPage('checkout-redirect');
       } else if (path === '/blog') {
         setCurrentPage('blog');
@@ -710,6 +718,8 @@ function AppContent() {
       case 'meal-planner': return <MealPlanner onNavigate={handleNavigate} />;
       case 'grocery-list': return <GroceryList onNavigate={handleNavigate} />;
       case 'cart': return <Cart onNavigate={handleNavigate} />;
+      case 'checkout': return <Checkout onNavigate={handleNavigate} />;
+      case 'checkout-results': return <CheckoutResults onNavigate={handleNavigate} />;
       case 'upload': return <Upload onNavigate={handleNavigate} />;
       case 'profile': return <Profile />;
       case 'messages': return <Messages onBack={() => handleNavigate('discover')} />;

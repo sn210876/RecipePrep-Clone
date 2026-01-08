@@ -35,14 +35,8 @@ import { ProductSelectorDialog } from '../components/ProductSelectorDialog';
 import { addProductToCart, findProductsForIngredient, bulkAddToCart, type AmazonProduct } from '../services/amazonProductService';
 import { getGroceryItems, saveGroceryItems, clearAllGroceryItems } from '../services/groceryListService';
 import { getMealPlans } from '../services/mealPlannerService';
-import { DeliveryServiceSelector } from '../components/DeliveryServiceSelector';
-import { routeGroceryItems, getUserDeliveryPreferences, type RoutedItem } from '../services/deliveryRoutingService';
+import { routeGroceryItems, getUserDeliveryPreferences } from '../services/deliveryRoutingService';
 import { isInstacartEnabled } from '../services/instacartService';
-import { createCheckoutResult, type CheckoutResult } from '../services/amazonSearchFallback';
-import { CheckoutResultsDialog } from '../components/CheckoutResultsDialog';
-import { App } from '@capacitor/app';
-import { Preferences } from '@capacitor/preferences';
-import { Capacitor } from '@capacitor/core';
 
 interface GroceryListProps {
   onNavigate?: (page: string) => void;
@@ -74,17 +68,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [selectedGroceryItem, setSelectedGroceryItem] = useState<GroceryListItem | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Delivery service integration
-  const [showDeliverySelector, setShowDeliverySelector] = useState(false);
-  const [routedInstacartItems, setRoutedInstacartItems] = useState<RoutedItem[]>([]);
-  const [routedAmazonItems, setRoutedAmazonItems] = useState<RoutedItem[]>([]);
-  const [routedAmazonFreshItems, setRoutedAmazonFreshItems] = useState<RoutedItem[]>([]);
-  const [routedAmazonGroceryItems, setRoutedAmazonGroceryItems] = useState<RoutedItem[]>([]);
-
-  // Checkout results
-  const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
-  const [showResultsDialog, setShowResultsDialog] = useState(false);
-  const [routedWholeFoodsItems, setRoutedWholeFoodsItems] = useState<RoutedItem[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState<any>({});
   const [instacartEnabled, setInstacartEnabled] = useState(false);
 
@@ -113,83 +96,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       }
     };
     getUserId();
-  }, []);
-
-  // Persist checkout and delivery dialog states when they open
-  useEffect(() => {
-    const saveDialogState = async () => {
-      if (!Capacitor.isNativePlatform()) return;
-
-      if (showResultsDialog || showDeliverySelector) {
-        try {
-          await Preferences.set({
-            key: 'groceryDialogState',
-            value: JSON.stringify({
-              showResultsDialog,
-              showDeliverySelector,
-              checkoutResult,
-              routedInstacartItems,
-              routedAmazonItems,
-              routedAmazonFreshItems,
-              routedAmazonGroceryItems,
-              routedWholeFoodsItems,
-              deliveryAddress,
-            }),
-          });
-        } catch (error) {
-          console.error('Error saving dialog state:', error);
-        }
-      } else {
-        // Clear saved state when all dialogs are closed
-        try {
-          await Preferences.remove({ key: 'groceryDialogState' });
-        } catch (error) {
-          console.error('Error removing dialog state:', error);
-        }
-      }
-    };
-    saveDialogState();
-  }, [showResultsDialog, showDeliverySelector, checkoutResult, routedInstacartItems, routedAmazonItems, routedAmazonFreshItems, routedAmazonGroceryItems, routedWholeFoodsItems, deliveryAddress]);
-
-  // Restore dialog states on mount and when app resumes
-  useEffect(() => {
-    const restoreDialogState = async () => {
-      if (!Capacitor.isNativePlatform()) return;
-
-      try {
-        const { value } = await Preferences.get({ key: 'groceryDialogState' });
-        if (value) {
-          const savedState = JSON.parse(value);
-          if (savedState.showResultsDialog) setShowResultsDialog(true);
-          if (savedState.showDeliverySelector) setShowDeliverySelector(true);
-          if (savedState.checkoutResult) setCheckoutResult(savedState.checkoutResult);
-          if (savedState.routedInstacartItems) setRoutedInstacartItems(savedState.routedInstacartItems);
-          if (savedState.routedAmazonItems) setRoutedAmazonItems(savedState.routedAmazonItems);
-          if (savedState.routedAmazonFreshItems) setRoutedAmazonFreshItems(savedState.routedAmazonFreshItems);
-          if (savedState.routedAmazonGroceryItems) setRoutedAmazonGroceryItems(savedState.routedAmazonGroceryItems);
-          if (savedState.routedWholeFoodsItems) setRoutedWholeFoodsItems(savedState.routedWholeFoodsItems);
-          if (savedState.deliveryAddress) setDeliveryAddress(savedState.deliveryAddress);
-        }
-      } catch (error) {
-        console.error('Error restoring dialog state:', error);
-      }
-    };
-
-    // Restore on mount
-    restoreDialogState();
-
-    // Listen for app state changes (when app resumes from background)
-    if (Capacitor.isNativePlatform()) {
-      const listener = App.addListener('appStateChange', ({ isActive }) => {
-        if (isActive) {
-          restoreDialogState();
-        }
-      });
-
-      return () => {
-        listener.then(l => l.remove());
-      };
-    }
   }, []);
 
   const deliveryServicesAvailable = true;
@@ -772,21 +678,16 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
       if (itemsToAdd.length > 0) {
         await bulkAddToCart(userData.user.id, itemsToAdd);
+        toast.success(`Added ${itemsToAdd.length} items to cart!`);
       }
 
-      const result = createCheckoutResult(itemsWithProducts, 'amazon');
-      setCheckoutResult(result);
-      setShowResultsDialog(true);
+      const unmappedCount = itemsWithProducts.filter(item => !item.asin).length;
+      if (unmappedCount > 0) {
+        toast.info(`${unmappedCount} items couldn't be found and need manual search`);
+      }
 
-      if (result.hasCartItems && !result.hasUnmappedItems) {
-        toast.success(`Added ${result.mappedItems.length} items to cart!`);
-        if (onNavigate) {
-          setTimeout(() => onNavigate('cart'), 1000);
-        }
-      } else if (result.hasCartItems && result.hasUnmappedItems) {
-        toast.info(`${result.mappedItems.length} items added to cart, ${result.unmappedItems.length} need manual search`);
-      } else if (result.hasUnmappedItems) {
-        toast.info(`${result.unmappedItems.length} items need manual search on Amazon`);
+      if (onNavigate) {
+        setTimeout(() => onNavigate('cart'), 1000);
       }
     } catch (error) {
       console.error('Failed to send to cart:', error);
@@ -842,12 +743,17 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
 
       const { instacartItems, amazonItems, amazonFreshItems, amazonGroceryItems, wholeFoodsItems } = await routeGroceryItems(items, userId);
 
-      setRoutedInstacartItems(instacartItems);
-      setRoutedAmazonItems(amazonItems);
-      setRoutedAmazonFreshItems(amazonFreshItems);
-      setRoutedAmazonGroceryItems(amazonGroceryItems);
-      setRoutedWholeFoodsItems(wholeFoodsItems);
-      setShowDeliverySelector(true);
+      localStorage.setItem('checkout_data', JSON.stringify({
+        instacartItems,
+        amazonItems,
+        amazonFreshItems,
+        amazonGroceryItems,
+        wholeFoodsItems,
+        userId,
+        deliveryAddress
+      }));
+
+      onNavigate?.('checkout');
     } catch (error) {
       console.error('Error routing items:', error);
       toast.error('Failed to route items. Please try again.');
@@ -1293,27 +1199,6 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
         />
       )}
 
-      {/* Delivery Service Selector */}
-      {showDeliverySelector && userId && (
-        <DeliveryServiceSelector
-          instacartItems={routedInstacartItems}
-          amazonItems={routedAmazonItems}
-          amazonFreshItems={routedAmazonFreshItems}
-          amazonGroceryItems={routedAmazonGroceryItems}
-          wholeFoodsItems={routedWholeFoodsItems}
-          userId={userId}
-          deliveryAddress={deliveryAddress}
-          onClose={() => setShowDeliverySelector(false)}
-        />
-      )}
-
-      {/* Checkout Results Dialog */}
-      <CheckoutResultsDialog
-        open={showResultsDialog}
-        onClose={() => setShowResultsDialog(false)}
-        result={checkoutResult}
-        serviceName="Amazon"
-      />
     </div>
   );
 }
