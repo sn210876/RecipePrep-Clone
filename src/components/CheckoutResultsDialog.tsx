@@ -180,11 +180,10 @@ export function CheckoutResultsDialog({
               </div>
             )}
           </div>
-        </ScrollArea>
-
-      <DialogFooter className="flex gap-2 sm:gap-2">
+      </ScrollArea>
+      <DialogFooter className="flex gap-2 sm:gap-2 pb-safe">
           {result.hasCartItems && result.cartUrl && (
-            <Button onClick={handleProceedToCheckout}>
+            <Button onClick={handleProceedToCheckout} className="w-full">
               <ExternalLink className="w-4 h-4 mr-2" />
               Proceed to {serviceName} Checkout
             </Button>
