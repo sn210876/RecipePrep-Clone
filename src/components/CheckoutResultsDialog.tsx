@@ -182,10 +182,7 @@ export function CheckoutResultsDialog({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="flex gap-2 sm:gap-2">
-          <Button variant="outline" onClick={onClose}>
-            
-          </Button>
+      <DialogFooter className="flex gap-2 sm:gap-2">
           {result.hasCartItems && result.cartUrl && (
             <Button onClick={handleProceedToCheckout}>
               <ExternalLink className="w-4 h-4 mr-2" />
