@@ -614,9 +614,7 @@ export function DeliveryServiceSelector({
             }}
             disabled={loading}
           >
-            Close
-          </Button>
-        </DialogFooter>
+           
       </DialogContent>
     </Dialog>
     </>
