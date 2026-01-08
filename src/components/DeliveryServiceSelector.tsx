@@ -29,6 +29,9 @@ import {
 import { findProductsForIngredient, bulkAddToCart } from '../services/amazonProductService';
 import { createCheckoutResult, type CheckoutResult } from '../services/amazonSearchFallback';
 import { CheckoutResultsDialog } from './CheckoutResultsDialog';
+import { Preferences } from '@capacitor/preferences';
+import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 interface DeliveryServiceSelectorProps {
   instacartItems: RoutedItem[];
@@ -40,6 +43,8 @@ interface DeliveryServiceSelectorProps {
   deliveryAddress: DeliveryAddress;
   onClose: () => void;
 }
+
+const SELECTOR_STATE_KEY = 'delivery_selector_state';
 
 export function DeliveryServiceSelector({
   instacartItems,
@@ -63,6 +68,49 @@ export function DeliveryServiceSelector({
     ...wholeFoodsItems,
   ];
   const totalItems = instacartItems.length + allAmazonItems.length;
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    if (!showResultsDialog) {
+      Preferences.set({
+        key: SELECTOR_STATE_KEY,
+        value: JSON.stringify({
+          open: true,
+          timestamp: Date.now()
+        })
+      });
+    }
+  }, [showResultsDialog]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let listener: any;
+
+    const setupListener = async () => {
+      listener = await App.addListener('appStateChange', async ({ isActive }) => {
+        if (isActive) {
+          const { value } = await Preferences.get({ key: SELECTOR_STATE_KEY });
+          if (value) {
+            const state = JSON.parse(value);
+            const age = Date.now() - state.timestamp;
+            if (age > 30 * 60 * 1000) {
+              await Preferences.remove({ key: SELECTOR_STATE_KEY });
+            }
+          }
+        }
+      });
+    };
+
+    setupListener();
+
+    return () => {
+      if (listener) {
+        listener.remove();
+      }
+    };
+  }, []);
 
   const handleCheckoutInstacart = async () => {
     if (instacartItems.length === 0) {
@@ -101,9 +149,7 @@ export function DeliveryServiceSelector({
       const session = await createInstacartCart(cartItems, userId, deliveryAddress);
 
       window.open(session.checkout_url, '_blank');
-      toast.success('Redirecting to Instacart checkout...');
-
-      onClose();
+      toast.success('Checkout window opened - dialog will stay open');
     } catch (error) {
       console.error('Error creating Instacart cart:', error);
       toast.error('Failed to create Instacart cart. Please try again.');
@@ -197,7 +243,9 @@ export function DeliveryServiceSelector({
         open={showResultsDialog}
         onClose={() => {
           setShowResultsDialog(false);
-          onClose();
+          if (Capacitor.isNativePlatform()) {
+            Preferences.remove({ key: 'checkout_results_dialog_state' });
+          }
         }}
         result={checkoutResult}
         serviceName={selectedService ? getServiceDisplayName(selectedService) : 'Amazon'}
@@ -558,7 +606,12 @@ export function DeliveryServiceSelector({
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={() => {
+              if (Capacitor.isNativePlatform()) {
+                Preferences.remove({ key: SELECTOR_STATE_KEY });
+              }
+              onClose();
+            }}
             disabled={loading}
           >
             Close

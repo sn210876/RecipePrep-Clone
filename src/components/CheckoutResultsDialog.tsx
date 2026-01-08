@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ExternalLink, ShoppingCart, Package, Search, Check, AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -12,6 +13,9 @@ import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
 import { type CheckoutResult } from '../services/amazonSearchFallback';
 import { appendAffiliateTag } from '../services/amazonProductService';
+import { Preferences } from '@capacitor/preferences';
+import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 interface CheckoutResultsDialogProps {
   open: boolean;
@@ -20,12 +24,61 @@ interface CheckoutResultsDialogProps {
   serviceName: string;
 }
 
+const DIALOG_STATE_KEY = 'checkout_results_dialog_state';
+
 export function CheckoutResultsDialog({
   open,
   onClose,
   result,
   serviceName
 }: CheckoutResultsDialogProps) {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    if (open && result) {
+      Preferences.set({
+        key: DIALOG_STATE_KEY,
+        value: JSON.stringify({
+          open: true,
+          result,
+          serviceName,
+          timestamp: Date.now()
+        })
+      });
+    } else {
+      Preferences.remove({ key: DIALOG_STATE_KEY });
+    }
+  }, [open, result, serviceName]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let listener: any;
+
+    const setupListener = async () => {
+      listener = await App.addListener('appStateChange', async ({ isActive }) => {
+        if (isActive) {
+          const { value } = await Preferences.get({ key: DIALOG_STATE_KEY });
+          if (value) {
+            const state = JSON.parse(value);
+            const age = Date.now() - state.timestamp;
+            if (age > 30 * 60 * 1000) {
+              await Preferences.remove({ key: DIALOG_STATE_KEY });
+            }
+          }
+        }
+      });
+    };
+
+    setupListener();
+
+    return () => {
+      if (listener) {
+        listener.remove();
+      }
+    };
+  }, []);
+
   if (!result) return null;
 
   const handleProceedToCheckout = () => {
@@ -33,7 +86,6 @@ export function CheckoutResultsDialog({
       const affiliateUrl = appendAffiliateTag(result.cartUrl);
       window.open(affiliateUrl, '_blank');
     }
-    onClose();
   };
 
   const handleSearchItem = (searchUrl: string) => {
