@@ -184,7 +184,7 @@ export function CheckoutResultsDialog({
 
         <DialogFooter className="flex gap-2 sm:gap-2">
           <Button variant="outline" onClick={onClose}>
-            Close
+            
           </Button>
           {result.hasCartItems && result.cartUrl && (
             <Button onClick={handleProceedToCheckout}>
