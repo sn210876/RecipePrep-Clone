@@ -603,19 +603,7 @@ export function DeliveryServiceSelector({
           )}
        </div>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (Capacitor.isNativePlatform()) {
-                Preferences.remove({ key: SELECTOR_STATE_KEY });
-              }
-              onClose();
-            }}
-            disabled={loading}
-          >
-            
-        </DialogFooter>
+       
       </DialogContent>
     </Dialog>
     </>
