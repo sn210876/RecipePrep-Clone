@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
-import { Upload as UploadIcon, X, Image as ImageIcon, Video, Music, Play, Pause } from 'lucide-react';
+import { Upload as UploadIcon, X, Image as ImageIcon, Video, Music, Play, Pause, Camera as CameraIcon } from 'lucide-react';
 import { extractHashtags } from '../lib/hashtags';
 import React from 'react';
 import {
@@ -15,6 +15,8 @@ import {
 } from '../components/ui/select';
 import { compressMultipleImages, isImageFile, formatFileSize } from '../lib/imageCompression';
 import { compressVideo, isVideoFile, getVideoInfo } from '../lib/videoCompression';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface UploadProps {
   onNavigate: (page: string) => void;
@@ -199,6 +201,60 @@ const getVideoDuration = (file: File): Promise<number> => {
   setSelectedFiles([]);
   setPreviewUrls([]);
   setFileType(null);
+};
+
+const handleCapacitorCamera = async (source: CameraSource) => {
+  try {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: source,
+    });
+
+    if (!image.webPath) {
+      toast.error('Failed to get image');
+      return;
+    }
+
+    const response = await fetch(image.webPath);
+    const blob = await response.blob();
+    const file = new File([blob], `photo-${Date.now()}.${image.format}`, { type: `image/${image.format}` });
+
+    const toastId = toast.loading('Compressing image...', { duration: 0 });
+
+    try {
+      const compressedResults = await compressMultipleImages([file]);
+      const compressedFile = compressedResults[0].file;
+
+      toast.success('Image ready!', { id: toastId });
+
+      setSelectedFiles([compressedFile]);
+      setPreviewUrls([URL.createObjectURL(compressedFile)]);
+      setFileType('image');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to compress image', { id: toastId });
+    }
+  } catch (error: any) {
+    if (error.message !== 'User cancelled photos app') {
+      console.error('Camera error:', error);
+      toast.error('Failed to access camera');
+    }
+  }
+};
+
+const handleTakePhoto = () => {
+  if (Capacitor.isNativePlatform()) {
+    handleCapacitorCamera(CameraSource.Camera);
+  } else {
+    toast.info('Camera only available on mobile app');
+  }
+};
+
+const handlePickFromGallery = () => {
+  if (Capacitor.isNativePlatform()) {
+    handleCapacitorCamera(CameraSource.Photos);
+  }
 };
 
 
@@ -497,30 +553,70 @@ onNavigate('discover');
         </div>
 
 {previewUrls.length === 0 ? (
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 sm:p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
-            <label className="cursor-pointer">
-      <input 
-  type="file" 
-  accept="image/*,video/*" 
-  multiple 
-  onChange={handleFileSelect} 
-  className="hidden" 
-/>
-              <div className="space-y-4">
-                <div className="flex gap-3 sm:gap-4 justify-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
-                    <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+          <div className="space-y-3">
+            {Capacitor.isNativePlatform() && (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={handleTakePhoto}
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-orange-500 transition-colors"
+                >
+                  <div className="space-y-3">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl shadow-lg mx-auto">
+                      <CameraIcon className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Take Photo</p>
+                      <p className="text-xs text-gray-500">Use camera</p>
+                    </div>
                   </div>
-                  <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg">
-                    <Video className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePickFromGallery}
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-orange-500 transition-colors"
+                >
+                  <div className="space-y-3">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg mx-auto">
+                      <ImageIcon className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">From Gallery</p>
+                      <p className="text-xs text-gray-500">Choose photo</p>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Upload a photo or video</p>
-                  <p className="text-xs sm:text-sm text-gray-500">Click to select a file from your device</p>
-                </div>
+                </button>
               </div>
-            </label>
+            )}
+            <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 sm:p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
+              <label className="cursor-pointer">
+        <input
+    type="file"
+    accept="image/*,video/*"
+    multiple
+    onChange={handleFileSelect}
+    className="hidden"
+  />
+                <div className="space-y-4">
+                  <div className="flex gap-3 sm:gap-4 justify-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl shadow-lg">
+                      <ImageIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                    </div>
+                    <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg">
+                      <Video className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-base sm:text-lg font-semibold text-gray-900 mb-1">
+                      {Capacitor.isNativePlatform() ? 'Or select files' : 'Upload a photo or video'}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {Capacitor.isNativePlatform() ? 'Browse your files' : 'Click to select a file from your device'}
+                    </p>
+                  </div>
+                </div>
+              </label>
+            </div>
           </div>
     ) : (
   <div className="space-y-2">
