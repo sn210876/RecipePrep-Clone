@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -45,6 +45,12 @@ export function Cart({ onNavigate }: CartProps = {}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [productsLoading, setProductsLoading] = useState(false);
   const [showCatalog, setShowCatalog] = useState(true);
+
+  const cartSectionRef = useRef<HTMLDivElement>(null);
+
+  const scrollToCart = () => {
+    cartSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     loadCart();
@@ -263,14 +269,25 @@ export function Cart({ onNavigate }: CartProps = {}) {
   <div>
     <CardTitle className="text-lg sm:text-xl mb-2">Amazon Product Catalog</CardTitle>
     <p className="text-sm text-gray-600 mb-3">Browse and add pantry staples to your cart</p>
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => setShowCatalog(!showCatalog)}
-      className="w-full sm:w-auto"
-    >
-      {showCatalog ? 'Hide' : 'Show'} Catalog
-    </Button>
+    <div className="flex flex-col sm:flex-row gap-2 justify-center">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowCatalog(!showCatalog)}
+        className="w-full sm:w-auto"
+      >
+        {showCatalog ? 'Hide' : 'Show'} Catalog
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={scrollToCart}
+        className="w-full sm:w-auto bg-orange-50 hover:bg-orange-100 border-orange-300"
+      >
+        <ShoppingCart className="w-4 h-4 mr-2" />
+        Show Cart
+      </Button>
+    </div>
   </div>
 </CardHeader>
 
@@ -387,6 +404,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
         </Card>
 
         {/* Cart Items Section */}
+        <div ref={cartSectionRef}>
         {cartItems.length === 0 ? (
           <Card className="w-full max-w-sm mx-auto border-4 border-orange-500">
             <CardContent className="flex flex-col items-center justify-center py-12 px-6">
@@ -547,6 +565,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
             </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );
