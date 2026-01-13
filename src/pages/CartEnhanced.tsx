@@ -425,10 +425,10 @@ export function Cart({ onNavigate }: CartProps = {}) {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-gray-900">Your Cart</h2>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={clearCart}
-                className="text-xs md:text-sm hover:bg-red-50 hover:text-red-600"
+                className="text-xs md:text-sm border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-600"
               >
                 Clear All
               </Button>
