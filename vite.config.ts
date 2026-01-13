@@ -15,12 +15,35 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-          'supabase-vendor': ['@supabase/supabase-js'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase-vendor';
+            }
+            if (id.includes('@capacitor')) {
+              return 'capacitor-vendor';
+            }
+            if (id.includes('lucide-react')) {
+              return 'icons-vendor';
+            }
+            return 'vendor';
+          }
+          if (id.includes('src/pages/')) {
+            const pageName = id.split('src/pages/')[1].split('.')[0];
+            return `page-${pageName.toLowerCase()}`;
+          }
+          if (id.includes('src/services/')) {
+            return 'services';
+          }
         },
       },
     },

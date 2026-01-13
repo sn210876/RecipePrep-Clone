@@ -1,32 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { RecipeProvider } from './context/RecipeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
 import { imageMonitorService } from './services/imageMonitorService';
-import { Discover as DiscoverRecipes } from './pages/DiscoverRecipes';
-import { Discover } from './pages/Discover';
-import { MyRecipes } from './pages/MyRecipes';
-import { AddRecipe } from './pages/AddRecipe';
-import { MealPlanner } from './pages/MealPlanner';
-import { GroceryList } from './pages/GroceryList';
-import { Cart } from './pages/CartEnhanced';
-import Settings from './pages/Settings';
-import Referrals from './pages/Referrals';
-import AdminPayouts from './pages/AdminPayouts';
-import AdminImageMigration from './pages/AdminImageMigration';
-import { AdminProducts } from './pages/AdminProducts';
-import { AdminMappings } from './pages/AdminMappings';
-import { Upload } from './pages/Upload';
-import { Profile } from './pages/Profile';
-import { VerifyEmail } from './pages/VerifyEmail';
-import { Messages } from './pages/Messages';
-import { Blog } from './pages/Blog';
-import { BlogPostPage } from './pages/BlogPost';
-import { FAQ } from './pages/FAQ';
-import { Onboarding } from './pages/Onboarding';
-import { Checkout } from './pages/Checkout';
-import { CheckoutResults } from './pages/CheckoutResults';
 import { Toaster } from './components/ui/sonner';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -39,10 +16,42 @@ import { ErrorBanner } from './components/ErrorBanner';
 import { errorHandler } from './lib/errorHandler';
 import { checkEnvironment } from './lib/envChecker';
 import { safeStorage } from './lib/safeStorage';
-import { CheckoutRedirectPage } from './components/CheckoutRedirectPage';
 import { withTimeout, forceSessionCheck, AuthTimeoutError } from './lib/authTimeout';
 
-// Mobile-safe wrapper — fixes notch & home bar on iPhone/Android
+const DiscoverRecipes = lazy(() => import('./pages/DiscoverRecipes').then(m => ({ default: m.Discover })));
+const Discover = lazy(() => import('./pages/Discover').then(m => ({ default: m.Discover })));
+const MyRecipes = lazy(() => import('./pages/MyRecipes').then(m => ({ default: m.MyRecipes })));
+const AddRecipe = lazy(() => import('./pages/AddRecipe').then(m => ({ default: m.AddRecipe })));
+const MealPlanner = lazy(() => import('./pages/MealPlanner').then(m => ({ default: m.MealPlanner })));
+const GroceryList = lazy(() => import('./pages/GroceryList').then(m => ({ default: m.GroceryList })));
+const Cart = lazy(() => import('./pages/CartEnhanced').then(m => ({ default: m.Cart })));
+const Settings = lazy(() => import('./pages/Settings'));
+const Referrals = lazy(() => import('./pages/Referrals'));
+const AdminPayouts = lazy(() => import('./pages/AdminPayouts'));
+const AdminImageMigration = lazy(() => import('./pages/AdminImageMigration'));
+const AdminProducts = lazy(() => import('./pages/AdminProducts').then(m => ({ default: m.AdminProducts })));
+const AdminMappings = lazy(() => import('./pages/AdminMappings').then(m => ({ default: m.AdminMappings })));
+const Upload = lazy(() => import('./pages/Upload').then(m => ({ default: m.Upload })));
+const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail').then(m => ({ default: m.VerifyEmail })));
+const Messages = lazy(() => import('./pages/Messages').then(m => ({ default: m.Messages })));
+const Blog = lazy(() => import('./pages/Blog').then(m => ({ default: m.Blog })));
+const BlogPostPage = lazy(() => import('./pages/BlogPost').then(m => ({ default: m.BlogPostPage })));
+const FAQ = lazy(() => import('./pages/FAQ').then(m => ({ default: m.FAQ })));
+const Onboarding = lazy(() => import('./pages/Onboarding').then(m => ({ default: m.Onboarding })));
+const Checkout = lazy(() => import('./pages/Checkout').then(m => ({ default: m.Checkout })));
+const CheckoutResults = lazy(() => import('./pages/CheckoutResults').then(m => ({ default: m.CheckoutResults })));
+const CheckoutRedirectPage = lazy(() => import('./components/CheckoutRedirectPage').then(m => ({ default: m.CheckoutRedirectPage })));
+
+const PageLoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <div className="inline-block w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      <p className="mt-4 text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
+
 const MobileSafeWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
     {children}
@@ -837,7 +846,9 @@ if (loading || (user && isEmailVerified === undefined) || oauthExchangeInProgres
         />
       )}
       <Layout currentPage={currentPage} onNavigate={handleNavigate}>
-        {renderPage()}
+        <Suspense fallback={<PageLoadingFallback />}>
+          {renderPage()}
+        </Suspense>
         <Toaster />
       </Layout>
     </MobileSafeWrapper>

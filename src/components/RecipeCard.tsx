@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useRef, useCallback } from 'react';
 import { Clock, ChefHat, Bookmark, Flame, Trash2, MoreVertical, Edit } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
