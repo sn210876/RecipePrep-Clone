@@ -20,20 +20,17 @@ export default defineConfig({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
               return 'react-vendor';
             }
-            if (id.includes('@radix-ui')) {
-              return 'ui-vendor';
+            if (id.includes('@radix-ui') || id.includes('lucide-react')) {
+              return 'react-vendor';
             }
             if (id.includes('@supabase')) {
               return 'supabase-vendor';
             }
             if (id.includes('@capacitor')) {
               return 'capacitor-vendor';
-            }
-            if (id.includes('lucide-react')) {
-              return 'icons-vendor';
             }
             return 'vendor';
           }
