@@ -252,8 +252,13 @@ const handleTakePhoto = () => {
 };
 
 const handlePickFromGallery = () => {
+  console.log('From Gallery button clicked');
   if (Capacitor.isNativePlatform()) {
-    handleCapacitorCamera(CameraSource.Photos);
+    const fileInput = document.getElementById('mobile-file-input') as HTMLInputElement;
+    console.log('File input found:', !!fileInput);
+    if (fileInput) {
+      fileInput.click();
+    }
   }
 };
 
@@ -591,6 +596,7 @@ onNavigate('discover');
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 sm:p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
               <label className="cursor-pointer">
         <input
+    id="mobile-file-input"
     type="file"
     accept="image/*,video/*"
     multiple
