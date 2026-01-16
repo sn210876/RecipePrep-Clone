@@ -838,7 +838,7 @@ onNavigate('discover');
             <video
               src={url}
               controls
-              className="w-full aspect-square object-cover rounded-xl"
+              className="w-full max-h-64 object-cover rounded-xl"
               onError={(e) => {
                 console.error('❌ Video failed to load:', e);
                 toast.error('Failed to load video preview');
@@ -848,7 +848,7 @@ onNavigate('discover');
             <img
               src={url}
               alt={`Preview ${index + 1}`}
-              className="w-full aspect-square object-cover rounded-xl"
+              className="w-full max-h-64 object-cover rounded-xl"
               onLoad={() => console.log('✅ Image preview loaded successfully')}
               onError={(e) => {
                 console.error('❌ Image failed to load:', e);
