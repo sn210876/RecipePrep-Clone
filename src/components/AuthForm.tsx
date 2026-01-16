@@ -267,6 +267,27 @@ export default function AuthForm() {
     };
   }, [refreshSession]);
 
+  const checkConnectivity = async (): Promise<boolean> => {
+    try {
+      console.log('🔌 Checking network connectivity...');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch('https://www.google.com/favicon.ico', {
+        method: 'HEAD',
+        mode: 'no-cors',
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      console.log('✅ Network connectivity confirmed');
+      return true;
+    } catch (error) {
+      console.error('❌ Network connectivity check failed:', error);
+      return false;
+    }
+  };
+
   const handleSubmit = async () => {
     setError('');
     setMessage('');
@@ -292,6 +313,15 @@ export default function AuthForm() {
       }
     }
 
+    // Check network connectivity first
+    if (Capacitor.isNativePlatform()) {
+      const hasConnectivity = await checkConnectivity();
+      if (!hasConnectivity) {
+        setError('No internet connection. Please check your network settings and try again.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -305,7 +335,7 @@ export default function AuthForm() {
               email: formData.email,
               password: formData.password,
             }),
-            { timeoutMs: 15000, operationName: 'Sign In' }
+            { operationName: 'Sign In' }
           );
 
           const { data, error } = signInResult as any;

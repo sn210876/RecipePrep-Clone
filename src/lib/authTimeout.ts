@@ -1,4 +1,5 @@
 import { errorHandler } from './errorHandler';
+import { Capacitor } from '@capacitor/core';
 
 export interface TimeoutOptions {
   timeoutMs?: number;
@@ -12,11 +13,21 @@ export class AuthTimeoutError extends Error {
   }
 }
 
+function getDefaultTimeout(): number {
+  try {
+    const isNative = Capacitor?.isNativePlatform?.();
+    return isNative ? 30000 : 15000;
+  } catch {
+    return 15000;
+  }
+}
+
 export async function withTimeout<T>(
   promise: Promise<T>,
   options: TimeoutOptions = {}
 ): Promise<T> {
-  const { timeoutMs = 15000, operationName = 'Auth operation' } = options;
+  const defaultTimeout = getDefaultTimeout();
+  const { timeoutMs = defaultTimeout, operationName = 'Auth operation' } = options;
 
   const timeoutPromise = new Promise<T>((_, reject) => {
     setTimeout(() => {
