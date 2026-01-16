@@ -573,12 +573,12 @@ onNavigate('discover');
     }
   };
 
-  console.log('🔄 Upload component render:', {
+  console.log('🔄 Upload component render:', JSON.stringify({
     previewUrlsCount: previewUrls.length,
     selectedFilesCount: selectedFiles.length,
     fileType,
     previewUrls: previewUrls.slice(0, 2), // Log first 2 to avoid spam
-  });
+  }));
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent md:relative">
@@ -717,17 +717,21 @@ onNavigate('discover');
           </div>
     ) : (
   <div className="space-y-2">
+    {(() => {
+      console.log('📊 About to render previews. previewUrls.length:', previewUrls.length, 'selectedFiles.length:', selectedFiles.length);
+      return null;
+    })()}
     {previewUrls.map((url, index) => {
       const file = selectedFiles[index];
       const isVideo = file?.type.startsWith('video/');
 
-      console.log(`🖼️ Rendering preview ${index}:`, {
-        url,
+      console.log(`🖼️ Rendering preview ${index}:`, JSON.stringify({
+        url: url.substring(0, 50),
         isVideo,
         fileType: file?.type,
         fileName: file?.name,
         fileSize: file?.size
-      });
+      }));
 
       return (
         <div key={index} className="relative">
