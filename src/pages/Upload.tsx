@@ -49,32 +49,54 @@ export function Upload({ onNavigate }: UploadProps) {
     // Check for pending upload that was interrupted by unmount
     const checkPendingUpload = async () => {
       try {
-        const { value } = await Preferences.get({ key: 'pending_upload_file' });
+        const { value } = await Preferences.get({ key: 'pending_upload_webpath' });
         if (value) {
           console.log('🔄 Found pending upload, restoring...');
-          const fileData = JSON.parse(value);
+          const pendingData = JSON.parse(value);
 
-          // Convert base64 back to blob and file
-          const response = await fetch(fileData.dataUrl);
-          const blob = await response.blob();
-          const file = new File([blob], fileData.name, { type: fileData.type });
+          // Show loading toast
+          const toastId = toast.loading('Loading photo...', { duration: 0 });
 
-          const previewUrl = URL.createObjectURL(file);
+          try {
+            // Fetch the image from the cached webPath
+            console.log('🔄 Fetching from webPath:', pendingData.webPath);
+            const response = await fetch(pendingData.webPath);
 
-          setSelectedFiles([file]);
-          setPreviewUrls([previewUrl]);
-          setFileType('image');
+            if (!response.ok) {
+              throw new Error('Failed to load cached image');
+            }
 
-          // Clear the pending upload
-          await Preferences.remove({ key: 'pending_upload_file' });
+            const blob = await response.blob();
+            const file = new File(
+              [blob],
+              `photo-${pendingData.timestamp}.${pendingData.format}`,
+              { type: pendingData.mimeType }
+            );
 
-          console.log('✅ Restored pending upload');
-          toast.success('Photo loaded!');
+            console.log('🗜️ Compressing restored image...');
+            const compressedResults = await compressMultipleImages([file]);
+            const compressedFile = compressedResults[0].file;
+
+            const previewUrl = URL.createObjectURL(compressedFile);
+
+            setSelectedFiles([compressedFile]);
+            setPreviewUrls([previewUrl]);
+            setFileType('image');
+
+            // Clear the pending upload
+            await Preferences.remove({ key: 'pending_upload_webpath' });
+
+            console.log('✅ Restored and compressed pending upload');
+            toast.success('Photo loaded!', { id: toastId });
+          } catch (error) {
+            console.error('❌ Failed to restore pending upload:', error);
+            toast.error('Failed to load photo', { id: toastId });
+            await Preferences.remove({ key: 'pending_upload_webpath' });
+          }
         }
       } catch (error) {
-        console.error('❌ Failed to restore pending upload:', error);
-        // Clean up if there was an error
-        await Preferences.remove({ key: 'pending_upload_file' });
+        console.error('❌ Error checking for pending upload:', error);
+        await Preferences.remove({ key: 'pending_upload_webpath' });
       }
     };
 
@@ -280,7 +302,7 @@ const getVideoDuration = (file: File): Promise<number> => {
   setPreviewUrls([]);
   setFileType(null);
   // Clear any pending upload
-  await Preferences.remove({ key: 'pending_upload_file' });
+  await Preferences.remove({ key: 'pending_upload_webpath' });
 };
 
 const handleCapacitorCamera = async (source: CameraSource) => {
@@ -332,6 +354,19 @@ const handleCapacitorCamera = async (source: CameraSource) => {
     });
     console.log('✅ File created:', { name: file.name, size: file.size, type: file.type });
 
+    // Save webPath to Preferences IMMEDIATELY to survive component unmount
+    console.log('💾 Saving webPath to Preferences before compression...');
+    await Preferences.set({
+      key: 'pending_upload_webpath',
+      value: JSON.stringify({
+        webPath: image.webPath,
+        format: image.format || 'jpeg',
+        mimeType: mimeType,
+        timestamp: Date.now()
+      })
+    });
+    console.log('✅ Saved to Preferences');
+
     const toastId = toast.loading('Compressing image...', { duration: 0 });
 
     try {
@@ -339,27 +374,6 @@ const handleCapacitorCamera = async (source: CameraSource) => {
       const compressedResults = await compressMultipleImages([file]);
       const compressedFile = compressedResults[0].file;
       console.log('✅ Compression complete:', { size: compressedFile.size });
-
-      // Save to Preferences to survive component unmount during app resume
-      console.log('💾 Saving to Preferences to survive unmount...');
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const dataUrl = reader.result as string;
-          await Preferences.set({
-            key: 'pending_upload_file',
-            value: JSON.stringify({
-              name: compressedFile.name,
-              type: compressedFile.type,
-              dataUrl: dataUrl
-            })
-          });
-          console.log('✅ Saved to Preferences');
-        } catch (error) {
-          console.error('❌ Failed to save to Preferences:', error);
-        }
-      };
-      reader.readAsDataURL(compressedFile);
 
       toast.success('Image ready!', { id: toastId });
 
@@ -389,12 +403,12 @@ const handleCapacitorCamera = async (source: CameraSource) => {
 
       // Clear the pending upload since we successfully set state
       console.log('🧹 Clearing pending upload from Preferences');
-      await Preferences.remove({ key: 'pending_upload_file' });
+      await Preferences.remove({ key: 'pending_upload_webpath' });
     } catch (error: any) {
       console.error('❌ Compression error:', error);
       toast.error(error.message || 'Failed to compress image', { id: toastId });
       // Clear pending upload on error
-      await Preferences.remove({ key: 'pending_upload_file' });
+      await Preferences.remove({ key: 'pending_upload_webpath' });
     }
   } catch (error: any) {
     console.error('❌ Camera error:', error);
