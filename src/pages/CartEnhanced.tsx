@@ -220,7 +220,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
 
     if (device.isMobile) {
       if (itemsWithAsin.length > 0) {
-        toast.info('Opening items in browser for best affiliate tracking...');
+        toast.info('Opening items in browser to preserve your affiliate commission...');
       }
 
       const allItems = [
@@ -234,36 +234,36 @@ export function Cart({ onNavigate }: CartProps = {}) {
         }))
       ];
 
-      allItems.forEach((item, index) => {
-        setTimeout(() => {
-          const enhancedUrl = appendAffiliateTag(item.url, { mobile: true, source: 'mobile_cart' });
-          openInBrowser(enhancedUrl);
-        }, index * 400);
-      });
+      for (let i = 0; i < allItems.length; i++) {
+        const item = allItems[i];
+        await new Promise(resolve => setTimeout(resolve, i * 400));
+        const enhancedUrl = appendAffiliateTag(item.url, { mobile: true, source: 'mobile_cart' });
+        await openInBrowser(enhancedUrl);
+      }
 
-      toast.success(`Opening ${allItems.length} items in browser to preserve affiliate tracking`);
+      toast.success(`Opened ${allItems.length} items in browser with affiliate tracking`);
     } else {
       if (itemsWithAsin.length > 0) {
         const cartUrl = buildAmazonCartUrl(itemsWithAsin);
-        openInBrowser(cartUrl);
+        await openInBrowser(cartUrl);
 
         if (itemsWithoutAsin.length > 0) {
           toast.success(`Added ${itemsWithAsin.length} items to Amazon cart. Opening ${itemsWithoutAsin.length} additional items...`);
-          itemsWithoutAsin.forEach((item, index) => {
-            setTimeout(() => {
-              openInBrowser(appendAffiliateTag(item.amazon_product_url!, { mobile: false }));
-            }, (index + 1) * 300);
-          });
+          for (let i = 0; i < itemsWithoutAsin.length; i++) {
+            const item = itemsWithoutAsin[i];
+            await new Promise(resolve => setTimeout(resolve, (i + 1) * 300));
+            await openInBrowser(appendAffiliateTag(item.amazon_product_url!, { mobile: false }));
+          }
         } else {
-          toast.success(`Added ${itemsWithAsin.length} items to Amazon cart!`);
+          toast.success(`Added ${itemsWithAsin.length} items to Amazon cart with affiliate tracking!`);
         }
       } else if (itemsWithoutAsin.length > 0) {
-        itemsWithoutAsin.forEach((item, index) => {
-          setTimeout(() => {
-            openInBrowser(appendAffiliateTag(item.amazon_product_url!, { mobile: false }));
-          }, index * 300);
-        });
-        toast.success('Opening Amazon product pages...');
+        for (let i = 0; i < itemsWithoutAsin.length; i++) {
+          const item = itemsWithoutAsin[i];
+          await new Promise(resolve => setTimeout(resolve, i * 300));
+          await openInBrowser(appendAffiliateTag(item.amazon_product_url!, { mobile: false }));
+        }
+        toast.success('Opened Amazon product pages with affiliate tracking!');
       } else {
         toast.error('No Amazon products in cart');
       }

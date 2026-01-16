@@ -61,11 +61,15 @@ export function appendAffiliateTag(url: string, options?: { mobile?: boolean; so
       urlObj.searchParams.set('utm_medium', source);
     }
 
-    return urlObj.toString();
+    const finalUrl = urlObj.toString();
+    console.log(`🔗 Affiliate URL: ${finalUrl.substring(0, 100)}... (tag=${AFFILIATE_TAG})`);
+    return finalUrl;
   } catch {
     const separator = url.includes('?') ? '&' : '?';
     const source = options?.source || (options?.mobile ? 'mobile_cart' : 'web_cart');
-    return `${url}${separator}tag=${AFFILIATE_TAG}&linkCode=ll1&ref=nosim&utm_source=mealscrape&utm_medium=${source}`;
+    const finalUrl = `${url}${separator}tag=${AFFILIATE_TAG}&linkCode=ll1&ref=nosim&utm_source=mealscrape&utm_medium=${source}`;
+    console.log(`🔗 Affiliate URL (fallback): ${finalUrl.substring(0, 100)}... (tag=${AFFILIATE_TAG})`);
+    return finalUrl;
   }
 }
 

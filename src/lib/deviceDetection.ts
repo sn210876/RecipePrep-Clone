@@ -75,24 +75,31 @@ export function buildMobileFriendlyUrl(url: string): string {
   }
 }
 
-export function openInBrowser(url: string): void {
+export async function openInBrowser(url: string): Promise<void> {
   const device = detectDevice();
 
   if (device.isMobile) {
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
+    try {
+      const { Browser } = await import('@capacitor/browser');
+      const { Capacitor } = await import('@capacitor/core');
 
-    link.style.display = 'none';
-    document.body.appendChild(link);
+      if (Capacitor.isNativePlatform()) {
+        console.log('🌐 Opening in Capacitor Browser (NOT Amazon app) to preserve affiliate tracking');
+        await Browser.open({
+          url,
+          presentationStyle: 'popover',
+          toolbarColor: '#FF6B35'
+        });
+        return;
+      }
+    } catch (error) {
+      console.log('⚠️ Capacitor Browser not available, using fallback');
+    }
 
-    link.click();
-
-    setTimeout(() => {
-      document.body.removeChild(link);
-    }, 100);
+    console.log('🌐 Opening in mobile browser window');
+    window.open(url, '_blank', 'noopener,noreferrer');
   } else {
+    console.log('🌐 Opening in desktop browser');
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 }
