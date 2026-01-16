@@ -15,6 +15,7 @@ import { trackAmazonServiceClick } from '../services/amazonGroceryService';
 import { findProductsForIngredient, bulkAddToCart } from '../services/amazonProductService';
 import { createCheckoutResult } from '../services/amazonSearchFallback';
 import { supabase } from '../lib/supabase';
+import { openInBrowser } from '../lib/deviceDetection';
 
 interface CheckoutProps {
   onNavigate?: (page: string) => void;
@@ -105,7 +106,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
 
       const session = await createInstacartCart(cartItems, userId, deliveryAddress);
 
-      window.open(session.checkout_url, '_blank');
+      await openInBrowser(session.checkout_url);
       toast.success('Checkout window opened - you can return anytime');
     } catch (error) {
       console.error('Error creating Instacart cart:', error);

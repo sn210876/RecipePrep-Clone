@@ -6,6 +6,7 @@ import { Badge } from '../components/ui/badge';
 import { type CheckoutResult } from '../services/amazonSearchFallback';
 import { appendAffiliateTag } from '../services/amazonProductService';
 import { toast } from 'sonner';
+import { openInBrowser } from '../lib/deviceDetection';
 
 interface CheckoutResultsProps {
   onNavigate?: (page: string) => void;
@@ -52,17 +53,17 @@ export function CheckoutResults({ onNavigate }: CheckoutResultsProps) {
 
   const { result, serviceName } = resultsData;
 
-  const handleProceedToCheckout = () => {
+  const handleProceedToCheckout = async () => {
     if (result.cartUrl) {
       const affiliateUrl = appendAffiliateTag(result.cartUrl);
-      window.open(affiliateUrl, '_blank');
+      await openInBrowser(affiliateUrl);
       toast.success('Checkout window opened - you can return anytime');
     }
   };
 
-  const handleSearchItem = (searchUrl: string) => {
+  const handleSearchItem = async (searchUrl: string) => {
     const affiliateUrl = appendAffiliateTag(searchUrl);
-    window.open(affiliateUrl, '_blank');
+    await openInBrowser(affiliateUrl);
   };
 
   return (

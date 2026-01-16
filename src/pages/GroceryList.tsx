@@ -71,6 +71,10 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   const [deliveryAddress, setDeliveryAddress] = useState<any>({});
   const [instacartEnabled, setInstacartEnabled] = useState(false);
 
+  // Loading states for buttons
+  const [cartLoading, setCartLoading] = useState(false);
+  const [deliveryLoading, setDeliveryLoading] = useState(false);
+
   const items = state.groceryList;
 
   // Get user ID on mount and load grocery items
@@ -631,6 +635,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
   }
 
   async function handleSendToCart() {
+    setCartLoading(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
@@ -692,6 +697,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     } catch (error) {
       console.error('Failed to send to cart:', error);
       toast.error('Failed to send items to cart');
+    } finally {
+      setCartLoading(false);
     }
   }
 
@@ -738,6 +745,7 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
       return;
     }
 
+    setDeliveryLoading(true);
     try {
       toast.info('Routing items to delivery services...');
 
@@ -757,6 +765,8 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
     } catch (error) {
       console.error('Error routing items:', error);
       toast.error('Failed to route items. Please try again.');
+    } finally {
+      setDeliveryLoading(false);
     }
   };
 
@@ -832,20 +842,40 @@ export function GroceryList({ onNavigate }: GroceryListProps = {}) {
                 <Button
                   variant="outline"
                   onClick={handleSendToCart}
+                  disabled={cartLoading}
                   className="h-10 text-sm border-2 border-gray-300 bg-white hover:bg-gray-100 hover:border-gray-500 hover:text-gray-900"
                 >
-                  <ShoppingCart className="w-4 h-4 mr-1" />
-                  Amazon Cart
+                  {cartLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4 mr-1" />
+                      Amazon Cart
+                    </>
+                  )}
                 </Button>
               )}
               {totalCount > 0 && deliveryServicesAvailable && (
                 <Button
                   variant="outline"
                   onClick={handleDeliveryCheckout}
+                  disabled={deliveryLoading}
                   className="h-10 text-sm border-2 border-green-300 bg-white hover:bg-green-50 hover:border-green-500 hover:text-green-900"
                 >
-                  <Truck className="w-4 h-4 mr-1" />
-                  Order Delivery
+                  {deliveryLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="w-4 h-4 mr-1" />
+                      Order Delivery
+                    </>
+                  )}
                 </Button>
               )}
               {totalCount > 0 && (
