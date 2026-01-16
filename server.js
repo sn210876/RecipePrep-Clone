@@ -151,22 +151,33 @@ async function convertImageToBase64(imagePath) {
 }
 
 async function extractRecipeFromTranscript(transcript, thumbnailBase64, videoMetadata) {
-  const prompt = `You are a recipe extraction expert. Your PRIMARY SOURCE is the video transcript - this is the most important source of information.
+  const hasDescriptionRecipe = videoMetadata.description &&
+    (videoMetadata.description.match(/\d+[\s\/]*(?:cup|tablespoon|teaspoon|tbsp|tsp|oz|lb|gram|g|ml|kg)/gi) || []).length >= 3;
 
-===== VIDEO TRANSCRIPT (PRIMARY SOURCE - USE THIS FIRST) =====
-${transcript}
+  const primarySource = hasDescriptionRecipe ? videoMetadata.description : transcript;
+  const secondarySource = hasDescriptionRecipe ? transcript : videoMetadata.description;
 
-${videoMetadata.description ? `===== VIDEO DESCRIPTION (SECONDARY SOURCE) =====\n${videoMetadata.description}\n` : ''}
+  console.log('📊 Recipe extraction strategy:');
+  console.log('- Has recipe in description:', hasDescriptionRecipe);
+  console.log('- Primary source:', hasDescriptionRecipe ? 'DESCRIPTION/CAPTION' : 'TRANSCRIPT');
+  console.log('- Description preview:', videoMetadata.description?.substring(0, 200));
+
+  const prompt = `You are a recipe extraction expert. Extract the recipe from the provided content.
+
+===== PRIMARY CONTENT (USE THIS FIRST) =====
+${primarySource}
+
+${secondarySource ? `===== ADDITIONAL CONTENT (USE IF PRIMARY IS INCOMPLETE) =====\n${secondarySource}\n` : ''}
 
 CRITICAL EXTRACTION RULES:
-1. THE TRANSCRIPT IS YOUR PRIMARY SOURCE - extract ALL ingredients and instructions from it first
-2. Only use the description if the transcript is incomplete or unclear
-3. Extract ingredients WORD-FOR-WORD from the transcript - do not paraphrase
-4. Extract cooking steps EXACTLY as spoken in the transcript, in the exact order
-5. If measurements are mentioned in the transcript (cups, tablespoons, pinches), use those EXACT terms
-6. If the creator says "some", "a bit", "to taste", preserve those exact phrases
-7. Each sentence or instruction in the transcript should typically become one step
-8. Do NOT make up or infer information - only use what was actually said
+1. Extract ingredients EXACTLY as written - preserve all measurements, fractions, and units
+2. Keep measurements in their original format (1/4, 1.5, etc.) - do not convert or change them
+3. Extract cooking steps in the exact order they appear
+4. If measurements use fractions, preserve them exactly (1/4 cup, 1/2 teaspoon, etc.)
+5. If ingredients are grouped in sections (like "Butter cream sauce:"), maintain those sections
+6. Do NOT make up or infer measurements - only use what is explicitly stated
+7. Each numbered step in the source should become one instruction step
+8. Preserve special notes like "or just garlic paste", "plus extra", "to taste"
 
 RESPONSE FORMAT REQUIREMENT:
 You MUST respond with ONLY a valid JSON object. NO markdown formatting, NO code blocks, NO backticks, NO explanation text.
@@ -174,15 +185,19 @@ Just the raw JSON object starting with { and ending with }.
 
 The JSON structure MUST be exactly:
 {
-  "title": "recipe name from video",
-  "description": "brief description from video",
+  "title": "recipe name",
+  "description": "brief description",
   "ingredients": [
-    {"quantity": "2", "unit": "cup", "name": "flour"},
-    {"quantity": "1", "unit": "tsp", "name": "salt"}
+    {"quantity": "4", "unit": "", "name": "chicken quarters"},
+    {"quantity": "1/4", "unit": "cup", "name": "Greek plain yogurt"},
+    {"quantity": "1", "unit": "tablespoon", "name": "ginger and garlic paste - or just garlic paste"},
+    {"quantity": "1/2", "unit": "teaspoon", "name": "salt and turmeric"},
+    {"quantity": "1.5", "unit": "teaspoons each", "name": "coriander powder, cumin, paprika, garam masala"}
   ],
   "instructions": [
-    "First step exactly as said",
-    "Second step exactly as said"
+    "Make 4 cups of rice - I used basmati rice",
+    "I removed the skin of the chicken quarters.",
+    "Cut a few slits into the chicken so that all seasoning can go in."
   ],
   "prepTime": 15,
   "cookTime": 30,
@@ -191,6 +206,14 @@ The JSON structure MUST be exactly:
   "difficulty": "Easy",
   "dietaryTags": []
 }
+
+INGREDIENT FORMAT RULES:
+- If an ingredient has a number, extract it as "quantity" (keep fractions like 1/4, 1/2, decimals like 1.5)
+- If it has a unit (cup, tablespoon, tsp, tbsp, oz, etc.), extract it as "unit"
+- Everything else goes in "name" including notes, alternatives, or special instructions
+- If there's no quantity (like "Salt to taste"), use empty string "" for quantity
+- For compound ingredients like "1.5 teaspoons each coriander powder, cumin, paprika", use "teaspoons each" as unit
+- NEVER use strings for ingredients - always use the object format with quantity, unit, and name
 
 IMPORTANT: Each ingredient MUST be an object with "quantity", "unit", and "name" properties. Never use strings.`;
 
