@@ -110,6 +110,8 @@ export function ProductSelectorDialog({
                             src={product.image_url}
                             alt={product.product_name}
                             className="w-full h-full object-contain p-2"
+                            loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <Package className="w-12 h-12 text-gray-300" />

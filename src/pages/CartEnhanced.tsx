@@ -112,7 +112,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
           .select('*')
           .eq('is_active', true)
           .order('popularity_score', { ascending: false })
-          .limit(24);
+          .limit(16);
 
         if (error) throw error;
         data = allProducts || [];
@@ -344,6 +344,8 @@ export function Cart({ onNavigate }: CartProps = {}) {
                             src={product.image_url}
                             alt={product.product_name}
                             className="w-full h-full object-contain"
+                            loading="lazy"
+                            decoding="async"
                           />
                         ) : (
                           <Package className="w-16 h-16 text-gray-300" />
@@ -445,6 +447,8 @@ export function Cart({ onNavigate }: CartProps = {}) {
                             src={item.image_url}
                             alt={item.amazon_product_name || item.ingredient_name}
                             className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg bg-slate-100"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </div>
                       )}
