@@ -17,6 +17,7 @@ import { compressMultipleImages, isImageFile, formatFileSize } from '../lib/imag
 import { compressVideo, isVideoFile, getVideoInfo } from '../lib/videoCompression';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 
 interface UploadProps {
   onNavigate: (page: string) => void;
@@ -40,10 +41,45 @@ export function Upload({ onNavigate }: UploadProps) {
   const [uploading, setUploading] = useState(false);
   const [videoDuration, setVideoDuration] = useState<number>(0);
 
-  // Component mount/unmount tracking
+  // Component mount/unmount tracking and restore pending uploads
   useEffect(() => {
     const mountTime = Date.now();
     console.log('🚀 Upload component MOUNTED at', mountTime);
+
+    // Check for pending upload that was interrupted by unmount
+    const checkPendingUpload = async () => {
+      try {
+        const { value } = await Preferences.get({ key: 'pending_upload_file' });
+        if (value) {
+          console.log('🔄 Found pending upload, restoring...');
+          const fileData = JSON.parse(value);
+
+          // Convert base64 back to blob and file
+          const response = await fetch(fileData.dataUrl);
+          const blob = await response.blob();
+          const file = new File([blob], fileData.name, { type: fileData.type });
+
+          const previewUrl = URL.createObjectURL(file);
+
+          setSelectedFiles([file]);
+          setPreviewUrls([previewUrl]);
+          setFileType('image');
+
+          // Clear the pending upload
+          await Preferences.remove({ key: 'pending_upload_file' });
+
+          console.log('✅ Restored pending upload');
+          toast.success('Photo loaded!');
+        }
+      } catch (error) {
+        console.error('❌ Failed to restore pending upload:', error);
+        // Clean up if there was an error
+        await Preferences.remove({ key: 'pending_upload_file' });
+      }
+    };
+
+    checkPendingUpload();
+
     return () => {
       console.log('💀 Upload component UNMOUNTED at', Date.now(), 'lived for', Date.now() - mountTime, 'ms');
     };
@@ -238,11 +274,13 @@ const getVideoDuration = (file: File): Promise<number> => {
   // ✅ Better file type validation
  
 
- const handleClearImage = () => {
+ const handleClearImage = async () => {
   previewUrls.forEach(url => URL.revokeObjectURL(url));
   setSelectedFiles([]);
   setPreviewUrls([]);
   setFileType(null);
+  // Clear any pending upload
+  await Preferences.remove({ key: 'pending_upload_file' });
 };
 
 const handleCapacitorCamera = async (source: CameraSource) => {
@@ -302,6 +340,27 @@ const handleCapacitorCamera = async (source: CameraSource) => {
       const compressedFile = compressedResults[0].file;
       console.log('✅ Compression complete:', { size: compressedFile.size });
 
+      // Save to Preferences to survive component unmount during app resume
+      console.log('💾 Saving to Preferences to survive unmount...');
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const dataUrl = reader.result as string;
+          await Preferences.set({
+            key: 'pending_upload_file',
+            value: JSON.stringify({
+              name: compressedFile.name,
+              type: compressedFile.type,
+              dataUrl: dataUrl
+            })
+          });
+          console.log('✅ Saved to Preferences');
+        } catch (error) {
+          console.error('❌ Failed to save to Preferences:', error);
+        }
+      };
+      reader.readAsDataURL(compressedFile);
+
       toast.success('Image ready!', { id: toastId });
 
       const previewUrl = URL.createObjectURL(compressedFile);
@@ -327,9 +386,15 @@ const handleCapacitorCamera = async (source: CameraSource) => {
       });
       console.log('✅ setFileType called');
       console.log('✅ All state setters completed');
+
+      // Clear the pending upload since we successfully set state
+      console.log('🧹 Clearing pending upload from Preferences');
+      await Preferences.remove({ key: 'pending_upload_file' });
     } catch (error: any) {
       console.error('❌ Compression error:', error);
       toast.error(error.message || 'Failed to compress image', { id: toastId });
+      // Clear pending upload on error
+      await Preferences.remove({ key: 'pending_upload_file' });
     }
   } catch (error: any) {
     console.error('❌ Camera error:', error);
