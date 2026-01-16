@@ -40,6 +40,20 @@ export function Upload({ onNavigate }: UploadProps) {
   const [uploading, setUploading] = useState(false);
   const [videoDuration, setVideoDuration] = useState<number>(0);
 
+  // Component mount/unmount tracking
+  useEffect(() => {
+    const mountTime = Date.now();
+    console.log('🚀 Upload component MOUNTED at', mountTime);
+    return () => {
+      console.log('💀 Upload component UNMOUNTED at', Date.now(), 'lived for', Date.now() - mountTime, 'ms');
+    };
+  }, []);
+
+  // Track state changes
+  useEffect(() => {
+    console.log('📊 State changed - selectedFiles:', selectedFiles.length, 'previewUrls:', previewUrls.length, 'fileType:', fileType);
+  }, [selectedFiles, previewUrls, fileType]);
+
   // Music states
   const [showMusicPicker, setShowMusicPicker] = useState(false);
   const [musicSearch, setMusicSearch] = useState('');
@@ -294,19 +308,25 @@ const handleCapacitorCamera = async (source: CameraSource) => {
       console.log('✅ Preview URL created:', previewUrl);
 
       // Use functional updates to ensure React detects the change
+      console.log('🔧 About to call state setters...');
       setSelectedFiles((prev) => {
         console.log('📝 Setting selectedFiles from', prev.length, 'to 1 file');
         return [compressedFile];
       });
+      console.log('✅ setSelectedFiles called');
+
       setPreviewUrls((prev) => {
-        console.log('📝 Setting previewUrls from', prev.length, 'to 1 url:', previewUrl);
+        console.log('📝 Setting previewUrls from', prev.length, 'to 1 url:', previewUrl.substring(0, 50));
         return [previewUrl];
       });
+      console.log('✅ setPreviewUrls called');
+
       setFileType((prev) => {
         console.log('📝 Setting fileType from', prev, 'to image');
         return 'image';
       });
-      console.log('✅ State updated with image');
+      console.log('✅ setFileType called');
+      console.log('✅ All state setters completed');
     } catch (error: any) {
       console.error('❌ Compression error:', error);
       toast.error(error.message || 'Failed to compress image', { id: toastId });
