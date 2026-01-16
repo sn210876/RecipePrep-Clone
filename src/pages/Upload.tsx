@@ -293,9 +293,19 @@ const handleCapacitorCamera = async (source: CameraSource) => {
       const previewUrl = URL.createObjectURL(compressedFile);
       console.log('✅ Preview URL created:', previewUrl);
 
-      setSelectedFiles([compressedFile]);
-      setPreviewUrls([previewUrl]);
-      setFileType('image');
+      // Use functional updates to ensure React detects the change
+      setSelectedFiles((prev) => {
+        console.log('📝 Setting selectedFiles from', prev.length, 'to 1 file');
+        return [compressedFile];
+      });
+      setPreviewUrls((prev) => {
+        console.log('📝 Setting previewUrls from', prev.length, 'to 1 url:', previewUrl);
+        return [previewUrl];
+      });
+      setFileType((prev) => {
+        console.log('📝 Setting fileType from', prev, 'to image');
+        return 'image';
+      });
       console.log('✅ State updated with image');
     } catch (error: any) {
       console.error('❌ Compression error:', error);
@@ -563,6 +573,13 @@ onNavigate('discover');
     }
   };
 
+  console.log('🔄 Upload component render:', {
+    previewUrlsCount: previewUrls.length,
+    selectedFilesCount: selectedFiles.length,
+    fileType,
+    previewUrls: previewUrls.slice(0, 2), // Log first 2 to avoid spam
+  });
+
   return (
     <div className="fixed inset-0 z-50 bg-black/50 md:bg-transparent md:relative">
       <div
@@ -703,22 +720,37 @@ onNavigate('discover');
     {previewUrls.map((url, index) => {
       const file = selectedFiles[index];
       const isVideo = file?.type.startsWith('video/');
-      
+
+      console.log(`🖼️ Rendering preview ${index}:`, {
+        url,
+        isVideo,
+        fileType: file?.type,
+        fileName: file?.name,
+        fileSize: file?.size
+      });
+
       return (
         <div key={index} className="relative">
           {isVideo ? (
-            <video 
-              src={url} 
-              controls 
+            <video
+              src={url}
+              controls
               className="w-full aspect-square object-cover rounded-xl"
+              onError={(e) => {
+                console.error('❌ Video failed to load:', e);
+                toast.error('Failed to load video preview');
+              }}
             />
           ) : (
             <img
               src={url}
               alt={`Preview ${index + 1}`}
               className="w-full aspect-square object-cover rounded-xl"
-              loading="lazy"
-              decoding="async"
+              onLoad={() => console.log('✅ Image preview loaded successfully')}
+              onError={(e) => {
+                console.error('❌ Image failed to load:', e);
+                toast.error('Failed to load image preview');
+              }}
             />
           )}
           <button
