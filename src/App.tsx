@@ -29,6 +29,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const Referrals = lazy(() => import('./pages/Referrals'));
 const AdminPayouts = lazy(() => import('./pages/AdminPayouts'));
 const AdminImageMigration = lazy(() => import('./pages/AdminImageMigration'));
+const AdminProductImageCompression = lazy(() => import('./pages/AdminProductImageCompression'));
 const AdminProducts = lazy(() => import('./pages/AdminProducts').then(m => ({ default: m.AdminProducts })));
 const AdminMappings = lazy(() => import('./pages/AdminMappings').then(m => ({ default: m.AdminMappings })));
 const Upload = lazy(() => import('./pages/Upload').then(m => ({ default: m.Upload })));
@@ -117,6 +118,7 @@ function AppContent() {
   if (path === '/referrals') return 'referrals';
   if (path === '/admin-payouts') return 'admin-payouts';
   if (path === '/admin-image-migration') return 'admin-image-migration';
+  if (path === '/admin-product-compression') return 'admin-product-compression';
   if (path === '/admin-products') return 'admin-products';
   if (path === '/admin-mappings') return 'admin-mappings';
   if (path === '/faq') return 'faq';
@@ -137,7 +139,7 @@ function AppContent() {
   // Only treat as username if not a known route
   if (path !== '/' && path.length > 1 && !path.includes('.')) {
     const username = path.substring(1);
-    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings', 'admin-payouts', 'admin-image-migration', 'admin-products', 'admin-mappings', 'blog'];
+    const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'upload', 'messages', 'settings', 'admin-payouts', 'admin-image-migration', 'admin-product-compression', 'admin-products', 'admin-mappings', 'blog'];
     if (username && !username.includes('/') && !knownRoutes.includes(username)) {
       return `profile:${username}`;
     }
@@ -198,6 +200,8 @@ function AppContent() {
         setCurrentPage('admin-payouts');
       } else if (path === '/admin-image-migration') {
         setCurrentPage('admin-image-migration');
+      } else if (path === '/admin-product-compression') {
+        setCurrentPage('admin-product-compression');
       } else if (path === '/admin-products') {
         setCurrentPage('admin-products');
       } else if (path === '/admin-mappings') {
@@ -222,7 +226,7 @@ function AppContent() {
         setCurrentPage('discover');
       } else if (path !== '/' && path.length > 1 && !path.includes('.')) {
         const username = path.substring(1);
-        const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'admin-payouts', 'admin-image-migration', 'admin-products', 'admin-mappings', 'blog'];
+        const knownRoutes = ['add-recipe', 'meal-planner', 'grocery-list', 'cart', 'admin-payouts', 'admin-image-migration', 'admin-product-compression', 'admin-products', 'admin-mappings', 'blog'];
         if (username && !username.includes('/') && !knownRoutes.includes(username)) {
           setCurrentPage(`profile:${username}`);
         } else {
@@ -651,6 +655,7 @@ function AppContent() {
       'settings',
       'admin-payouts',
       'admin-image-migration',
+      'admin-product-compression',
       'admin-products',
       'admin-mappings'
     ];
@@ -677,6 +682,7 @@ function AppContent() {
       'referrals': '/referrals',
       'admin-payouts': '/admin-payouts',
       'admin-image-migration': '/admin-image-migration',
+      'admin-product-compression': '/admin-product-compression',
       'admin-products': '/admin-products',
       'admin-mappings': '/admin-mappings',
       'faq': '/faq',
@@ -736,6 +742,7 @@ function AppContent() {
       case 'referrals': return <Referrals />;
       case 'admin-payouts': return <AdminPayouts />;
       case 'admin-image-migration': return <AdminImageMigration />;
+      case 'admin-product-compression': return <AdminProductImageCompression />;
       case 'admin-products': return <AdminProducts />;
       case 'admin-mappings': return <AdminMappings />;
       case 'faq': return <FAQ />;

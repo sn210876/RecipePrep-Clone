@@ -642,6 +642,20 @@ export default function Settings({ onNavigate }: SettingsProps) {
                       )}
                     </Button>
                   </div>
+
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                    <h3 className="font-semibold text-slate-900 mb-2">Compress Product Images</h3>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Reduce Amazon product image file sizes by ~75% while maintaining dimensions. Saves storage space and improves load times.
+                    </p>
+                    <Button
+                      onClick={() => onNavigate('admin-product-compression')}
+                      className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Compress Images
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
