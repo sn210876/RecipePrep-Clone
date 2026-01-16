@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import { CookMode } from './CookMode';
 import { ImageLightbox } from './ImageLightbox';
+import { getDisplayImageUrl } from '../lib/imageUrl';
 
 interface RecipeDetailModalProps {
   recipe: Recipe;
@@ -156,9 +157,7 @@ export function RecipeDetailModal({
               {/* Hero Image Section with Header */}
               <div className="relative w-full h-48 sm:h-56 bg-gray-100 mb-4">
                 <img
-                  src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-                    : recipe.imageUrl}
+                  src={getDisplayImageUrl(recipe.imageUrl) || ''}
                   alt={recipe.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -428,9 +427,7 @@ export function RecipeDetailModal({
       </Dialog>
 
       <ImageLightbox
-        src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-          ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-          : recipe.imageUrl}
+        src={getDisplayImageUrl(recipe.imageUrl) || ''}
         alt={recipe.title}
         open={showImageLightbox}
         onOpenChange={setShowImageLightbox}

@@ -14,6 +14,7 @@ import { supabase } from '../lib/supabase';
 import { decodeHtmlEntities } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useLanguage } from '@/context/LanguageContext';
+import { getDisplayImageUrl } from '@/lib/imageUrl';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -129,9 +130,7 @@ useEffect(() => {
         <div className="relative overflow-hidden aspect-square bg-gray-100">
           {!imageError && recipe.imageUrl ? (
             <img
-              src={recipe.imageUrl?.includes('instagram.com') || recipe.imageUrl?.includes('cdninstagram.com')
-                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(recipe.imageUrl.replace(/&amp;/g, '&'))}`
-                : recipe.imageUrl}
+              src={getDisplayImageUrl(recipe.imageUrl) || ''}
               alt={recipe.title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               loading="lazy"

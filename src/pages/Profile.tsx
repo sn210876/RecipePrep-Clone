@@ -17,6 +17,7 @@ import { PostLightbox } from '../components/PostLightbox';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { compressImageWithOptions, formatFileSize, isImageFile } from '../lib/imageCompression';
+import { getDisplayImageUrl } from '../lib/imageUrl';
 // ✅ ADD THIS - Loading skeleton component
 const ProfileSkeleton = () => (
   <div className="min-h-screen bg-gray-50 pb-32 overflow-x-hidden animate-pulse">
@@ -72,27 +73,6 @@ const ProfileSkeleton = () => (
   </div>
 );
 
-const getDisplayImageUrl = (imageUrl: string | null): string | null => {
-  if (!imageUrl) return null;
-  
-  if (imageUrl.includes('/functions/v1/image-proxy')) {
-    return imageUrl;
-  }
-  
-  if (imageUrl.includes('supabase.co/storage/v1/object/public/')) {
-    return imageUrl;
-  }
-  
-  if (imageUrl.includes('instagram.com') || 
-      imageUrl.includes('cdninstagram.com') || 
-      imageUrl.includes('fbcdn.net')) {
-    return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
-  }
-  
-  return imageUrl;
-};
-
-console.log('[Profile] VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
 const validateUsername = (username: string): string | null => {
   const trimmed = username.trim();
   if (trimmed.length === 0) return 'Username required';
