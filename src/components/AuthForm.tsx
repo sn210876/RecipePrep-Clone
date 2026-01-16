@@ -270,13 +270,22 @@ export default function AuthForm() {
   const checkConnectivity = async (): Promise<boolean> => {
     try {
       console.log('🔌 Checking network connectivity...');
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        console.log('⚠️ No Supabase URL configured, skipping connectivity check');
+        return true;
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const response = await fetch('https://www.google.com/favicon.ico', {
+      const response = await fetch(`${supabaseUrl}/rest/v1/`, {
         method: 'HEAD',
-        mode: 'no-cors',
-        signal: controller.signal
+        signal: controller.signal,
+        headers: {
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+        }
       });
 
       clearTimeout(timeoutId);

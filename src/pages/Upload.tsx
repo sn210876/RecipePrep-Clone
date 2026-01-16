@@ -233,40 +233,78 @@ const getVideoDuration = (file: File): Promise<number> => {
 
 const handleCapacitorCamera = async (source: CameraSource) => {
   try {
+    console.log('📸 handleCapacitorCamera called with source:', source);
+
     const image = await Camera.getPhoto({
       quality: 90,
       allowEditing: false,
       resultType: CameraResultType.Uri,
       source: source,
+      saveToGallery: source === CameraSource.Camera,
+    });
+
+    console.log('✅ Camera.getPhoto succeeded:', {
+      hasWebPath: !!image.webPath,
+      hasPath: !!image.path,
+      format: image.format
     });
 
     if (!image.webPath) {
-      toast.error('Failed to get image');
+      console.error('❌ No webPath in image result');
+      toast.error('Failed to get image path');
       return;
     }
 
+    console.log('🔄 Fetching image from webPath:', image.webPath);
     const response = await fetch(image.webPath);
+
+    if (!response.ok) {
+      console.error('❌ Fetch failed:', response.status, response.statusText);
+      toast.error('Failed to load image from device');
+      return;
+    }
+
     const blob = await response.blob();
-    const file = new File([blob], `photo-${Date.now()}.${image.format}`, { type: `image/${image.format}` });
+    console.log('✅ Blob created:', { size: blob.size, type: blob.type });
+
+    // Fix blob type if it's empty (common issue on Android)
+    let mimeType = blob.type;
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      const format = image.format || 'jpeg';
+      mimeType = `image/${format}`;
+      console.log('⚠️ Blob type was empty/generic, using format:', mimeType);
+    }
+
+    const file = new File([blob], `photo-${Date.now()}.${image.format || 'jpg'}`, {
+      type: mimeType
+    });
+    console.log('✅ File created:', { name: file.name, size: file.size, type: file.type });
 
     const toastId = toast.loading('Compressing image...', { duration: 0 });
 
     try {
+      console.log('🗜️ Starting compression...');
       const compressedResults = await compressMultipleImages([file]);
       const compressedFile = compressedResults[0].file;
+      console.log('✅ Compression complete:', { size: compressedFile.size });
 
       toast.success('Image ready!', { id: toastId });
 
+      const previewUrl = URL.createObjectURL(compressedFile);
+      console.log('✅ Preview URL created:', previewUrl);
+
       setSelectedFiles([compressedFile]);
-      setPreviewUrls([URL.createObjectURL(compressedFile)]);
+      setPreviewUrls([previewUrl]);
       setFileType('image');
+      console.log('✅ State updated with image');
     } catch (error: any) {
+      console.error('❌ Compression error:', error);
       toast.error(error.message || 'Failed to compress image', { id: toastId });
     }
   } catch (error: any) {
+    console.error('❌ Camera error:', error);
     if (error.message !== 'User cancelled photos app') {
-      console.error('Camera error:', error);
-      toast.error('Failed to access camera');
+      toast.error('Failed to access camera: ' + (error.message || 'Unknown error'));
     }
   }
 };
@@ -281,13 +319,19 @@ const handleTakePhoto = () => {
 
 const handlePickFromGallery = () => {
   console.log('📷 From Gallery button clicked');
+  console.log('📱 Platform:', Capacitor.getPlatform());
+  console.log('📱 Is Native:', Capacitor.isNativePlatform());
+
   if (Capacitor.isNativePlatform()) {
-    console.log('✅ On native platform - using Capacitor Camera');
+    console.log('✅ On native platform - using Capacitor Camera with Photos source');
     handleCapacitorCamera(CameraSource.Photos);
   } else {
-    console.log('✅ On web platform - using file input');
+    console.log('✅ On web platform - triggering file input');
     if (fileInputRef.current) {
+      console.log('✅ File input ref exists, clicking...');
       fileInputRef.current.click();
+    } else {
+      console.error('❌ File input ref is null!');
     }
   }
 };
