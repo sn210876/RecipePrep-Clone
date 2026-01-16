@@ -37,17 +37,35 @@ export interface IngredientMapping {
 
 const AFFILIATE_TAG = 'mealscrape-20';
 
-export function appendAffiliateTag(url: string): string {
+export function appendAffiliateTag(url: string, options?: { mobile?: boolean; source?: string }): string {
   try {
     const urlObj = new URL(url);
+
     if (!urlObj.searchParams.has('tag')) {
       urlObj.searchParams.set('tag', AFFILIATE_TAG);
     }
+
+    if (!urlObj.searchParams.has('linkCode')) {
+      urlObj.searchParams.set('linkCode', 'll1');
+    }
+
+    if (!urlObj.searchParams.has('ref')) {
+      urlObj.searchParams.set('ref', 'nosim');
+    }
+
+    const source = options?.source || (options?.mobile ? 'mobile_cart' : 'web_cart');
+    if (!urlObj.searchParams.has('utm_source')) {
+      urlObj.searchParams.set('utm_source', 'mealscrape');
+    }
+    if (!urlObj.searchParams.has('utm_medium')) {
+      urlObj.searchParams.set('utm_medium', source);
+    }
+
     return urlObj.toString();
   } catch {
-    return url.includes('?')
-      ? `${url}&tag=${AFFILIATE_TAG}`
-      : `${url}?tag=${AFFILIATE_TAG}`;
+    const separator = url.includes('?') ? '&' : '?';
+    const source = options?.source || (options?.mobile ? 'mobile_cart' : 'web_cart');
+    return `${url}${separator}tag=${AFFILIATE_TAG}&linkCode=ll1&ref=nosim&utm_source=mealscrape&utm_medium=${source}`;
   }
 }
 

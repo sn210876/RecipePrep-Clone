@@ -16,6 +16,7 @@ import {
   type AmazonProduct,
   type ProductCategory,
 } from '../services/amazonProductService';
+import { detectDevice, openInBrowser } from '../lib/deviceDetection';
 
 interface CartItem {
   id: string;
@@ -201,38 +202,71 @@ export function Cart({ onNavigate }: CartProps = {}) {
     }, 0);
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) {
       toast.error('Your cart is empty');
       return;
     }
 
+    const device = detectDevice();
     const itemsWithAsin = cartItems.filter(item => item.asin);
     const itemsWithoutAsin = cartItems.filter(item => !item.asin && item.amazon_product_url);
 
-    if (itemsWithAsin.length > 0) {
-      const cartUrl = buildAmazonCartUrl(itemsWithAsin);
-      window.open(cartUrl, '_blank');
+    const checkoutMethod = device.isMobile ? 'mobile_browser_forced' : 'desktop_cart_api';
 
-      if (itemsWithoutAsin.length > 0) {
-        toast.success(`Added ${itemsWithAsin.length} items to Amazon cart. Opening ${itemsWithoutAsin.length} additional items...`);
+    if (userId) {
+      await trackCheckout(checkoutMethod, device);
+    }
+
+    if (device.isMobile) {
+      if (itemsWithAsin.length > 0) {
+        toast.info('Opening items in browser for best affiliate tracking...');
+      }
+
+      const allItems = [
+        ...itemsWithAsin.map(item => ({
+          url: `https://www.amazon.com/dp/${item.asin}`,
+          name: item.amazon_product_name || item.ingredient_name
+        })),
+        ...itemsWithoutAsin.map(item => ({
+          url: item.amazon_product_url!,
+          name: item.amazon_product_name || item.ingredient_name
+        }))
+      ];
+
+      allItems.forEach((item, index) => {
+        setTimeout(() => {
+          const enhancedUrl = appendAffiliateTag(item.url, { mobile: true, source: 'mobile_cart' });
+          openInBrowser(enhancedUrl);
+        }, index * 400);
+      });
+
+      toast.success(`Opening ${allItems.length} items in browser to preserve affiliate tracking`);
+    } else {
+      if (itemsWithAsin.length > 0) {
+        const cartUrl = buildAmazonCartUrl(itemsWithAsin);
+        openInBrowser(cartUrl);
+
+        if (itemsWithoutAsin.length > 0) {
+          toast.success(`Added ${itemsWithAsin.length} items to Amazon cart. Opening ${itemsWithoutAsin.length} additional items...`);
+          itemsWithoutAsin.forEach((item, index) => {
+            setTimeout(() => {
+              openInBrowser(appendAffiliateTag(item.amazon_product_url!, { mobile: false }));
+            }, (index + 1) * 300);
+          });
+        } else {
+          toast.success(`Added ${itemsWithAsin.length} items to Amazon cart!`);
+        }
+      } else if (itemsWithoutAsin.length > 0) {
         itemsWithoutAsin.forEach((item, index) => {
           setTimeout(() => {
-            window.open(appendAffiliateTag(item.amazon_product_url!), '_blank');
-          }, (index + 1) * 300);
+            openInBrowser(appendAffiliateTag(item.amazon_product_url!, { mobile: false }));
+          }, index * 300);
         });
+        toast.success('Opening Amazon product pages...');
       } else {
-        toast.success(`Added ${itemsWithAsin.length} items to Amazon cart!`);
+        toast.error('No Amazon products in cart');
       }
-    } else if (itemsWithoutAsin.length > 0) {
-      itemsWithoutAsin.forEach((item, index) => {
-        setTimeout(() => {
-          window.open(appendAffiliateTag(item.amazon_product_url!), '_blank');
-        }, index * 300);
-      });
-      toast.success('Opening Amazon product pages...');
-    } else {
-      toast.error('No Amazon products in cart');
     }
   };
 
@@ -249,7 +283,30 @@ export function Cart({ onNavigate }: CartProps = {}) {
     });
 
     params.append('tag', AFFILIATE_TAG);
+    params.append('linkCode', 'll1');
+    params.append('ref', 'nosim');
+    params.append('utm_source', 'mealscrape');
+    params.append('utm_medium', 'web_cart');
+
     return `${baseUrl}?${params.toString()}`;
+  };
+
+  const trackCheckout = async (checkoutMethod: string, device: any) => {
+    try {
+      await supabase.from('amazon_service_clicks').insert({
+        user_id: userId,
+        service_type: 'amazon',
+        clicked_at: new Date().toISOString(),
+        item_count: cartItems.length,
+        estimated_value: getTotalPrice(),
+        checkout_method: checkoutMethod,
+        device_type: device.isMobile ? 'mobile' : 'desktop',
+        os: device.os,
+        browser: device.browser,
+      });
+    } catch (error) {
+      console.error('Error tracking checkout:', error);
+    }
   };
 
   if (loading) {
