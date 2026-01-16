@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
@@ -48,6 +48,7 @@ export function Upload({ onNavigate }: UploadProps) {
   const [searchingMusic, setSearchingMusic] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const audioPreviewRef = React.useRef<HTMLAudioElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadUserRecipes();
@@ -93,13 +94,21 @@ const getVideoDuration = (file: File): Promise<number> => {
   });
 };
  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  console.log('🔍 File select triggered');
   const files = Array.from(e.target.files || []);
-  if (files.length === 0) return;
+  console.log('📁 Selected files count:', files.length);
+  if (files.length === 0) {
+    console.log('⚠️ No files selected');
+    return;
+  }
 
   // Filter for images and videos
   const allMediaFiles = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+  console.log('🎯 Media files after filter:', allMediaFiles.length);
+  console.log('📝 File types:', files.map(f => f.type));
 
   if (allMediaFiles.length === 0) {
+    console.log('❌ No valid media files');
     toast.error('Please select at least one image or video');
     return;
   }
@@ -109,6 +118,8 @@ const getVideoDuration = (file: File): Promise<number> => {
     toast.error('You can only upload up to 4 images/videos total');
     return;
   }
+
+  console.log('✅ Processing', allMediaFiles.length, 'media files');
 
   const validFiles: File[] = [];
   const validPreviews: string[] = [];
@@ -252,12 +263,14 @@ const handleTakePhoto = () => {
 };
 
 const handlePickFromGallery = () => {
-  console.log('From Gallery button clicked');
+  console.log('📷 From Gallery button clicked');
   if (Capacitor.isNativePlatform()) {
-    const fileInput = document.getElementById('mobile-file-input') as HTMLInputElement;
-    console.log('File input found:', !!fileInput);
-    if (fileInput) {
-      fileInput.click();
+    console.log('✅ On native platform');
+    if (fileInputRef.current) {
+      console.log('📂 Triggering file input');
+      fileInputRef.current.click();
+    } else {
+      console.log('❌ File input ref not found');
     }
   }
 };
@@ -596,7 +609,7 @@ onNavigate('discover');
             <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 sm:p-12 text-center hover:border-orange-500 transition-colors cursor-pointer">
               <label className="cursor-pointer">
         <input
-    id="mobile-file-input"
+    ref={fileInputRef}
     type="file"
     accept="image/*,video/*"
     multiple
