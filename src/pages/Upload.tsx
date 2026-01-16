@@ -95,17 +95,24 @@ const getVideoDuration = (file: File): Promise<number> => {
 };
  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
   console.log('🔍 File select triggered');
+  console.log('📱 Platform:', Capacitor.getPlatform());
   const files = Array.from(e.target.files || []);
   console.log('📁 Selected files count:', files.length);
+
   if (files.length === 0) {
     console.log('⚠️ No files selected');
     return;
   }
 
+  console.log('📝 File details:', files.map(f => ({
+    name: f.name,
+    size: f.size,
+    type: f.type,
+  })));
+
   // Filter for images and videos
   const allMediaFiles = files.filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
   console.log('🎯 Media files after filter:', allMediaFiles.length);
-  console.log('📝 File types:', files.map(f => f.type));
 
   if (allMediaFiles.length === 0) {
     console.log('❌ No valid media files');
@@ -162,8 +169,10 @@ const getVideoDuration = (file: File): Promise<number> => {
     const toastId = toast.loading('Compressing images...', { duration: 0 });
 
     try {
+      console.log('🗜️ Starting compression for', imageFiles.length, 'images');
       const compressedResults = await compressMultipleImages(imageFiles, (index, total, progress) => {
         if (progress.isCompressing) {
+          console.log(`Compressing ${index + 1}/${total}: ${Math.round(progress.percent)}%`);
           toast.loading(
             `Compressing image ${index + 1}/${total}... ${Math.round(progress.percent)}%`,
             { id: toastId, duration: 0 }
@@ -171,6 +180,7 @@ const getVideoDuration = (file: File): Promise<number> => {
         }
       });
 
+      console.log('✅ Compression complete:', compressedResults);
       const totalSaved = compressedResults.reduce((sum, r) => sum + (r.originalSize - r.compressedSize), 0);
 
       toast.success(
@@ -180,9 +190,12 @@ const getVideoDuration = (file: File): Promise<number> => {
 
       for (const result of compressedResults) {
         validFiles.push(result.file);
-        validPreviews.push(URL.createObjectURL(result.file));
+        const blobUrl = URL.createObjectURL(result.file);
+        console.log('📸 Created preview URL:', blobUrl);
+        validPreviews.push(blobUrl);
       }
     } catch (error: any) {
+      console.error('❌ Compression error:', error);
       toast.error(error.message || 'Failed to compress images', { id: toastId });
       return;
     }
@@ -194,13 +207,17 @@ const getVideoDuration = (file: File): Promise<number> => {
   }
 
   if (validFiles.length === 0) {
+    console.log('❌ No valid files to upload');
     toast.error('No valid files to upload');
     return;
   }
 
+  console.log('✅ Setting state with', validFiles.length, 'files');
+  console.log('📸 Preview URLs:', validPreviews);
   setSelectedFiles(validFiles);
   setPreviewUrls(validPreviews);
   setFileType(hasVideo ? 'video' : 'image');
+  console.log('✅ State updated successfully');
 };
 
     
@@ -265,12 +282,12 @@ const handleTakePhoto = () => {
 const handlePickFromGallery = () => {
   console.log('📷 From Gallery button clicked');
   if (Capacitor.isNativePlatform()) {
-    console.log('✅ On native platform');
+    console.log('✅ On native platform - using Capacitor Camera');
+    handleCapacitorCamera(CameraSource.Photos);
+  } else {
+    console.log('✅ On web platform - using file input');
     if (fileInputRef.current) {
-      console.log('📂 Triggering file input');
       fileInputRef.current.click();
-    } else {
-      console.log('❌ File input ref not found');
     }
   }
 };
