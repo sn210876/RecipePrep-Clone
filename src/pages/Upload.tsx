@@ -306,6 +306,11 @@ const getVideoDuration = (file: File): Promise<number> => {
 };
 
 const handleCapacitorCamera = async (source: CameraSource) => {
+  const loadingToastId = toast.loading(
+    source === CameraSource.Camera ? 'Opening camera...' : 'Opening gallery...',
+    { duration: 0 }
+  );
+
   try {
     console.log('📸 handleCapacitorCamera called with source:', source);
 
@@ -323,9 +328,11 @@ const handleCapacitorCamera = async (source: CameraSource) => {
       format: image.format
     });
 
+    toast.loading('Processing image...', { id: loadingToastId });
+
     if (!image.webPath) {
       console.error('❌ No webPath in image result');
-      toast.error('Failed to get image path');
+      toast.error('Failed to get image path', { id: loadingToastId });
       return;
     }
 
@@ -334,14 +341,13 @@ const handleCapacitorCamera = async (source: CameraSource) => {
 
     if (!response.ok) {
       console.error('❌ Fetch failed:', response.status, response.statusText);
-      toast.error('Failed to load image from device');
+      toast.error('Failed to load image from device', { id: loadingToastId });
       return;
     }
 
     const blob = await response.blob();
     console.log('✅ Blob created:', { size: blob.size, type: blob.type });
 
-    // Fix blob type if it's empty (common issue on Android)
     let mimeType = blob.type;
     if (!mimeType || mimeType === 'application/octet-stream') {
       const format = image.format || 'jpeg';
@@ -354,8 +360,7 @@ const handleCapacitorCamera = async (source: CameraSource) => {
     });
     console.log('✅ File created:', { name: file.name, size: file.size, type: file.type });
 
-    // Save webPath to Preferences IMMEDIATELY to survive component unmount
-    console.log('💾 Saving webPath to Preferences before compression...');
+    console.log('💾 Saving to Preferences for recovery...');
     await Preferences.set({
       key: 'pending_upload_webpath',
       value: JSON.stringify({
@@ -365,9 +370,8 @@ const handleCapacitorCamera = async (source: CameraSource) => {
         timestamp: Date.now()
       })
     });
-    console.log('✅ Saved to Preferences');
 
-    const toastId = toast.loading('Compressing image...', { duration: 0 });
+    toast.loading('Compressing image...', { id: loadingToastId });
 
     try {
       console.log('🗜️ Starting compression...');
@@ -375,45 +379,35 @@ const handleCapacitorCamera = async (source: CameraSource) => {
       const compressedFile = compressedResults[0].file;
       console.log('✅ Compression complete:', { size: compressedFile.size });
 
-      toast.success('Image ready!', { id: toastId });
-
       const previewUrl = URL.createObjectURL(compressedFile);
       console.log('✅ Preview URL created:', previewUrl);
 
-      // Use functional updates to ensure React detects the change
-      console.log('🔧 About to call state setters...');
-      setSelectedFiles((prev) => {
-        console.log('📝 Setting selectedFiles from', prev.length, 'to 1 file');
-        return [compressedFile];
-      });
-      console.log('✅ setSelectedFiles called');
+      console.log('🔧 Setting state immediately...');
+      setSelectedFiles([compressedFile]);
+      setPreviewUrls([previewUrl]);
+      setFileType('image');
+      console.log('✅ State updated successfully');
 
-      setPreviewUrls((prev) => {
-        console.log('📝 Setting previewUrls from', prev.length, 'to 1 url:', previewUrl.substring(0, 50));
-        return [previewUrl];
-      });
-      console.log('✅ setPreviewUrls called');
-
-      setFileType((prev) => {
-        console.log('📝 Setting fileType from', prev, 'to image');
-        return 'image';
-      });
-      console.log('✅ setFileType called');
-      console.log('✅ All state setters completed');
-
-      // Clear the pending upload since we successfully set state
-      console.log('🧹 Clearing pending upload from Preferences');
       await Preferences.remove({ key: 'pending_upload_webpath' });
+
+      toast.success(
+        source === CameraSource.Camera ? 'Photo captured!' : 'Photo selected!',
+        { id: loadingToastId }
+      );
     } catch (error: any) {
       console.error('❌ Compression error:', error);
-      toast.error(error.message || 'Failed to compress image', { id: toastId });
-      // Clear pending upload on error
+      toast.error(error.message || 'Failed to compress image', { id: loadingToastId });
       await Preferences.remove({ key: 'pending_upload_webpath' });
     }
   } catch (error: any) {
-    console.error('❌ Camera error:', error);
+    console.error('❌ Camera/Gallery error:', error);
     if (error.message !== 'User cancelled photos app') {
-      toast.error('Failed to access camera: ' + (error.message || 'Unknown error'));
+      toast.error(
+        `Failed to ${source === CameraSource.Camera ? 'capture photo' : 'select from gallery'}`,
+        { id: loadingToastId }
+      );
+    } else {
+      toast.dismiss(loadingToastId);
     }
   }
 };
