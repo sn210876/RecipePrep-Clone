@@ -4,20 +4,44 @@ import { SupportedStorage } from '@supabase/supabase-js';
 export class CapacitorStorage implements SupportedStorage {
   private cache = new Map<string, string>();
   private useLocalStorageFallback = false;
+  private initialized = false;
+  private initPromise: Promise<void> | null = null;
 
-  private async testPreferences(): Promise<boolean> {
+  constructor() {
+    this.initPromise = this.initialize();
+  }
+
+  private async initialize(): Promise<void> {
+    if (this.initialized) return;
+
     try {
       const testKey = '__preferences_test__';
       await Preferences.set({ key: testKey, value: 'test' });
+      const { value } = await Preferences.get({ key: testKey });
       await Preferences.remove({ key: testKey });
-      return true;
+
+      if (value === 'test') {
+        console.log('✅ [CapacitorStorage] Preferences plugin initialized successfully');
+        this.initialized = true;
+      } else {
+        throw new Error('Preferences test failed');
+      }
     } catch (error) {
       console.warn('⚠️ [CapacitorStorage] Preferences plugin not available, using localStorage fallback');
-      return false;
+      this.useLocalStorageFallback = true;
+      this.initialized = true;
+    }
+  }
+
+  private async ensureInitialized(): Promise<void> {
+    if (this.initPromise) {
+      await this.initPromise;
     }
   }
 
   async getItem(key: string): Promise<string | null> {
+    await this.ensureInitialized();
+
     try {
       if (this.cache.has(key)) {
         console.log('📦 [CapacitorStorage] Cache hit for key:', key);
@@ -48,7 +72,7 @@ export class CapacitorStorage implements SupportedStorage {
     } catch (error: any) {
       console.error('❌ [CapacitorStorage] Error reading key:', key, error);
 
-      if (!this.useLocalStorageFallback && error.message?.includes('not implemented')) {
+      if (!this.useLocalStorageFallback && (error.message?.includes('not implemented') || error.message?.includes('quota'))) {
         console.warn('⚠️ [CapacitorStorage] Switching to localStorage fallback');
         this.useLocalStorageFallback = true;
         return this.getItem(key);
@@ -56,7 +80,11 @@ export class CapacitorStorage implements SupportedStorage {
 
       console.log('📦 [CapacitorStorage] Attempting localStorage fallback for key:', key);
       try {
-        return localStorage.getItem(key);
+        const fallbackValue = localStorage.getItem(key);
+        if (fallbackValue) {
+          this.cache.set(key, fallbackValue);
+        }
+        return fallbackValue;
       } catch (fallbackError) {
         console.error('❌ [CapacitorStorage] localStorage fallback also failed:', fallbackError);
         return null;
@@ -65,6 +93,8 @@ export class CapacitorStorage implements SupportedStorage {
   }
 
   async setItem(key: string, value: string): Promise<void> {
+    await this.ensureInitialized();
+
     try {
       if (this.useLocalStorageFallback) {
         console.log('📝 [CapacitorStorage] Writing to localStorage fallback:', key, 'length:', value.length);
@@ -78,10 +108,12 @@ export class CapacitorStorage implements SupportedStorage {
       await Preferences.set({ key, value });
       this.cache.set(key, value);
       console.log('✅ [CapacitorStorage] Successfully stored key:', key);
+
+      localStorage.setItem(key, value);
     } catch (error: any) {
       console.error('❌ [CapacitorStorage] Error storing key:', key, error);
 
-      if (!this.useLocalStorageFallback && error.message?.includes('not implemented')) {
+      if (!this.useLocalStorageFallback && (error.message?.includes('not implemented') || error.message?.includes('quota'))) {
         console.warn('⚠️ [CapacitorStorage] Switching to localStorage fallback');
         this.useLocalStorageFallback = true;
         return this.setItem(key, value);
@@ -100,6 +132,8 @@ export class CapacitorStorage implements SupportedStorage {
   }
 
   async removeItem(key: string): Promise<void> {
+    await this.ensureInitialized();
+
     try {
       if (this.useLocalStorageFallback) {
         console.log('🗑️ [CapacitorStorage] Removing from localStorage fallback:', key);
@@ -113,10 +147,12 @@ export class CapacitorStorage implements SupportedStorage {
       await Preferences.remove({ key });
       this.cache.delete(key);
       console.log('✅ [CapacitorStorage] Successfully removed key:', key);
+
+      localStorage.removeItem(key);
     } catch (error: any) {
       console.error('❌ [CapacitorStorage] Error removing key:', key, error);
 
-      if (!this.useLocalStorageFallback && error.message?.includes('not implemented')) {
+      if (!this.useLocalStorageFallback && (error.message?.includes('not implemented') || error.message?.includes('quota'))) {
         console.warn('⚠️ [CapacitorStorage] Switching to localStorage fallback');
         this.useLocalStorageFallback = true;
         return this.removeItem(key);

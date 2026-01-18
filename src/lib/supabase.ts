@@ -46,6 +46,7 @@ try {
       detectSessionInUrl: !isNativePlatform,
       storageKey: 'mealscrape-auth',
       flowType: 'pkce',
+      debug: false,
     },
     realtime: {
       params: {
@@ -55,6 +56,57 @@ try {
   });
   errorHandler.info('Supabase', '✅ Supabase client created successfully');
   errorHandler.info('Supabase', `🔐 Auth config: flowType=pkce, detectSessionInUrl=${!isNativePlatform} (${isNativePlatform ? 'mobile uses deep linking' : 'web uses URL detection'})`);
+
+  if (isNativePlatform) {
+    let sessionRefreshInProgress = false;
+
+    const refreshSessionIfNeeded = async () => {
+      if (sessionRefreshInProgress) {
+        errorHandler.info('Supabase', 'Session refresh already in progress, skipping');
+        return;
+      }
+
+      try {
+        sessionRefreshInProgress = true;
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (session && !error) {
+          const expiresAt = session.expires_at || 0;
+          const now = Math.floor(Date.now() / 1000);
+          const timeUntilExpiry = expiresAt - now;
+
+          if (timeUntilExpiry < 600) {
+            errorHandler.info('Supabase', `Session expires in ${timeUntilExpiry}s, refreshing...`);
+            const { error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError) {
+              errorHandler.error('Supabase', 'Session refresh failed', refreshError);
+            } else {
+              errorHandler.info('Supabase', 'Session refreshed successfully');
+            }
+          } else {
+            errorHandler.info('Supabase', `Session valid for ${Math.floor(timeUntilExpiry / 60)}m`);
+          }
+        } else if (error) {
+          errorHandler.error('Supabase', 'Session check error', error);
+        }
+      } catch (err) {
+        errorHandler.error('Supabase', 'Session refresh exception', err);
+      } finally {
+        sessionRefreshInProgress = false;
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          errorHandler.info('Supabase', 'App visible - checking session');
+          refreshSessionIfNeeded();
+        }
+      });
+    }
+
+    setInterval(refreshSessionIfNeeded, 5 * 60 * 1000);
+  }
 } catch (error) {
   errorHandler.error('Supabase', '❌ Failed to create Supabase client', error);
   throw error;
