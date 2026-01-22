@@ -10,7 +10,7 @@ import {
   getCategoryIcon,
   type DeliveryService,
 } from '../services/deliveryRoutingService';
-import { createInstacartCart, type DeliveryAddress } from '../services/instacartService';
+import { createInstacartShoppingList, type DeliveryAddress } from '../services/instacartService';
 import { trackAmazonServiceClick } from '../services/amazonGroceryService';
 import { findProductsForIngredient, bulkAddToCart } from '../services/amazonProductService';
 import { createCheckoutResult } from '../services/amazonSearchFallback';
@@ -78,39 +78,21 @@ export function Checkout({ onNavigate }: CheckoutProps) {
 
     setLoading(true);
     try {
-      toast.info('Finding matching products for Instacart...');
+      toast.info('Creating Instacart shopping list...');
 
-      const itemsToAdd = [];
-      for (const item of instacartItems) {
-        const products = await findProductsForIngredient(item.name, 1);
-        if (products.length > 0) {
-          itemsToAdd.push({
-            product: products[0],
-            quantity: item.quantity.toString(),
-            unit: item.unit,
-            deliveryService: 'instacart' as DeliveryService,
-          });
-        }
-      }
-
-      if (itemsToAdd.length > 0) {
-        await bulkAddToCart(userId, itemsToAdd);
-        toast.success(`Added ${itemsToAdd.length} items to cart for Instacart`);
-      }
-
-      const cartItems = instacartItems.map(item => ({
-        product_id: item.id,
+      const shoppingListItems = instacartItems.map(item => ({
+        name: item.name,
         quantity: item.quantity,
         unit: item.unit,
       }));
 
-      const session = await createInstacartCart(cartItems, userId, deliveryAddress);
+      const response = await createInstacartShoppingList(shoppingListItems, userId, deliveryAddress);
 
-      await openInBrowser(session.checkout_url);
-      toast.success('Checkout window opened - you can return anytime');
+      await openInBrowser(response.products_link_url);
+      toast.success('Instacart opened - add items to cart and checkout!');
     } catch (error) {
-      console.error('Error creating Instacart cart:', error);
-      toast.error('Failed to create Instacart cart. Please try again.');
+      console.error('Error creating Instacart shopping list:', error);
+      toast.error('Failed to create Instacart shopping list. Please try again.');
     } finally {
       setLoading(false);
     }
