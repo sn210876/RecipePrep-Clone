@@ -17,6 +17,13 @@ import {
   type ProductCategory,
 } from '../services/amazonProductService';
 import { detectDevice, openInBrowser } from '../lib/deviceDetection';
+import {
+  createInstacartShoppingList,
+  isInstacartEnabled,
+  type InstacartShoppingListItem,
+  type DeliveryAddress,
+} from '../services/instacartService';
+import { getUserDeliveryPreferences } from '../services/deliveryRoutingService';
 
 interface CartItem {
   id: string;
@@ -29,6 +36,7 @@ interface CartItem {
   image_url: string | null;
   asin: string | null;
   source_recipe_id: string | null;
+  delivery_service: string | null;
 }
 
 interface CartProps {
@@ -47,6 +55,9 @@ export function Cart({ onNavigate }: CartProps = {}) {
   const [productsLoading, setProductsLoading] = useState(false);
   const [showCatalog, setShowCatalog] = useState(true);
 
+  const [instacartEnabled, setInstacartEnabled] = useState(false);
+  const [checkingOutInstacart, setCheckingOutInstacart] = useState(false);
+
   const cartSectionRef = useRef<HTMLDivElement>(null);
 
   const scrollToCart = () => {
@@ -57,7 +68,13 @@ export function Cart({ onNavigate }: CartProps = {}) {
     loadCart();
     loadCategories();
     loadProducts();
+    checkInstacartStatus();
   }, []);
+
+  const checkInstacartStatus = async () => {
+    const enabled = await isInstacartEnabled();
+    setInstacartEnabled(enabled);
+  };
 
   useEffect(() => {
     loadProducts();
@@ -309,6 +326,63 @@ export function Cart({ onNavigate }: CartProps = {}) {
     }
   };
 
+  const handleInstacartCheckout = async () => {
+    if (!userId) {
+      toast.error('Please sign in to checkout');
+      return;
+    }
+
+    const instacartItems = cartItems.filter(item => item.delivery_service === 'instacart');
+
+    if (instacartItems.length === 0) {
+      toast.error('No Instacart items in cart');
+      return;
+    }
+
+    setCheckingOutInstacart(true);
+    toast.loading('Creating Instacart shopping list...', { id: 'instacart-checkout' });
+
+    try {
+      const preferences = await getUserDeliveryPreferences(userId);
+
+      if (!preferences?.deliveryAddress?.street || !preferences?.deliveryAddress?.zip) {
+        toast.error('Please add your delivery address in Settings first', { id: 'instacart-checkout' });
+        if (onNavigate) {
+          onNavigate('settings');
+        }
+        return;
+      }
+
+      const deliveryAddress: DeliveryAddress = {
+        street: preferences.deliveryAddress.street,
+        city: preferences.deliveryAddress.city || '',
+        state: preferences.deliveryAddress.state || '',
+        zip: preferences.deliveryAddress.zip,
+        country: preferences.deliveryAddress.country || 'US',
+        apt: preferences.deliveryAddress.apt || '',
+      };
+
+      const shoppingListItems: InstacartShoppingListItem[] = instacartItems.map(item => ({
+        name: item.amazon_product_name || item.ingredient_name,
+        quantity: item.quantity,
+        unit: item.unit || '',
+      }));
+
+      const result = await createInstacartShoppingList(shoppingListItems, userId, deliveryAddress);
+
+      toast.success('Opening Instacart shopping list...', { id: 'instacart-checkout' });
+
+      await openInBrowser(result.checkout_url);
+
+      toast.success(`Opened ${instacartItems.length} items in Instacart with affiliate tracking!`);
+    } catch (error: any) {
+      console.error('Error creating Instacart shopping list:', error);
+      toast.error(error.message || 'Failed to create Instacart shopping list', { id: 'instacart-checkout' });
+    } finally {
+      setCheckingOutInstacart(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
@@ -493,8 +567,123 @@ export function Cart({ onNavigate }: CartProps = {}) {
               </Button>
             </div>
 
+            {/* Instacart Items Section */}
+            {instacartEnabled && cartItems.filter(item => item.delivery_service === 'instacart').length > 0 && (
+              <div className="mb-6">
+                <Card className="border-4 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50">
+                  <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                    <CardTitle className="flex items-center gap-2">
+                      <Store className="w-5 h-5" />
+                      Instacart Items ({cartItems.filter(item => item.delivery_service === 'instacart').length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-3">
+                    {cartItems
+                      .filter(item => item.delivery_service === 'instacart')
+                      .map(item => (
+                        <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow border-2 border-green-200">
+                          <CardContent className="p-3 md:p-4">
+                            <div className="flex gap-3 md:gap-4">
+                              {item.image_url && (
+                                <div className="shrink-0">
+                                  <img
+                                    src={item.image_url}
+                                    alt={item.amazon_product_name || item.ingredient_name}
+                                    className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg bg-slate-100"
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                </div>
+                              )}
+
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-sm md:text-lg text-slate-900 line-clamp-2 mb-1">
+                                  {item.amazon_product_name || item.ingredient_name}
+                                </h3>
+                                <Badge className="bg-green-100 text-green-800 mb-2">Instacart</Badge>
+
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                  <div className="flex items-center gap-2 bg-slate-100 rounded-lg w-fit p-1">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const current = parseFloat(item.quantity) || 1;
+                                        if (current > 1) {
+                                          updateQuantity(item.id, (current - 1).toString());
+                                        }
+                                      }}
+                                      className="h-7 w-7 p-0 hover:bg-slate-200"
+                                    >
+                                      <Minus className="w-3 h-3" />
+                                    </Button>
+                                    <Input
+                                      type="text"
+                                      value={item.quantity}
+                                      onChange={e => updateQuantity(item.id, e.target.value)}
+                                      className="w-12 md:w-16 text-center text-sm h-7 border-0 bg-transparent"
+                                    />
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const current = parseFloat(item.quantity) || 1;
+                                        updateQuantity(item.id, (current + 1).toString());
+                                      }}
+                                      className="h-7 w-7 p-0 hover:bg-slate-200"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  <span className="text-xs md:text-sm text-gray-600">{item.unit}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col items-end gap-2 justify-between">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => removeItem(item.id)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs md:text-sm h-7 px-2"
+                                >
+                                  <Trash2 className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                                  <span className="hidden sm:inline">Remove</span>
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+
+                    <Button
+                      onClick={handleInstacartCheckout}
+                      disabled={checkingOutInstacart}
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold h-12 md:h-14 shadow-lg"
+                      size="lg"
+                    >
+                      {checkingOutInstacart ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Creating List...
+                        </>
+                      ) : (
+                        <>
+                          <Store className="w-5 h-5 mr-2" />
+                          Checkout with Instacart
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-center text-gray-600 mt-2">
+                      Creates a shopping list with your delivery address
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Amazon Items Section */}
             <div className="space-y-3 md:space-y-4 mb-6">
-              {cartItems.map(item => (
+              {cartItems.filter(item => item.delivery_service !== 'instacart').map(item => (
                 <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow border-4 border-orange-500">
                   <CardContent className="p-3 md:p-4">
                     <div className="flex gap-3 md:gap-4">
