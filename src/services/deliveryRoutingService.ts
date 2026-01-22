@@ -25,6 +25,7 @@ export interface UserDeliveryPreferences {
   enableAmazonFresh?: boolean;
   enableAmazonGrocery?: boolean;
   enableWholeFoods?: boolean;
+  enableInstacart?: boolean;
   userZipCode?: string;
 }
 
@@ -74,7 +75,9 @@ function categorizeIngredient(
   if (FRESH_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
     let service: DeliveryService = 'instacart';
 
-    if (isOrganic && preferences?.enableWholeFoods) {
+    if (preferences?.enableInstacart !== false) {
+      service = 'instacart';
+    } else if (isOrganic && preferences?.enableWholeFoods) {
       service = 'whole_foods';
     } else if (preferences?.enableAmazonFresh) {
       service = 'amazon_fresh';
@@ -90,7 +93,9 @@ function categorizeIngredient(
   if (MEAT_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
     let service: DeliveryService = 'instacart';
 
-    if (isOrganic && preferences?.enableWholeFoods) {
+    if (preferences?.enableInstacart !== false) {
+      service = 'instacart';
+    } else if (isOrganic && preferences?.enableWholeFoods) {
       service = 'whole_foods';
     } else if (preferences?.enableAmazonFresh) {
       service = 'amazon_fresh';
@@ -106,7 +111,9 @@ function categorizeIngredient(
   if (DAIRY_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
     let service: DeliveryService = 'instacart';
 
-    if (isOrganic && preferences?.enableWholeFoods) {
+    if (preferences?.enableInstacart !== false) {
+      service = 'instacart';
+    } else if (isOrganic && preferences?.enableWholeFoods) {
       service = 'whole_foods';
     } else if (preferences?.enableAmazonFresh) {
       service = 'amazon_fresh';
@@ -122,7 +129,9 @@ function categorizeIngredient(
   if (FROZEN_KEYWORDS.some(keyword => nameLower.includes(keyword))) {
     let service: DeliveryService = 'instacart';
 
-    if (preferences?.enableAmazonFresh) {
+    if (preferences?.enableInstacart !== false) {
+      service = 'instacart';
+    } else if (preferences?.enableAmazonFresh) {
       service = 'amazon_fresh';
     }
 
