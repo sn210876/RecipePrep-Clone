@@ -114,6 +114,22 @@ export async function searchInstacartProducts(
   }
 }
 
+function createInstacartStorefrontUrl(items: InstacartShoppingListItem[], affiliateTag: string): string {
+  const baseUrl = 'https://www.instacart.com/store/search';
+  const searchQuery = items.map(item => {
+    const qty = item.quantity > 1 ? `${item.quantity} ` : '';
+    const unit = item.unit ? ` ${item.unit}` : '';
+    return `${qty}${item.name}${unit}`;
+  }).join(', ');
+
+  const params = new URLSearchParams({
+    q: searchQuery,
+    ref: affiliateTag || 'mealscrape'
+  });
+
+  return `${baseUrl}?${params.toString()}`;
+}
+
 export async function createInstacartShoppingList(
   items: InstacartShoppingListItem[],
   userId: string,
@@ -121,14 +137,41 @@ export async function createInstacartShoppingList(
 ): Promise<InstacartShoppingListResponse> {
   try {
     const config = await getInstacartConfig();
-
-    if (!config.api_key) {
-      throw new Error('Instacart API key not configured');
-    }
-
     const trackingId = `${userId}-${Date.now()}`;
 
     console.log('[Instacart] Creating shopping list with', items.length, 'items');
+
+    if (!config.api_key || config.api_key.length < 20) {
+      console.log('[Instacart] No valid API key, using storefront URL fallback');
+      const storefrontUrl = createInstacartStorefrontUrl(items, config.affiliate_tag || 'mealscrape');
+
+      await supabase.from('affiliate_conversions').insert({
+        user_id: userId,
+        service_name: 'instacart',
+        conversion_type: 'cart_created',
+        tracking_id: trackingId,
+        status: 'pending',
+        metadata: {
+          products_link_url: storefrontUrl,
+          item_count: items.length,
+          method: 'storefront_fallback'
+        },
+      });
+
+      if (deliveryAddress) {
+        await saveDeliveryOrder(
+          userId,
+          'instacart',
+          items,
+          deliveryAddress,
+          trackingId
+        );
+      }
+
+      return {
+        products_link_url: storefrontUrl
+      };
+    }
 
     const requestBody = {
       title: 'My Shopping List from MealScrape',
@@ -142,7 +185,7 @@ export async function createInstacartShoppingList(
       }
     };
 
-    console.log('[Instacart] Request body:', JSON.stringify(requestBody, null, 2));
+    console.log('[Instacart] Using API with request body:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(INSTACART_API_ENDPOINT, {
       method: 'POST',
@@ -158,7 +201,37 @@ export async function createInstacartShoppingList(
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
       console.error('[Instacart] API error:', response.status, errorText);
-      throw new Error(`Instacart API returned ${response.status}: ${errorText || response.statusText}`);
+      console.log('[Instacart] Falling back to storefront URL');
+
+      const storefrontUrl = createInstacartStorefrontUrl(items, config.affiliate_tag || 'mealscrape');
+
+      await supabase.from('affiliate_conversions').insert({
+        user_id: userId,
+        service_name: 'instacart',
+        conversion_type: 'cart_created',
+        tracking_id: trackingId,
+        status: 'pending',
+        metadata: {
+          products_link_url: storefrontUrl,
+          item_count: items.length,
+          method: 'storefront_fallback',
+          api_error: errorText
+        },
+      });
+
+      if (deliveryAddress) {
+        await saveDeliveryOrder(
+          userId,
+          'instacart',
+          items,
+          deliveryAddress,
+          trackingId
+        );
+      }
+
+      return {
+        products_link_url: storefrontUrl
+      };
     }
 
     const data = await response.json();
@@ -176,7 +249,8 @@ export async function createInstacartShoppingList(
       status: 'pending',
       metadata: {
         products_link_url: data.products_link_url,
-        item_count: items.length
+        item_count: items.length,
+        method: 'api'
       },
     });
 
