@@ -152,7 +152,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
     }
 
     try {
-      await addProductToCart(userId, product, '1', product.package_size || '');
+      await addProductToCart(userId, product, '1', product.package_size || '', undefined, 'amazon');
       await loadCart();
       toast.success(`Added ${product.product_name} to cart`);
     } catch (error) {
@@ -177,6 +177,25 @@ export function Cart({ onNavigate }: CartProps = {}) {
     } catch (error) {
       console.error('Error updating quantity:', error);
       toast.error('Failed to update quantity');
+    }
+  };
+
+  const updateDeliveryService = async (itemId: string, deliveryService: string) => {
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .update({ delivery_service: deliveryService })
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      setCartItems(items =>
+        items.map(item => (item.id === itemId ? { ...item, delivery_service: deliveryService } : item))
+      );
+      toast.success(`Delivery service updated to ${deliveryService === 'instacart' ? 'Instacart' : 'Amazon'}`);
+    } catch (error) {
+      console.error('Error updating delivery service:', error);
+      toast.error('Failed to update delivery service');
     }
   };
 
@@ -598,42 +617,69 @@ export function Cart({ onNavigate }: CartProps = {}) {
                                 <h3 className="font-semibold text-sm md:text-lg text-slate-900 line-clamp-2 mb-1">
                                   {item.amazon_product_name || item.ingredient_name}
                                 </h3>
-                                <Badge className="bg-green-100 text-green-800 mb-2">Instacart</Badge>
 
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                                  <div className="flex items-center gap-2 bg-slate-100 rounded-lg w-fit p-1">
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => {
-                                        const current = parseFloat(item.quantity) || 1;
-                                        if (current > 1) {
-                                          updateQuantity(item.id, (current - 1).toString());
-                                        }
-                                      }}
-                                      className="h-7 w-7 p-0 hover:bg-slate-200"
-                                    >
-                                      <Minus className="w-3 h-3" />
-                                    </Button>
-                                    <Input
-                                      type="text"
-                                      value={item.quantity}
-                                      onChange={e => updateQuantity(item.id, e.target.value)}
-                                      className="w-12 md:w-16 text-center text-sm h-7 border-0 bg-transparent"
-                                    />
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => {
-                                        const current = parseFloat(item.quantity) || 1;
-                                        updateQuantity(item.id, (current + 1).toString());
-                                      }}
-                                      className="h-7 w-7 p-0 hover:bg-slate-200"
-                                    >
-                                      <Plus className="w-3 h-3" />
-                                    </Button>
+                                <div className="flex flex-col gap-2 mb-2">
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                    <div className="flex items-center gap-2 bg-slate-100 rounded-lg w-fit p-1">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          const current = parseFloat(item.quantity) || 1;
+                                          if (current > 1) {
+                                            updateQuantity(item.id, (current - 1).toString());
+                                          }
+                                        }}
+                                        className="h-7 w-7 p-0 hover:bg-slate-200"
+                                      >
+                                        <Minus className="w-3 h-3" />
+                                      </Button>
+                                      <Input
+                                        type="text"
+                                        value={item.quantity}
+                                        onChange={e => updateQuantity(item.id, e.target.value)}
+                                        className="w-12 md:w-16 text-center text-sm h-7 border-0 bg-transparent"
+                                      />
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => {
+                                          const current = parseFloat(item.quantity) || 1;
+                                          updateQuantity(item.id, (current + 1).toString());
+                                        }}
+                                        className="h-7 w-7 p-0 hover:bg-slate-200"
+                                      >
+                                        <Plus className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                    <span className="text-xs md:text-sm text-gray-600">{item.unit}</span>
                                   </div>
-                                  <span className="text-xs md:text-sm text-gray-600">{item.unit}</span>
+
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-600 whitespace-nowrap">Deliver via:</span>
+                                    <Select
+                                      value={item.delivery_service || 'instacart'}
+                                      onValueChange={(value) => updateDeliveryService(item.id, value)}
+                                    >
+                                      <SelectTrigger className="h-7 text-xs w-[140px]">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="amazon">
+                                          <div className="flex items-center gap-2">
+                                            <Package className="w-3 h-3" />
+                                            Amazon
+                                          </div>
+                                        </SelectItem>
+                                        <SelectItem value="instacart">
+                                          <div className="flex items-center gap-2">
+                                            <Store className="w-3 h-3" />
+                                            Instacart
+                                          </div>
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
                                 </div>
                               </div>
 
@@ -702,40 +748,70 @@ export function Cart({ onNavigate }: CartProps = {}) {
                           {item.amazon_product_name || item.ingredient_name}
                         </h3>
 
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                          <div className="flex items-center gap-2 bg-slate-100 rounded-lg w-fit p-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                const current = parseFloat(item.quantity) || 1;
-                                if (current > 1) {
-                                  updateQuantity(item.id, (current - 1).toString());
-                                }
-                              }}
-                              className="h-7 w-7 p-0 hover:bg-slate-200"
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <Input
-                              type="text"
-                              value={item.quantity}
-                              onChange={e => updateQuantity(item.id, e.target.value)}
-                              className="w-12 md:w-16 text-center text-sm h-7 border-0 bg-transparent"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                const current = parseFloat(item.quantity) || 1;
-                                updateQuantity(item.id, (current + 1).toString());
-                              }}
-                              className="h-7 w-7 p-0 hover:bg-slate-200"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
+                        <div className="flex flex-col gap-2 mb-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <div className="flex items-center gap-2 bg-slate-100 rounded-lg w-fit p-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const current = parseFloat(item.quantity) || 1;
+                                  if (current > 1) {
+                                    updateQuantity(item.id, (current - 1).toString());
+                                  }
+                                }}
+                                className="h-7 w-7 p-0 hover:bg-slate-200"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </Button>
+                              <Input
+                                type="text"
+                                value={item.quantity}
+                                onChange={e => updateQuantity(item.id, e.target.value)}
+                                className="w-12 md:w-16 text-center text-sm h-7 border-0 bg-transparent"
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const current = parseFloat(item.quantity) || 1;
+                                  updateQuantity(item.id, (current + 1).toString());
+                                }}
+                                className="h-7 w-7 p-0 hover:bg-slate-200"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <span className="text-xs md:text-sm text-gray-600">{item.unit}</span>
                           </div>
-                          <span className="text-xs md:text-sm text-gray-600">{item.unit}</span>
+
+                          {instacartEnabled && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-600 whitespace-nowrap">Deliver via:</span>
+                              <Select
+                                value={item.delivery_service || 'amazon'}
+                                onValueChange={(value) => updateDeliveryService(item.id, value)}
+                              >
+                                <SelectTrigger className="h-7 text-xs w-[140px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="amazon">
+                                    <div className="flex items-center gap-2">
+                                      <Package className="w-3 h-3" />
+                                      Amazon
+                                    </div>
+                                  </SelectItem>
+                                  <SelectItem value="instacart">
+                                    <div className="flex items-center gap-2">
+                                      <Store className="w-3 h-3" />
+                                      Instacart
+                                    </div>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
                         </div>
                       </div>
 
