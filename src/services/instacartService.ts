@@ -20,15 +20,12 @@ export interface InstacartCartItem {
 
 export interface InstacartShoppingListItem {
   name: string;
-  quantity: string;
+  quantity: number;
   unit?: string;
 }
 
 export interface InstacartShoppingListResponse {
-  shopping_list_id: string;
-  checkout_url: string;
-  items: InstacartShoppingListItem[];
-  retailer_id?: string;
+  products_link_url: string;
 }
 
 export interface InstacartCheckoutSession {
@@ -53,6 +50,7 @@ export interface DeliveryAddress {
   apt?: string;
 }
 
+const INSTACART_API_ENDPOINT = 'https://connect.instacart.com/idp/v1/products/products_link';
 const INSTACART_API_BASE = 'https://api.instacart.com/v2';
 
 async function getInstacartConfig() {
@@ -119,7 +117,7 @@ export async function searchInstacartProducts(
 export async function createInstacartShoppingList(
   items: InstacartShoppingListItem[],
   userId: string,
-  deliveryAddress: DeliveryAddress
+  deliveryAddress?: DeliveryAddress
 ): Promise<InstacartShoppingListResponse> {
   try {
     const config = await getInstacartConfig();
@@ -128,34 +126,34 @@ export async function createInstacartShoppingList(
       throw new Error('Instacart API key not configured');
     }
 
-    const affiliateTag = config.affiliate_tag || 'mealscrape';
     const trackingId = `${userId}-${Date.now()}`;
 
-    const response = await fetch(`${INSTACART_API_BASE}/shopping_lists`, {
+    const response = await fetch(INSTACART_API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${config.api_key}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        items,
-        postal_code: deliveryAddress.zip,
-        country_code: deliveryAddress.country || 'US',
-        partner_metadata: {
-          affiliate_tag: affiliateTag,
-          tracking_id: trackingId,
-          source: 'mealscrape_app',
-        },
+        title: 'My Shopping List from MealScrape',
+        line_items: items,
+        landing_page_configuration: {
+          partner_linkback_url: 'https://mealscrapeapp.com'
+        }
       }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Instacart API error:', errorData);
-      throw new Error(errorData.message || 'Failed to create Instacart shopping list');
+      const errorText = await response.text().catch(() => '');
+      console.error('Instacart API error:', response.status, errorText);
+      throw new Error(`Failed to create Instacart shopping list: ${response.statusText}`);
     }
 
     const data = await response.json();
+
+    if (!data.products_link_url) {
+      throw new Error('No products link URL returned from Instacart');
+    }
 
     await supabase.from('affiliate_conversions').insert({
       user_id: userId,
@@ -163,22 +161,24 @@ export async function createInstacartShoppingList(
       conversion_type: 'cart_created',
       tracking_id: trackingId,
       status: 'pending',
-      metadata: { shopping_list_id: data.shopping_list_id },
+      metadata: {
+        products_link_url: data.products_link_url,
+        item_count: items.length
+      },
     });
 
-    await saveDeliveryOrder(
-      userId,
-      'instacart',
-      items,
-      deliveryAddress,
-      data.shopping_list_id
-    );
+    if (deliveryAddress) {
+      await saveDeliveryOrder(
+        userId,
+        'instacart',
+        items,
+        deliveryAddress,
+        trackingId
+      );
+    }
 
     return {
-      shopping_list_id: data.shopping_list_id,
-      checkout_url: appendAffiliateTracking(data.checkout_url || data.url, trackingId),
-      items: data.items || items,
-      retailer_id: data.retailer_id,
+      products_link_url: appendAffiliateTracking(data.products_link_url, trackingId)
     };
   } catch (error) {
     console.error('Error creating Instacart shopping list:', error);

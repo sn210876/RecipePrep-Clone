@@ -343,36 +343,34 @@ export function Cart({ onNavigate }: CartProps = {}) {
     toast.loading('Creating Instacart shopping list...', { id: 'instacart-checkout' });
 
     try {
+      const shoppingListItems: InstacartShoppingListItem[] = instacartItems.map(item => {
+        const quantity = parseFloat(item.quantity) || 1;
+        return {
+          name: item.amazon_product_name || item.ingredient_name,
+          quantity: quantity,
+          unit: item.unit || 'unit',
+        };
+      });
+
       const preferences = await getUserDeliveryPreferences(userId);
+      let deliveryAddress: DeliveryAddress | undefined;
 
-      if (!preferences?.deliveryAddress?.street || !preferences?.deliveryAddress?.zip) {
-        toast.error('Please add your delivery address in Settings first', { id: 'instacart-checkout' });
-        if (onNavigate) {
-          onNavigate('settings');
-        }
-        return;
+      if (preferences?.deliveryAddress?.street && preferences?.deliveryAddress?.zip) {
+        deliveryAddress = {
+          street: preferences.deliveryAddress.street,
+          city: preferences.deliveryAddress.city || '',
+          state: preferences.deliveryAddress.state || '',
+          zip: preferences.deliveryAddress.zip,
+          country: preferences.deliveryAddress.country || 'US',
+          apt: preferences.deliveryAddress.apt || '',
+        };
       }
-
-      const deliveryAddress: DeliveryAddress = {
-        street: preferences.deliveryAddress.street,
-        city: preferences.deliveryAddress.city || '',
-        state: preferences.deliveryAddress.state || '',
-        zip: preferences.deliveryAddress.zip,
-        country: preferences.deliveryAddress.country || 'US',
-        apt: preferences.deliveryAddress.apt || '',
-      };
-
-      const shoppingListItems: InstacartShoppingListItem[] = instacartItems.map(item => ({
-        name: item.amazon_product_name || item.ingredient_name,
-        quantity: item.quantity,
-        unit: item.unit || '',
-      }));
 
       const result = await createInstacartShoppingList(shoppingListItems, userId, deliveryAddress);
 
       toast.success('Opening Instacart shopping list...', { id: 'instacart-checkout' });
 
-      await openInBrowser(result.checkout_url);
+      window.open(result.products_link_url, '_blank');
 
       toast.success(`Opened ${instacartItems.length} items in Instacart with affiliate tracking!`);
     } catch (error: any) {
