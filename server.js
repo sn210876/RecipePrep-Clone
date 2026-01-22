@@ -285,9 +285,7 @@ async function cleanupFiles(videoId) {
   }
 }
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+
 
 app.post('/extract', async (req, res) => {
   try {
