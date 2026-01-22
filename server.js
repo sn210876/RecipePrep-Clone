@@ -24,7 +24,18 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use(limiter);
+// Health check endpoint - NO rate limiting (must be BEFORE rate limiter)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// Apply rate limiting to all routes EXCEPT health check
+app.use((req, res, next) => {
+  if (req.path === '/api/health') {
+    return next();
+  }
+  return limiter(req, res, next);
+});
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
