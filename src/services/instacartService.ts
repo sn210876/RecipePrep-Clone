@@ -128,28 +128,41 @@ export async function createInstacartShoppingList(
 
     const trackingId = `${userId}-${Date.now()}`;
 
+    console.log('[Instacart] Creating shopping list with', items.length, 'items');
+
+    const requestBody = {
+      title: 'My Shopping List from MealScrape',
+      line_items: items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit || ''
+      })),
+      landing_page_configuration: {
+        partner_linkback_url: 'https://mealscrapeapp.com'
+      }
+    };
+
+    console.log('[Instacart] Request body:', JSON.stringify(requestBody, null, 2));
+
     const response = await fetch(INSTACART_API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${config.api_key}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        title: 'My Shopping List from MealScrape',
-        line_items: items,
-        landing_page_configuration: {
-          partner_linkback_url: 'https://mealscrapeapp.com'
-        }
-      }),
+      body: JSON.stringify(requestBody),
     });
+
+    console.log('[Instacart] Response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
-      console.error('Instacart API error:', response.status, errorText);
-      throw new Error(`Failed to create Instacart shopping list: ${response.statusText}`);
+      console.error('[Instacart] API error:', response.status, errorText);
+      throw new Error(`Instacart API returned ${response.status}: ${errorText || response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('[Instacart] Response data:', data);
 
     if (!data.products_link_url) {
       throw new Error('No products link URL returned from Instacart');
@@ -181,7 +194,7 @@ export async function createInstacartShoppingList(
       products_link_url: appendAffiliateTracking(data.products_link_url, trackingId)
     };
   } catch (error) {
-    console.error('Error creating Instacart shopping list:', error);
+    console.error('[Instacart] Error creating shopping list:', error);
     throw error;
   }
 }
