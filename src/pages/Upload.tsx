@@ -79,8 +79,8 @@ export function Upload({ onNavigate }: UploadProps) {
 
             const previewUrl = URL.createObjectURL(compressedFile);
 
-            setSelectedFiles([compressedFile]);
-            setPreviewUrls([previewUrl]);
+            setSelectedFiles(prevFiles => [...prevFiles, compressedFile]);
+            setPreviewUrls(prevUrls => [...prevUrls, previewUrl]);
             setFileType('image');
 
             // Clear the pending upload
@@ -306,6 +306,11 @@ const getVideoDuration = (file: File): Promise<number> => {
 };
 
 const handleCapacitorCamera = async (source: CameraSource) => {
+  if (selectedFiles.length >= 4) {
+    toast.error('Maximum 4 photos allowed');
+    return;
+  }
+
   const loadingToastId = toast.loading(
     source === CameraSource.Camera ? 'Opening camera...' : 'Opening gallery...',
     { duration: 0 }
@@ -313,6 +318,7 @@ const handleCapacitorCamera = async (source: CameraSource) => {
 
   try {
     console.log('📸 handleCapacitorCamera called with source:', source);
+    console.log('📊 Current state:', { selectedFiles: selectedFiles.length, previewUrls: previewUrls.length });
 
     const image = await Camera.getPhoto({
       quality: 90,
@@ -382,16 +388,31 @@ const handleCapacitorCamera = async (source: CameraSource) => {
       const previewUrl = URL.createObjectURL(compressedFile);
       console.log('✅ Preview URL created:', previewUrl);
 
-      console.log('🔧 Setting state immediately...');
-      setSelectedFiles([compressedFile]);
-      setPreviewUrls([previewUrl]);
+      console.log('🔧 Appending to existing files...');
+      console.log('📊 Before update:', { selectedFiles: selectedFiles.length, previewUrls: previewUrls.length });
+
+      setSelectedFiles(prevFiles => {
+        const newFiles = [...prevFiles, compressedFile];
+        console.log('📊 Updated selectedFiles:', newFiles.length);
+        return newFiles;
+      });
+
+      setPreviewUrls(prevUrls => {
+        const newUrls = [...prevUrls, previewUrl];
+        console.log('📊 Updated previewUrls:', newUrls.length);
+        return newUrls;
+      });
+
       setFileType('image');
-      console.log('✅ State updated successfully');
+      console.log('✅ State updated successfully - photo added to existing collection');
 
       await Preferences.remove({ key: 'pending_upload_webpath' });
 
+      const totalPhotos = selectedFiles.length + 1;
       toast.success(
-        source === CameraSource.Camera ? 'Photo captured!' : 'Photo selected!',
+        source === CameraSource.Camera
+          ? `Photo ${totalPhotos}/4 captured!`
+          : `Photo ${totalPhotos}/4 added!`,
         { id: loadingToastId }
       );
     } catch (error: any) {
@@ -860,46 +881,84 @@ onNavigate('discover');
       );
     })}
     {selectedFiles.length < 4 && (
-              <label className="cursor-pointer">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  multiple 
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    const remainingSlots = 4 - selectedFiles.length;
-                    const newFiles = files.slice(0, remainingSlots);
-                    
-                    const validFiles: File[] = [];
-                    const validPreviews: string[] = [];
-                    
-                    for (const file of newFiles) {
-                      if (file.size > 10 * 1024 * 1024) {
-                        toast.error(`${file.name} is too large (max 10MB)`);
-                        continue;
+              <div className="space-y-3">
+                {Capacitor.isNativePlatform() && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={handleTakePhoto}
+                      className="border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-orange-500 transition-colors"
+                    >
+                      <div className="space-y-2">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl shadow-lg mx-auto">
+                          <CameraIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">Take Photo</p>
+                          <p className="text-xs text-gray-400">{selectedFiles.length}/4</p>
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePickFromGallery}
+                      className="border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-orange-500 transition-colors"
+                    >
+                      <div className="space-y-2">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg mx-auto">
+                          <ImageIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">From Gallery</p>
+                          <p className="text-xs text-gray-400">{selectedFiles.length}/4</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+                <label className="cursor-pointer block">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      const remainingSlots = 4 - selectedFiles.length;
+                      const newFiles = files.slice(0, remainingSlots);
+
+                      const validFiles: File[] = [];
+                      const validPreviews: string[] = [];
+
+                      for (const file of newFiles) {
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error(`${file.name} is too large (max 10MB)`);
+                          continue;
+                        }
+                        if (!file.type.startsWith('image/')) {
+                          toast.error(`${file.name} is not an image`);
+                          continue;
+                        }
+                        validFiles.push(file);
+                        validPreviews.push(URL.createObjectURL(file));
                       }
-                      if (!file.type.startsWith('image/')) {
-                        toast.error(`${file.name} is not an image`);
-                        continue;
+
+                      if (validFiles.length > 0) {
+                        setSelectedFiles([...selectedFiles, ...validFiles]);
+                        setPreviewUrls([...previewUrls, ...validPreviews]);
+                        toast.success(`Added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`);
                       }
-                      validFiles.push(file);
-                      validPreviews.push(URL.createObjectURL(file));
-                    }
-                    
-                    if (validFiles.length > 0) {
-                      setSelectedFiles([...selectedFiles, ...validFiles]);
-                      setPreviewUrls([...previewUrls, ...validPreviews]);
-                      toast.success(`Added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`);
-                    }
-                  }}
-                  className="hidden" 
-                />
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-500 transition-colors">
-                  <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                  <p className="text-sm font-medium text-gray-600">Add More Photos</p>
-                  <p className="text-xs text-gray-400 mt-1">{selectedFiles.length}/4 selected</p>
-                </div>
-              </label>
+                    }}
+                    className="hidden"
+                  />
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-500 transition-colors">
+                    <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                    <p className="text-sm font-medium text-gray-600">
+                      {Capacitor.isNativePlatform() ? 'Or browse files' : 'Add More Photos'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">{selectedFiles.length}/4 selected</p>
+                  </div>
+                </label>
+              </div>
             )}
           </div>
         )}
