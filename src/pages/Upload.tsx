@@ -919,41 +919,95 @@ onNavigate('discover');
                 <label className="cursor-pointer block">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const files = Array.from(e.target.files || []);
                       const remainingSlots = 4 - selectedFiles.length;
                       const newFiles = files.slice(0, remainingSlots);
 
                       const validFiles: File[] = [];
                       const validPreviews: string[] = [];
+                      let hasVideo = false;
 
                       for (const file of newFiles) {
-                        if (file.size > 10 * 1024 * 1024) {
-                          toast.error(`${file.name} is too large (max 10MB)`);
+                        const isImage = file.type.startsWith('image/');
+                        const isVideo = file.type.startsWith('video/');
+
+                        if (!isImage && !isVideo) {
+                          toast.error(`${file.name} is not a valid image or video`);
                           continue;
                         }
-                        if (!file.type.startsWith('image/')) {
-                          toast.error(`${file.name} is not an image`);
+
+                        if (isVideo) {
+                          if (file.size > 100 * 1024 * 1024) {
+                            toast.error(`${file.name} is too large (max 100MB for videos)`);
+                            continue;
+                          }
+
+                          try {
+                            const duration = await getVideoDuration(file);
+                            if (postType === 'daily' && duration > 30) {
+                              toast.error(`${file.name}: Daily videos must be 30 seconds or less`);
+                              continue;
+                            }
+                            hasVideo = true;
+                          } catch (error) {
+                            toast.error(`Failed to load ${file.name}`);
+                            continue;
+                          }
+                        } else if (file.size > 10 * 1024 * 1024) {
+                          toast.error(`${file.name} is too large (max 10MB for images)`);
                           continue;
                         }
+
                         validFiles.push(file);
                         validPreviews.push(URL.createObjectURL(file));
                       }
 
                       if (validFiles.length > 0) {
-                        setSelectedFiles([...selectedFiles, ...validFiles]);
-                        setPreviewUrls([...previewUrls, ...validPreviews]);
-                        toast.success(`Added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`);
+                        const imageFiles = validFiles.filter(f => f.type.startsWith('image/'));
+                        const videoFiles = validFiles.filter(f => f.type.startsWith('video/'));
+
+                        if (imageFiles.length > 0) {
+                          const toastId = toast.loading('Compressing images...', { duration: 0 });
+                          try {
+                            const compressedResults = await compressMultipleImages(imageFiles);
+                            const compressedFiles = compressedResults.map(r => r.file);
+
+                            setSelectedFiles(prev => [...prev, ...compressedFiles, ...videoFiles]);
+
+                            const compressedPreviews = compressedResults.map(r => URL.createObjectURL(r.file));
+                            const videoPreviews = videoFiles.map(f => URL.createObjectURL(f));
+                            setPreviewUrls(prev => [...prev, ...compressedPreviews, ...videoPreviews]);
+
+                            toast.success(`Added ${validFiles.length} file${validFiles.length > 1 ? 's' : ''}`, { id: toastId });
+                          } catch (error: any) {
+                            toast.error(error.message || 'Failed to process files', { id: toastId });
+                            return;
+                          }
+                        } else {
+                          setSelectedFiles(prev => [...prev, ...videoFiles]);
+                          setPreviewUrls(prev => [...prev, ...validPreviews]);
+                          toast.success(`Added ${validFiles.length} video${validFiles.length > 1 ? 's' : ''}`);
+                        }
+
+                        if (hasVideo || fileType === 'video') {
+                          setFileType('video');
+                        } else {
+                          setFileType('image');
+                        }
                       }
                     }}
                     className="hidden"
                   />
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-500 transition-colors">
-                    <ImageIcon className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                    <div className="flex gap-2 justify-center mb-2">
+                      <ImageIcon className="w-8 h-8 text-gray-400" />
+                      <Video className="w-8 h-8 text-gray-400" />
+                    </div>
                     <p className="text-sm font-medium text-gray-600">
-                      {Capacitor.isNativePlatform() ? 'Or browse files' : 'Add More Photos'}
+                      {Capacitor.isNativePlatform() ? 'Or browse files' : 'Add More Media'}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">{selectedFiles.length}/4 selected</p>
                   </div>
@@ -1078,9 +1132,20 @@ onNavigate('discover');
               <UploadIcon className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-orange-900">Ready to post</p>
-<p className="text-xs text-orange-700 mt-1 truncate">
-  {selectedFiles.length} image{selectedFiles.length > 1 ? 's' : ''} selected
-</p>              </div>
+                <p className="text-xs text-orange-700 mt-1 truncate">
+                  {(() => {
+                    const imageCount = selectedFiles.filter(f => f.type.startsWith('image/')).length;
+                    const videoCount = selectedFiles.filter(f => f.type.startsWith('video/')).length;
+                    if (imageCount > 0 && videoCount > 0) {
+                      return `${imageCount} image${imageCount > 1 ? 's' : ''} & ${videoCount} video${videoCount > 1 ? 's' : ''} selected`;
+                    } else if (videoCount > 0) {
+                      return `${videoCount} video${videoCount > 1 ? 's' : ''} selected`;
+                    } else {
+                      return `${imageCount} image${imageCount > 1 ? 's' : ''} selected`;
+                    }
+                  })()}
+                </p>
+              </div>
             </div>
           </div>
         )}
