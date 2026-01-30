@@ -590,7 +590,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                 <Card className="border-4 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50">
                   <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                     <CardTitle className="flex items-center gap-2">
-                      <Store className="w-5 h-5" />
+                      <img src="/instacart_logo_cashew.png" alt="Instacart" className="w-5 h-5" />
                       Instacart Items ({cartItems.filter(item => item.delivery_service === 'instacart').length})
                     </CardTitle>
                   </CardHeader>
@@ -673,7 +673,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                                         </SelectItem>
                                         <SelectItem value="instacart">
                                           <div className="flex items-center gap-2">
-                                            <Store className="w-3 h-3" />
+                                            <img src="/instacart_logo_cashew.png" alt="Instacart" className="w-3 h-3" />
                                             Instacart
                                           </div>
                                         </SelectItem>

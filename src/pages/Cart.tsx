@@ -143,7 +143,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
       case 'whole_foods':
         return <ShoppingBag className="w-4 h-4 text-emerald-600" />;
       case 'instacart':
-        return <ShoppingBag className="w-4 h-4 text-green-600" />;
+        return <img src="/instacart_logo_cashew.png" alt="Instacart" className="w-4 h-4" />;
       case 'amazon':
         return <Package className="w-4 h-4 text-orange-600" />;
       default:
@@ -246,14 +246,39 @@ export function Cart({ onNavigate }: CartProps = {}) {
                         </Badge>
                       </div>
                       {service !== 'general' && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleServiceCheckout(service, items)}
-                          className="bg-orange-600 hover:bg-orange-700 text-white"
-                        >
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          Checkout
-                        </Button>
+                        service === 'instacart' ? (
+                          <Button
+                            size="sm"
+                            onClick={() => handleServiceCheckout(service, items)}
+                            className="font-medium"
+                            style={{
+                              height: '32px',
+                              backgroundColor: '#003D29',
+                              color: '#FAF1E5',
+                              borderRadius: '16px',
+                              paddingLeft: '12px',
+                              paddingRight: '12px',
+                              border: 'none',
+                            }}
+                          >
+                            <img
+                              src="/instacart_logo_cashew.png"
+                              alt="Instacart"
+                              className="w-4 h-4 mr-1.5"
+                              style={{ width: '16px', height: '16px' }}
+                            />
+                            Shop with Instacart
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => handleServiceCheckout(service, items)}
+                            className="bg-orange-600 hover:bg-orange-700 text-white"
+                          >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Checkout
+                          </Button>
+                        )
                       )}
                     </div>
                   </CardHeader>

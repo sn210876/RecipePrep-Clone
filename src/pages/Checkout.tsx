@@ -191,7 +191,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-green-600" />
+                    <img src="/instacart_logo_cashew.png" alt="Instacart" className="w-4 h-4" />
                     Instacart
                   </CardTitle>
                   <CardDescription>Quick delivery</CardDescription>
@@ -283,17 +283,31 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <CardHeader>
                 <CardTitle className="text-sm flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-green-600" />
+                    <img src="/instacart_logo_cashew.png" alt="Instacart" className="w-4 h-4" />
                     Instacart Items ({instacartItems.length})
                   </span>
                   <Button
                     size="sm"
                     onClick={handleCheckoutInstacart}
                     disabled={loading}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="font-medium"
+                    style={{
+                      height: '32px',
+                      backgroundColor: loading ? '#002920' : '#003D29',
+                      color: '#FAF1E5',
+                      borderRadius: '16px',
+                      paddingLeft: '12px',
+                      paddingRight: '12px',
+                      border: 'none',
+                    }}
                   >
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    Checkout
+                    <img
+                      src="/instacart_logo_cashew.png"
+                      alt="Instacart"
+                      className="w-4 h-4 mr-1.5"
+                      style={{ width: '16px', height: '16px' }}
+                    />
+                    Shop with Instacart
                   </Button>
                 </CardTitle>
               </CardHeader>
