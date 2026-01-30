@@ -261,16 +261,16 @@ export function Cart({ onNavigate }: CartProps = {}) {
                               gap: '8px',
                             }}
                           >
-                            <img
-                              src="/instacart_logo_kale.png"
-                              alt="Instacart"
-                              style={{
-                                width: '36px',
-                                height: '36px',
-                                objectFit: 'contain',
-                                flexShrink: 0,
-                              }}
-                            />
+                           <img
+  src="/instacart_logo_kale.png"
+  alt="Instacart"
+  style={{
+    width: '32px',
+    height: '32px',
+    objectFit: 'contain',
+    flexShrink: 0,
+  }}
+/>
                             <span style={{ whiteSpace: 'nowrap' }}>Shop with Instacart</span>
                           </Button>
                         ) : (
