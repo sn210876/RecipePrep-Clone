@@ -248,30 +248,33 @@ export function Cart({ onNavigate }: CartProps = {}) {
                       {service !== 'general' && (
                         service === 'instacart' ? (
                           <Button
-                            onClick={() => handleServiceCheckout(service, items)}
-                            className="font-medium hover:opacity-90 flex items-center"
-                            style={{
-                              height: '44px',
-                              backgroundColor: '#003D29',
-                              color: '#FAF1E5',
-                              borderRadius: '22px',
-                              paddingLeft: '20px',
-                              paddingRight: '20px',
-                              border: 'none',
-                              gap: '8px',
-                            }}
-                          >
-                           <img
-  src="/instacart_logo_kale.png"
-  alt="Instacart"
+  onClick={() => handleServiceCheckout(service, items)}
+  className="font-medium hover:opacity-90 flex items-center"
   style={{
-    width: '32px',
-    height: '32px',
-    objectFit: 'contain',
-    flexShrink: 0,
+    height: '46px',
+    backgroundColor: '#003D29',
+    color: '#FAF1E5',
+    borderRadius: '23px',
+    paddingLeft: '18px',
+    paddingRight: '18px',
+    border: 'none',
+    gap: '8px',
+    display: 'flex',
+    alignItems: 'center',
   }}
-/>
-                            <span style={{ whiteSpace: 'nowrap' }}>Shop with Instacart</span>
+>
+  <img
+    src="/instacart_logo_kale.png"
+    alt="Instacart"
+    style={{
+      width: '22px',
+      height: '22px',
+      objectFit: 'contain',
+      flexShrink: 0,
+    }}
+  />
+  <span style={{ whiteSpace: 'nowrap' }}>Shop with Instacart</span>
+</Button>
                           </Button>
                         ) : (
                           <Button
