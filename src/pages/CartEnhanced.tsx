@@ -735,7 +735,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                             <img
                               src="/instacart_logo_kale.png"
                               alt="Instacart"
-                              style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }}
+                              style={{ width: '36px', height: '36px', objectFit: 'contain', flexShrink: 0 }}
                             />
                             <span style={{ color: '#FAF1E5', fontSize: '15px', fontWeight: 500 }}>Shop with Instacart</span>
                           </div>
