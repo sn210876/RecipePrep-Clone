@@ -316,7 +316,7 @@ export function DeliveryServiceSelector({
                       <Package className="w-4 h-4 text-orange-600" />
                       Amazon Grocery
                     </CardTitle>
-                    <CardDescription>Standard shipping</CardDescription>
+                    <CardDescription> shipping</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-orange-600">
