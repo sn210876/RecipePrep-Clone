@@ -590,7 +590,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                 <Card className="border-4 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50">
                   <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                     <CardTitle className="flex items-center gap-2">
-                      <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
+                      <img src="/instacart)logo_carrot.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
                       ({cartItems.filter(item => item.delivery_service === 'instacart').length})
                     </CardTitle>
                   </CardHeader>
@@ -673,7 +673,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                                         </SelectItem>
                                         <SelectItem value="instacart">
                                           <div className="flex items-center gap-2">
-                                            <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+                                            <img src="/instacart)logo_carrot.png" alt="Instacart" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
                                             Instacart
                                           </div>
                                         </SelectItem>
@@ -733,7 +733,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                         ) : (
                           <div className="flex items-center justify-center" style={{ gap: '8px' }}>
                             <img
-                              src="/instacart_logo_kale.png"
+                              src="/instacart)logo_carrot.png"
                               alt="Instacart"
                               style={{ width: '36px', height: '36px', objectFit: 'contain', flexShrink: 0 }}
                             />
