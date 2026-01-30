@@ -590,8 +590,8 @@ export function Cart({ onNavigate }: CartProps = {}) {
                 <Card className="border-4 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50">
                   <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                     <CardTitle className="flex items-center gap-2">
-                      <img src="/instacart_logo_cashew.png" alt="Instacart" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-                      Instacart Items ({cartItems.filter(item => item.delivery_service === 'instacart').length})
+                      <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+                      ({cartItems.filter(item => item.delivery_service === 'instacart').length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
@@ -673,7 +673,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                                         </SelectItem>
                                         <SelectItem value="instacart">
                                           <div className="flex items-center gap-2">
-                                            <img src="/instacart_logo_cashew.png" alt="Instacart" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                                            <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '18px', height: '18px', objectFit: 'contain' }} />
                                             Instacart
                                           </div>
                                         </SelectItem>
@@ -736,9 +736,9 @@ export function Cart({ onNavigate }: CartProps = {}) {
                         ) : (
                           <div className="flex items-center justify-center" style={{ gap: '10px' }}>
                             <img
-                              src="/instacart_logo_cashew.png"
+                              src="/instacart_logo_kale.png"
                               alt="Instacart"
-                              style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }}
+                              style={{ width: '32px', height: '32px', objectFit: 'contain', flexShrink: 0 }}
                             />
                             <span style={{ color: '#FAF1E5', fontSize: '15px', fontWeight: 500 }}>Shop with Instacart</span>
                           </div>
