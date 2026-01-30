@@ -191,7 +191,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
-                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '144px', height: '144px', objectFit: 'contain' }} />
+                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
                   </CardTitle>
                   <CardDescription>Quick delivery</CardDescription>
                 </CardHeader>
@@ -282,32 +282,30 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <CardHeader>
                 <CardTitle className="text-sm flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '108px', height: '108px', objectFit: 'contain' }} />
+                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
                     ({instacartItems.length})
                   </span>
                   <Button
                     onClick={handleCheckoutInstacart}
                     disabled={loading}
-                    className="font-medium hover:opacity-90 flex items-center gap-2"
+                    className="font-medium hover:opacity-90 flex items-center"
                     style={{
-                      height: 'auto',
-                      minHeight: '40px',
+                      height: '44px',
                       backgroundColor: loading ? '#002920' : '#003D29',
                       color: '#FAF1E5',
-                      borderRadius: '20px',
-                      paddingTop: '10px',
-                      paddingBottom: '10px',
-                      paddingLeft: '18px',
-                      paddingRight: '18px',
+                      borderRadius: '22px',
+                      paddingLeft: '20px',
+                      paddingRight: '20px',
                       border: 'none',
+                      gap: '8px',
                     }}
                   >
                     <img
                       src="/instacart_logo_kale.png"
                       alt="Instacart"
                       style={{
-                        width: '144px',
-                        height: '144px',
+                        width: '28px',
+                        height: '28px',
                         objectFit: 'contain',
                         flexShrink: 0,
                       }}

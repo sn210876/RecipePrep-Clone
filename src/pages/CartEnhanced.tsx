@@ -590,7 +590,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                 <Card className="border-4 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50">
                   <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                     <CardTitle className="flex items-center gap-2">
-                      <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '144px', height: '144px', objectFit: 'contain' }} />
+                      <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
                       ({cartItems.filter(item => item.delivery_service === 'instacart').length})
                     </CardTitle>
                   </CardHeader>
@@ -673,7 +673,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
                                         </SelectItem>
                                         <SelectItem value="instacart">
                                           <div className="flex items-center gap-2">
-                                            <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '72px', height: '72px', objectFit: 'contain' }} />
+                                            <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
                                             Instacart
                                           </div>
                                         </SelectItem>
@@ -705,13 +705,10 @@ export function Cart({ onNavigate }: CartProps = {}) {
                         disabled={checkingOutInstacart}
                         className="w-full font-medium transition-all duration-200"
                         style={{
-                          height: 'auto',
-                          minHeight: '56px',
+                          height: '48px',
                           backgroundColor: checkingOutInstacart ? '#002920' : '#003D29',
                           color: '#FAF1E5',
-                          borderRadius: '28px',
-                          paddingTop: '14px',
-                          paddingBottom: '14px',
+                          borderRadius: '24px',
                           paddingLeft: '24px',
                           paddingRight: '24px',
                           border: 'none',
@@ -734,11 +731,11 @@ export function Cart({ onNavigate }: CartProps = {}) {
                             <span style={{ color: '#FAF1E5' }}>Creating List...</span>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-center" style={{ gap: '10px' }}>
+                          <div className="flex items-center justify-center" style={{ gap: '8px' }}>
                             <img
                               src="/instacart_logo_kale.png"
                               alt="Instacart"
-                              style={{ width: '160px', height: '160px', objectFit: 'contain', flexShrink: 0 }}
+                              style={{ width: '28px', height: '28px', objectFit: 'contain', flexShrink: 0 }}
                             />
                             <span style={{ color: '#FAF1E5', fontSize: '15px', fontWeight: 500 }}>Shop with Instacart</span>
                           </div>

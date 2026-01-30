@@ -143,7 +143,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
       case 'whole_foods':
         return <ShoppingBag className="w-4 h-4 text-emerald-600" />;
       case 'instacart':
-        return <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '96px', height: '96px', objectFit: 'contain' }} />;
+        return <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />;
       case 'amazon':
         return <Package className="w-4 h-4 text-orange-600" />;
       default:
@@ -249,26 +249,24 @@ export function Cart({ onNavigate }: CartProps = {}) {
                         service === 'instacart' ? (
                           <Button
                             onClick={() => handleServiceCheckout(service, items)}
-                            className="font-medium hover:opacity-90 flex items-center gap-2"
+                            className="font-medium hover:opacity-90 flex items-center"
                             style={{
-                              height: 'auto',
-                              minHeight: '40px',
+                              height: '44px',
                               backgroundColor: '#003D29',
                               color: '#FAF1E5',
-                              borderRadius: '20px',
-                              paddingTop: '10px',
-                              paddingBottom: '10px',
-                              paddingLeft: '18px',
-                              paddingRight: '18px',
+                              borderRadius: '22px',
+                              paddingLeft: '20px',
+                              paddingRight: '20px',
                               border: 'none',
+                              gap: '8px',
                             }}
                           >
                             <img
                               src="/instacart_logo_kale.png"
                               alt="Instacart"
                               style={{
-                                width: '144px',
-                                height: '144px',
+                                width: '28px',
+                                height: '28px',
                                 objectFit: 'contain',
                                 flexShrink: 0,
                               }}
