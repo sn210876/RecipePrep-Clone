@@ -143,7 +143,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
       case 'whole_foods':
         return <ShoppingBag className="w-4 h-4 text-emerald-600" />;
       case 'instacart':
-        return <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />;
+        return <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />;
       case 'amazon':
         return <Package className="w-4 h-4 text-orange-600" />;
       default:
@@ -267,8 +267,8 @@ export function Cart({ onNavigate }: CartProps = {}) {
                               src="/instacart_logo_kale.png"
                               alt="Instacart"
                               style={{
-                                width: '28px',
-                                height: '28px',
+                                width: '36px',
+                                height: '36px',
                                 objectFit: 'contain',
                                 flexShrink: 0,
                               }}

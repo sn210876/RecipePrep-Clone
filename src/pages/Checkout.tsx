@@ -191,7 +191,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
-                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
                   </CardTitle>
                   <CardDescription>Quick delivery</CardDescription>
                 </CardHeader>
@@ -282,7 +282,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <CardHeader>
                 <CardTitle className="text-sm flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
                     ({instacartItems.length})
                   </span>
                   <Button
@@ -306,8 +306,8 @@ export function Checkout({ onNavigate }: CheckoutProps) {
                       src="/instacart_logo_kale.png"
                       alt="Instacart"
                       style={{
-                        width: '28px',
-                        height: '28px',
+                        width: '36px',
+                        height: '36px',
                         objectFit: 'contain',
                         flexShrink: 0,
                       }}
