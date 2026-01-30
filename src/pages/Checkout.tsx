@@ -222,22 +222,23 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               </Card>
             )}
 
-           {amazonGroceryItems.length > 0 && (
-  <Card>
-    <CardHeader className="pb-3">
-      <CardTitle className="text-base flex items-center gap-2">
-        <Package className="w-4 h-4 text-orange-600" />
-        Amazon Grocery
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="pt-6">
-      <div className="text-2xl font-bold text-orange-600">
-        {amazonGroceryItems.length}
-      </div>
-      <div className="text-xs text-muted-foreground">items</div>
-    </CardContent>
-  </Card>
-)}
+            {amazonGroceryItems.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Package className="w-4 h-4 text-orange-600" />
+                    Amazon Grocery
+                  </CardTitle>
+                  <CardDescription>Standard shipping</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {amazonGroceryItems.length}
+                  </div>
+                  <div className="text-xs text-muted-foreground">items</div>
+                </CardContent>
+              </Card>
+            )}
 
             {wholeFoodsItems.length > 0 && (
               <Card>
