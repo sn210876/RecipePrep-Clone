@@ -699,27 +699,56 @@ export function Cart({ onNavigate }: CartProps = {}) {
                         </Card>
                       ))}
 
-                    <Button
-                      onClick={handleInstacartCheckout}
-                      disabled={checkingOutInstacart}
-                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold h-12 md:h-14 shadow-lg"
-                      size="lg"
-                    >
-                      {checkingOutInstacart ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          Creating List...
-                        </>
-                      ) : (
-                        <>
-                          <Store className="w-5 h-5 mr-2" />
-                          Checkout with Instacart
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-xs text-center text-gray-600 mt-2">
-                      Creates a shopping list with your delivery address
-                    </p>
+                    <div className="my-4">
+                      <Button
+                        onClick={handleInstacartCheckout}
+                        disabled={checkingOutInstacart}
+                        className="w-full font-medium transition-all duration-200"
+                        style={{
+                          height: '46px',
+                          backgroundColor: checkingOutInstacart ? '#002920' : '#003D29',
+                          color: '#FAF1E5',
+                          borderRadius: '23px',
+                          paddingTop: '16px',
+                          paddingBottom: '16px',
+                          paddingLeft: '18px',
+                          paddingRight: '18px',
+                          border: 'none',
+                          cursor: checkingOutInstacart ? 'not-allowed' : 'pointer',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!checkingOutInstacart) {
+                            e.currentTarget.style.backgroundColor = '#002920';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!checkingOutInstacart) {
+                            e.currentTarget.style.backgroundColor = '#003D29';
+                          }
+                        }}
+                      >
+                        {checkingOutInstacart ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#FAF1E5]"></div>
+                            <span style={{ color: '#FAF1E5' }}>Creating List...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center" style={{ gap: '8px' }}>
+                            <img
+                              src="/instacart_logo_cashew.png"
+                              alt="Instacart"
+                              width="22"
+                              height="22"
+                              style={{ width: '22px', height: '22px', flexShrink: 0 }}
+                            />
+                            <span style={{ color: '#FAF1E5' }}>Shop with Instacart</span>
+                          </div>
+                        )}
+                      </Button>
+                      <p className="text-xs text-center text-gray-600 mt-2">
+                        Creates a shopping list with your delivery address
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
