@@ -304,8 +304,8 @@ export function Checkout({ onNavigate }: CheckoutProps) {
                       src="/instacart_logo_carrott.png" 
                       alt="Instacart"
                       style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '18px',
+                        height: '18px',
                         objectFit: 'contain',
                         flexShrink: 0,
                       }}
