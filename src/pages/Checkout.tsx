@@ -301,7 +301,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
                     }}
                   >
                     <img
-                      src="/instacart_logocarrot.png" 
+                      src="/instacart_logo_carrott.png" 
                       alt="Instacart"
                       style={{
                         width: '36px',
