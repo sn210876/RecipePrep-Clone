@@ -282,7 +282,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <CardHeader>
                 <CardTitle className="text-sm flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <img src="/instacart_logo_kae.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
+                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
                     ({instacartItems.length})
                   </span>
                   <Button
@@ -301,7 +301,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
                     }}
                   >
                     <img
-                      src="/instacart_logo_kale.png"
+                      src="/instacart_lgo_kale.png"
                       alt="Instacart"
                       style={{
                         width: '36px',
