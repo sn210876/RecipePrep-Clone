@@ -191,7 +191,7 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
-                    <img src="/instacart_logo_cashew.png" alt="Instacart" className="w-4 h-4" />
+                    <img src="/instacart_logo_cashew.png" alt="Instacart" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
                     Instacart
                   </CardTitle>
                   <CardDescription>Quick delivery</CardDescription>
@@ -283,31 +283,37 @@ export function Checkout({ onNavigate }: CheckoutProps) {
               <CardHeader>
                 <CardTitle className="text-sm flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <img src="/instacart_logo_cashew.png" alt="Instacart" className="w-4 h-4" />
+                    <img src="/instacart_logo_cashew.png" alt="Instacart" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
                     Instacart Items ({instacartItems.length})
                   </span>
                   <Button
-                    size="sm"
                     onClick={handleCheckoutInstacart}
                     disabled={loading}
-                    className="font-medium"
+                    className="font-medium hover:opacity-90 flex items-center gap-2"
                     style={{
-                      height: '32px',
+                      height: 'auto',
+                      minHeight: '40px',
                       backgroundColor: loading ? '#002920' : '#003D29',
                       color: '#FAF1E5',
-                      borderRadius: '16px',
-                      paddingLeft: '12px',
-                      paddingRight: '12px',
+                      borderRadius: '20px',
+                      paddingTop: '10px',
+                      paddingBottom: '10px',
+                      paddingLeft: '18px',
+                      paddingRight: '18px',
                       border: 'none',
                     }}
                   >
                     <img
                       src="/instacart_logo_cashew.png"
                       alt="Instacart"
-                      className="w-4 h-4 mr-1.5"
-                      style={{ width: '16px', height: '16px' }}
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        objectFit: 'contain',
+                        flexShrink: 0,
+                      }}
                     />
-                    Shop with Instacart
+                    <span style={{ whiteSpace: 'nowrap' }}>Shop with Instacart</span>
                   </Button>
                 </CardTitle>
               </CardHeader>

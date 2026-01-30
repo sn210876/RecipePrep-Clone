@@ -143,7 +143,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
       case 'whole_foods':
         return <ShoppingBag className="w-4 h-4 text-emerald-600" />;
       case 'instacart':
-        return <img src="/instacart_logo_cashew.png" alt="Instacart" className="w-4 h-4" />;
+        return <img src="/instacart_logo_cashew.png" alt="Instacart" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />;
       case 'amazon':
         return <Package className="w-4 h-4 text-orange-600" />;
       default:
@@ -248,26 +248,32 @@ export function Cart({ onNavigate }: CartProps = {}) {
                       {service !== 'general' && (
                         service === 'instacart' ? (
                           <Button
-                            size="sm"
                             onClick={() => handleServiceCheckout(service, items)}
-                            className="font-medium"
+                            className="font-medium hover:opacity-90 flex items-center gap-2"
                             style={{
-                              height: '32px',
+                              height: 'auto',
+                              minHeight: '40px',
                               backgroundColor: '#003D29',
                               color: '#FAF1E5',
-                              borderRadius: '16px',
-                              paddingLeft: '12px',
-                              paddingRight: '12px',
+                              borderRadius: '20px',
+                              paddingTop: '10px',
+                              paddingBottom: '10px',
+                              paddingLeft: '18px',
+                              paddingRight: '18px',
                               border: 'none',
                             }}
                           >
                             <img
                               src="/instacart_logo_cashew.png"
                               alt="Instacart"
-                              className="w-4 h-4 mr-1.5"
-                              style={{ width: '16px', height: '16px' }}
+                              style={{
+                                width: '24px',
+                                height: '24px',
+                                objectFit: 'contain',
+                                flexShrink: 0,
+                              }}
                             />
-                            Shop with Instacart
+                            <span style={{ whiteSpace: 'nowrap' }}>Shop with Instacart</span>
                           </Button>
                         ) : (
                           <Button
