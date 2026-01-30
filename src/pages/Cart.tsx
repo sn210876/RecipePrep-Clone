@@ -264,7 +264,7 @@ export function Cart({ onNavigate }: CartProps = {}) {
   }}
 >
   <img
-    src="/instacart_logo_kale.png"
+    src="/home/project/public/screenshot_2026-01-30_at_1.12.31_pm.png"
     alt="Instacart"
     style={{
       width: '22px',
