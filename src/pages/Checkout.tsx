@@ -189,9 +189,9 @@ export function Checkout({ onNavigate }: CheckoutProps) {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {instacartItems.length > 0 && (
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
+                <CardHeader className="pb-3 pt-6">
+                  <CardTitle className="text-base flex items-start gap-2 mb-2">
+                    <img src="/instacart_logo_kale.png" alt="Instacart" style={{ width: '80px', height: '24px', objectFit: 'contain', marginTop: '-4px' }} />
                   </CardTitle>
                   <CardDescription>Quick delivery</CardDescription>
                 </CardHeader>
